@@ -33,7 +33,7 @@ if ($LASTEXITCODE -ne 0) { throw "dotnet publish failed" }
 
 Write-Host "==> [2/3] Packing with Velopack (vpk)..." -ForegroundColor Cyan
 New-Item -ItemType Directory -Force -Path $releasesDir | Out-Null
-vpk pack -u VRCNext -v $version -p $publishDir -e VRCNext.exe -o $releasesDir
+vpk pack -u VRCNext -v $version -p $publishDir -e CVRC.exe -o $releasesDir
 if ($LASTEXITCODE -ne 0) { throw "vpk pack failed" }
 
 Write-Host "==> [3/3] Compiling branded installer (Inno Setup)..." -ForegroundColor Cyan

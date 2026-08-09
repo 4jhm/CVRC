@@ -6,7 +6,7 @@
     <OutputType Condition="'$(_LinuxBuild)'!='true'">WinExe</OutputType>
     <OutputType Condition="'$(_LinuxBuild)'=='true'">Exe</OutputType>
     <RootNamespace>VRCNext</RootNamespace>
-    <AssemblyName>VRCNext</AssemblyName>
+    <AssemblyName>CVRC</AssemblyName>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon Condition="'$(_LinuxBuild)'!='true'">logo.ico</ApplicationIcon>
@@ -88,7 +88,7 @@
     </ItemGroup>
   </Target>
 
-  <!-- Embed custom icon into apphost (VRCNext.exe) after each build on Windows -->
+  <!-- Embed custom icon into apphost ($(AssemblyName).exe) after each build on Windows -->
   <Target Name="StampIconIntoAppHost" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\tools\stamp_icon.ps1&quot; -exe &quot;$(OutputPath)$(AssemblyName).exe&quot; -ico &quot;$(MSBuildProjectDirectory)\logo.ico&quot;" ContinueOnError="true" />
   </Target>
