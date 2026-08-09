@@ -46,6 +46,29 @@
     text-align: right;
 }
 
+.as-scale-input-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.as-scale-apply-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 7px;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .15s;
+}
+
+.as-scale-apply-btn:hover { opacity: .85; }
+
 .as-info-badge {
     display: inline-flex;
     align-items: center;

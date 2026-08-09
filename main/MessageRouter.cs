@@ -602,6 +602,8 @@ public partial class AppShell
                 case "browseDashBg":
                 case "vrcLoadDashBg":
                 case "vrcRandomDashBg":
+                case "pickCustomMusic":
+                case "resetCustomMusic":
                     await _authCtrl.HandleMessage(action, msg);
                     break;
 

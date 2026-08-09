@@ -544,6 +544,7 @@ function loadSettingsToUI(s) {
     applyDesignStyle(s.DesignStyle || s.designStyle || 'line');
     applyCustomFont(s.CustomFont || s.customFont || '');
     applyFontSizeOffset(s.FontSizeOffset ?? s.fontSizeOffset ?? 0);
+    if (typeof applyMusicSettingsUI === 'function') applyMusicSettingsUI(s.CustomMusicPath || s.customMusicPath || '');
     sendToCS({ action: 'getSystemFonts' });
     renderFontGrid();
     sendToCS({ action: 'getCursorFiles' });

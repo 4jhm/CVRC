@@ -1040,6 +1040,9 @@ case 'vrcNews':
                 if (typeof renderDashBgPreview === 'function') renderDashBgPreview();
                 autoSave();
                 break;
+            case 'customMusicChanged':
+                if (typeof handleCustomMusicChanged === 'function') handleCustomMusicChanged(payload);
+                break;
             case 'chatboxUpdate':
                 handleChatboxUpdate(payload);
                 break;

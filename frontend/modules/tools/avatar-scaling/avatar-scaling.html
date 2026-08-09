@@ -34,6 +34,12 @@
                             <span id="asScaleMaxLabel" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);min-width:42px;text-align:right;">10000 m</span>
                             <span class="as-slider-val" id="asScaleVal">1.00 m</span>
                         </div>
+                        <div class="as-scale-input-row">
+                            <input type="number" id="asScaleInput" class="vrcn-edit-field" min="0.01" max="10000" step="0.01"
+                                placeholder="Exact scale in meters..." data-i18n-placeholder="as.scale.input_placeholder"
+                                style="flex:1;" onkeydown="if(event.key==='Enter'){asScaleApply();}">
+                            <button class="as-scale-apply-btn" onclick="asScaleApply()" title="Apply" data-i18n-title="common.apply"><span class="msi" style="font-size:16px;">check</span></button>
+                        </div>
                         <div class="sf-toggle-row" style="margin-top:10px;">
                             <span data-i18n="as.scale.save_worlds">Save Scale between Worlds</span>
                             <label class="toggle"><input type="checkbox" id="asSaveScale" onchange="asSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>

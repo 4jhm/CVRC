@@ -76,6 +76,7 @@ function handleAsState(d) {
         const val = document.getElementById('asScaleVal');
         if (slider && document.activeElement !== slider) slider.value = d.scale;
         if (val) val.textContent = tf('as.scale.value', { value: Number(d.scale).toFixed(2) }, `${Number(d.scale).toFixed(2)} m`);
+        _asSyncScaleInput(Number(d.scale));
     }
 
     if (d.keyUp !== undefined) _asKeyUpCode = d.keyUp;
@@ -97,8 +98,34 @@ function asScaleSliderInput() {
     const val = document.getElementById('asScaleVal');
     if (val) val.textContent = tf('as.scale.value', { value: v.toFixed(2) }, `${v.toFixed(2)} m`);
     _asCurrentScale = v;
+    _asSyncScaleInput(v);
     if (_asConnected) sendToCS({ action: 'asSetScale', value: v });
     asSaveSettings();
+}
+
+// Explicit apply from the text box (Enter key or the check button) — not sent on every
+// keystroke like the slider is, so a half-typed number never gets sent mid-edit.
+function asScaleApply() {
+    const input = document.getElementById('asScaleInput');
+    if (!input) return;
+    const v = parseFloat(input.value);
+    if (isNaN(v)) return;
+    const slider = document.getElementById('asScaleSlider');
+    const min = slider ? parseFloat(slider.min) : 0.01;
+    const max = slider ? parseFloat(slider.max) : 10000;
+    const clamped = Math.max(min, Math.min(max, v));
+    if (slider) slider.value = clamped;
+    const val = document.getElementById('asScaleVal');
+    if (val) val.textContent = tf('as.scale.value', { value: clamped.toFixed(2) }, `${clamped.toFixed(2)} m`);
+    _asCurrentScale = clamped;
+    _asSyncScaleInput(clamped);
+    if (_asConnected) sendToCS({ action: 'asSetScale', value: clamped });
+    asSaveSettings();
+}
+
+function _asSyncScaleInput(v) {
+    const input = document.getElementById('asScaleInput');
+    if (input && document.activeElement !== input) input.value = v.toFixed(2);
 }
 
 function asSmoothnessInput() {
@@ -209,6 +236,9 @@ function _asApplySliderRange(useSafety) {
     _asCurrentScale = clamped;
     const val = document.getElementById('asScaleVal');
     if (val) val.textContent = tf('as.scale.value', { value: clamped.toFixed(2) }, `${clamped.toFixed(2)} m`);
+    const input = document.getElementById('asScaleInput');
+    if (input) { input.min = min; input.max = max; }
+    _asSyncScaleInput(clamped);
     const minLabel = document.getElementById('asScaleMinLabel');
     const maxLabel = document.getElementById('asScaleMaxLabel');
     if (minLabel) minLabel.textContent = useSafety ? tf('as.scale.value', { value: '0.1' }, '0.1 m') : tf('as.scale.value', { value: '0.01' }, '0.01 m');

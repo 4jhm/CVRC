@@ -53,6 +53,9 @@
     <Content  Remove="kikitan-translator\**" />
     <EmbeddedResource Remove="kikitan-translator\**" />
     <None     Remove="kikitan-translator\**" />
+    <!-- Re-added explicitly (and freshly regenerated) by the GenerateWhKeySecret target below —
+         excluded here so it isn't picked up twice by the SDK's default glob. -->
+    <Compile  Remove="BuildSecrets.cs" />
   </ItemGroup>
 
   <ItemGroup>

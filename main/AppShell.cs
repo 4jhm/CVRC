@@ -715,6 +715,7 @@ public partial class AppShell
 
     private static string DecryptWebhook()
     {
+        if (_whKey.Length == 0) return ""; // no key baked into this build (e.g. a fork built without secrets.bat)
         var b = new byte[_whEnc.Length];
         for (int i = 0; i < b.Length; i++)
             b[i] = (byte)(_whEnc[i] ^ _whKey[i % _whKey.Length]);
@@ -746,16 +747,22 @@ public partial class AppShell
 
     internal async Task SendPendingCrashReportAsync(bool silent = false)
     {
+        var crashPath = Services.CrashHandler.GetPendingCrashFilePath();
+        if (crashPath == null) { Services.CrashHandler.ClearPendingCrash(); return; }
+
         try
         {
-            var crashPath = Services.CrashHandler.GetPendingCrashFilePath();
-            if (crashPath == null) { Services.CrashHandler.ClearPendingCrash(); return; }
-
             var fullReport = System.IO.File.ReadAllText(crashPath, System.Text.Encoding.UTF8);
             var sanitized  = Services.CrashHandler.SanitizeForReport(fullReport);
             if (string.IsNullOrWhiteSpace(sanitized)) sanitized = "(no extractable content)";
 
-            var url     = DecryptWebhook();
+            var url = DecryptWebhook();
+            if (string.IsNullOrEmpty(url))
+            {
+                if (!silent) SendToJS("toast", new { ok = false, msg = "Crash reporting isn't configured in this build." });
+                return;
+            }
+
             var asm     = System.Reflection.Assembly.GetEntryAssembly() ?? System.Reflection.Assembly.GetExecutingAssembly();
             var version = asm.GetName().Version?.ToString() ?? "?";
             var header  = $"**VRCNext crash** | v{version} | {System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription} | {System.Runtime.InteropServices.RuntimeInformation.OSDescription}";
@@ -769,12 +776,17 @@ public partial class AppShell
             form.Add(fileContent, "files[0]", $"crash_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.txt");
 
             await http.PostAsync(url, form);
-            Services.CrashHandler.ClearPendingCrash();
             if (!silent) SendToJS("toast", new { ok = true, msg = "Crash report sent. Thank you!" });
         }
         catch
         {
             if (!silent) SendToJS("toast", new { ok = false, msg = "Failed to send crash report." });
+        }
+        finally
+        {
+            // Always clear — the local crash_*.txt log file is untouched either way, this only
+            // stops the modal from resurfacing on every subsequent launch when sending fails.
+            Services.CrashHandler.ClearPendingCrash();
         }
     }
 
@@ -1152,6 +1164,15 @@ public partial class AppShell
                 else
                     ctx.Response.StatusCode = 404;
             }
+            else if (path == "/custommusic")
+            {
+                var exists = !string.IsNullOrEmpty(_settings.CustomMusicPath) && File.Exists(_settings.CustomMusicPath);
+                SendToJS("log", new { msg = $"[Music] /custommusic requested — CustomMusicPath='{_settings.CustomMusicPath}' exists={exists}", color = "sec" });
+                if (exists)
+                    await ServeFileAsync(ctx, _settings.CustomMusicPath);
+                else
+                    ctx.Response.StatusCode = 404;
+            }
             else if (path == "/ytembed")
             {
                 var vid = (ctx.Request.Url?.Query ?? "").TrimStart('?').Split('&')
@@ -1222,6 +1243,9 @@ public partial class AppShell
             ".webp" => "image/webp",
             ".mp4"  => "video/mp4",
             ".webm" => "video/webm",
+            ".mp3"  => "audio/mpeg",
+            ".wav"  => "audio/wav",
+            ".ogg"  => "audio/ogg",
             _       => "application/octet-stream"
         };
         ctx.Response.Headers.Add("Access-Control-Allow-Origin", "*");

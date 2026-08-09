@@ -294,6 +294,17 @@
                         <div class="sf-toggle-row" style="margin-top:8px;"><span data-i18n="settings.design.clock_ampm">Use AM/PM</span><label class="toggle"><input type="checkbox" id="setClockAmPm" onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
                     </div>
 
+                    <!-- BACKGROUND MUSIC -->
+                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">music_note</span> <span data-i18n="settings.music.title">Background Music</span></div>
+                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="settings.music.desc">Plays quietly in the background while the app is open. Pick your own track, or leave it on the default.</div>
+                        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                            <span id="musicFileName" style="flex:1;min-width:160px;color:var(--tx2);font-size:calc(12px + var(--fs-off, 0px));" data-i18n="settings.music.default_track">Default (cario.mp3)</span>
+                            <button class="vrcn-button" onclick="pickCustomMusic()"><span class="msi" style="font-size:16px;">folder_open</span> <span data-i18n="settings.music.choose">Choose File</span></button>
+                            <button class="vrcn-button" id="musicResetBtn" style="display:none;" onclick="resetCustomMusic()"><span class="msi" style="font-size:16px;">restart_alt</span> <span data-i18n="settings.music.reset">Reset to Default</span></button>
+                        </div>
+                    </div>
+
                     <!-- THEMES -->
                     <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
                         <div class="vrcn-panel-card-header"><span class="msi">brush</span> <span data-i18n="settings.design.tabs.themes">Themes</span></div>

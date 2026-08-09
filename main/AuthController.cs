@@ -550,6 +550,26 @@ public class AuthController
                 }
                 break;
 
+            case "pickCustomMusic":
+                {
+                    var r = Dialog.FileOpen("mp3,wav,ogg");
+                    _core.SendToJS("log", new { msg = $"[Music] pickCustomMusic dialog result: IsOk={r.IsOk} Path='{r.Path}'", color = "sec" });
+                    if (r.IsOk)
+                    {
+                        _core.Settings.CustomMusicPath = r.Path;
+                        _core.Settings.Save();
+                        _core.SendToJS("log", new { msg = $"[Music] Saved CustomMusicPath='{_core.Settings.CustomMusicPath}' saveError={_core.Settings.LastSaveError ?? "none"}", color = "sec" });
+                        _core.SendToJS("customMusicChanged", new { fileName = Path.GetFileName(r.Path), hasCustom = true });
+                    }
+                }
+                break;
+
+            case "resetCustomMusic":
+                _core.Settings.CustomMusicPath = "";
+                _core.Settings.Save();
+                _core.SendToJS("customMusicChanged", new { fileName = "", hasCustom = false });
+                break;
+
             case "vrcLoadDashBg":
                 _ = Task.Run(() =>
                 {
