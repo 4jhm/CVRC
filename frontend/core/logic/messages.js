@@ -1043,6 +1043,9 @@ case 'vrcNews':
             case 'customMusicChanged':
                 if (typeof handleCustomMusicChanged === 'function') handleCustomMusicChanged(payload);
                 break;
+            case 'vrcAccountsLaunchResult':
+                if (typeof handleVrcAccountsLaunchResult === 'function') handleVrcAccountsLaunchResult(payload);
+                break;
             case 'chatboxUpdate':
                 handleChatboxUpdate(payload);
                 break;

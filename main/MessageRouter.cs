@@ -2951,6 +2951,8 @@ public partial class AppShell
                     break;
 
                 case "vrcLaunchAndJoin":
+                case "vrcAccountsSaveLabel":
+                case "vrcAccountsLaunch":
                     _relayCtrl.HandleMessage(action, msg);
                     break;
 

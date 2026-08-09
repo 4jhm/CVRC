@@ -545,6 +545,7 @@ function loadSettingsToUI(s) {
     applyCustomFont(s.CustomFont || s.customFont || '');
     applyFontSizeOffset(s.FontSizeOffset ?? s.fontSizeOffset ?? 0);
     if (typeof applyMusicSettingsUI === 'function') applyMusicSettingsUI(s.CustomMusicPath || s.customMusicPath || '');
+    if (typeof applyVrcAccountLabels === 'function') applyVrcAccountLabels(s.VrcAccountLabels || s.vrcAccountLabels || []);
     sendToCS({ action: 'getSystemFonts' });
     renderFontGrid();
     sendToCS({ action: 'getCursorFiles' });

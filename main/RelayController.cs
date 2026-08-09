@@ -246,6 +246,27 @@ public class RelayController : IDisposable
                     _core.SendToJS("vrcLaunched", new { vr = llVr });
                 }
                 break;
+
+            case "vrcAccountsSaveLabel":
+                {
+                    var slot = msg["slot"]?.Value<int>() ?? -1;
+                    var label = msg["label"]?.ToString() ?? "";
+                    if (slot >= 0 && slot < 10)
+                    {
+                        var labels = GetVrcAccountLabels();
+                        labels[slot] = label;
+                        _core.Settings.VrcAccountLabels = labels;
+                        _core.Settings.Save();
+                    }
+                }
+                break;
+
+            case "vrcAccountsLaunch":
+                {
+                    var slot = msg["slot"]?.Value<int>() ?? -1;
+                    if (slot >= 0 && slot < 10) LaunchVRChatProfile(slot);
+                }
+                break;
         }
     }
 
@@ -429,6 +450,79 @@ public class RelayController : IDisposable
         var idx = _core.Settings.EnsureProfileIndex(acc);
         if (idx != before) _core.Settings.Save();
         return $"--profile={idx}";
+    }
+
+    // Always exactly 10 entries — pads with "Account N" defaults and trims any excess.
+    private List<string> GetVrcAccountLabels()
+    {
+        var labels = new List<string>(_core.Settings.VrcAccountLabels ?? new List<string>());
+        while (labels.Count < 10) labels.Add($"Account {labels.Count + 1}");
+        if (labels.Count > 10) labels = labels.Take(10).ToList();
+        return labels;
+    }
+
+    // Launches a fresh, independent VRChat process on a specific "--profile=N" slot (0-9), each of
+    // which VRChat treats as a fully separate local login session — this is what lets 10 buttons run
+    // 10 concurrently logged-in accounts side by side. Always desktop mode: these are alt/bot
+    // instances, not something you'd wear a headset for, and only one HMD session can be VR anyway.
+    private void LaunchVRChatProfile(int slot)
+    {
+        var labels = GetVrcAccountLabels();
+        var label = slot >= 0 && slot < labels.Count ? labels[slot] : $"Account {slot + 1}";
+        try
+        {
+            var profileArg = $"--profile={slot}";
+            var extraArgs = (_core.Settings.VrcLaunchArgs ?? "").Trim();
+#if WINDOWS
+            // Deliberately NOT using steam.exe -applaunch here: Steam treats an App ID as a
+            // singleton and either no-ops or just refocuses the existing window instead of
+            // spawning a second process, so it can't actually run concurrent instances. Launching
+            // the game exe directly (bypassing Steam's launcher) is the only way multiple
+            // "--profile=N" sessions can run side by side — same approach community multi-account
+            // launcher scripts use.
+            var vrcPath = _core.Settings.VrcPath;
+            if (string.IsNullOrWhiteSpace(vrcPath) || !File.Exists(vrcPath))
+                vrcPath = AuthController.DetectVrcLaunchExe();
+
+            if (string.IsNullOrWhiteSpace(vrcPath) || !File.Exists(vrcPath))
+            {
+                _core.SendToJS("log", new { msg = "Could not launch VRChat: install not found. Set the VRChat exe path in Settings.", color = "err" });
+                _core.SendToJS("vrcAccountsLaunchResult", new { slot, success = false });
+                return;
+            }
+            var exeArgs = System.Text.RegularExpressions.Regex.Replace(
+                $"--no-vr {profileArg} {extraArgs}", "\\s+", " ").Trim();
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = vrcPath, Arguments = exeArgs,
+                WorkingDirectory = Path.GetDirectoryName(vrcPath) ?? "",
+                UseShellExecute = false
+            });
+#else
+            var applaunchLnx = System.Text.RegularExpressions.Regex.Replace(
+                $"-applaunch 438100 --no-vr {profileArg} {extraArgs}", "\\s+", " ").Trim();
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "steam",
+                    Arguments = applaunchLnx,
+                    UseShellExecute = false
+                });
+            }
+            catch
+            {
+                Process.Start(new ProcessStartInfo { FileName = "steam://rungameid/438100", UseShellExecute = true });
+            }
+#endif
+            _core.SendToJS("log", new { msg = $"Launched VRChat — {label} (profile {slot})", color = "ok" });
+            _core.SendToJS("vrcAccountsLaunchResult", new { slot, success = true });
+        }
+        catch (Exception ex)
+        {
+            _core.SendToJS("log", new { msg = $"Launch error ({label}): {ex.Message}", color = "err" });
+            _core.SendToJS("vrcAccountsLaunchResult", new { slot, success = false });
+        }
     }
 
     private void LaunchVRChat()

@@ -27,6 +27,7 @@ const NAV_ITEMS_DEF = {
     'avatar-scaling':   { icon: 'height',          tab: 24, i18n: 'nav.avatar_scaling',     label: 'Avatar Scaling',   windowsOnly: true },
     'action-flow':      { icon: 'auto_awesome',    tab: 25, i18n: 'nav.action_flow',        label: 'Action Flow'      },
     'status-schedule':  { icon: 'event_available', tab: 27, i18n: 'nav.status_schedule',    label: 'Status Schedule',  defaultFolder: 'folder-tools' },
+    'vrc-accounts':     { icon: 'switch_account',  tab: 28, i18n: 'nav.vrc_accounts',       label: 'VRChat Accounts',  defaultFolder: 'folder-tools' },
 };
 
 const NAV_ICON_OPTIONS = [
@@ -34,7 +35,7 @@ const NAV_ICON_OPTIONS = [
     'dashboard','travel_explore','groups','person_search','calendar_month','checkroom',
     'inventory_2','timeline','photo_library','settings','chat','cell_tower','rocket_launch',
     'photo_camera',
-    'tune','smart_display','article','hub','schedule','mic','sensors','watch','lock',
+    'tune','smart_display','article','hub','schedule','mic','sensors','watch','lock','switch_account',
     'translate','gps_fixed','height','build','adjust','folder','star','favorite','bookmark',
     'home','explore','map','music_note','videocam','image','code','analytics','bar_chart',
     'notifications','sports_esports','emoji_events','diamond','auto_awesome','bolt',
@@ -86,7 +87,7 @@ const NAV_DEFAULT_LAYOUT = [
             'chatbox','media-relay','space-flight','frame-shot','osc-tool','youtube-fix',
             'activity-log','mutual-network','time-spent','voice-fight',
             'discord-presence','vr-overlay','permini','kikitan-xd','event-snipe','avatar-scaling','action-flow',
-            'status-schedule',
+            'status-schedule','vrc-accounts',
         ],
     },
     { type: 'item', key: 'settings' },

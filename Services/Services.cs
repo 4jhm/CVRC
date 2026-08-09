@@ -308,6 +308,11 @@ public class AppSettings
     public List<VrcAccount> Accounts { get; set; } = new();
     public string ActiveAccountId { get; set; } = "";
 
+    // User-editable labels for the 10 concurrent-launch slots on the "VRChat Accounts" tool page.
+    // Index N maps directly to VRChat's own "--profile=N" launch argument (a separate local login
+    // session per slot) — independent of the Accounts/ActiveAccountId system above.
+    public List<string> VrcAccountLabels { get; set; } = new();
+
     // Legacy single-account fields migrated into Accounts on Load and cleared on Save.
     public string VrcUsername { get; set; } = "";
     public string VrcPasswordEnc { get; set; } = "";
