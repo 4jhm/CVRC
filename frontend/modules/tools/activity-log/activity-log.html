@@ -1,0 +1,30 @@
+                <div class="log-header" style="margin-top:0;display:flex;align-items:center;gap:5px;flex-shrink:0;">
+                    <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:120px;max-width:200px;"><span class="msi search-ico">search</span><input id="logSearchInput" type="text" class="vrcn-input" placeholder="Search..." data-i18n-placeholder="logs.search.placeholder" oninput="onLogSearch(this.value)"></div>
+                    <div style="flex:1;"></div>
+                    <div class="mini-badge" id="agetBadge" style="display:none;background:var(--bg-hover);border-color:var(--brd);"><span class="mini-badge-label" style="color:var(--tx2);font-variant-numeric:tabular-nums;">AGET/H: 0</span></div>
+                    <div class="mini-badge" id="acdnBadge" style="display:none;background:var(--bg-hover);border-color:var(--brd);"><span class="mini-badge-label" style="color:var(--tx2);font-variant-numeric:tabular-nums;">ACDN/H: 0</span></div>
+                    <div class="mini-badge" id="cdnBadge" style="display:none;background:rgba(100,170,255,.12);border-color:rgba(100,170,255,.4);"><span class="mini-badge-label" style="color:#64aaff;font-variant-numeric:tabular-nums;">CDN: 0</span></div>
+                    <div class="mini-badge" id="httpBadge200" style="display:none;background:rgba(59,165,93,.12);border-color:rgba(59,165,93,.4);"><span class="mini-badge-label" style="color:#3ba55d;font-variant-numeric:tabular-nums;">200: 0</span></div>
+                    <div class="mini-badge" id="httpBadge429" style="display:none;background:rgba(240,165,0,.12);border-color:rgba(240,165,0,.4);"><span class="mini-badge-label" style="color:#f0a500;font-variant-numeric:tabular-nums;">429: 0</span></div>
+                    <div class="mini-badge" id="httpBadge404" style="display:none;background:rgba(237,66,69,.12);border-color:rgba(237,66,69,.4);"><span class="mini-badge-label" style="color:#ed4245;font-variant-numeric:tabular-nums;">404: 0</span></div>
+                    <div class="mini-badge" id="httpBadge403" style="display:none;background:rgba(237,66,69,.12);border-color:rgba(237,66,69,.4);"><span class="mini-badge-label" style="color:#ed4245;font-variant-numeric:tabular-nums;">403: 0</span></div>
+                    <div class="mini-badge" id="httpBadge400" style="display:none;background:rgba(237,66,69,.12);border-color:rgba(237,66,69,.4);"><span class="mini-badge-label" style="color:#ed4245;font-variant-numeric:tabular-nums;">400: 0</span></div>
+                    <div class="mini-badge offline" id="wsBadge">
+                        <span class="mini-badge-icon msi">wifi_off</span>
+                        <span class="mini-badge-label" data-i18n="activity.websocket">WebSocket</span>
+                    </div>
+                </div>
+                <div class="log-area" style="flex:1;min-height:0;">
+                    <div id="logArea" class="log-scroll"></div>
+                    <div class="log-input-row">
+                        <span class="log-input-prompt">&gt;</span>
+                        <input id="consoleInput" type="text" class="log-input-field" onkeydown="if(event.key==='Enter')execConsoleCommand(this.value)" autocomplete="off" spellcheck="false">
+                    </div>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:8px;flex-shrink:0;">
+                    <button id="logShowFullBtn" class="vrcn-button" onclick="toggleLogShowFull()" style="flex:1;justify-content:center;" title="Toggle full log view" data-i18n-title="activity.actions.show_full_title"><span class="msi logShowFullIcon" style="font-size:16px;">unfold_more</span> <span class="logShowFullText" data-i18n="activity.actions.show_full">Show Full</span></button>
+                    <button class="vrcn-button" onclick="copyLog()" style="flex:1;justify-content:center;" title="Copy to Clipboard" data-i18n-title="activity.actions.copy_title"><span class="msi" style="font-size:16px;">content_copy</span> <span data-i18n="common.copy">Copy</span></button>
+                    <button class="vrcn-button" onclick="sendToCS({action:'openLogFile'})" style="flex:1;justify-content:center;" title="Open current log file" data-i18n-title="activity.actions.open_log_title"><span class="msi" style="font-size:16px;">description</span> <span data-i18n="activity.actions.open_log">Open Log</span></button>
+                    <button class="vrcn-button" onclick="sendToCS({action:'openLogFolder'})" style="flex:1;justify-content:center;" title="Open logs folder" data-i18n-title="activity.actions.open_folder_title"><span class="msi" style="font-size:16px;">folder_open</span> <span data-i18n="activity.actions.open_folder">Open Folder</span></button>
+                    <button class="vrcn-button" onclick="clearLog()" style="flex:1;justify-content:center;" title="Clear log" data-i18n-title="activity.actions.clear_title"><span class="msi" style="font-size:16px;">delete_sweep</span> <span data-i18n="common.clear">Clear</span></button>
+                </div>

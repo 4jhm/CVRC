@@ -1,0 +1,38 @@
+name: Feature Request
+description: A short description of this template
+title: "[FEATURE]: "
+labels:
+  - Feature Request
+body:
+  - type: checkboxes
+    attributes:
+      label: Make sure to only report one bug per issue-report
+      description: Please click the checkmark to show that you understand.
+      options:
+        - label: This is one feature request
+          required: true
+  - type: textarea
+    attributes:
+      label: Explain the feature you want
+      description: >-
+        Be as detailed as possible. Simply saying “I want this to work” is not enough and will be ignored.  Make sure
+        you clearly explain what you actually want, including the expected behavior, the problem you are trying to
+        solve, and any important details needed to understand the request.  Do not use vague explanations like
+        “because,” “it already exists somewhere else,” or “VRCX does it too.” Just explain what you want without
+        comparing VRCNext to other tools or projects.  We do not need comparisons. We only need to understand what you
+        want, nothing more and nothing less.
+      placeholder: Describe in detail...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Why should we add this feature?
+      description: >-
+        Tell us a good and valid reason why we should add your requested feature. Simply saying “I want this” is not
+        enough.  Explain why this feature would be useful. Is it only valuable to you, or would it benefit many other
+        users as well? Think about whether this feature has broader value before submitting the request.  If your
+        request is too niche, stop here. We will not add features that do not benefit other users.  Make it clear why
+        this feature is worth adding. Choose your words carefully.
+      placeholder: Describe in detail...
+    validations:
+      required: true

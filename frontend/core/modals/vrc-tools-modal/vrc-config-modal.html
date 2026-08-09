@@ -1,0 +1,94 @@
+        <div class="modal-box vrc-cfg-box" style="width:1120px;max-width:94%;">
+            <div class="fd-modal-bar">
+                <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" data-i18n="vrc_config.title">VRChat Config</span></div>
+                <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="document.getElementById('modalVrcConfig').style.display='none'"><span class="msi" style="font-size:20px;">close</span></button></div>
+            </div>
+            <div class="modal-msg" style="margin:20px 0 18px;" data-i18n="vrc_config.desc">Edit VRChat's config.json directly. Changes are written to VRChat's own data folder.</div>
+
+            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--bg-input);border-radius:8px;padding:10px 12px;margin-bottom:18px;">
+                <span style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);"><span data-i18n="vrc_config.cache_size">Cache Size</span>: <strong id="vrcCfgCacheSize" style="color:var(--tx0);">—</strong></span>
+                <span style="flex:1;"></span>
+                <button class="vrcn-button" onclick="vrcCfgRefreshCache()"><span class="msi" style="font-size:14px;">refresh</span> <span data-i18n="vrc_config.refresh">Refresh</span></button>
+                <button class="vrcn-button" onclick="vrcCfgDeleteCache()"><span class="msi" style="font-size:14px;">delete</span> <span data-i18n="vrc_config.delete_cache">Delete Cache</span></button>
+                <button class="vrcn-button" onclick="vrcCfgSweepCache()"><span class="msi" style="font-size:14px;">cleaning_services</span> <span data-i18n="vrc_config.sweep_cache">Sweep Cache</span></button>
+            </div>
+
+            <div class="vrc-cfg-grid">
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.max_cache_size">Max Cache Size [GB] (min 30)</div>
+                    <input type="number" id="vrcCfgMaxCacheSize" class="vrcn-edit-field" placeholder="30">
+                </div>
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.cache_expiry">Cache Expiry [Days]</div>
+                    <input type="number" id="vrcCfgCacheExpiry" class="vrcn-edit-field" placeholder="30">
+                </div>
+
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.cache_directory">Custom Cache Folder Location</div>
+                    <div class="vrc-cfg-path">
+                        <input type="text" id="vrcCfgCacheDir" class="vrcn-edit-field" placeholder="%AppData%\..\LocalLow\VRChat\VRChat">
+                        <button class="vrcn-button" onclick="vrcCfgPickFolder('vrcCfgCacheDir')" title="Browse" data-i18n-title="common.browse"><span class="msi" style="font-size:16px;">folder_open</span></button>
+                    </div>
+                </div>
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.picture_directory">Custom Picture Folder Location</div>
+                    <div class="vrc-cfg-path">
+                        <input type="text" id="vrcCfgPictureDir" class="vrcn-edit-field" placeholder="%UserProfile%\Pictures\VRChat">
+                        <button class="vrcn-button" onclick="vrcCfgPickFolder('vrcCfgPictureDir')" title="Browse" data-i18n-title="common.browse"><span class="msi" style="font-size:16px;">folder_open</span></button>
+                    </div>
+                </div>
+
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.camera_resolution">Camera Resolution</div>
+                    <select id="vrcCfgCameraRes" class="vrcn-dropdown"></select>
+                    <div class="set-desc" id="vrcCfgCameraResHint" style="display:none;margin-top:5px;"></div>
+                </div>
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.spout_resolution">Spout Resolution</div>
+                    <select id="vrcCfgSpoutRes" class="vrcn-dropdown"></select>
+                </div>
+
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.screenshot_resolution">Screenshot Resolution</div>
+                    <select id="vrcCfgScreenshotRes" class="vrcn-dropdown"></select>
+                </div>
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.steadycam_fov">First-Person Steadycam FOV</div>
+                    <input type="number" id="vrcCfgSteadycamFov" class="vrcn-edit-field" placeholder="50">
+                </div>
+
+                <div class="vrc-cfg-field">
+                    <div class="sf-toggle-row" style="margin:0;"><span data-i18n="vrc_config.picture_sort_by_date">Sort pictures into folders by date</span><label class="toggle"><input type="checkbox" id="vrcCfgSplitByDate"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                </div>
+                <div class="vrc-cfg-field">
+                    <div class="sf-toggle-row" style="margin:0;"><span data-i18n="vrc_config.disable_discord_presence">Disable Discord Rich Presence</span><label class="toggle"><input type="checkbox" id="vrcCfgDisableRichPresence"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                </div>
+            </div>
+
+            <div class="sf-section-label" style="margin-top:18px;margin-bottom:6px;" data-i18n="vrc_config.prints_section">Instance Prints</div>
+            <div class="set-desc" style="margin-bottom:8px;" data-i18n="vrc_config.prints_desc">Automatically save prints that players drop in your instance. VRCNext downloads each print once and stores it in the folder below.</div>
+            <div id="vrcCfgPrintsFlagRow" style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <span class="msi" id="vrcCfgPrintsStatusIco" style="font-size:16px;">info</span>
+                <span class="set-desc" id="vrcCfgPrintsStatus" style="flex:1;margin:0;"></span>
+                <button class="vrcn-button" id="vrcCfgPrintsFlagBtn" onclick="vrcCfgAddSdkLogFlag()" data-i18n="vrc_config.prints_add_flag">Add launch option</button>
+            </div>
+            <div class="vrc-cfg-grid">
+                <div class="vrc-cfg-field">
+                    <div class="sf-toggle-row" style="margin:0;"><span data-i18n="vrc_config.save_instance_prints">Save Prints in instance</span><label class="toggle"><input type="checkbox" id="vrcCfgSavePrints" onchange="vrcCfgSavePrintsToggle()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                </div>
+                <div class="vrc-cfg-field">
+                    <div class="sf-section-label" data-i18n="vrc_config.prints_folder">Prints Folder</div>
+                    <div class="vrc-cfg-path">
+                        <input type="text" id="vrcCfgPrintsDir" class="vrcn-edit-field" placeholder="%UserProfile%\Pictures\VRChat\Prints">
+                        <button class="vrcn-button" onclick="vrcCfgPickFolder('vrcCfgPrintsDir')" title="Browse" data-i18n-title="common.browse"><span class="msi" style="font-size:16px;">folder_open</span></button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-btns" style="margin-top:22px;justify-content:space-between;">
+                <button class="vrcn-button-round" onclick="sendToCS({action:'openUrl',url:'https://docs.vrchat.com/docs/configuration-file'})"><span class="msi">open_in_new</span> <span data-i18n="vrc_config.docs">VRChat Docs</span></button>
+                <div style="display:flex;gap:8px;">
+                    <button class="vrcn-button-round vrcn-btn-join" onclick="vrcCfgSave()" data-i18n="common.save">Save</button>
+                </div>
+            </div>
+        </div>

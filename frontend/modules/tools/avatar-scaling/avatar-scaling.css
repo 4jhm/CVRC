@@ -1,0 +1,59 @@
+/* === Avatar Scaling Module === */
+
+.as-keybind-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.as-keybind-display {
+    flex: 1;
+    background: var(--bg-input);
+    border: 1px solid var(--brd);
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx1);
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+}
+
+.as-keybind-display.as-recording {
+    border-color: var(--accent);
+    color: var(--accent);
+    font-style: italic;
+}
+
+.as-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+}
+
+.as-slider {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+.as-slider-val {
+    min-width: 60px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx2);
+    text-align: right;
+}
+
+.as-info-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(100, 149, 237, 0.08);
+    border: 1px solid rgba(100, 149, 237, 0.2);
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+}

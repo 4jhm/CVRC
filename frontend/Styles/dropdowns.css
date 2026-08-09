@@ -1,0 +1,165 @@
+div.vn-select {
+    position: relative;
+    display: inline-flex;
+    flex-direction: column;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    outline: none !important;
+    cursor: default !important;
+    font-size: inherit;
+}
+
+.vn-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--ui-input-bg);
+    color: var(--tx1);
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-family: inherit;
+    user-select: none;
+    transition: background .15s, color .15s;
+    white-space: nowrap;
+    min-width: 0;
+}
+.vn-select-trigger:hover,
+.vn-select.vn-open .vn-select-trigger {
+    background: var(--ui-input-hover-bg);
+    color: var(--tx0);
+}
+
+.vn-select-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+
+.vn-select-arrow {
+    font-size: calc(16px + var(--fs-off, 0px));
+    line-height: 1;
+    flex-shrink: 0;
+    transition: transform .2s;
+}
+.vn-select.vn-open .vn-select-arrow { transform: rotate(180deg); }
+
+.vn-select-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    min-width: 100%;
+    max-width: min(420px, calc(100vw - 16px));
+    background: var(--bg-card);
+    border-radius: 8px;
+    box-shadow: 0 8px 28px rgba(0,0,0,.45);
+    z-index: 1200;
+    max-height: 260px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+.vn-select.vn-open .vn-select-panel { display: block; }
+
+.vn-select-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-family: inherit;
+    color: var(--tx1);
+    transition: background .1s, color .1s;
+    white-space: nowrap;
+    overflow: hidden;
+}
+.vn-select-option .vn-select-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+.vn-select-option:hover { background: var(--bg-hover); color: var(--tx0); }
+.vn-select-option.vn-active { color: var(--accent); }
+.vn-select-option.vn-active:hover { background: var(--bg-hover); }
+
+/* height normalization — all selects/inputs in toolbar rows share 32px */
+.lib-filter-select,
+.wd-create-select,
+.vrcn-dropdown {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    box-sizing: border-box;
+    border-radius: 7px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.vn-select-trigger {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border-radius: 7px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    line-height: 32px;
+    display: flex;
+    align-items: center;
+}
+
+div.vn-select {
+    height: auto;
+    min-height: 0;
+}
+
+.wd-create-select.vn-select .vn-select-trigger { height: 32px; box-sizing: border-box; }
+
+.search-bar-row .search-input,
+.search-bar-row .vrcn-input,
+.tl-topbar .search-input,
+.inv-filter-row .search-input,
+.ts-search-bar .search-input {
+    height: 32px;
+    min-height: 32px;
+    max-height: 32px;
+    box-sizing: border-box;
+    border-radius: 7px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    padding-top: 0;
+    padding-bottom: 0;
+    line-height: 32px;
+}
+
+.search-bar-row,
+.tl-topbar,
+.tl-filter-row,
+.inv-filter-row,
+.inv-topbar,
+.ts-header,
+
+.search-bar-row .vn-select .vn-select-trigger,
+.tl-topbar .vn-select .vn-select-trigger,
+.tl-filter-row .vn-select .vn-select-trigger,
+.inv-filter-row .vn-select .vn-select-trigger,
+
+.search-bar-row .vrcn-button .msi,
+.tl-topbar .vrcn-button .msi,
+.tl-filter-row .vrcn-button .msi {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.search-bar-row .vn-select .vn-select-trigger .vn-select-label,
+.tl-topbar .vn-select .vn-select-trigger .vn-select-label,
+.tl-filter-row .vn-select .vn-select-trigger .vn-select-label,
+.inv-filter-row .vn-select .vn-select-trigger .vn-select-label {
+    font-size: calc(12px + var(--fs-off, 0px));
+}
+
+#worldSearchArea .vn-select .vn-select-trigger {
+    font-size: calc(12px + var(--fs-off, 0px));
+    line-height: 32px;
+}

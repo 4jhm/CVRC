@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VRCNext – Translation Editor</title>
+  <link rel="stylesheet" href="translation.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0" />
+</head>
+<body>
+  <header class="vrcn-i18n-toolbar">
+    <div class="vrcn-i18n-toolbar-center">
+      <div class="vrcn-i18n-lang-block">
+        <label class="vrcn-i18n-lang-label">Language name</label>
+        <input id="langName" class="vrcn-i18n-lang-input" type="text" placeholder="e.g. Deutsch" maxlength="40" />
+      </div>
+      <div class="vrcn-i18n-lang-block">
+        <label class="vrcn-i18n-lang-label">Language code</label>
+        <input id="langCode" class="vrcn-i18n-lang-input" type="text" placeholder="e.g. de" maxlength="10" />
+      </div>
+      <div class="vrcn-i18n-lang-block">
+        <label class="vrcn-i18n-lang-label">Author</label>
+        <input id="langAuthor" class="vrcn-i18n-lang-input" type="text" placeholder="optional" maxlength="60" />
+      </div>
+    </div>
+    <div class="vrcn-i18n-toolbar-right">
+      <div class="vrcn-i18n-progress-wrap">
+        <span id="progressLabel" class="vrcn-i18n-progress-label">0 / 0 translated</span>
+        <div class="vrcn-i18n-progress-bar">
+          <div id="progressFill" class="vrcn-i18n-progress-fill"></div>
+        </div>
+      </div>
+      <div class="vrcn-i18n-actions">
+        <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost" id="btnLoad" title="Load existing translation (.json)">
+          <span class="material-symbols-rounded">upload_file</span>Load
+        </button>
+        <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost" id="btnClear" title="Clear all translations">
+          <span class="material-symbols-rounded">delete_sweep</span>Clear
+        </button>
+        <button class="vrcn-i18n-btn vrcn-i18n-btn-accent" id="btnSave" title="Save translation as .json">
+          <span class="material-symbols-rounded">save</span>Save
+        </button>
+      </div>
+    </div>
+  </header>
+  <div class="vrcn-i18n-filterbar">
+    <div class="vrcn-i18n-search-wrap">
+      <span class="material-symbols-rounded vrcn-i18n-search-icon">search</span>
+      <input id="searchInput" class="vrcn-i18n-search" type="text" placeholder="Search keys or text…" />
+      <button id="btnClearSearch" class="vrcn-i18n-search-clear" title="Clear search">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+    <div class="vrcn-i18n-filter-chips">
+      <button class="vrcn-i18n-chip vrcn-i18n-chip-active" data-filter="all">All</button>
+      <button class="vrcn-i18n-chip" data-filter="missing">Missing</button>
+      <button class="vrcn-i18n-chip" data-filter="done">Translated</button>
+    </div>
+    <div class="vrcn-i18n-filterbar-divider"></div>
+    <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost vrcn-i18n-btn-sm" id="btnToggleFnr" title="Find & Replace (Ctrl+H)">
+      <span class="material-symbols-rounded">find_replace</span>Find &amp; Replace
+    </button>
+    <span id="visibleCount" class="vrcn-i18n-visible-count"></span>
+  </div>
+  <div class="vrcn-i18n-fnr-bar" id="fnrBar" style="display:none">
+    <div class="vrcn-i18n-fnr-group">
+      <label class="vrcn-i18n-fnr-label">Find</label>
+      <div class="vrcn-i18n-fnr-input-wrap">
+        <input id="fnrFind" class="vrcn-i18n-fnr-input" type="text" placeholder="Search text…" spellcheck="false" />
+        <span id="fnrMatchCount" class="vrcn-i18n-fnr-match-count"></span>
+      </div>
+    </div>
+    <div class="vrcn-i18n-fnr-group">
+      <label class="vrcn-i18n-fnr-label">Replace with</label>
+      <input id="fnrReplace" class="vrcn-i18n-fnr-input" type="text" placeholder="Replacement…" spellcheck="false" />
+    </div>
+    <div class="vrcn-i18n-fnr-options">
+      <label class="vrcn-i18n-fnr-check-label" title="Case-sensitive">
+        <input type="checkbox" id="fnrCase" class="vrcn-i18n-fnr-check" />
+        <span>Aa</span>
+      </label>
+      <label class="vrcn-i18n-fnr-check-label" title="Regular expression">
+        <input type="checkbox" id="fnrRegex" class="vrcn-i18n-fnr-check" />
+        <span>.*</span>
+      </label>
+    </div>
+    <div class="vrcn-i18n-fnr-scope">
+      <label class="vrcn-i18n-fnr-label">Match mode</label>
+      <select id="fnrMatchMode" class="vrcn-i18n-fnr-select">
+        <option value="contains">Contains word</option>
+        <option value="word">Only word (exact)</option>
+        <option value="starts">Starts with</option>
+        <option value="ends">Ends with</option>
+      </select>
+    </div>
+    <div class="vrcn-i18n-fnr-scope">
+      <label class="vrcn-i18n-fnr-label">Scope</label>
+      <select id="fnrScope" class="vrcn-i18n-fnr-select">
+        <option value="all">All columns</option>
+        <option value="english">English only</option>
+        <option value="translations">Translations only</option>
+        <option value="keys">Keys only</option>
+      </select>
+    </div>
+    <div class="vrcn-i18n-fnr-actions">
+      <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost vrcn-i18n-btn-sm" id="btnFindPrev" title="Previous match">
+        <span class="material-symbols-rounded">arrow_upward</span>
+      </button>
+      <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost vrcn-i18n-btn-sm" id="btnFindNext" title="Next match (Enter)">
+        <span class="material-symbols-rounded">arrow_downward</span>
+      </button>
+      <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost vrcn-i18n-btn-sm" id="btnReplaceOne" title="Replace current match">
+        <span class="material-symbols-rounded">find_replace</span>Replace
+      </button>
+      <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost vrcn-i18n-btn-sm" id="btnReplaceAll" title="Replace within existing translations only">
+        <span class="material-symbols-rounded">autorenew</span>Replace All
+      </button>
+      <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost vrcn-i18n-btn-sm" id="btnMassPlace" title="Fill all empty translations with replacement text">
+        <span class="material-symbols-rounded">format_color_fill</span>Mass Place
+      </button>
+      <button class="vrcn-i18n-btn vrcn-i18n-btn-ghost vrcn-i18n-btn-sm" id="btnFnrClose" title="Close (Esc)">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    </div>
+  </div>
+  <div class="vrcn-i18n-table-wrap" id="tableWrap">
+    <table class="vrcn-i18n-table" id="mainTable">
+      <thead>
+        <tr class="vrcn-i18n-thead-row">
+          <th class="vrcn-i18n-th vrcn-i18n-th-idx">#</th>
+          <th class="vrcn-i18n-th vrcn-i18n-th-key">KEY</th>
+          <th class="vrcn-i18n-th vrcn-i18n-th-en">ENGLISH</th>
+          <th class="vrcn-i18n-th vrcn-i18n-th-custom">
+            CUSTOM TRANSLATION
+            <span id="thLangName" class="vrcn-i18n-th-lang-badge"></span>
+          </th>
+          <th class="vrcn-i18n-th vrcn-i18n-th-status">STATUS</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+    <div id="emptyState" class="vrcn-i18n-empty" style="display:none">
+      <span class="material-symbols-rounded">manage_search</span>
+      <span>No entries match your filter.</span>
+    </div>
+    <div id="loadingState" class="vrcn-i18n-empty">
+      <span class="material-symbols-rounded">hourglass_empty</span>
+      <span>Loading…</span>
+    </div>
+  </div>
+  <div id="toast" class="vrcn-i18n-toast" aria-live="polite"></div>
+  <script src="translation.js"></script>
+</body>
+</html>

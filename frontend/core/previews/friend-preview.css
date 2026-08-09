@@ -1,0 +1,188 @@
+/* === Friend Preview Popup === */
+
+.fp-preview {
+    position: fixed;
+    width: 273px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 20100;
+    box-shadow: 0 8px 32px rgba(0,0,0,.55);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(8px);
+    transition: opacity .15s, transform .15s;
+}
+
+.fp-preview.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(0);
+}
+
+/* Override fd-banner modal margins/size for preview */
+.fp-preview .fd-banner {
+    margin: 0;
+    height: 109px;
+    border-radius: 0;
+}
+
+.fp-preview .fd-banner-fade {
+    background: linear-gradient(to top, var(--bg-card) 0%, rgba(0,0,0,.18) 55%, transparent 100%);
+}
+
+/* Background layer inside banner */
+.fp-banner-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center top;
+    filter: brightness(0.55);
+}
+
+.fp-body {
+    padding: 10px 12px;
+    margin-top: -56px;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fp-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+.fp-av-wrap { position: relative; flex-shrink: 0; }
+.fp-av {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+    display: block;
+    background: var(--bg-hover);
+    border: 2px solid var(--bg-card);
+}
+.fp-av-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(16px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx2);
+}
+.fp-av-dot {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 11px !important;
+    height: 11px !important;
+    border-radius: 50%;
+    box-shadow: 0 0 0 2px var(--bg-card);
+}
+.fp-av-dot.vrc-status-ring { background: var(--bg-card); }
+.fp-header-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.fp-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.fp-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx2);
+    white-space: nowrap;
+    margin-top: 1px;
+}
+.fp-stats-row .msi { font-size: 12px; color: var(--tx3); }
+.fp-stats-dot { color: var(--tx3); margin: 0 1px; }
+
+/* Override fd-name size for preview */
+.fp-preview .fd-name {
+    font-size: calc(13px + var(--fs-off, 0px));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 158px;
+}
+
+.fp-status-row {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx2);
+    overflow: hidden;
+}
+
+.fp-status-row > span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Remove bottom margin on badge/lang rows and group card in preview */
+.fp-preview .fd-badges-row,
+.fp-preview .fd-lang-tags,
+.fp-preview .fd-group-card {
+    margin-bottom: 0;
+}
+
+/* Bio in preview: no scroll, no max-height, slightly smaller */
+.fp-preview .fd-bio {
+    margin-bottom: 0;
+    max-height: none;
+    overflow-y: visible;
+    font-size: calc(11px + var(--fs-off, 0px));
+}
+
+/* Friends in same instance strip */
+.fp-inst-friends {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-shrink: 0;
+}
+
+.fp-inst-av {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-card);
+    object-fit: cover;
+    margin-left: -5px;
+    background: var(--bg-hover);
+    flex-shrink: 0;
+}
+
+.fp-inst-av:first-child { margin-left: 0; }
+
+.fp-inst-av-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(8px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+}
+
+.fp-inst-more {
+    margin-left: 5px;
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+}

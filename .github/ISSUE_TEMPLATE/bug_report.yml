@@ -1,0 +1,56 @@
+name: Bug Report
+description: File a bug report
+title: "[BUG]: "
+labels:
+  - Bug
+body:
+  - type: checkboxes
+    attributes:
+      label: Make sure to only report one bug per issue-report
+      description: Please click the checkmark to show that you understand.
+      options:
+        - label: This is only one bug report
+          required: true
+  - type: dropdown
+    attributes:
+      label: VRCNext Version
+      description: The version you are using right now, where the bug occurs.
+      multiple: false
+      options:
+        - 2026.25.6
+        - 2026.25.1
+        - 2026.25.0
+        - 2026.24.6
+        - 2026.24.X
+        - 2026.23.X
+        - 2026.23.X and below
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: "Example: The app started to crash when i opened the profile of a friend."
+      placeholder: Describe in detail...
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Does it happen after a restart too?
+      description: Pick one
+      multiple: false
+      options:
+        - "Yes"
+        - Sometimes
+        - "No"
+        - I'm unsure...
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: Explain in steps one-by-one how we as developers could trigger the same bug
+      placeholder: "Example: 1. Start VRCN, 2. Open the \"Avatars\" Tab, 3. Click on one Avatar, 4. Result: the app crashes."
+  - type: textarea
+    attributes:
+      label: Anything else?
+      description: If you want to say anything else....

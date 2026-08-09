@@ -1,0 +1,90 @@
+                <div class="vrcn-panel-card status" style="margin-bottom:16px;">
+                    <div class="sf-status-row">
+                        <div class="sf-status"><span class="sf-dot offline" id="cbDot"></span><span id="cbStatusText" data-i18n="chatbox.status.not_running">Not running</span></div>
+                        <button class="vrcn-button" id="cbConnBtn" onclick="toggleChatbox()"><span class="msi" style="font-size:16px;">play_arrow</span> <span data-i18n="common.start">Start</span></button>
+                    </div>
+                </div>
+                <div class="cb-grid">
+                    <!-- Row 1: Live Preview | Now Playing -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">visibility</span> <span data-i18n="common.live_preview">Live Preview</span></div>
+                        <div class="cb-preview-box" id="cbPreviewBox">
+                            <div class="cb-preview-text" id="cbPreviewText" data-i18n="chatbox.preview.enable_prompt">Enable chatbox to see preview</div>
+                        </div>
+                        <div class="cb-char-count"><span id="cbCharCount">0</span> / <span data-i18n="chatbox.preview.characters">144 characters</span></div>
+                    </div>
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">music_note</span> <span data-i18n="common.now_playing">Now Playing</span></div>
+                        <div id="cbMediaInfo">
+                            <div class="cb-media-idle"><span class="msi" style="font-size:16px;vertical-align:middle;">music_off</span> <span data-i18n="chatbox.media.none">No media playing</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Modules | Format -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">toggle_on</span> <span data-i18n="chatbox.modules.title">Modules</span></div>
+                        <div class="sf-toggle-row"><div style="display:flex;align-items:center;gap:8px;"><span class="msi cb-toggle-icon">schedule</span><span data-i18n="chatbox.modules.local_time">Local Time</span></div><label class="toggle"><input type="checkbox" id="cbShowTime" checked onchange="updateChatboxConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><div style="display:flex;align-items:center;gap:8px;"><span class="msi cb-toggle-icon">music_note</span><span data-i18n="chatbox.modules.now_playing">Now Playing</span></div><label class="toggle"><input type="checkbox" id="cbShowMedia" checked onchange="updateChatboxConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><div style="display:flex;align-items:center;gap:8px;"><span class="msi cb-toggle-icon">timer</span><span data-i18n="chatbox.modules.song_playtime">Song Playtime</span></div><label class="toggle"><input type="checkbox" id="cbShowPlaytime" checked onchange="updateChatboxConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><div style="display:flex;align-items:center;gap:8px;"><span class="msi cb-toggle-icon">memory</span><span data-i18n="chatbox.modules.system_stats">System Stats (CPU/RAM)</span></div><label class="toggle"><input type="checkbox" id="cbShowSystemStats" onchange="updateChatboxConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><div style="display:flex;align-items:center;gap:8px;"><span class="msi cb-toggle-icon">bedtime</span><span data-i18n="chatbox.modules.afk_detection">AFK Detection</span></div><label class="toggle"><input type="checkbox" id="cbShowAfk" onchange="updateChatboxConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><div style="display:flex;align-items:center;gap:8px;"><span class="msi cb-toggle-icon">edit_note</span><span data-i18n="chatbox.modules.custom_text">Custom Text</span></div><label class="toggle"><input type="checkbox" id="cbShowCustom" checked onchange="updateChatboxConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><div style="display:flex;align-items:center;gap:8px;"><span class="msi cb-toggle-icon">notifications_off</span><span data-i18n="chatbox.modules.suppress_sound">Suppress Sound</span></div><label class="toggle"><input type="checkbox" id="cbSuppressSound" checked onchange="updateChatboxConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><div style="display:flex;align-items:center;gap:8px;"><span class="msi cb-toggle-icon">hide_source</span><span data-i18n="chatbox.modules.hide_background">Hide Chatbox Background</span><span class="vrcn-badge accent" data-i18n="chatbox.modules.hide_background_badge">Trick</span><span class="msi cb-info-icon" title="Sends two invisible control characters after your text that make VRChat render the chatbox without its dark bubble background. Toggle it to see a live preview below." data-i18n-title="chatbox.modules.hide_background_tip">info</span></div><label class="toggle"><input type="checkbox" id="cbHideBackground" onchange="updateChatboxConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                    </div>
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">tune</span> <span data-i18n="chatbox.format.title">Format</span></div>
+                        <div class="cb-form-row"><label data-i18n="chatbox.format.time">Time</label><select id="cbTimeFormat" class="cb-select" onchange="updateChatboxConfig()"><option value="hh:mm tt" data-i18n="chatbox.format.time.12h">12h (02:45 PM)</option><option value="HH:mm" data-i18n="chatbox.format.time.24h">24h (14:45)</option><option value="hh:mm:ss tt" data-i18n="chatbox.format.time.12h_sec">12h + sec</option><option value="HH:mm:ss" data-i18n="chatbox.format.time.24h_sec">24h + sec</option></select></div>
+                        <div class="cb-form-row"><label data-i18n="chatbox.format.separator">Separator</label><select id="cbSeparator" class="cb-select" onchange="updateChatboxConfig()"><option value=" | " data-i18n="chatbox.format.separator.pipe">| pipe</option><option value=" · " data-i18n="chatbox.format.separator.dot">· dot</option><option value=" ♪ " data-i18n="chatbox.format.separator.note">♪ note</option><option value=" — " data-i18n="chatbox.format.separator.dash">— dash</option><option value="&#10;" data-i18n="chatbox.format.separator.new_line">↵ new line</option></select></div>
+                        <div class="cb-form-row"><label data-i18n="chatbox.format.update_rate">Update Rate</label><select id="cbInterval" class="cb-select" onchange="updateChatboxConfig()"><option value="3000" data-i18n="chatbox.format.interval.3s">3s (relaxed)</option><option value="5000" data-i18n="chatbox.format.interval.5s">5s (recommended)</option><option value="8000" data-i18n="chatbox.format.interval.8s">8s (slow)</option><option value="10000" data-i18n="chatbox.format.interval.10s">10s (minimal)</option><option value="15000" data-i18n="chatbox.format.interval.15s">15s (very slow)</option></select></div>
+                    </div>
+
+                    <!-- Row 3: Launch | Custom Text Lines -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">power_settings_new</span> <span data-i18n="common.launch">Launch</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="common.start_with_vrchat_vr">Start when launching VRChat in VR</span><label class="toggle"><input type="checkbox" id="setCbAutoStartVR" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><span data-i18n="common.start_with_vrchat_desktop">Start when launching VRChat on Desktop</span><label class="toggle"><input type="checkbox" id="setCbAutoStartDesktop" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                    </div>
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">edit_note</span> <span data-i18n="chatbox.custom_lines.title">Custom Text Lines</span></div>
+                        <div class="cb-custom-lines" id="cbCustomLines"></div>
+                        <div class="cb-add-line">
+                            <input type="text" id="cbNewLine" class="vrcn-edit-field" placeholder="Type a custom line..." data-i18n-placeholder="chatbox.custom_lines.placeholder" onkeydown="if(event.key==='Enter'){addChatboxLine();}" style="flex:1;">
+                            <button class="cb-add-btn" onclick="addChatboxLine()"><span class="msi" style="font-size:16px;">add</span></button>
+                        </div>
+                        <div style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);margin-top:6px;" data-i18n="chatbox.custom_lines.hint">Lines rotate each cycle. Use for status, socials, bio, etc.</div>
+                    </div>
+                </div>
+
+                <div class="vrcn-panel-card" id="cbAfkCard" style="display:none;margin-top:16px;">
+                    <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">bedtime</span> <span data-i18n="chatbox.afk.title">AFK Settings</span></div>
+                    <div class="cb-form-row"><label data-i18n="chatbox.afk.message">Message</label><input type="text" id="cbAfkMessage" class="vrcn-edit-field" value="" placeholder="Currently AFK" data-i18n-placeholder="chatbox.afk.default_message" oninput="updateChatboxConfig()" style="flex:1;"></div>
+                    <div style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);margin-top:4px;" data-i18n="chatbox.afk.hint">Shown when VRChat is not the active window. Overrides other modules.</div>
+                </div>
+
+                <!-- Live Chat — full width, unterhalb aller anderen Cards -->
+                <div class="vrcn-panel-card" style="margin-top:16px;">
+                    <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">forum</span> <span data-i18n="chatbox.live_chat.title">Live Chat</span></div>
+                    <div class="cb-messages" id="cbChatHistory">
+                        <div class="osc-empty" data-i18n="chatbox.live_chat.empty">No messages sent yet</div>
+                    </div>
+                    <div class="sf-toggle-row">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <span class="msi cb-toggle-icon">more_horiz</span>
+                            <span data-i18n="chatbox.live_chat.typing_indicator">Show "typing..." indicator</span>
+                        </div>
+                        <label class="toggle"><input type="checkbox" id="cbTypingToggle" onchange="toggleCbTypingIndicator(this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                    </div>
+                    <div class="cb-chat-footer">
+                        <div class="cb-chat-input-wrap">
+                            <input type="text" id="cbChatInput" class="cb-chat-inp" maxlength="144"
+                                placeholder="Type a message..." data-i18n-placeholder="chatbox.live_chat.placeholder"
+                                oninput="updateCbChatCharCount(this.value)"
+                                onkeydown="if(event.key==='Enter'){sendChatboxDirectMessage();}">
+                            <span class="cb-chat-chars" id="cbChatCharCount">0</span>
+                        </div>
+                        <button class="cb-chat-send" onclick="sendChatboxDirectMessage()" title="Send" data-i18n-title="chatbox.live_chat.send">
+                            <span class="msi">send</span>
+                        </button>
+                    </div>
+                </div>

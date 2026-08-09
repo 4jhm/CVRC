@@ -1,0 +1,88 @@
+                <div class="tl-mode-row tab-toolbar tt-split">
+                    <button class="vrcn-button sub-tab-btn active" id="tlModePersonal" onclick="setTlMode('personal')" title="Personal" data-i18n-title="timeline.mode.personal"><span class="msi" style="font-size:16px;">person</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlModeFriends" onclick="setTlMode('friends')" title="Friends" data-i18n-title="timeline.mode.friends"><span class="msi" style="font-size:16px;">group</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlModeInstanceChart" onclick="setTlMode('instancechart')" title="Instance Chart" data-i18n-title="timeline.mode.instance_chart"><span class="msi" style="font-size:16px;">stacks</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlModeGameLog" onclick="setTlMode('gamelog')" title="Game Log" data-i18n-title="timeline.mode.gamelog"><span class="msi" style="font-size:16px;">terminal</span></button>
+                    <div class="search-bar-row" style="flex:1;margin-bottom:0;">
+                        <span class="msi search-ico">search</span>
+                        <input type="text" id="tlSearchInput" class="vrcn-input" placeholder="Search timeline..." data-i18n-placeholder="timeline.search.placeholder" oninput="tlMode==='gamelog'?renderGameLog():tlMode==='friends'?filterFriendTimeline():filterTimeline()">
+                    </div>
+                    <div id="tlIcSpacer" style="flex:1;display:none;"></div>
+                    <button class="vrcn-button tl-datebtn" id="tlIcPrev" onclick="icNavDay(-1)" title="Previous day" data-i18n-title="timeline.instance_chart.prev_day" style="display:none;"><span class="msi" style="font-size:16px;">chevron_left</span></button>
+                    <button class="vrcn-button tl-datebtn" id="tlDateBtn" onclick="toggleTlDatePicker()" title="Filter by date" data-i18n-title="timeline.date.filter_title">
+                        <span class="msi" style="font-size:15px;">calendar_today</span>
+                        <span id="tlDateLabel" style="display:none;color:var(--accent-lt);font-size:calc(11px + var(--fs-off, 0px));max-width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+                    </button>
+                    <button class="vrcn-button tl-datebtn" id="tlIcNext" onclick="icNavDay(1)" title="Next day" data-i18n-title="timeline.instance_chart.next_day" style="display:none;"><span class="msi" style="font-size:16px;">chevron_right</span></button>
+                    <button class="vrcn-button tl-datebtn" id="tlDateClear" onclick="clearTlDateFilter()" title="Clear date filter" data-i18n-title="timeline.date.clear_title" style="display:none;">
+                        <span class="msi" style="font-size:14px;">close</span>
+                    </button>
+                    <button class="vrcn-button tl-datebtn" onclick="refreshTimeline()" title="Refresh" data-i18n-title="timeline.refresh_title">
+                        <span class="msi" style="font-size:16px;">refresh</span>
+                    </button>
+                    <button class="vrcn-button tl-datebtn" id="tlEditBtn" onclick="toggleTlEditMode()" title="Select / bulk delete" data-i18n-title="timeline.edit_title">
+                        <span class="msi" style="font-size:15px;">edit</span>
+                    </button>
+                    <button class="vrcn-button tl-datebtn" id="tlEditDeleteBtn" onclick="tlEditDeleteSelected()" title="Delete selected" data-i18n-title="timeline.delete_selected_title" style="display:none;color:var(--err);">
+                        <span class="msi" style="font-size:16px;">delete</span>
+                        <span id="tlEditDeleteCount" style="font-size:calc(11px + var(--fs-off, 0px));"></span>
+                    </button>
+                    <button class="vrcn-button sub-tab-btn" id="tlViewTimeline" title="Timeline View" data-i18n-title="timeline.view.timeline_title" onclick="setTlViewMode('timeline')"><span class="msi" style="font-size:14px;">account_tree</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlViewList" title="List View" data-i18n-title="timeline.view.list_title" onclick="setTlViewMode('list')"><span class="msi" style="font-size:14px;">format_list_bulleted</span></button>
+                </div>
+                <div id="tlDatePicker" class="tl-date-picker" style="display:none;">
+                    <div class="tl-dp-header">
+                        <button class="tl-dp-nav" onclick="dpNavMonth(-1)"><span class="msi" style="font-size:16px;">chevron_left</span></button>
+                        <span id="tlDpMonthLabel" class="tl-dp-month-label"></span>
+                        <button class="tl-dp-nav" onclick="dpNavMonth(1)"><span class="msi" style="font-size:16px;">chevron_right</span></button>
+                    </div>
+                    <div class="tl-dp-weekdays">
+                        <div class="tl-dp-wd" data-i18n="timeline.datepicker.weekday.mon">Mo</div><div class="tl-dp-wd" data-i18n="timeline.datepicker.weekday.tue">Tu</div><div class="tl-dp-wd" data-i18n="timeline.datepicker.weekday.wed">We</div>
+                        <div class="tl-dp-wd" data-i18n="timeline.datepicker.weekday.thu">Th</div><div class="tl-dp-wd" data-i18n="timeline.datepicker.weekday.fri">Fr</div><div class="tl-dp-wd" data-i18n="timeline.datepicker.weekday.sat">Sa</div><div class="tl-dp-wd" data-i18n="timeline.datepicker.weekday.sun">Su</div>
+                    </div>
+                    <div id="tlDpDaysGrid" class="tl-dp-days"></div>
+                    <div class="tl-dp-footer">
+                        <button class="vrcn-button" id="tlDpTodayBtn" style="flex:1;justify-content:center;font-size:calc(11px + var(--fs-off, 0px));" onclick="dpSelectToday()" data-i18n="timeline.datepicker.today">Today</button>
+                        <button class="vrcn-button" style="flex:1;justify-content:center;font-size:calc(11px + var(--fs-off, 0px));" onclick="dpClear()" data-i18n="timeline.datepicker.clear">Clear</button>
+                    </div>
+                </div>
+                <div class="tl-filter-row tab-toolbar-body" id="tlPersonalFilters">
+                    <button class="vrcn-button sub-tab-btn active" id="tlFAll" onclick="setTlFilter('all')" data-i18n="timeline.filters.all">All</button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFJoin" onclick="setTlFilter('instance_join')"><span class="msi" style="font-size:14px;">travel_explore</span> <span data-i18n="timeline.filters.instances">Instances</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFPhoto" onclick="setTlFilter('photo')"><span class="msi" style="font-size:14px;">camera</span> <span data-i18n="timeline.filters.photos">Photos</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFMeet" onclick="setTlFilter('first_meet')"><span class="msi" style="font-size:14px;">person_add</span> <span data-i18n="timeline.filters.first_meets">First Meets</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFMeetAgain" onclick="setTlFilter('meet_again')"><span class="msi" style="font-size:14px;">person_check</span> <span data-i18n="timeline.filters.meet_again">Meet Again</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFNotif" onclick="setTlFilter('notification')"><span class="msi" style="font-size:14px;">notifications</span> <span data-i18n="timeline.filters.notifications">Notifications</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFAvatar" onclick="setTlFilter('avatar_switch')"><span class="msi" style="font-size:14px;">checkroom</span> <span data-i18n="timeline.filters.avatars">Avatars</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFUrl" onclick="setTlFilter('video_url')"><span class="msi" style="font-size:14px;">link</span> <span data-i18n="timeline.filters.urls">URLs</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFModeration" onclick="setTlFilter('moderation')"><span class="msi" style="font-size:14px;">gavel</span> <span data-i18n="timeline.filters.moderation">Moderation</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="tlFProfile" onclick="setTlFilter('profile')"><span class="msi" style="font-size:14px;">account_circle</span> <span data-i18n="timeline.filters.profile">Profile</span></button>
+                </div>
+                <div class="tl-filter-row tab-toolbar-body" id="tlFriendsFilters" style="display:none;">
+                    <button class="vrcn-button sub-tab-btn active" id="ftFAll"        onclick="setFtFilter('all')" data-i18n="timeline.filters.all">All</button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFGps"        onclick="setFtFilter('friend_gps')"><span class="msi" style="font-size:14px;">location_on</span> <span data-i18n="timeline.filters.location">Location</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFStatus"     onclick="setFtFilter('friend_status')"><span class="msi" style="font-size:14px;">circle</span> <span data-i18n="timeline.filters.status">Status</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFStatusDesc" onclick="setFtFilter('friend_statusdesc')"><span class="msi" style="font-size:14px;">chat_bubble_outline</span> <span data-i18n="timeline.filters.status_text">Status Text</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFOnline"     onclick="setFtFilter('friend_online')"><span class="msi" style="font-size:14px;">login</span> <span data-i18n="timeline.filters.online">Online</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFOffline"    onclick="setFtFilter('friend_offline')"><span class="msi" style="font-size:14px;">power_settings_new</span> <span data-i18n="timeline.filters.offline">Offline</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFBio"        onclick="setFtFilter('friend_bio')"><span class="msi" style="font-size:14px;">edit_note</span> <span data-i18n="timeline.filters.bio">Bio</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFAvatar"    onclick="setFtFilter('friend_avatar')"><span class="msi" style="font-size:14px;">checkroom</span> <span data-i18n="timeline.filters.avatar">Avatar</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFAdded"     onclick="setFtFilter('friend_added')"><span class="msi" style="font-size:14px;">person_add</span> <span data-i18n="timeline.filters.friended">Friended</span></button>
+                    <button class="vrcn-button sub-tab-btn" id="ftFRemoved"   onclick="setFtFilter('friend_removed')"><span class="msi" style="font-size:14px;">person_remove</span> <span data-i18n="timeline.filters.unfriended">Unfriended</span></button>
+                </div>
+                <div class="tl-filter-row tab-toolbar-body" id="glFilters" style="display:none;">
+                    <button class="vrcn-button sub-tab-btn active" data-f="all"     onclick="setGlFilter('all')"     data-i18n="timeline.filters.all">All</button>
+                    <button class="vrcn-button sub-tab-btn"        data-f="world"   onclick="setGlFilter('world')"><span class="msi" style="font-size:14px;">travel_explore</span> <span data-i18n="timeline.filters.world">World</span></button>
+                    <button class="vrcn-button sub-tab-btn"        data-f="players" onclick="setGlFilter('players')"><span class="msi" style="font-size:14px;">group</span> <span data-i18n="timeline.filters.players">Players</span></button>
+                    <button class="vrcn-button sub-tab-btn"        data-f="media"   onclick="setGlFilter('media')"><span class="msi" style="font-size:14px;">play_circle</span> <span data-i18n="timeline.filters.media">Media</span></button>
+                    <button class="vrcn-button sub-tab-btn"        data-f="portal"  onclick="setGlFilter('portal')"><span class="msi" style="font-size:14px;">blur_circular</span> <span data-i18n="timeline.filters.portal">Portal</span></button>
+                    <button class="vrcn-button sub-tab-btn"        data-f="errors"  onclick="setGlFilter('errors')"><span class="msi" style="font-size:14px;">error_outline</span> <span data-i18n="timeline.filters.errors">Errors</span></button>
+                </div>
+                <div class="tl-container" id="tlContainer">
+                    <div class="empty-msg" data-i18n="timeline.empty.initial">No timeline events yet. VRChat activity will appear here.</div>
+                </div>
+                <div class="tl-container" id="glContent" style="display:none;">
+                    <div class="empty-msg" data-i18n="gamelog.empty">No game log entries yet.</div>
+                </div>
+                <div class="tl-ic-wrap" id="tlInstanceChart" style="display:none;"></div>
+                <div id="tlPaginatorBar" class="tl-paginator-bar"></div>

@@ -1,0 +1,144 @@
+.lv-scroll .tl-list-wrap { padding: 4px 0 0; }
+
+.tl-list-fixed { table-layout: fixed; }
+.tl-list-fixed td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tl-list-fixed thead th { overflow: hidden; }
+
+.lv-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--bg-hover) center/cover no-repeat;
+    flex-shrink: 0;
+}
+.lv-icon-round {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+}
+.lv-icon-letter {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+}
+
+.lv-name {
+    font-weight: 700;
+    color: var(--tx1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.lv-sub { color: var(--tx2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lv-num { color: var(--tx2); white-space: nowrap; }
+.lv-date { white-space: nowrap; color: var(--tx2); }
+.lv-tags {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.lv-tags .vrcn-badge {
+    max-width: 90px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.lv-tags-more { font-size: calc(11px + var(--fs-off, 0px)); color: var(--tx3); flex-shrink: 0; }
+.lv-more {
+    text-align: center;
+    padding: 12px 0 4px;
+}
+.lv-perf { white-space: nowrap; }
+.lv-perf .av-perf-icon { width: 20px; height: 20px; }
+
+/* Tab layout: toolbar + paginator fixed, only the grid scrolls */
+#tab1.active,
+#tab2.active,
+#tab4.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+#tab1.active > .tab-toolbar,
+#tab2.active > .tab-toolbar,
+#tab4.active > .tab-toolbar { flex-shrink: 0; }
+
+#worldFavArea, #worldMineArea, #worldRecentArea, #worldSearchArea,
+#groupMineArea, #groupSearchArea,
+#avatarOwnArea, #avatarFavArea, #avatarRecentArea, #avatarRoseArea, #avatarSearchArea {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+#worldFavArea > .tab-toolbar-body, #worldSearchArea > .tab-toolbar-body,
+#groupMineArea > .tab-toolbar-body, #groupSearchArea > .tab-toolbar-body,
+#avatarOwnArea > .tab-toolbar-body, #avatarFavArea > .tab-toolbar-body,
+#avatarRecentArea > .tab-toolbar-body, #avatarRoseArea > .tab-toolbar-body,
+#avatarSearchArea > .tab-toolbar-body { flex-shrink: 0; }
+
+#favWorldsGrid, #worldMineGrid, #worldRecentGrid, #searchWorldsResults,
+#myGroupsGrid, #searchGroupsResults {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    align-content: start;
+}
+
+.lv-tab-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+#favWorldsGrid:has(.lv-scroll), #worldMineGrid:has(.lv-scroll),
+#worldRecentGrid:has(.lv-scroll), #searchWorldsResults:has(.lv-scroll),
+#myGroupsGrid:has(.lv-scroll), #searchGroupsResults:has(.lv-scroll),
+.lv-tab-scroll:has(.lv-scroll) {
+    overflow-x: auto;
+    position: relative;
+    z-index: 2;
+}
+
+/* Inventory + Calendar: toolbar fixed, only content scrolls */
+#tab13.active,
+#tab17.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+#tab13.active > .tab-toolbar,
+#tab13.active > .inv-topbar { flex-shrink: 0; }
+.lv-tab-scroll > .inv-grid {
+    flex: none;
+    overflow: visible;
+    height: auto;
+}
+#tab17.active #calInner {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+#tab17.active #calInner > .tab-toolbar { flex-shrink: 0; }
+#tab17.active #calGridArea,
+#tab17.active #calDayPanel {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+#tab17.active #calDayPanel[style*="display: none"],
+#tab17.active #calDayPanel[style*="display:none"] { flex: 0; }
+
+#favWorldsGrid:has(.lv-scroll), #worldMineGrid:has(.lv-scroll),
+#worldRecentGrid:has(.lv-scroll), #searchWorldsResults:has(.lv-scroll),
+#myGroupsGrid:has(.lv-scroll), #searchGroupsResults:has(.lv-scroll),
+.lv-tab-scroll:has(.lv-scroll) { margin-bottom: 8px; }

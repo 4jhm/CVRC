@@ -1,0 +1,12 @@
+        <div class="modal-box wide narrow">
+            <div class="fd-modal-bar">
+                <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" data-i18n="dashboard.edit.title">Dashboard Layout</span></div>
+                <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="closeDashLayoutEditor()"><span class="msi" style="font-size:20px;">close</span></button></div>
+            </div>
+            <div id="dashLayoutList" class="ne-list vrcn-scrollbar" style="margin-top:20px;"></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button class="vrcn-button" onclick="dashLayoutReset()"><span class="msi" style="font-size:16px;">restart_alt</span><span data-i18n="dashboard.edit.reset">Reset</span></button>
+                <span style="flex:1;"></span>
+                <button class="vrcn-button vrcn-btn-primary" onclick="saveDashLayoutFromModal()"><span class="msi" style="font-size:16px;">check</span><span data-i18n="common.save">Save</span></button>
+            </div>
+        </div>

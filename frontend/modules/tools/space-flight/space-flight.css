@@ -1,0 +1,127 @@
+/* === Space Flight Module === */
+
+.sf-offset {
+    background: var(--bg-input);
+    border: none;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 14px;
+}
+
+.sf-offset-values {
+    display: flex;
+    gap: 12px;
+}
+.sf-axis {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.sf-axis-label {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 800;
+    color: var(--accent);
+}
+.sf-axis-val {
+    font-size: calc(15px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx0);
+    font-family: inherit;
+}
+
+.sf-controllers {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 2px;
+}
+.sf-ctrl {
+    flex: 1;
+    gap: 6px;
+    padding: 8px;
+    border-radius: 6px;
+    background: var(--bg-input);
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx3);
+    transition: all .2s;
+}
+.sf-ctrl.detected {
+    color: var(--ok);
+    background: rgba(45, 212, 140, 0.06);
+}
+
+.sf-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.sf-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx1);
+}
+.sf-row label {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    min-width: 100px;
+    flex-shrink: 0;
+}
+.sf-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    min-width: 0;
+}
+
+.sf-section-label {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 12px 0 6px;
+}
+
+.sf-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx1);
+}
+.sf-toggle-row + .sf-toggle-row {
+    border-top: 1px solid var(--brd);
+}
+.sf-toggle-row.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.sf-ctrl-grid {
+    display: grid;
+    grid-template-columns: 90px 1fr 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx1);
+}
+.sf-ctrl-grid label {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+}
+.sf-ctrl-head {
+    margin-bottom: 4px;
+}
+.sf-ctrl-head > span {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--tx3);
+    letter-spacing: 0.5px;
+    text-align: left;
+}

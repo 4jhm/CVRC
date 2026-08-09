@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <AssemblyName>VRCNextTranslator</AssemblyName>
+    <RootNamespace>TranslationEditor</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <CETCompat>false</CETCompat>
+    <DebugType>embedded</DebugType>
+    <PublishSingleFile>true</PublishSingleFile>
+    <SelfContained>true</SelfContained>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <PublishTrimmed>false</PublishTrimmed>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Photino.NET"      Version="4.0.16" />
+    <PackageReference Include="Newtonsoft.Json"  Version="13.0.3" />
+  </ItemGroup>
+
+  <!-- Frontend files bundled as embedded resources (works in single-file publish) -->
+  <ItemGroup>
+    <EmbeddedResource Include="wwwroot\**\*" />
+  </ItemGroup>
+
+  <!-- Always pull the latest en.json from the main project at build time -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\frontend\i18n\en.json">
+      <Link>wwwroot\en.json</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

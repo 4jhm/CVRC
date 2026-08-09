@@ -1,0 +1,914 @@
+﻿<!DOCTYPE html>
+<html lang="en" class="vrcn-scrollbar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVRC</title>
+    <link rel="stylesheet" href="Fonts/fonts.css">
+    <link rel="stylesheet" href="Styles/styles.css">
+    <link rel="stylesheet" href="Styles/core.css">
+    <link rel="stylesheet" href="Styles/animations.css">
+    <link rel="stylesheet" href="Styles/topbar.css">
+    <link rel="stylesheet" href="Styles/scrollbars.css">
+    <link rel="stylesheet" href="Styles/buttons.css">
+    <link rel="stylesheet" href="Styles/status.css">
+    <link rel="stylesheet" href="Styles/content-card.css">
+    <link rel="stylesheet" href="Styles/dropdowns.css">
+    <link rel="stylesheet" href="Styles/badges.css">
+    <link rel="stylesheet" href="Styles/forms.css">
+    <link rel="stylesheet" href="Styles/profile-background.css">
+    <link rel="stylesheet" href="Styles/profile-theme.css">
+    <link rel="stylesheet" href="Styles/theme.css">
+    <link rel="stylesheet" href="Styles/myprofile.css">
+    <link rel="stylesheet" href="modules/dashboard/dashboard.css">
+    <link rel="stylesheet" href="modules/worlds/worlds.css">
+    <link rel="stylesheet" href="modules/groups/groups.css">
+    <link rel="stylesheet" href="modules/people/people.css">
+    <link rel="stylesheet" href="modules/calendar/calendar.css">
+    <link rel="stylesheet" href="modules/avatars/avatars.css">
+    <link rel="stylesheet" href="modules/inventory/inventory.css">
+    <link rel="stylesheet" href="modules/timeline/timeline.css">
+    <link rel="stylesheet" href="modules/rewind/rewind.css">
+    <link rel="stylesheet" href="modules/media-library/media-library.css">
+    <link rel="stylesheet" href="modules/tools/chatbox/chatbox.css">
+    <link rel="stylesheet" href="modules/tools/media-relay/media-relay.css">
+    <link rel="stylesheet" href="modules/tools/space-flight/space-flight.css">
+    <link rel="stylesheet" href="modules/tools/frame-shot/frame-shot.css">
+    <link rel="stylesheet" href="modules/tools/osc-tool/osc-tool.css">
+    <link rel="stylesheet" href="modules/tools/avatar-scaling/avatar-scaling.css">
+    <link rel="stylesheet" href="modules/tools/activity-log/activity-log.css">
+    <link rel="stylesheet" href="modules/tools/mutual-network/mutual-network.css">
+    <link rel="stylesheet" href="modules/tools/time-spent/time-spent.css">
+    <link rel="stylesheet" href="modules/tools/voice-fight/voice-fight.css">
+    <link rel="stylesheet" href="modules/tools/discord-presence/discord-presence.css">
+    <link rel="stylesheet" href="modules/tools/vr-overlay/vr-overlay.css">
+    <link rel="stylesheet" href="modules/tools/permini/permini.css">
+    <link rel="stylesheet" href="modules/tools/action-flow/action-flow.css">
+    <link rel="stylesheet" href="modules/tools/status-schedule/status-schedule.css">
+    <link rel="stylesheet" href="modules/settings/settings.css">
+    <link rel="stylesheet" href="modules/user-profile/profile-editor.css">
+    <link rel="stylesheet" href="core/modals/modals.css">
+    <link rel="stylesheet" href="core/modals/invite-modal/invite-modal.css">
+    <link rel="stylesheet" href="core/modals/user-modal/user-modal.css">
+    <link rel="stylesheet" href="core/modals/world-modal/world-modal.css">
+    <link rel="stylesheet" href="core/modals/create-instance-modal/create-instance-modal.css">
+    <link rel="stylesheet" href="core/modals/group-modal/group-modal.css">
+    <link rel="stylesheet" href="core/modals/my-instance-modal/my-instance-modal.css">
+    <link rel="stylesheet" href="core/modals/timeline-modal/timeline-modal.css">
+    <link rel="stylesheet" href="core/modals/import-modal/import-modal.css">
+    <link rel="stylesheet" href="core/context-menu/context-menu.css">
+    <link rel="stylesheet" href="core/messenger/messenger.css">
+    <link rel="stylesheet" href="core/items/items.css">
+    <link rel="stylesheet" href="core/notifications/notifications.css">
+    <link rel="stylesheet" href="core/paginator/paginator.css">
+    <link rel="stylesheet" href="core/listview/listview.css">
+    <link rel="stylesheet" href="core/friend-fetch/friend-fetch.css">
+    <link rel="stylesheet" href="core/paginator/mini-paginator.css">
+    <link rel="stylesheet" href="core/debounce/deb-anim.css">
+    <link rel="stylesheet" href="core/sidebars/navigation/navigation.css">
+    <link rel="stylesheet" href="core/sidebars/navigation/nav-editor.css">
+    <link rel="stylesheet" href="core/sidebars/friends/friends.css">
+    <link rel="stylesheet" href="core/previews/friend-preview.css">
+    <link rel="stylesheet" href="core/Blyat/blyat.css">
+    <link rel="stylesheet" href="core/SmartSearch/smart-search.css">
+    <link rel="stylesheet" href="core/Pins/pins.css">
+    <link rel="stylesheet" href="core/Keybinds/Keybind.css">
+    <link rel="stylesheet" href="Debug/CacheTests/cache-debug.css">
+    <link rel="stylesheet" href="core/Taskbar/taskbar.css">
+    <style id="vrcnSplashStyle">
+        #vrcnSplash {
+            position: fixed;
+            inset: 0;
+            z-index: 2147483646;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-base, #0A0A0A);
+            transition: opacity .45s ease;
+        }
+        #vrcnSplash.vrcn-splash-hide { opacity: 0; pointer-events: none; }
+        #vrcnSplashLogo {
+            width: 132px;
+            height: auto;
+            filter: drop-shadow(0 6px 26px rgba(0, 0, 0, .45));
+            animation: vrcnSplashPulse 1.8s ease-in-out infinite;
+        }
+        @keyframes vrcnSplashPulse {
+            0%, 100% { opacity: .82; transform: scale(1); }
+            50%      { opacity: 1;   transform: scale(1.05); }
+        }
+        #vrcnSplashBarWrap {
+            position: absolute;
+            bottom: 58px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 220px;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--bg-hover, #1c2030);
+            overflow: hidden;
+            opacity: .75;
+        }
+        #vrcnSplashBar {
+            height: 100%;
+            width: 0;
+            border-radius: 2px;
+            background: var(--accent, #5C76FF);
+            transition: width .25s ease;
+        }
+    </style>
+</head>
+<body>
+    <div id="vrcnSplash">
+        <img id="vrcnSplashLogo" src="logo.png" alt="CVRC">
+        <div id="vrcnSplashBarWrap"><div id="vrcnSplashBar"></div></div>
+    </div>
+    <div class="app-body">
+    <div class="sidebar" id="sidebarEl">
+        <div class="sidebar-resizer" id="sidebarResizer" data-side="left"></div>
+        <div class="sidebar-sep"></div>
+        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.1</div></div></div>
+        <div class="nav vrcn-scrollbar" id="navEl"></div>
+        <div class="clock-area"><div class="clock-time" id="clock">00:00:00</div><div class="clock-date" id="clockDate"></div></div>
+        <div class="play-area"><button class="btn-play" onclick="playVRChat()" data-i18n-title="sidebar.play_vrchat" title="Play VRChat"><span class="play-icon-wrap"><span class="msi play-icon">play_arrow</span></span><span class="play-copy pl"><strong class="play-title" data-i18n="sidebar.play_vrchat">Play VRChat</strong><span class="play-sub" id="playSubText"></span></span><span class="msi play-arrow pl">chevron_right</span></button></div>
+    </div>
+
+    <div class="main">
+        <div id="taskbar">
+            <div id="tb-left">
+                <div class="tb-brand">CVRC</div>
+                <div class="tb-sep"></div>
+                <div id="tbNormalLeft">
+                <span class="topbar-title" id="pageTitle" data-i18n="page.dashboard" onclick="toggleHelpPanel()" style="cursor:pointer;" data-i18n-title="page.help.tooltip">Dashboard</span>
+                <div class="tb-sep"></div>
+                <div id="tbMenuItems">
+                    <div class="tb-menu-item" id="tbMenuApp"><span data-i18n="tb.app">App</span>
+                        <div class="tb-dropdown">
+                            <div class="tb-dd-user" id="tbAppUserHeader">
+                                <div class="tb-dd-user-avatar" id="tbAppUserAvatar"></div>
+                                <span class="tb-dd-user-name" id="tbAppUserName"></span>
+                            </div>
+                            <div class="tb-dd-submenu">
+                                <button class="tb-dd-item"><span class="msi">switch_account</span><span data-i18n="tb.app.switch_accounts">Switch Accounts</span><span class="msi tb-dd-arrow">chevron_right</span></button>
+                                <div class="tb-dd-sub-drop" id="tbAccountsSubDrop"></div>
+                            </div>
+                            <div class="tb-dd-sep"></div>
+                            <div class="tb-dd-item" onclick="showTab(9)"><span class="msi">settings</span><span data-i18n="nav.settings">Settings</span></div>
+                            <div class="tb-dd-sep"></div>
+                            <div class="tb-dd-item" onclick="sendToCS({action:'restartApp'})"><span class="msi">refresh</span><span data-i18n="tb.app.restart">Restart</span></div>
+                            <div class="tb-dd-item" onclick="sendToCS({action:'windowClose'})"><span class="msi">power_settings_new</span><span data-i18n="tb.app.exit">Exit</span></div>
+                        </div>
+                    </div>
+                    <div class="tb-menu-item" id="tbMenuView"><span data-i18n="tb.app.view">View</span>
+                        <div class="tb-dropdown">
+                            <div class="tb-dd-item" onclick="toggleSidebar()"><span class="msi">dock_to_left</span><span data-i18n="tb.app.view.toggle_left">Toggle Left Sidebar</span></div>
+                            <div class="tb-dd-item" onclick="toggleRsidebar()"><span class="msi">dock_to_right</span><span data-i18n="tb.app.view.toggle_right">Toggle Right Sidebar</span></div>
+                            <div class="tb-dd-item" id="tbLockSidebars" onclick="toggleSidebarLock()"><span class="msi">lock</span><span data-i18n="tb.app.view.lock_sidebars">Lock Sidebars</span><span class="msi tb-dd-check">check</span></div>
+                            <div class="tb-dd-item" onclick="resetSidebarWidths()"><span class="msi">restart_alt</span><span data-i18n="tb.app.view.reset_sidebars">Reset Sidebars</span></div>
+                            <div class="tb-dd-sep"></div>
+                            <div class="tb-dd-scale-row">
+                                <span class="msi">aspect_ratio</span>
+                                <span data-i18n="tb.app.view.scale">Scale</span>
+                                <div class="tb-scale-ctrl">
+                                    <button class="tb-scale-btn" onclick="tbZoomStep(-1)">−</button>
+                                    <span id="tbZoomLabel">100%</span>
+                                    <button class="tb-scale-btn" onclick="tbZoomStep(1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tb-menu-item" id="tbMenuTools"><span data-i18n="nav.tools">Tools</span>
+                        <div class="tb-dropdown">
+                            <div class="tb-dd-submenu">
+                                <button class="tb-dd-item"><span class="msi">videogame_asset</span><span data-i18n="tb.tools.vrchat">VRChat</span><span class="msi tb-dd-arrow">chevron_right</span></button>
+                                <div class="tb-dd-sub-drop">
+                                    <button class="tb-dd-item" data-keep-modal onclick="openVrcConfigModal()"><span class="msi">tune</span><span data-i18n="tb.vrchat.config">VRChat Config</span></button>
+                                    <button class="tb-dd-item" data-keep-modal onclick="openVrcLaunchOptionsModal()"><span class="msi">terminal</span><span data-i18n="tb.vrchat.launch_options">VRChat Launch Options</span></button>
+                                </div>
+                            </div>
+                            <div class="tb-dd-submenu">
+                                <button class="tb-dd-item"><span class="msi">link</span><span data-i18n="tb.tools.shortcuts">Shortcuts</span><span class="msi tb-dd-arrow">chevron_right</span></button>
+                                <div class="tb-dd-sub-drop">
+                                    <button class="tb-dd-item" onclick="sendToCS({action:'openShortcutFolder',folder:'vrchat_data'})"><span class="msi">folder</span><span data-i18n="tb.shortcuts.vrchat_data">VRChat Data</span></button>
+                                    <button class="tb-dd-item" onclick="sendToCS({action:'openShortcutFolder',folder:'vrchat_crash'})"><span class="msi">folder</span><span data-i18n="tb.shortcuts.vrchat_crash">VRChat Crash Dump</span></button>
+                                    <button class="tb-dd-item" onclick="sendToCS({action:'openShortcutFolder',folder:'vrcn_data'})"><span class="msi">folder</span><span data-i18n="tb.shortcuts.vrcn_data">VRCN Data</span></button>
+                                </div>
+                            </div>
+                            <div class="tb-dd-submenu">
+                                <button class="tb-dd-item"><span class="msi">file_download</span><span data-i18n="tb.tools.export">Export</span><span class="msi tb-dd-arrow">chevron_right</span></button>
+                                <div class="tb-dd-sub-drop">
+                                    <button class="tb-dd-item" data-keep-modal onclick="openExportModal('worlds')"><span class="msi">public</span><span data-i18n="export.worlds">Worlds</span></button>
+                                    <button class="tb-dd-item" data-keep-modal onclick="openExportModal('groups')"><span class="msi">groups</span><span data-i18n="export.groups">Groups</span></button>
+                                    <button class="tb-dd-item" data-keep-modal onclick="openExportModal('avatars')"><span class="msi">checkroom</span><span data-i18n="export.avatars">Avatars</span></button>
+                                    <button class="tb-dd-item" data-keep-modal onclick="openExportModal('friends')"><span class="msi">group</span><span data-i18n="export.friends">Friends</span></button>
+                                </div>
+                            </div>
+                            <div class="tb-dd-submenu">
+                                <button class="tb-dd-item"><span class="msi">file_upload</span><span data-i18n="tb.tools.import">Import</span><span class="msi tb-dd-arrow">chevron_right</span></button>
+                                <div class="tb-dd-sub-drop">
+                                    <button class="tb-dd-item" data-keep-modal onclick="openImportModal('worlds')"><span class="msi">public</span><span data-i18n="import.worlds">Worlds</span></button>
+                                    <button class="tb-dd-item" data-keep-modal onclick="openImportModal('avatars')"><span class="msi">checkroom</span><span data-i18n="import.avatars">Avatars</span></button>
+                                </div>
+                            </div>
+                            <div class="tb-dd-submenu" data-windows-only>
+                                <button class="tb-dd-item"><span class="msi">view_in_ar</span><span data-i18n="tb.tools.vr_tools">VR Tools</span><span class="msi tb-dd-arrow">chevron_right</span></button>
+                                <div class="tb-dd-sub-drop">
+                                    <div class="tb-dd-item" onclick="showTab(26)"><span class="msi">photo_camera</span><span data-i18n="nav.frame_shot">FrameShot</span></div>
+                                    <div class="tb-dd-item" onclick="showTab(20)"><span class="msi">watch</span><span data-i18n="nav.vr_overlay">VR Overlay</span></div>
+                                    <div class="tb-dd-item" onclick="showTab(10)"><span class="msi">rocket_launch</span><span data-i18n="nav.space_flight">Space Flight</span></div>
+                                    <div class="tb-dd-item" onclick="showTab(5)"><span class="msi">chat</span><span data-i18n="nav.custom_chatbox">Custom Chatbox</span></div>
+                                </div>
+                            </div>
+                            <div class="tb-dd-submenu">
+                                <button class="tb-dd-item"><span class="msi">bolt</span><span data-i18n="tb.tools.automation">Automation</span><span class="msi tb-dd-arrow">chevron_right</span></button>
+                                <div class="tb-dd-sub-drop">
+                                    <div class="tb-dd-item" onclick="showTab(25)"><span class="msi">auto_awesome</span><span data-i18n="nav.action_flow">Action Flow</span></div>
+                                    <div class="tb-dd-item" onclick="showTab(21)"><span class="msi">lock</span><span data-i18n="nav.permini">Permini</span></div>
+                                    <div class="tb-dd-item" onclick="showTab(27)"><span class="msi">event_available</span><span data-i18n="nav.status_schedule">Status Schedule</span></div>
+                                    <div class="tb-dd-item" onclick="showTab(23)"><span class="msi">gps_fixed</span><span data-i18n="nav.event_snipe">Event Snipe</span></div>
+                                </div>
+                            </div>
+                            <div class="tb-dd-sep" data-windows-only></div>
+                            <div class="tb-dd-item" data-windows-only onclick="showTab(6)"><span class="msi">cell_tower</span><span data-i18n="nav.media_relay">Media Relay</span></div>
+                            <div class="tb-dd-item" data-windows-only onclick="showTab(11)"><span class="msi">tune</span><span data-i18n="nav.osc_tool">OSC Tool</span></div>
+                            <div class="tb-dd-item" data-windows-only onclick="showTab(14)"><span class="msi">smart_display</span><span data-i18n="nav.youtube_fix">YouTube Fix</span></div>
+                            <div class="tb-dd-sep"></div>
+                            <div class="tb-dd-item" onclick="showTab(8)"><span class="msi">article</span><span data-i18n="nav.activity_log">Activity Log</span></div>
+                            <div class="tb-dd-item" onclick="showTab(15)"><span class="msi">hub</span><span data-i18n="nav.mutual_network">Mutual Network</span></div>
+                            <div class="tb-dd-item" onclick="showTab(16)"><span class="msi">schedule</span><span data-i18n="nav.time_spent">Time Spent</span></div>
+                            <div class="tb-dd-sep" data-windows-only></div>
+                            <div class="tb-dd-item" data-windows-only onclick="showTab(18)"><span class="msi">mic</span><span data-i18n="nav.voice_fight">Voice Fight</span></div>
+                            <div class="tb-dd-item" data-windows-only onclick="showTab(19)"><span class="msi">sensors</span><span data-i18n="nav.discord_presence">Discord Presence</span></div>
+                            <div class="tb-dd-item" data-windows-only onclick="showTab(22)"><span class="msi">translate</span><span data-i18n="nav.kikitan_xd">Kikitan XD</span></div>
+                            <div class="tb-dd-item" data-windows-only onclick="showTab(24)"><span class="msi">height</span><span data-i18n="nav.avatar_scaling">Avatar Scaling</span></div>
+                        </div>
+                    </div>
+                    <div class="tb-menu-item" id="tbMenuPins"><span data-i18n="tb.pins">Pins</span>
+                        <div class="tb-dropdown" id="pinsDropdown"></div>
+                    </div>
+                    <div class="tb-menu-item" id="tbMenuHelp"><span data-i18n="tb.help">Help</span>
+                        <div class="tb-dropdown">
+                            <div class="tb-dd-item" onclick="sendToCS({action:'openUrl',url:'https://wiki.vrcnext.com'})"><span class="msi">article</span><span data-i18n="tb.help.wiki">Wiki</span></div>
+                            <div class="tb-dd-sep"></div>
+                            <div class="tb-dd-item" data-keep-modal onclick="document.getElementById('modalKeybinds').style.display='flex'"><span class="msi">keyboard</span><span data-i18n="tb.help.show_keybinds">Show Keybinds</span></div>
+                            <div class="tb-dd-item" onclick="toggleHelpPanel()"><span class="msi">info</span><span data-i18n="tb.help.explain_tab">Explain this Tab</span></div>
+                            <div class="tb-dd-sep"></div>
+                            <div class="tb-dd-item" onclick="sendToCS({action:'openUrl',url:'https://discord.gg/dHsrWJzNS9'})"><span class="msi">forum</span><span data-i18n="tb.help.join_discord">Join Discord</span></div>
+                            <div class="tb-dd-sep"></div>
+                            <div class="tb-dd-item" onclick="sendToCS({action:'openUrl',url:'https://github.com/shinyflvre/VRCNext/issues/new?template=bug_report.yml'})"><span class="msi">bug_report</span><span data-i18n="tb.help.report_bug">Report Bug</span></div>
+                            <div class="tb-dd-item" onclick="sendToCS({action:'openUrl',url:'https://github.com/shinyflvre/VRCNext/issues/new?template=feature_request.yml'})"><span class="msi">lightbulb</span><span data-i18n="tb.help.feature_request">Feature Request</span></div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+                <div id="tbModalCrumbs"></div>
+            </div>
+            <div id="tb-drag">
+                <div id="dbMigrationIndicator" style="display:none;flex:0 0 auto;align-items:center;gap:8px;margin:0 8px;min-width:140px;max-width:200px;">
+                    <div style="flex:1;">
+                        <div style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);margin-bottom:3px;white-space:nowrap;" data-i18n="migration.label">Migrating Database...</div>
+                        <div class="upd-progress-bar" style="height:5px;">
+                            <div class="upd-progress-fill" id="dbMigrationFill" style="width:0%;transition:width .3s ease;"></div>
+                        </div>
+                    </div>
+                    <span style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);flex-shrink:0;" id="dbMigrationPct">0%</span>
+                </div>
+            </div>
+            <div id="tb-right">
+                <div id="tbAppControls">
+                <button class="tb-sidebar-btn" id="badgeVrcCredits" style="display:none;width:auto;padding:0 9px;gap:5px;" title="VRC Credits" data-i18n-title="tb.title.vrc_credits"><span class="tb-mask-icon tb-mask-credits"></span><span id="badgeVrcCreditsLabel" style="font-size:calc(11px + var(--fs-off, 0px));font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;"></span></button>
+                <button class="tb-sidebar-btn" id="badgeVrcPlus" style="display:none;" title="VRC+" data-i18n-title="tb.title.vrc_plus"><span class="tb-mask-icon tb-mask-vrcplus"></span></button>
+                <div class="tb-sep"></div>
+                <div id="ssWrap" class="ss-wrap">
+                    <div class="ss-badge" id="ssBadge" title="Smart Search" data-i18n-title="tb.title.smart_search">
+                        <span class="msi ss-icon">search</span>
+                    </div>
+                </div>
+                <div id="tbToolsGroup" data-windows-only>
+                    <button class="tb-sidebar-btn" id="badgeRelay" title="Media Relay" data-i18n-title="nav.media_relay" onclick="toggleRelay()"><span class="msi">cell_tower</span></button>
+                    <button class="tb-sidebar-btn" id="badgeChatbox" title="Custom Chatbox" data-i18n-title="nav.custom_chatbox" onclick="toggleChatbox()"><span class="msi">chat</span></button>
+                    <button class="tb-sidebar-btn" id="badgeSpace" title="Space Flight" data-i18n-title="nav.space_flight" onclick="sfConnect()"><span class="msi">rocket_launch</span></button>
+                    <button class="tb-sidebar-btn" id="badgeFrameShot" title="FrameShot" data-i18n-title="nav.frame_shot" onclick="fsConnect()"><span class="msi">photo_camera</span></button>
+                    <button class="tb-sidebar-btn" id="badgeVoice" title="Voice Fight" data-i18n-title="nav.voice_fight" onclick="if(!vfRunning)vfOnTabOpen();vfConnect()"><span class="msi">mic</span></button>
+                    <button class="tb-sidebar-btn" id="badgeDp" title="Discord Presence" data-i18n-title="nav.discord_presence" onclick="dpToggle()"><span class="msi">sensors</span></button>
+                    <button class="tb-sidebar-btn" id="badgeYt" title="YouTube Fix" data-i18n-title="nav.youtube_fix" onclick="toggleVc()"><span class="msi">smart_display</span></button>
+                    <button class="tb-sidebar-btn" id="badgeKxd" title="Kikitan XD" data-i18n-title="nav.kikitan_xd" onclick="kxdConnect()"><span class="msi">translate</span></button>
+                    <button class="tb-sidebar-btn" id="badgeVroTop" title="VR Overlay" data-i18n-title="nav.vr_overlay" onclick="vroConnect()"><span class="msi">watch</span></button>
+                    <div class="tb-sep"></div>
+                </div>
+                <button class="tb-sidebar-btn" id="btnUpdate" onclick="toggleUpdatePanel()" title="Update available" data-i18n-title="update.available" style="display:none;"><span class="msi">system_update_alt</span><span class="notif-count" id="updateBadge">1</span></button>
+                <button class="tb-sidebar-btn" id="tbToolsToggle" data-windows-only onclick="tbToggleTools()" title="Tools" data-i18n-title="nav.tools"><span class="msi">adjust</span></button>
+                <button class="tb-sidebar-btn" id="btnChat" onclick="toggleChatPanel()" title="Messages" data-i18n-title="common.messages"><span class="msi">forum</span><span class="notif-count" id="chatBadge" style="display:none;">0</span></button>
+                <button class="tb-sidebar-btn" id="btnNotif" onclick="toggleNotifPanel()" title="Notifications" data-i18n-title="common.notifications"><span class="msi">notifications</span><span class="notif-count" id="notifBadge" style="display:none;">0</span></button>
+                <button class="tb-sidebar-btn" id="btnMusicMute" onclick="toggleAppMusic()" title="Mute Music"><span class="msi">volume_up</span></button>
+                <div class="tb-sep"></div>
+                <button class="tb-sidebar-btn" onclick="toggleSidebar()" title="Toggle Left Sidebar" data-i18n-title="tb.app.view.toggle_left">
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0.5" y="0.5" width="15" height="11" rx="1.5" stroke="currentColor" stroke-width="1"/>
+                        <rect x="1.5" y="1.5" width="4" height="9" rx="0.5" fill="currentColor" opacity="0.7"/>
+                    </svg>
+                </button>
+                <button class="tb-sidebar-btn" onclick="toggleRsidebar()" title="Toggle Right Sidebar" data-i18n-title="tb.app.view.toggle_right">
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0.5" y="0.5" width="15" height="11" rx="1.5" stroke="currentColor" stroke-width="1"/>
+                        <rect x="10.5" y="1.5" width="4" height="9" rx="0.5" fill="currentColor" opacity="0.7"/>
+                    </svg>
+                </button>
+                </div>
+                <div id="tbModalActions"></div>
+                <div class="tb-sep" id="tbModalActionsSep" data-windows-only></div>
+                <button class="tb-win-btn" data-windows-only title="Minimize" data-i18n-title="tb.win.minimize" onclick="sendToCS({action:'windowMinimize'})">
+                    <svg width="12" height="2" viewBox="0 0 12 2"><rect width="12" height="1.5" y="0.25" fill="currentColor"/></svg>
+                </button>
+                <button class="tb-win-btn" id="tbMaximize" data-windows-only title="Maximize / Restore" data-i18n-title="tb.win.maximize_restore" onclick="sendToCS({action:'windowMaximize'})">
+                    <span id="winMaxIcon" style="display:none;"></span>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                        <rect class="tb-icon-max" x="0.5" y="0.5" width="9" height="9" stroke="currentColor" stroke-width="1.1"/>
+                        <path class="tb-icon-restore" d="M3.5 0.5h6v6M0.5 3.5v6h6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+                <button class="tb-win-btn tb-close" data-windows-only title="Close" data-i18n-title="tb.win.close" onclick="sendToCS({action:'windowClose'})">
+                    <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1L9 9M9 1L1 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                </button>
+            </div>
+        </div>
+        <!-- Update panel -->
+        <div class="notif-panel upd-panel" id="updatePanel" style="display:none;">
+            <div class="notif-panel-header">
+                <span style="font-weight:700;font-size:calc(13px + var(--fs-off, 0px));" data-i18n="update.available">Update Available</span>
+                <button class="vrcn-button" onclick="toggleUpdatePanel()" style="padding:2px 8px;font-size:calc(10px + var(--fs-off, 0px));" data-i18n-title="common.close"><span class="msi" style="font-size:14px;">close</span></button>
+            </div>
+            <div style="padding:14px 16px;">
+                <div id="updMessage" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);margin-bottom:12px;"><span data-i18n="update.version_label">Version</span> <strong id="updVersion" style="color:var(--tx0);"></strong> <span data-i18n="update.ready_suffix">is ready to install.</span></div>
+                <div class="upd-progress-wrap" id="updProgressWrap" style="display:none;">
+                    <div class="upd-progress-bar"><div class="upd-progress-fill" id="updProgressFill"></div></div>
+                    <div class="upd-status" id="updStatus" data-i18n="update.downloading">Downloading...</div>
+                </div>
+                <button class="vrcn-button vrcn-btn-primary" id="updBtn" onclick="startUpdate()" style="width:100%;justify-content:center;gap:6px;">
+                    <span class="msi" style="font-size:16px;">download</span> <span data-i18n="update.download_install">Download &amp; Install</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat inbox panel -->
+        <div class="notif-panel" id="chatPanel" style="display:none;">
+            <div class="notif-panel-header"><span style="font-weight:700;font-size:calc(13px + var(--fs-off, 0px));" data-i18n="common.messages">Messages</span></div>
+            <div class="notif-panel-list" id="chatPanelList"><div class="empty-msg" data-i18n="messages.empty">No messages</div></div>
+        </div>
+
+        <!-- Notification panel -->
+        <div class="notif-panel" id="notifPanel" style="display:none;">
+            <div class="notif-panel-header"><span style="font-weight:700;font-size:calc(13px + var(--fs-off, 0px));" data-i18n="common.notifications">Notifications</span><div style="display:flex;gap:6px;align-items:center;"><div class="vrcn-mini-pill-group" id="notifPillGroup"><div class="vrcn-mini-pill-indicator" id="notifPillIndicator"></div><button class="vrcn-mini-pill active" id="notifTabCurrent" onclick="setNotifTab('current')" data-i18n="notifications.tab.current">Current</button><button class="vrcn-mini-pill" id="notifTabHidden" onclick="setNotifTab('hidden')" data-i18n="notifications.tab.hidden">Hidden</button></div><button class="vrcn-button" onclick="refreshNotifications()" style="padding:2px 8px;font-size:calc(10px + var(--fs-off, 0px));" data-i18n-title="common.refresh"><span class="msi" style="font-size:14px;">refresh</span></button></div></div>
+            <div class="notif-panel-list" id="notifList"><div class="empty-msg" data-i18n="notifications.empty">No notifications</div></div>
+        </div>
+        <!-- Help panel -->
+        <div class="notif-panel help-panel" id="helpPanel" style="display:none;">
+            <div class="notif-panel-header">
+                <span id="helpPanelTitle" style="font-weight:700;font-size:calc(13px + var(--fs-off, 0px));"></span>
+                <button class="vrcn-button" onclick="toggleHelpPanel()" style="padding:2px 8px;font-size:calc(10px + var(--fs-off, 0px));"><span class="msi" style="font-size:14px;">close</span></button>
+            </div>
+            <div style="padding:14px 16px;overflow-y:auto;flex:1;">
+                <p id="helpPanelText" style="font-size:calc(13px + var(--fs-off, 0px));line-height:1.65;color:var(--tx2);margin:0;white-space:pre-wrap;"></p>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Tab 0: Dashboard -->
+            <div class="tab active" id="tab0"></div>
+            <!-- Tab 1: Worlds -->
+            <div class="tab" id="tab1"></div>
+            <!-- Tab 2: Groups -->
+            <div class="tab" id="tab2"></div>
+            <!-- Tab 3: People (Favorites + Search + Blocked + Muted) -->
+            <div class="tab" id="tab3"></div>
+            <!-- Tab 4: Avatars -->
+            <div class="tab" id="tab4"></div>
+            <!-- Tab 5: Custom Chatbox -->
+            <div class="tab" id="tab5" data-windows-only></div>
+            <!-- Tab 6: Media Relay -->
+            <div class="tab" id="tab6" data-windows-only></div>
+            <!-- Tab 7: Media Library -->
+            <div class="tab" id="tab7"></div>
+            <!-- Tab 8: Activity Log -->
+            <div class="tab" id="tab8"></div>
+            <!-- Tab 9: Settings -->
+            <div class="tab" id="tab9"></div>
+            <!-- Tab 10: Space Flight -->
+            <div class="tab" id="tab10" data-windows-only></div>
+            <!-- Tab 11: OSC Tool -->
+            <div class="tab" id="tab11" data-windows-only></div>
+            <!-- Tab 12: Timeline -->
+            <div class="tab" id="tab12"></div>
+            <!-- Tab 13: Inventory -->
+            <div class="tab" id="tab13"></div>
+            <!-- Tab 14: YouTube Fix / VRCVideoCacher -->
+            <div class="tab" id="tab14" data-windows-only></div>
+
+            <!-- Tab 15: Mutual Network -->
+            <div class="tab" id="tab15"></div>
+
+            <!-- Tab 16: Time Spent -->
+            <div class="tab" id="tab16"></div>
+            <!-- Tab 17: Calendar (content built by calendar.js) -->
+            <div class="tab" id="tab17"></div>
+
+            <!-- Tab 18: Voice Fight -->
+            <div class="tab" id="tab18" data-windows-only></div>
+
+            <!-- Tab 19: Discord Presence -->
+            <div class="tab" id="tab19" data-windows-only></div>
+            <!-- Tab 20: VR Wrist Overlay -->
+            <div class="tab" id="tab20" data-windows-only></div>
+
+            <!-- Tab 21: Permini -->
+            <div class="tab" id="tab21"></div>
+
+            <!-- Tab 22: Kikitan XD -->
+            <div class="tab" id="tab22" data-windows-only></div>
+
+            <!-- Tab 23: Event Snipe -->
+            <div class="tab" id="tab23"></div>
+
+            <!-- Tab 24: Avatar Scaling -->
+            <div class="tab" id="tab24" data-windows-only></div>
+
+            <!-- Tab 25: Action Flow -->
+            <div class="tab" id="tab25"></div>
+
+            <!-- Tab 26: FrameShot -->
+            <div class="tab" id="tab26" data-windows-only></div>
+
+            <!-- Tab 27: Status Schedule -->
+            <div class="tab" id="tab27"></div>
+
+        </div>
+    </div>
+
+    <div class="rsidebar logged-out" id="rsidebar">
+        <div class="sidebar-resizer" id="rsidebarResizer" data-side="right"></div>
+        <div class="sidebar-sep"></div>
+        <div class="rsidebar-content" id="vrcPanel">
+            <div id="vrcProfileArea"></div>
+            <div id="vrcInstanceArea"></div>
+            <button id="vrcLoginCollapsed" class="nav-btn vrc-login-collapsed-btn" onclick="if(rsidebarCollapsed)toggleRsidebar()" title="Login to VRChat" data-i18n-title="profiles.friends.login_to_vrchat"><span class="msi vrc-login-collapsed-icon">error</span></button>
+            <div id="vrcFriendSearch" class="vrc-friend-search" style="display:none;">
+                <button class="nav-btn vrc-fs-icon-btn" onclick="if(rsidebarCollapsed)toggleRsidebar()"><span class="msi vrc-fs-icon">search</span></button>
+                <input type="text" id="vrcFriendSearchInput" class="vrcn-input" placeholder="Search friends..." data-i18n-placeholder="profiles.friends.search_placeholder" oninput="_dbFilterFriends()">
+                <button id="vrcFriendRefreshBtn" class="vrcn-button vrc-fs-refresh-btn" onclick="refreshVrcFriendsAndGroups()" title="Refresh friends &amp; group instances" data-i18n-title="profiles.friends.refresh"><span class="msi">refresh</span></button>
+            </div>
+            <div id="vrcFriendsList">
+                <div class="vrc-login-box" id="vrcLoginPrompt">
+                    <div style="font-size:calc(14px + var(--fs-off, 0px));margin-bottom:8px;color:var(--tx3);font-weight:700;">VRChat</div>
+                    <div style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);margin-bottom:12px;" data-i18n="profiles.friends.login_prompt">Login to VRChat to see friends online</div>
+                    <input type="text" id="vrcQuickUser" placeholder="Username" data-i18n-placeholder="settings.api.username" onkeydown="if(event.key==='Enter')document.getElementById('vrcQuickPass').focus()">
+                    <input type="password" id="vrcQuickPass" placeholder="Password" data-i18n-placeholder="settings.api.password" onkeydown="if(event.key==='Enter')vrcQuickLogin()">
+                    <button class="vrcn-button" onclick="vrcQuickLogin()" style="width:100%;justify-content:center;"><span class="msi" style="font-size:16px;">login</span> <span data-i18n="common.connect">Connect</span></button>
+                    <div id="vrcQuickError" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx2);margin-top:6px;min-height:16px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div><!-- /.app-body -->
+
+    <!-- 2FA Modal -->
+    <div class="modal-overlay" id="modal2FA" style="display:none;" onclick="if(event.target===this)this.style.display='none'"></div>
+
+    <!-- Status Change Modal -->
+    <div class="modal-overlay" id="modalStatus" style="display:none;" onclick="if(event.target===this)this.style.display='none'"></div>
+
+    <!-- Keybind Help Modal -->
+    <div class="modal-overlay" id="modalKeybinds" style="display:none;" onclick="if(event.target===this)this.style.display='none'"></div>
+
+    <!-- Friend Detail Modal -->
+    <div class="modal-overlay" id="modalFriendDetail" style="display:none;" onclick="if(event.target===this)closeFriendDetail()"></div>
+
+    <!-- World Detail Modal -->
+    <div class="modal-overlay" id="modalWorldDetail" style="display:none;" onclick="if(event.target===this)closeWorldDetail()"></div>
+
+    <!-- Instance Info Modal (current instance player list) -->
+    <div class="modal-overlay" id="modalInstanceInfo" style="display:none;" onclick="if(event.target===this)closeInstanceInfoModal()"></div>
+
+    <!-- My Instance Detail Modal -->
+    <div class="modal-overlay" id="modalMyInstance" style="display:none;" onclick="if(event.target===this)closeMyInstanceDetail()"></div>
+
+    <!-- Friend GPS Instance Log Modal -->
+    <div class="modal-overlay" id="modalFtGpsDetail" style="display:none;" onclick="if(event.target===this)closeFtGpsDetail()"></div>
+
+    <!-- Universal Detail Modal (groups / events / world search) -->
+    <div class="modal-overlay" id="modalDetail" style="display:none;z-index:10001;" onclick="if(event.target===this){this.style.display='none';navClear();}">
+        <div class="modal-box wide" style="position:relative;padding:0;">
+            <div class="myp-breadcrumb-bar" id="dt_navBar" style="display:none;">
+                <div class="myp-breadcrumbs" id="dt_navCrumbs">
+                    <button class="myp-crumb" id="dt_ov" hidden onclick="navGoTo(0)">···</button>
+                    <span class="myp-crumb-sep" id="dt_s0" hidden>›</span><button class="myp-crumb" id="dt_b0" hidden></button><span class="myp-crumb current" id="dt_cur0" hidden></span>
+                    <span class="myp-crumb-sep" id="dt_s1" hidden>›</span><button class="myp-crumb" id="dt_b1" hidden></button><span class="myp-crumb current" id="dt_cur1" hidden></span>
+                    <span class="myp-crumb-sep" id="dt_s2" hidden>›</span><button class="myp-crumb" id="dt_b2" hidden></button><span class="myp-crumb current" id="dt_cur2" hidden></span>
+                    <span class="myp-crumb-sep" id="dt_s3" hidden>›</span><button class="myp-crumb" id="dt_b3" hidden></button><span class="myp-crumb current" id="dt_cur3" hidden></span>
+                    <span class="myp-crumb-sep" id="dt_s4" hidden>›</span><button class="myp-crumb" id="dt_b4" hidden></button><span class="myp-crumb current" id="dt_cur4" hidden></span>
+                </div>
+            </div>
+            <div class="modal-box-body" id="detailModalContent"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalDetail2" style="display:none;z-index:10003;" onclick="if(event.target===this){this.style.display='none';}">
+        <div class="modal-box wide" style="position:relative;padding:0;">
+            <div class="modal-box-body" id="detailModalContent2"></div>
+        </div>
+    </div>
+
+    <!-- Avatar Detail Modal -->
+    <div class="modal-overlay" id="modalAvatarDetail" style="display:none;" onclick="if(event.target===this)closeAvatarDetail()"></div>
+
+    <!-- My Profile Modal -->
+    <div class="modal-overlay" id="modalMyProfile" style="display:none;" onclick="if(event.target===this)closeMyProfile()"></div>
+
+    <!-- Voice Fight Block Words Modal -->
+    <div class="modal-overlay" id="modalVfBlock" style="display:none;" onclick="if(event.target===this)this.style.display='none'"></div>
+
+    <!-- Multi-Invite Modal -->
+    <div class="modal-overlay" id="modalInvite" style="display:none;" onclick="if(event.target===this)closeInviteModal()"></div>
+
+    <!-- Permini Friend Picker Modal -->
+    <div class="modal-overlay" id="modalCreateInstance" style="display:none;z-index:10010;" onclick="if(event.target===this)closeCreateInstanceModal()"></div>
+
+    <div class="modal-overlay" id="modalPerminiPicker" style="display:none;" onclick="if(event.target===this)closePerminiPicker()"></div>
+
+    <!-- VRChat Config Modal -->
+    <div class="modal-overlay" id="modalVrcConfig" style="display:none;" onclick="if(event.target===this)this.style.display='none'"></div>
+
+    <!-- News Article Modal -->
+    <div class="modal-overlay" id="modalNewsArticle" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-box" style="width:720px;max-width:94%;display:flex;flex-direction:column;max-height:86vh;">
+            <div class="fd-modal-bar">
+                <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" id="newsArticleTitle">News</span></div>
+                <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="document.getElementById('modalNewsArticle').style.display='none'"><span class="msi" style="font-size:20px;">close</span></button></div>
+            </div>
+            <div id="newsArticleBody" class="news-article-body" onclick="newsArticleLinkClick(event)" style="flex:1;overflow-y:auto;min-height:0;margin-top:20px;"></div>
+            <div class="modal-btns" style="margin-top:16px;">
+                <button class="vrcn-button" onclick="if(_newsArticleLink)sendToCS({action:'openUrl',url:_newsArticleLink})"><span class="msi" style="font-size:14px;">open_in_new</span> <span data-i18n="dashboard.news.full_article">Full Article</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Changelog / Update Modal -->
+    <div class="modal-overlay" id="modalChangelog" style="display:none;" onclick="if(event.target===this)closeChangelogModal()">
+        <div class="modal-box cl-box">
+            <div class="fd-modal-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="closeChangelogModal()"><span class="msi" style="font-size:20px;">close</span></button></div>
+            <div class="fd-banner"><img id="changelogGroupBanner" src="fallback_cover.png" onerror="this.src='fallback_cover.png'"><div class="fd-banner-fade"></div></div>
+            <div class="fd-content fd-has-banner">
+                <div class="fd-header" style="margin-bottom:0;">
+                    <img class="fd-avatar" id="changelogGroupIcon" src="logo.png" onerror="this.src='logo.png'">
+                    <div style="flex:1;min-width:0;">
+                        <div class="fd-name" id="changelogGroupName">VRCN</div>
+                        <div class="fd-status" id="changelogGroupMeta"></div>
+                    </div>
+                    <span class="cl-version-badge" id="changelogVersion" style="margin-left:auto;flex-shrink:0;"></span>
+                </div>
+            </div>
+            <div class="cl-columns">
+                <div class="cl-support">
+                    <div class="cl-col-head" data-i18n="changelog.support_title">Support VRCNext</div>
+                    <div class="cl-support-sub" data-i18n="changelog.support_sub">VRCNext is free. If you enjoy it, here are two ways to support the project:</div>
+                    <button class="vrcn-button-round vrcn-btn-join" id="changelogJoinBtn" style="justify-content:center;" onclick="changelogJoinGroup()"><span class="msi">group_add</span> <span data-i18n="changelog.join_group">Join Group</span></button>
+                    <div class="cl-btn-row">
+                        <button class="vrcn-button" style="flex:1;justify-content:center;" onclick="sendToCS({action:'openUrl',url:'https://www.patreon.com/cw/Shinyflvres'})"><svg class="cl-brand-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="14.508" cy="9.437" r="6.437"/><rect x="2" y="3" width="3.5" height="18"/></svg> Patreon</button>
+                        <button class="vrcn-button" style="flex:1;justify-content:center;" onclick="sendToCS({action:'openUrl',url:'https://github.com/shinyflvre/VRCNext'})"><svg class="cl-brand-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> <span data-i18n="changelog.star_github">Star on GitHub</span></button>
+                    </div>
+                </div>
+                <div class="cl-notes">
+                    <div class="cl-col-head" data-i18n="changelog.notes_title">Changelog</div>
+                    <div id="changelogBody" class="cl-notes-body"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="modalExport" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-box" style="width:640px;max-width:92%;">
+            <div class="fd-modal-bar">
+                <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" id="exportTitle">Export</span></div>
+                <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="document.getElementById('modalExport').style.display='none'"><span class="msi" style="font-size:20px;">close</span></button></div>
+            </div>
+            <div class="modal-msg" id="exportDesc" style="margin:20px 0 14px;"></div>
+            <textarea id="exportText" readonly spellcheck="false" style="width:100%;height:320px;box-sizing:border-box;resize:vertical;background:var(--bg-input);color:var(--tx1);border:1px solid var(--brd-lt);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:calc(12px + var(--fs-off, 0px));line-height:1.5;white-space:pre;overflow:auto;"></textarea>
+            <div class="modal-btns" style="margin-top:16px;">
+                <button class="vrcn-button-round" onclick="exportCopy()"><span class="msi" style="font-size:14px;">content_copy</span> <span data-i18n="export.copy">Copy</span></button>
+                <button class="vrcn-button-round vrcn-btn-join" onclick="exportSaveCsv()"><span class="msi" style="font-size:14px;">download</span> <span data-i18n="export.export_csv">Export CSV</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal-overlay" id="modalImport" style="display:none;" onclick="if(event.target===this)closeImportModal()">
+        <div class="modal-box" style="width:748px;max-width:92%;">
+            <div class="fd-modal-bar">
+                <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" id="importTitle">Import</span></div>
+                <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="closeImportModal()"><span class="msi" style="font-size:20px;">close</span></button></div>
+            </div>
+            <div class="modal-msg" id="importDesc" style="margin:20px 0 14px;"></div>
+            <div id="importRows"></div>
+            <div class="modal-msg" id="importStatus" style="margin:14px 0 0;min-height:18px;"></div>
+            <div class="modal-btns" style="margin-top:16px;">
+                <button class="vrcn-button-round" onclick="closeImportModal()"><span data-i18n="common.cancel">Cancel</span></button>
+                <button class="vrcn-button-round vrcn-btn-join" id="importStartBtn" onclick="importStart()"><span class="msi" style="font-size:14px;">upload</span> <span data-i18n="import.start">Import</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VRChat Launch Options Modal -->
+    <div class="modal-overlay" id="modalVrcLaunchOptions" style="display:none;" onclick="if(event.target===this)this.style.display='none'"></div>
+
+    <!-- Notification Toast (top-right, action feedback) -->
+    <div id="notifToastArea" class="notif-toast-area"></div>
+    <!-- Notification Cards (bottom-right, incoming VRChat notifications) -->
+    <div id="notifCardArea"></div>
+    <!-- Dashboard layout editor modal -->
+    <div id="dashLayoutModal" class="modal-overlay" style="display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closeDashLayoutEditor()"></div>
+    <!-- Favorite group picker popup (global, outside tabs so it's always visible) -->
+    <div id="avFavPickerPanel" style="display:none;position:fixed;z-index:10005;background:var(--bg-card);border:1px solid var(--brd-lt);border-radius:10px;padding:10px;min-width:220px;max-width:280px;box-shadow:0 8px 32px #0008;"></div>
+<!-- Theme Editor Panel -->
+<div id="themeEditorPanel" style="display:none;position:fixed;bottom:16px;right:16px;width:380px;max-height:600px;z-index:9999;flex-direction:column;background:var(--bg-card);border:1px solid var(--brd);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.5);"></div>
+<div id="vrcnPlusEditor"></div>
+<div id="vpeColorPicker" style="display:none;position:fixed;z-index:10031;background:var(--bg-card);border:1px solid var(--brd);border-radius:10px;padding:10px;box-shadow:0 4px 24px rgba(0,0,0,.6);width:220px;">
+    <canvas id="vpePickerSV"  width="200" height="150" style="border-radius:6px;cursor:crosshair;display:block;"></canvas>
+    <canvas id="vpePickerHue" width="200" height="14"  style="border-radius:4px;cursor:crosshair;display:block;margin-top:8px;"></canvas>
+    <div style="display:flex;gap:5px;margin-top:8px;align-items:center;">
+        <div id="vpePickerPreview" style="width:22px;height:22px;border-radius:4px;border:1px solid var(--brd);flex-shrink:0;"></div>
+        <div style="flex:1;display:flex;align-items:center;position:relative;">
+            <input type="text" class="vrcn-input" id="vpePickerHex" maxlength="7" style="width:100%;font-family:'Google Sans Mono',monospace;font-size:calc(11px + var(--fs-off, 0px));padding-right:26px;" oninput="vpePickerHexInput(this.value)">
+            <span class="msi" onclick="vpePickerEyedropper()" title="Pick color from screen" style="position:absolute;right:5px;font-size:14px;color:var(--tx3);cursor:pointer;user-select:none;" onmouseover="this.style.color='var(--tx1)'" onmouseout="this.style.color='var(--tx3)'">colorize</span>
+        </div>
+    </div>
+</div>
+<!-- Custom Color Picker -->
+<div id="teColorPicker" style="display:none;position:fixed;z-index:10001;background:var(--bg-card);border:1px solid var(--brd);border-radius:10px;padding:10px;box-shadow:0 4px 24px rgba(0,0,0,.6);width:220px;">
+    <canvas id="tePickerSV"  width="200" height="150" style="border-radius:6px;cursor:crosshair;display:block;"></canvas>
+    <canvas id="tePickerHue" width="200" height="14"  style="border-radius:4px;cursor:crosshair;display:block;margin-top:8px;"></canvas>
+    <div style="display:flex;gap:5px;margin-top:8px;align-items:center;">
+        <div id="tePickerPreview" style="width:22px;height:22px;border-radius:4px;border:1px solid var(--brd);flex-shrink:0;"></div>
+        <div style="flex:1;display:flex;align-items:center;position:relative;">
+            <input type="text" class="vrcn-input" id="tePickerHex" maxlength="7" style="width:100%;font-family:'Google Sans Mono',monospace;font-size:calc(11px + var(--fs-off, 0px));padding-right:26px;" oninput="tePickerHexInput(this.value)">
+            <span class="msi" onclick="tePickerEyedropper()" title="Pick color from screen" style="position:absolute;right:5px;font-size:14px;color:var(--tx3);cursor:pointer;user-select:none;" onmouseover="this.style.color='var(--tx1)'" onmouseout="this.style.color='var(--tx3)'">colorize</span>
+        </div>
+    </div>
+</div>
+    <!-- SmartSearch Modal -->
+    <div id="ssModal" class="ss-modal-overlay"></div>
+
+    <!-- Nav Editor Modal -->
+    <div class="modal-overlay" id="navEditorOverlay" style="display:none;align-items:center;justify-content:center;" onclick="if(event.target===this)closeNavEditor()">
+        <div class="modal-box wide narrow">
+            <div class="fd-modal-bar">
+                <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" data-i18n="nav.editor.title">Edit Navigation</span></div>
+                <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="closeNavEditor()"><span class="msi" style="font-size:20px;">close</span></button></div>
+            </div>
+            <div id="navEditorList" class="ne-list vrcn-scrollbar" style="margin-top:20px;"></div>
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button class="vrcn-button" onclick="_edAddFolder()"><span class="msi" style="font-size:16px;">create_new_folder</span><span data-i18n="nav.editor.add_folder">Add Folder</span></button>
+                <button class="vrcn-button" onclick="_edAddSeparator()"><span class="msi" style="font-size:16px;">horizontal_rule</span><span data-i18n="nav.editor.add_separator">Add Separator</span></button>
+                <span style="flex:1;"></span>
+                <button class="vrcn-button" onclick="_edRestoreDefault()"><span class="msi" style="font-size:16px;">restore</span><span data-i18n="nav.editor.reset">Reset</span></button>
+                <button class="vrcn-button vrcn-btn-primary" onclick="_edConfirm()"><span class="msi" style="font-size:16px;">check</span><span data-i18n="common.save">Save</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Crash Report Modal -->
+    <div class="modal-overlay" id="modalCrash" style="display:none;">
+        <div class="modal-box" style="width:750px;max-width:90%;">
+            <div class="fd-modal-bar">
+                <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" data-i18n="crash.modal.title">CVRC has crashed</span></div>
+                <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="document.getElementById('modalCrash').style.display='none';sendToCS({action:'dismissCrashReport'})"><span class="msi" style="font-size:20px;">close</span></button></div>
+            </div>
+            <div class="modal-icon" style="background:rgba(224,108,117,.12);color:var(--err);margin-top:20px;"><span class="msi" style="font-size:22px;">bug_report</span></div>
+            <div class="modal-msg" data-i18n="crash.modal.msg">Would you like to send the crash report to the developers to help them fix the issue? The crash log is anonymous and only contains the stack trace of the crash. It does not include any personal information or user data.</div>
+            <div class="log-area" id="crashLogPreview" style="max-height:200px;margin:14px 0 4px;font-size:calc(10.5px + var(--fs-off, 0px));"></div>
+            <div class="modal-btns">
+                <button class="vrcn-button-round vrcn-btn-join" onclick="document.getElementById('modalCrash').style.display='none';sendToCS({action:'sendCrashReport'})" data-i18n="crash.modal.send">Send Report</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (async function () {
+        function showFatalError(msg, detail) {
+            console.error('[FRAGMENT LOADER]', msg, detail || '');
+            const sp = document.getElementById('vrcnSplash');
+            if (sp) sp.remove();
+            const banner = document.createElement('div');
+            banner.style.cssText =
+                'position:fixed;top:0;left:0;right:0;z-index:2147483647;' +
+                'background:#b00020;color:#fff;font:600 13px/1.4 system-ui,sans-serif;' +
+                'padding:10px 14px;white-space:pre-wrap;box-shadow:0 2px 8px rgba(0,0,0,.4);';
+            banner.textContent = 'CVRC Fragment Loader: ' + msg + (detail ? '\n' + detail : '');
+            document.body.appendChild(banner);
+        }
+
+        const tabFragments = {
+            tab0:  'modules/dashboard/dashboard.html',
+            tab1:  'modules/worlds/worlds.html',
+            tab2:  'modules/groups/groups.html',
+            tab3:  'modules/people/people.html',
+            tab4:  'modules/avatars/avatars.html',
+            tab5:  'modules/tools/chatbox/chatbox.html',
+            tab6:  'modules/tools/media-relay/media-relay.html',
+            tab7:  'modules/media-library/media-library.html',
+            tab8:  'modules/tools/activity-log/activity-log.html',
+            tab9:  'modules/settings/settings.html',
+            tab10: 'modules/tools/space-flight/space-flight.html',
+            tab11: 'modules/tools/osc-tool/osc-tool.html',
+            tab12: 'modules/timeline/timeline.html',
+            tab13: 'modules/inventory/inventory.html',
+            tab14: 'modules/tools/youtube-fix/youtube-fix.html',
+            tab15: 'modules/tools/mutual-network/mutual-network.html',
+            tab16: 'modules/tools/time-spent/time-spent.html',
+            tab18: 'modules/tools/voice-fight/voice-fight.html',
+            tab19: 'modules/tools/discord-presence/discord-presence.html',
+            tab20: 'modules/tools/vr-overlay/vr-overlay.html',
+            tab21: 'modules/tools/permini/permini.html',
+            tab22: 'modules/tools/kikitan-xd/kikitan-xd.html',
+            tab23: 'modules/tools/event-snipe/event-snipe.html',
+            tab24: 'modules/tools/avatar-scaling/avatar-scaling.html',
+            tab25: 'modules/tools/action-flow/action-flow.html',
+            tab26: 'modules/tools/frame-shot/frame-shot.html',
+            tab27: 'modules/tools/status-schedule/status-schedule.html',
+        };
+
+        const modalFragments = {
+            modal2FA:            'core/modals/auth-modal/auth-modal.html',
+            modalStatus:         'core/modals/my-profile-modal/status-modal.html',
+            modalKeybinds:       'core/Keybinds/keybind-modal.html',
+            modalFriendDetail:   'core/modals/user-modal/user-modal.html',
+            modalWorldDetail:    'core/modals/world-modal/world-modal.html',
+            modalInstanceInfo:   'core/modals/instance-modal/instance-modal.html',
+            modalMyInstance:     'core/modals/my-instance-modal/my-instance-modal.html',
+            modalFtGpsDetail:    'core/modals/timeline-modal/timeline-modal.html',
+            modalAvatarDetail:   'core/modals/avatar-modal/avatar-modal.html',
+            modalMyProfile:      'core/modals/my-profile-modal/my-profile-modal.html',
+            modalInvite:         'core/modals/invite-modal/invite-modal.html',
+            modalCreateInstance: 'core/modals/create-instance-modal/create-instance-modal.html',
+            modalVfBlock:       'modules/tools/voice-fight/voice-fight-block.html',
+            modalPerminiPicker: 'modules/tools/permini/permini-picker.html',
+            modalVrcConfig:        'core/modals/vrc-tools-modal/vrc-config-modal.html',
+            modalVrcLaunchOptions: 'core/modals/vrc-tools-modal/vrc-launch-options-modal.html',
+            dashLayoutModal:    'modules/dashboard/dash-layout.html',
+            avFavPickerPanel:   'modules/avatars/fav-picker.html',
+            themeEditorPanel:   'modules/settings/theme-editor.html',
+            vrcnPlusEditor:     'modules/user-profile/profile-editor.html',
+            ssModal:            'core/SmartSearch/smart-search.html',
+        };
+
+        const scripts = [
+            'Debug/CacheTests/cache-debug.js',
+            'core/hover/hover.js',
+            'core/sidebars/sidebar-resize.js',
+            'core/notifications/toast.js',
+            'core/notifications/notification-toast.js',
+            'core/items/profile-item.js',
+            'core/items/profile-item-small.js',
+            'core/items/instance-item.js',
+            'core/logic/core.js',
+            'core/logic/profile-background.js',
+            'core/logic/profile-theme.js',
+            'core/paginator/paginator.js',
+            'core/listview/listview.js',
+            'core/friend-fetch/friend-fetch.js',
+            'core/paginator/mini-paginator.js',
+            'core/debounce/deb-anim.js',
+            'core/sidebars/navigation/nav-model.js',
+            'core/sidebars/navigation/navigation.js',
+            'core/i18n/i18n.js',
+            'modules/tools/media-relay/media-relay.js',
+            'modules/settings/settings.js',
+            'modules/settings/accounts.js',
+            'modules/media-library/library.js',
+            'modules/dashboard/dashboard.js',
+            'core/modals/my-instance-modal/my-instance-modal.js',
+            'modules/people/people.js',
+            'modules/people/instance-players.js',
+            'core/sidebars/friends/friends.js',
+            'core/modals/auth-modal/auth-modal.js',
+            'core/modals/my-profile-modal/my-profile-modal.js',
+            'modules/user-profile/profile-editor.js',
+            'core/modals/friend-invite-modal/friend-invite-modal.js',
+            'core/modals/notification-respond-modal/notification-respond-modal.js',
+            'core/modals/image-picker-modal/image-picker-modal.js',
+            'core/modals/boop-modal/boop-modal.js',
+            'core/modals/user-modal/user-modal.js',
+            'core/previews/friend-preview.js',
+            'core/modals/modal-nav.js',
+            'core/modals/world-modal/world-modal.js',
+            'core/modals/create-instance-modal/create-instance-modal.js',
+            'modules/worlds/worlds.js',
+            'modules/groups/groups.js',
+            'core/modals/group-modal/group-modal.js',
+            'core/search/search.js',
+            'modules/avatars/avatars.js',
+            'core/modals/avatar-modal/avatar-modal.js',
+            'core/modals/avatar-wear-modal/avatar-wear-modal.js',
+            'core/notifications/notifications.js',
+            'core/modals/instance-modal/instance-modal.js',
+            'core/logic/update.js',
+            'core/modals/invite-modal/invite-modal.js',
+            'modules/tools/chatbox/chatbox.js',
+            'modules/tools/space-flight/space-flight.js',
+            'modules/tools/frame-shot/frame-shot.js',
+            'modules/tools/osc-tool/osc-tool.js',
+            'modules/timeline/list-table.js',
+            'modules/timeline/timeline.js',
+            'modules/timeline/game-log.js',
+            'modules/timeline/instance-chart.js',
+            'modules/rewind/rewind.js',
+            'core/modals/timeline-modal/timeline-modal.js',
+            'modules/inventory/inventory_upload.js',
+            'modules/inventory/inventory.js',
+            'core/logic/messages.js',
+            'core/messenger/messenger.js',
+            'core/context-menu/context-menu.js',
+            'core/sidebars/navigation/nav-editor.js',
+            'modules/tools/mutual-network/mutual-score.js',
+            'modules/tools/mutual-network/mutual-network.js',
+            'modules/tools/time-spent/time-spent.js',
+            'core/modals/event-modal/event-modal.js',
+            'modules/calendar/calendar.js',
+            'modules/tools/voice-fight/voice-fight.js',
+            'modules/tools/discord-presence/discord-presence.js',
+            'modules/tools/vr-overlay/vr-overlay.js',
+            'modules/tools/permini/permini.js',
+            'modules/tools/kikitan-xd/kikitan-xd.js',
+            'modules/tools/event-snipe/event-snipe.js',
+            'modules/tools/avatar-scaling/avatar-scaling.js',
+            'modules/tools/action-flow/action-flow.js',
+            'modules/tools/status-schedule/status-schedule.js',
+            'core/logic/init.js',
+            'core/debounce/debounce.js',
+            'core/SmartSearch/smart-search.js',
+            'core/Pins/pins.js',
+            'core/Keybinds/Keybind.js',
+            'core/Taskbar/taskbar.js',
+            'core/modals/vrc-tools-modal/vrc-tools-modal.js',
+            'core/modals/export-modal/export-modal.js',
+            'core/modals/import-modal/import-modal.js',
+            'core/Blyat/blyat.js',
+            'core/Music/music.js',
+        ];
+
+        try {
+            const entries = Object.entries({ ...tabFragments, ...modalFragments });
+            let _splashDone = 0;
+            const _splashTotal = entries.length + scripts.length;
+            const _splashTick = () => {
+                _splashDone++;
+                const bar = document.getElementById('vrcnSplashBar');
+                if (bar) bar.style.width = Math.min(100, Math.round(_splashDone / _splashTotal * 100)) + '%';
+            };
+            const htmls = await Promise.all(entries.map(async ([tabId, p]) => {
+                const r = await fetch(p);
+                if (!r.ok) throw new Error('fetch ' + p + ' -> HTTP ' + r.status);
+                const txt = await r.text();
+                _splashTick();
+                return [tabId, txt];
+            }));
+            for (const [tabId, html] of htmls) {
+                const host = document.getElementById(tabId);
+                if (!host) throw new Error('Fragment host #' + tabId + ' missing in DOM');
+                host.innerHTML = html;
+            }
+            for (const src of scripts) {
+                await new Promise((resolve, reject) => {
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.async = false;
+                    s.onload = resolve;
+                    s.onerror = () => reject(new Error('script ' + src + ' failed to load'));
+                    document.body.appendChild(s);
+                });
+                _splashTick();
+            }
+            // All scripts loaded — signal backend that JS is ready.
+            // Must run AFTER init.js so that the backend's loadSettings response
+            // doesn't overwrite UI state that init.js will populate (e.g. webhooks).
+            if (typeof sendToCS === 'function') {
+                sendToCS({ action: 'ready' });
+                sendToCS({ action: 'kxdGetDevices' });
+            }
+            if (typeof navApplyStartPage === 'function') navApplyStartPage();
+            const _splashBar = document.getElementById('vrcnSplashBar');
+            if (_splashBar) _splashBar.style.width = '100%';
+            setTimeout(() => {
+                const sp = document.getElementById('vrcnSplash');
+                if (!sp) return;
+                sp.classList.add('vrcn-splash-hide');
+                setTimeout(() => sp.remove(), 550);
+            }, 2000);
+        } catch (err) {
+            showFatalError(err.message, err.stack);
+            throw err;
+        }
+    })();
+    </script>
+
+</body>
+</html>

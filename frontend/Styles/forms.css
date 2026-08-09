@@ -1,0 +1,124 @@
+.sect-label {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    margin-bottom: 14px;
+}
+
+.sect-label:not(:first-child) {
+    margin-top: 24px;
+}
+
+.input-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.input-row label {
+    width: 120px;
+    font-size: calc(13px + var(--fs-off, 0px));
+    color: var(--tx2);
+    flex-shrink: 0;
+}
+
+.toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.toggle input {
+    display: none;
+}
+
+.toggle-track {
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--brd);
+    cursor: pointer;
+    transition: background .2s;
+    position: relative;
+}
+
+.toggle input:checked + .toggle-track {
+    background: var(--accent);
+}
+
+.toggle-knob {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: left .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+
+.toggle input:checked + .toggle-track .toggle-knob {
+    left: 18px;
+}
+
+.search-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 18px;
+    position: relative;
+}
+
+.search-ico {
+    position: absolute;
+    left: 12px;
+    font-size: calc(18px + var(--fs-off, 0px));
+    color: var(--tx3);
+    pointer-events: none;
+}
+
+.search-input, .vrcn-input {
+    flex: 1;
+    padding: 9px 10px 9px 32px;
+    background: var(--ui-input-bg);
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: var(--tx1);
+    font-size: calc(13px + var(--fs-off, 0px));
+    font-family: inherit;
+    outline: none;
+    transition: border-color .15s;
+}
+
+.search-input:focus, .vrcn-input:focus {
+    border-color: var(--accent);
+}
+
+.search-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+}
+.search-grid.grid-compact {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.vrcn-edit-field {
+    height: 32px;
+    padding: 0 10px;
+    background: var(--bg-input);
+    border: none;
+    border-radius: 7px;
+    color: var(--tx0);
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-family: inherit;
+    outline: none;
+    box-sizing: border-box;
+    transition: background .15s;
+}
+.vrcn-edit-field:focus { background: var(--bg-hover); }

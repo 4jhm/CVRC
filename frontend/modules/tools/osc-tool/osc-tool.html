@@ -1,0 +1,55 @@
+                <div class="sf-layout">
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status"><span class="sf-dot offline" id="oscDot"></span><span id="oscStatusText" data-i18n="osc.status.not_connected">Not connected</span></div>
+                            <button class="vrcn-button" id="oscConnBtn" onclick="oscConnect()"><span class="msi" style="font-size:16px;">link</span> <span data-i18n="common.connect">Connect</span></button>
+                        </div>
+                    </div>
+                    <div id="oscOutputBanner" class="osc-output-banner" style="display:none;">
+                        <span class="msi" style="font-size:15px;flex-shrink:0;">warning</span>
+                        <span class="osc-banner-text"></span>
+                        <button class="vrcn-button osc-enable-btn" id="oscEnableBtn" onclick="oscEnableOutputs()"><span class="msi" style="font-size:14px;">output</span> <span data-i18n="osc.outputs.enable_all">Enable All Outputs</span></button>
+                    </div>
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">theater_comedy</span> <span data-i18n="osc.emotes.title">Emotes</span></div>
+                        <div class="osc-emote-grid">
+                            <button class="osc-emote-btn" disabled onclick="oscTriggerEmote(1)"><span class="msi">waving_hand</span><span data-i18n="osc.emotes.wave">Wave</span></button>
+                            <button class="osc-emote-btn" disabled onclick="oscTriggerEmote(2)"><span class="msi">front_hand</span><span data-i18n="osc.emotes.clap">Clap</span></button>
+                            <button class="osc-emote-btn" disabled onclick="oscTriggerEmote(3)"><span class="msi">touch_app</span><span data-i18n="osc.emotes.point">Point</span></button>
+                            <button class="osc-emote-btn" disabled onclick="oscTriggerEmote(4)"><span class="msi">celebration</span><span data-i18n="osc.emotes.cheer">Cheer</span></button>
+                            <button class="osc-emote-btn" disabled onclick="oscTriggerEmote(5)"><span class="msi">nightlife</span><span data-i18n="osc.emotes.dance">Dance</span></button>
+                            <button class="osc-emote-btn" disabled onclick="oscTriggerEmote(6)"><span class="msi">sports_gymnastics</span><span data-i18n="osc.emotes.backflip">Backflip</span></button>
+                            <button class="osc-emote-btn" disabled onclick="oscTriggerEmote(7)"><span class="msi">heart_broken</span><span data-i18n="osc.emotes.die">Die</span></button>
+                            <button class="osc-emote-btn" disabled onclick="oscTriggerEmote(8)"><span class="msi">sentiment_dissatisfied</span><span data-i18n="osc.emotes.sad">Sad</span></button>
+                        </div>
+                        <div class="osc-emote-hint" data-i18n="osc.emotes.hint">Sends VRCEmote once, like pressing it in VRChat's Expressions menu. A short cooldown prevents spam.</div>
+                    </div>
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">height</span> <span data-i18n="osc.height.title">Avatar Height</span></div>
+                        <div class="osc-float-wrap">
+                            <input type="range" class="osc-float-slider" id="oscHeightSlider" disabled min="0.2" max="5" step="0.01" value="1.7"
+                                oninput="document.getElementById('oscHeightVal').textContent=parseFloat(this.value).toFixed(2)+' m';oscHeightSet(this.value);">
+                            <span class="osc-height-unit" id="oscHeightVal">1.70 m</span>
+                        </div>
+                        <div class="osc-height-apply-row">
+                            <input type="number" id="oscHeightNum" class="vrcn-edit-field" disabled min="0.01" max="10000" step="0.01" value="1.70"
+                                placeholder="Exact height in meters..." data-i18n-placeholder="osc.height.input_placeholder"
+                                style="flex:1;" onkeydown="if(event.key==='Enter'){oscHeightApply();}">
+                            <button class="osc-height-apply-btn" id="oscHeightApplyBtn" disabled onclick="oscHeightApply()" title="Apply" data-i18n-title="common.apply"><span class="msi" style="font-size:16px;">check</span></button>
+                        </div>
+                        <div class="osc-emote-hint" data-i18n="osc.height.hint">Sets your avatar's eye height live via OSC. Drag the slider for a quick change, or type an exact value below and press Enter — the slider can be too coarse for fine adjustments.</div>
+                    </div>
+                    <div class="vrcn-panel-card" style="flex:1;min-height:0;display:flex;flex-direction:column;">
+                        <div class="vrcn-panel-card-header" style="display:flex;align-items:center;justify-content:space-between;">
+                            <span style="display:inline-flex;align-items:center;gap:6px;"><span class="msi">tune</span> <span data-i18n="osc.parameters.title">Parameters</span></span>
+                            <span class="osc-badge-count" id="oscParamCount" data-i18n="osc.parameters.count.zero">0 params</span>
+                        </div>
+                        <div class="search-bar-row" style="margin-bottom:8px;">
+                            <span class="msi search-ico">search</span>
+                            <input type="text" id="oscSearch" class="search-input" placeholder="Search parameters..." data-i18n-placeholder="osc.search.placeholder" oninput="filterOscParams()">
+                        </div>
+                        <div class="osc-param-list" id="oscParamList">
+                            <div class="osc-empty" id="oscEmptyMsg" data-i18n="osc.empty.connect_hint">Connect, then toggle OSC off/on in VRChat's Action Menu to load all parameters.</div>
+                        </div>
+                    </div>
+                </div>

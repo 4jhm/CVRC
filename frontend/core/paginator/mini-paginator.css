@@ -1,0 +1,84 @@
+/* === Mini Paginator — compact paginator for modals === */
+.mini-paginator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 8px 0 2px;
+    flex-wrap: wrap;
+}
+.mini-paginator:empty { display: none; }
+
+#modalFriendDetail .fd-right-scroll:has(.mini-paginator:last-child),
+#modalMyProfile .fd-right-scroll:has(.mini-paginator:last-child),
+#modalDetail .fd-right-scroll:has(.mini-paginator:last-child) {
+    display: flex;
+    flex-direction: column;
+}
+#modalFriendDetail .fd-right-scroll:has(.mini-paginator:last-child) > .fd-tabs,
+#modalMyProfile .fd-right-scroll:has(.mini-paginator:last-child) > .fd-tabs,
+#modalDetail .fd-right-scroll:has(.mini-paginator:last-child) > .fd-tabs {
+    flex-shrink: 0;
+}
+#modalFriendDetail .fd-right-scroll > div:has(.mini-paginator:last-child),
+#modalMyProfile .fd-right-scroll > div:has(.mini-paginator:last-child),
+#modalDetail .fd-right-scroll > div:has(.mini-paginator:last-child),
+#modalFriendDetail .fd-right-scroll > div > div:has(> .mini-paginator:last-child),
+#modalMyProfile .fd-right-scroll > div > div:has(> .mini-paginator:last-child),
+#modalDetail .fd-right-scroll > div > div:has(> .mini-paginator:last-child) {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+#modalFriendDetail .fd-right-scroll *:has(+ .mini-paginator:last-child),
+#modalMyProfile .fd-right-scroll *:has(+ .mini-paginator:last-child),
+#modalDetail .fd-right-scroll *:has(+ .mini-paginator:last-child) {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    align-content: start;
+}
+#modalFriendDetail .fd-right-scroll .mini-paginator:last-child,
+#modalMyProfile .fd-right-scroll .mini-paginator:last-child,
+#modalDetail .fd-right-scroll .mini-paginator:last-child {
+    flex-shrink: 0;
+}
+#modalFriendDetail .fd-right-scroll:has(.mini-paginator:last-child) .fd-content-pills,
+#modalMyProfile   .fd-right-scroll:has(.mini-paginator:last-child) .fd-content-pills,
+#modalDetail      .fd-right-scroll:has(.mini-paginator:last-child) .fd-content-pills,
+#modalFriendDetail .fd-right-scroll:has(.mini-paginator:last-child) .search-bar-row,
+#modalMyProfile   .fd-right-scroll:has(.mini-paginator:last-child) .search-bar-row,
+#modalDetail      .fd-right-scroll:has(.mini-paginator:last-child) .search-bar-row {
+    flex-shrink: 0;
+}
+
+@keyframes miniPageFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.mini-page-fade-in { animation: miniPageFadeIn 0.50s ease; }
+
+.mini-paginator .vrcn-button {
+    min-width: 26px;
+    height: 26px;
+    padding: 0 5px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.mini-paginator .mini-pg-active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.mini-paginator .mini-pg-ell {
+    padding: 0 2px;
+    color: var(--tx3);
+    font-size: calc(11px + var(--fs-off, 0px));
+}

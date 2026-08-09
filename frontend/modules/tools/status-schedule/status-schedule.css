@@ -1,0 +1,269 @@
+/* === Status Schedule === */
+
+.ss-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+.ss-toggle-label {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx3);
+}
+.ss-inline-toggle { margin-left: 0; }
+
+.ss-split {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 12px;
+    align-items: start;
+}
+
+/* Rule list */
+
+.ss-list-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.ss-rule-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.ss-rule-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-align: left;
+    font-family: inherit;
+    transition: background .12s, border-color .12s;
+}
+.ss-rule-item:hover { background: var(--bg-hover); }
+.ss-rule-item.active {
+    background: var(--bg-hover);
+    border-color: var(--accent);
+}
+/* Dim the row content but keep the switch readable so it stays operable. */
+.ss-rule-item.disabled .ss-rule-dot,
+.ss-rule-item.disabled .ss-rule-main { opacity: .45; }
+
+.ss-rule-toggle {
+    margin-left: 0;
+    flex-shrink: 0;
+}
+.ss-rule-main {
+    flex: 1;
+    min-width: 0;
+}
+.ss-rule-name {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx1);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.ss-rule-sub {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 2px;
+}
+.ss-rule-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.ss-rule-live {
+    font-size: calc(9px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: .04em;
+}
+.ss-list-empty {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    text-align: center;
+    padding: 20px 8px;
+}
+
+/* Editor */
+
+.ss-editor-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 320px;
+}
+.ss-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.ss-field-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+}
+.ss-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
+.ss-field-narrow { flex: 0 0 140px; }
+.ss-field-time { flex: 0 0 168px; }
+
+.ss-time-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.ss-time-part { flex: 1; min-width: 0; }
+.ss-time-sep {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+}
+.ss-midnight-note {
+    justify-content: flex-end;
+    padding-bottom: 8px;
+}
+.ss-label {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+.ss-hint {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+}
+
+/* Days */
+
+.ss-days {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.ss-day {
+    min-width: 38px;
+    padding: 6px 0;
+    border: 1px solid var(--brd);
+    background: transparent;
+    color: var(--tx3);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .12s, color .12s, border-color .12s;
+}
+.ss-day:hover { color: var(--tx1); }
+.ss-day.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+/* Status options */
+
+.ss-status-options {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.ss-status-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 1px solid var(--brd);
+    background: transparent;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx2);
+    cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+}
+.ss-status-opt:hover { background: var(--bg-hover); }
+.ss-status-opt.active {
+    border-color: var(--accent);
+    background: var(--bg-hover);
+    color: var(--tx0);
+}
+.ss-status-opt .ss-rule-dot { width: 9px; height: 9px; }
+
+/* Switch rows */
+
+.ss-switch-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--bg-input);
+    border-radius: 8px;
+}
+.ss-switch-label {
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx1);
+    font-weight: 600;
+}
+
+.ss-editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 2px;
+}
+.ss-btn-danger {
+    background: rgba(255,75,85,.15) !important;
+    color: var(--err) !important;
+}
+.ss-btn-danger:hover {
+    background: var(--err) !important;
+    color: #fff !important;
+}
+
+/* Empty state */
+
+.ss-empty-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 12px;
+}
+.ss-empty-title {
+    font-size: calc(14px + var(--fs-off, 0px));
+    color: var(--tx2);
+    margin-top: 8px;
+    font-weight: 600;
+}
+.ss-empty-sub {
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx3);
+    margin-top: 4px;
+}
+
+@media (max-width: 900px) {
+    .ss-split { grid-template-columns: 1fr; }
+}

@@ -1,0 +1,21 @@
+@keyframes blyatSpin { to { transform: rotate(360deg); } }
+
+body.blyat-active *:not(#blyatOverlay) {
+    animation: blyatSpin 0.8s linear infinite;
+}
+
+#blyatOverlay {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2147483647;
+    background: red;
+    opacity: 0.3;
+    mix-blend-mode: screen;
+    animation: blyatHue 3s linear infinite;
+}
+
+@keyframes blyatHue {
+    from { filter: hue-rotate(0deg); }
+    to   { filter: hue-rotate(360deg); }
+}

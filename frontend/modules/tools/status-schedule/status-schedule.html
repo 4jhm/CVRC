@@ -1,0 +1,102 @@
+                <div class="sf-layout ss-layout">
+
+                    <!-- Status bar -->
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status">
+                                <span class="sf-dot offline" id="ssDot"></span>
+                                <span id="ssStatusText" data-i18n="status_schedule.status.idle">No rule active</span>
+                            </div>
+                            <div class="ss-toolbar-group">
+                                <span class="ss-toggle-label" data-i18n="status_schedule.enabled">Enabled</span>
+                                <label class="toggle ss-inline-toggle"><input type="checkbox" id="ssEnabled" onchange="ssSetEnabled(this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                                <button class="vrcn-button vrcn-btn-primary" onclick="ssAddRule()"><span class="msi" style="font-size:16px;">add</span><span data-i18n="status_schedule.add_rule">Add Status Rule</span></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ss-split">
+
+                        <!-- Rule list -->
+                        <div class="vrcn-panel-card ss-list-card">
+                            <div class="vrcn-panel-card-header"><span class="msi">schedule</span> <span data-i18n="status_schedule.rules">Rules</span></div>
+                            <div id="ssRuleList" class="ss-rule-list vrcn-scrollbar"></div>
+                        </div>
+
+                        <!-- Rule editor -->
+                        <div class="vrcn-panel-card ss-editor-card">
+                            <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="status_schedule.rule_editor">Rule</span></div>
+
+                            <div id="ssEditorEmpty" class="ss-empty-hint">
+                                <span class="msi" style="font-size:34px;color:var(--tx3);">event_available</span>
+                                <div class="ss-empty-title" data-i18n="status_schedule.empty.title">No rule selected</div>
+                                <div class="ss-empty-sub" data-i18n="status_schedule.empty.hint">Create a rule with the button above.</div>
+                            </div>
+
+                            <div id="ssEditor" class="ss-editor" style="display:none;">
+
+                                <div class="ss-field-row">
+                                    <div class="ss-field">
+                                        <label class="ss-label" data-i18n="status_schedule.field.name">Rule Name</label>
+                                        <input type="text" id="ssFieldName" class="vrcn-edit-field" maxlength="60" oninput="ssUpdateField('name', this.value)">
+                                    </div>
+                                    <div class="ss-field ss-field-narrow">
+                                        <label class="ss-label" data-i18n="status_schedule.field.priority">Priority</label>
+                                        <div id="ssFieldPriorityWrap"></div>
+                                    </div>
+                                </div>
+
+                                <div class="ss-field-row">
+                                    <div class="ss-field ss-field-time">
+                                        <label class="ss-label" data-i18n="status_schedule.field.start">Start</label>
+                                        <div id="ssFieldStartWrap" class="ss-time-wrap"></div>
+                                    </div>
+                                    <div class="ss-field ss-field-time">
+                                        <label class="ss-label" data-i18n="status_schedule.field.end">End</label>
+                                        <div id="ssFieldEndWrap" class="ss-time-wrap"></div>
+                                    </div>
+                                    <div class="ss-field ss-midnight-note">
+                                        <span id="ssMidnightNote" class="ss-hint" style="display:none;" data-i18n="status_schedule.crosses_midnight">Window crosses midnight</span>
+                                    </div>
+                                </div>
+
+                                <div class="ss-field">
+                                    <label class="ss-label" data-i18n="status_schedule.field.days">Days</label>
+                                    <div id="ssFieldDays" class="ss-days"></div>
+                                    <span class="ss-hint" data-i18n="status_schedule.days_hint">No selection means every day.</span>
+                                </div>
+
+                                <div class="ss-field">
+                                    <label class="ss-label" data-i18n="status_schedule.field.status">Status</label>
+                                    <div id="ssFieldStatus" class="ss-status-options"></div>
+                                </div>
+
+                                <div class="ss-switch-row">
+                                    <span class="ss-switch-label" data-i18n="status_schedule.field.status_message">Status Message</span>
+                                    <label class="toggle"><input type="checkbox" id="ssFieldSetMessage" onchange="ssUpdateField('setStatusMessage', this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                                </div>
+                                <input type="text" id="ssFieldMessage" class="vrcn-edit-field" maxlength="32" data-i18n-placeholder="status_schedule.status_message_placeholder" placeholder="Status message..." oninput="ssUpdateField('statusMessage', this.value)" style="display:none;">
+
+                                <div class="ss-switch-row">
+                                    <span class="ss-switch-label" data-i18n="status_schedule.field.only_in_game">Only While in Game</span>
+                                    <label class="toggle"><input type="checkbox" id="ssFieldOnlyInGame" onchange="ssUpdateField('onlyWhileInGame', this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                                </div>
+
+                                <div class="ss-switch-row">
+                                    <span class="ss-switch-label" data-i18n="status_schedule.field.only_outside_game">Only Outside of Game</span>
+                                    <label class="toggle"><input type="checkbox" id="ssFieldOnlyOutsideGame" onchange="ssUpdateField('onlyWhileOutsideGame', this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                                </div>
+
+                                <div class="ss-switch-row">
+                                    <span class="ss-switch-label" data-i18n="status_schedule.field.restore">Restore Previous Status</span>
+                                    <label class="toggle"><input type="checkbox" id="ssFieldRestore" onchange="ssUpdateField('restorePreviousStatus', this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                                </div>
+
+                                <div class="ss-editor-actions">
+                                    <button class="vrcn-button ss-btn-danger" onclick="ssDeleteRule()"><span class="msi" style="font-size:16px;">delete</span><span data-i18n="common.delete">Delete</span></button>
+                                    <button class="vrcn-button vrcn-btn-primary" onclick="ssSaveRules()"><span class="msi" style="font-size:16px;">save</span><span data-i18n="common.save">Save</span></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>

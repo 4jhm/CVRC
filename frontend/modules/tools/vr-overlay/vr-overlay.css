@@ -1,0 +1,224 @@
+/* === VR Overlay Module === */
+
+.vro-setting-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx2);
+}
+.vro-setting-row label { color: var(--tx1); min-width: 60px; }
+.vrcn-select {
+    background: var(--bg-hover);
+    border: 1px solid var(--bdr);
+    border-radius: 6px;
+    color: var(--tx1);
+    font-size: calc(12px + var(--fs-off, 0px));
+    padding: 4px 8px;
+    cursor: pointer;
+    outline: none;
+    min-width: 140px;
+}
+.vrcn-select:hover { border-color: var(--accent); }
+
+.vro-transform-grid { display: flex; flex-direction: column; gap: 4px; }
+.vro-axis-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.vro-axis-lbl {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 700;
+    width: 18px;
+    text-align: center;
+    letter-spacing: .03em;
+}
+.vro-x { color: #f87171; }
+.vro-y { color: #4ade80; }
+.vro-z { color: #60a5fa; }
+.vro-slider {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 3px;
+}
+.vro-axis-val {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx2);
+    min-width: 36px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.vro-controller-visual {
+    margin: 10px 0 4px;
+}
+.vro-ctrl-diagram {
+    background: var(--bg-hover);
+    border-radius: 12px;
+    border: 1px solid var(--bdr);
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+}
+.vro-ctrl-image {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+.vro-ctrl-legacy {
+    display: none;
+    gap: 12px;
+    align-items: center;
+}
+.vro-controller-visual.legacy .vro-ctrl-image { display: none; }
+.vro-controller-visual.legacy .vro-ctrl-legacy { display: flex; }
+.vro-ctrl-legacy .vro-ctrl-left,
+.vro-ctrl-legacy .vro-ctrl-right {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: center;
+}
+.vro-ctrl-legacy .vro-btn {
+    position: static;
+    left: auto; top: auto;
+    width: auto; height: auto;
+    opacity: 1 !important;
+    background: var(--bg2);
+    background-image: none;
+    border: 1.5px solid var(--bdr);
+    border-radius: 8px;
+    padding: 5px 12px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx2);
+    white-space: nowrap;
+    cursor: pointer;
+}
+.vro-ctrl-legacy .vro-btn.active {
+    background: color-mix(in srgb, var(--accent) 25%, transparent);
+    border-color: var(--accent);
+    color: var(--accent-lt);
+    font-weight: 600;
+}
+
+.vro-view-toggle {
+    margin-left: auto;
+    padding: 3px 6px;
+}
+.vro-view-toggle.active .msi { color: #fff; }
+
+.vro-controller {
+    position: relative;
+    width: 50%;
+    max-width: 320px;
+    aspect-ratio: 1 / 1;
+}
+.vro-controller-left {
+    transform: scaleX(-1);
+}
+.vro-ctrl-base {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    opacity: .5;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.vro-btn {
+    position: absolute;
+    background-repeat: no-repeat;
+    opacity: 0;
+    cursor: default;
+    transition: opacity .15s, filter .15s;
+}
+.vro-btn[data-hl="grip"]    { left:46.484%; top:62.061%; width:13.574%; height:12.305%; background-image:url('../../../assets/VR/Quest/Grip.png');       background-size:736.69% 812.70%;   background-position:53.785% 70.768%; }
+.vro-btn[data-hl="trigger"] { left:27.393%; top:61.084%; width:13.916%; height:5.957%;  background-image:url('../../../assets/VR/Quest/Trigger.png');    background-size:718.60% 1678.69%;  background-position:31.821% 64.953%; }
+.vro-btn[data-hl="stick"]   { left:42.676%; top:33.447%; width:13.379%; height:9.668%;  background-image:url('../../../assets/VR/Quest/Thumbstick.png'); background-size:747.45% 1034.34%;  background-position:49.267% 37.027%; }
+.vro-btn[data-hl="a"]       { left:41.992%; top:43.896%; width:9.180%;  height:5.957%;  background-image:url('../../../assets/VR/Quest/A.png');         background-size:1089.36% 1678.69%; background-position:46.237% 46.677%; }
+.vro-btn[data-hl="b"]       { left:33.594%; top:43.213%; width:8.789%;  height:5.957%;  background-image:url('../../../assets/VR/Quest/B.png');         background-size:1137.78% 1678.69%; background-position:36.831% 45.950%; }
+
+.vro-btn.active {
+    opacity: 1;
+}
+
+.vro-controller-visual.editing .vro-btn {
+    opacity: .08;
+    cursor: pointer;
+}
+.vro-controller-visual.editing .vro-btn:hover {
+    opacity: .4;
+}
+.vro-controller-visual.editing .vro-btn.active {
+    opacity: 1;
+}
+
+.vro-keybind-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+.vro-keybind-display {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 28px;
+    background: var(--bg-hover);
+    border-radius: 8px;
+    border: 1px solid var(--bdr);
+    padding: 4px 8px;
+}
+.vro-keybind-chip {
+    background: color-mix(in srgb, var(--accent) 20%, transparent);
+    border: 1px solid var(--accent);
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--accent-lt);
+    font-weight: 600;
+}
+.vro-keybind-plus {
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx3);
+    font-weight: 700;
+}
+
+.vro-ctrl-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.vro-notif-toggles {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    flex-shrink: 0;
+}
+
+.vro-notif-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 0 4px;
+}
+
+.vro-notif-head .vro-notif-toggles span {
+    width: 34px;
+    text-align: center;
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--tx3);
+}

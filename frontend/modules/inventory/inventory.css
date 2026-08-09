@@ -1,0 +1,59 @@
+/* === Inventory Module === */
+
+.inv-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+.inv-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.inv-grid {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 20px;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    align-content: start;
+}
+
+.inv-grid .lib-date-group {
+    grid-column: 1 / -1;
+}
+
+.inv-card .lib-thumb-wrap {
+    aspect-ratio: 1 / 1;
+}
+
+#tab13 .inv-card[data-tag="gallery"] .lib-thumb-wrap {
+    aspect-ratio: 4 / 3;
+}
+
+.inv-no-preview {
+    width: 100%;
+    height: 100%;
+    color: var(--tx3);
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 700;
+    background: var(--bg-input);
+}
+
+.inv-anim-badge {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    z-index: 2;
+    pointer-events: none;
+    text-transform: uppercase;
+}

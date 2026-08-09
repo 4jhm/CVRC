@@ -1,0 +1,65 @@
+using System.Diagnostics;
+using System.Runtime;
+using System.Runtime.InteropServices;
+
+namespace VRCNext.Services;
+
+public class MemoryTrimService : IDisposable
+{
+    private System.Threading.Timer? _timer;
+    private const int IntervalMs = 10 * 60 * 1000; // 10 minutes
+
+    public void SetEnabled(bool enabled)
+    {
+        _timer?.Dispose();
+        _timer = null;
+        if (enabled)
+        {
+            TrimNow();
+            _timer = new System.Threading.Timer(_ => TrimNow(), null, IntervalMs, IntervalMs);
+        }
+    }
+
+    public Action? OnTrim { get; set; }
+
+    public void TrimNow()
+    {
+        Task.Run(() =>
+        {
+            try
+            {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced, blocking: true, compacting: true);
+                TrimWorkingSet();
+                OnTrim?.Invoke();
+            }
+            catch (Exception ex)
+            {
+                CrashHandler.WriteEntry("MemoryTrimService.TrimNow", ex);
+            }
+        });
+    }
+
+    private static void TrimWorkingSet()
+    {
+#if WINDOWS
+        try { EmptyWorkingSet(Process.GetCurrentProcess().Handle); } catch { }
+#else
+        try { malloc_trim(0); } catch { }
+#endif
+    }
+
+#if WINDOWS
+    [DllImport("psapi.dll")]
+    private static extern bool EmptyWorkingSet(nint hProcess);
+#else
+    [DllImport("libc", EntryPoint = "malloc_trim")]
+    private static extern int malloc_trim(nuint pad);
+#endif
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+        _timer = null;
+    }
+}

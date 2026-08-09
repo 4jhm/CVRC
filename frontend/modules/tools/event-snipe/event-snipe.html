@@ -1,0 +1,94 @@
+                <div class="sf-layout">
+
+                    <!-- Status -->
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status">
+                                <span class="sf-dot offline" id="snipeDot"></span>
+                                <span id="snipeStatusText" data-i18n="snipe.status.not_running">Not running</span>
+                            </div>
+                            <button class="vrcn-button" id="snipeToggleBtn" onclick="snipeToggle()">
+                                <span class="msi" style="font-size:16px;">play_arrow</span>
+                                <span data-i18n="common.start">Start</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+
+                        <!-- Group Picker -->
+                        <div class="vrcn-panel-card" style="display:flex;flex-direction:column;gap:10px;">
+                            <div class="vrcn-panel-card-header"><span class="msi">groups</span> <span data-i18n="snipe.group_picker.title">Group</span></div>
+
+                            <!-- Selected group display -->
+                            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:var(--bg3);border-radius:10px;min-height:50px;">
+                                <div id="snipeSelectedGroupIcon" style="width:36px;height:36px;border-radius:9px;background:var(--bg2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:calc(14px + var(--fs-off, 0px));font-weight:700;color:var(--tx3);overflow:hidden;">?</div>
+                                <div>
+                                    <div id="snipeSelectedGroupName" style="font-size:calc(12px + var(--fs-off, 0px));font-weight:600;color:var(--tx0);">—</div>
+                                    <div id="snipeNoGroupHint" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);" data-i18n="snipe.group_picker.hint">Select a group below</div>
+                                </div>
+                            </div>
+
+                            <!-- Search -->
+                            <div class="search-bar-row" style="margin:0;">
+                                <span class="msi search-ico">search</span>
+                                <input type="text" class="vrcn-input" data-i18n-placeholder="snipe.group_picker.search" placeholder="Search groups…" oninput="snipePopulateGroups(this.value)" style="flex:1;">
+                            </div>
+
+                            <!-- Group list -->
+                            <div id="snipeGroupList" class="vrcn-scrollbar" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+                        </div>
+
+                        <!-- Config -->
+                        <div style="display:flex;flex-direction:column;gap:12px;">
+
+                            <!-- World filter -->
+                            <div class="vrcn-panel-card">
+                                <div class="vrcn-panel-card-header"><span class="msi">travel_explore</span> <span data-i18n="snipe.world_filter.title">World Filter</span></div>
+                                <input id="snipeWorldIdInput" class="vrcn-input" placeholder="wrld_xxxxxxxx-…" style="width:100%;box-sizing:border-box;margin-top:6px;" data-i18n-placeholder="snipe.world_filter.placeholder">
+                            </div>
+
+                            <!-- Capacity + Auto-join -->
+                            <div class="vrcn-panel-card">
+                                <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="snipe.options.title">Options</span></div>
+                                <div style="display:flex;flex-direction:column;gap:10px;margin-top:8px;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                                        <span style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);" data-i18n="snipe.options.min_capacity">Min Capacity</span>
+                                        <input id="snipeMinCap" type="number" min="0" class="vrcn-input" value="0" style="width:70px;text-align:center;">
+                                    </div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                                        <span style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);" data-i18n="snipe.options.auto_join">Auto-join on find</span>
+                                        <label class="toggle"><input type="checkbox" id="snipeAutoJoin" checked><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Access types -->
+                            <div class="vrcn-panel-card">
+                                <div class="vrcn-panel-card-header"><span class="msi">lock_open</span> <span data-i18n="snipe.access_types.title">Access Types</span></div>
+                                <div style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);margin:4px 0 8px;" data-i18n="snipe.access_types.hint">Leave all off = any type</div>
+                                <div style="display:flex;flex-direction:column;gap:8px;">
+                                    <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);">Public</span><label class="toggle"><input type="checkbox" id="snipeAt_public"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);">Group</span><label class="toggle"><input type="checkbox" id="snipeAt_group"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);">Group+</span><label class="toggle"><input type="checkbox" id="snipeAt_groupPlus"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                    <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);">Group Public</span><label class="toggle"><input type="checkbox" id="snipeAt_groupPublic"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Found instances -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header" style="justify-content:space-between;">
+                            <div style="display:flex;align-items:center;gap:6px;"><span class="msi">radar</span> <span data-i18n="snipe.log.title">Found Instances</span></div>
+                            <button class="vrcn-button" onclick="document.getElementById('snipeLog').innerHTML=''" title="Clear">
+                                <span class="msi" style="font-size:14px;">delete_sweep</span>
+                            </button>
+                        </div>
+                        <div id="snipeLog" class="vrcn-scrollbar" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-top:8px;">
+                            <div data-snipe-empty style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);text-align:center;padding:16px 0;" data-i18n="snipe.log.empty">No instances found yet</div>
+                        </div>
+                    </div>
+
+                </div>

@@ -1,0 +1,92 @@
+                <div class="sf-layout">
+                    <!-- Status card -->
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status">
+                                <span class="sf-dot offline" id="dpDot"></span>
+                                <span id="dpStatusText" data-i18n="discord.status.not_connected">Not connected</span>
+                            </div>
+                            <button class="vrcn-button" id="dpConnBtn" onclick="dpToggle()">
+                                <span class="msi" style="font-size:16px;">play_arrow</span> <span data-i18n="common.start">Start</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Live preview card -->
+                    <div class="vrcn-panel-card" id="dpPreviewCard" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">visibility</span> <span data-i18n="common.live_preview">Live Preview</span></div>
+                        <div class="dp-preview">
+                            <div class="dp-img-wrap">
+                                <div id="dpPreviewImgPlaceholder" class="dp-world-placeholder">
+                                    <span class="msi" style="font-size:28px;color:var(--text-muted);">travel_explore</span>
+                                </div>
+                                <img id="dpPreviewImg" src="" alt="" class="dp-world-img" style="display:none;">
+                                <div id="dpPreviewStatusDot" class="dp-status-dot online"></div>
+                            </div>
+                            <div class="dp-preview-text">
+                                <div class="dp-preview-title" id="dpPreviewTitle">-</div>
+                                <div class="dp-preview-state" id="dpPreviewState">-</div>
+                                <div class="dp-preview-time" id="dpPreviewTime" data-i18n="discord.preview.default_elapsed">0:00 elapsed</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Launch card -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">power_settings_new</span> <span data-i18n="common.launch">Launch</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="common.start_with_vrchat_vr">Start when launching VRChat in VR</span><label class="toggle"><input type="checkbox" id="setDpAutoStartVR" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><span data-i18n="common.start_with_vrchat_desktop">Start when launching VRChat on Desktop</span><label class="toggle"><input type="checkbox" id="setDpAutoStartDesktop" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                    </div>
+
+                    <!-- Privacy settings card -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">shield</span> <span data-i18n="common.privacy">Privacy</span></div>
+                        <div class="dp-pg">
+                            <div class="dp-pg-row dp-pg-header">
+                                <div class="dp-pg-lbl"></div>
+                                <div class="dp-pg-col"><span class="dp-pg-dot join_me" title="Join Me" data-i18n-title="status.join_me"></span></div>
+                                <div class="dp-pg-col"><span class="dp-pg-dot online"  title="Online" data-i18n-title="status.online"></span></div>
+                                <div class="dp-pg-col"><span class="dp-pg-dot ask_me"  title="Ask Me" data-i18n-title="status.ask_me"></span></div>
+                                <div class="dp-pg-col"><span class="dp-pg-dot busy"    title="Busy" data-i18n-title="discord.privacy.busy"></span></div>
+                            </div>
+                            <div class="dp-pg-row">
+                                <div class="dp-pg-lbl" data-i18n="discord.privacy.hide_instance_id">Hide Instance ID</div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideInstId_joinme" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideInstId_online" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideInstId_askme"  onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideInstId_busy"   onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                            </div>
+                            <div class="dp-pg-row">
+                                <div class="dp-pg-lbl" data-i18n="discord.privacy.hide_location">Hide Location</div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideLoc_joinme" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideLoc_online" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideLoc_askme"  onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideLoc_busy"   onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                            </div>
+                            <div class="dp-pg-row">
+                                <div class="dp-pg-lbl" data-i18n="discord.privacy.hide_player_count">Hide Player Count</div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHidePlayers_joinme" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHidePlayers_online" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHidePlayers_askme"  onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHidePlayers_busy"   onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                            </div>
+                            <div class="dp-pg-row">
+                                <div class="dp-pg-lbl" data-i18n="discord.privacy.hide_join_button">Hide Join button</div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideJoinBtn_joinme" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideJoinBtn_online" onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideJoinBtn_askme"  onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                                <div class="dp-pg-col"><label class="toggle"><input type="checkbox" id="dpHideJoinBtn_busy"   onchange="dpAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Info card -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">info</span> <span data-i18n="common.how_it_works">How it works</span></div>
+                        <div style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);line-height:1.7;">
+                            <span data-i18n="discord.info.line1">Shows your current VRChat world on your Discord profile.</span><br>
+                            <span data-i18n="discord.info.line2">Updates automatically when you join a new world or change status.</span><br><br>
+                            <strong style="color:var(--tx1);" data-i18n="discord.info.line3">Discord must be running for Rich Presence to appear.</strong>
+                        </div>
+                    </div>
+                </div>

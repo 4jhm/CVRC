@@ -1,0 +1,90 @@
+/* === Activity Log Module === */
+
+.log-area {
+    margin-top: 10px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 10px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.log-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-bottom: 4px;
+}
+
+.log-input-row {
+    display: flex;
+    align-items: center;
+    padding: 5px 14px 8px;
+    border-top: 1px solid rgba(255,255,255,.05);
+    flex-shrink: 0;
+}
+
+.log-input-prompt {
+    color: var(--tx3);
+    font-family: 'Google Sans Mono', monospace;
+    font-size: calc(11px + var(--fs-off, 0px));
+    user-select: none;
+    margin-right: 6px;
+    flex-shrink: 0;
+}
+
+.log-input-field {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--tx2);
+    font-family: 'Google Sans Mono', monospace;
+    font-size: calc(11px + var(--fs-off, 0px));
+    caret-color: var(--tx2);
+    padding: 0;
+}
+
+.li-f {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 3.2px 14px;
+    font-family: 'Google Sans Mono', monospace;
+    font-size: calc(9.4px + var(--fs-off, 0px));
+    transition: background .08s;
+}
+
+.li-f:hover { background: rgba(255,255,255,.02); }
+
+.li-f .li-ts {
+    color: var(--tx3);
+    flex-shrink: 0;
+    min-width: 65px;
+    font-variant-numeric: tabular-nums;
+}
+
+.li-f .li-level {
+    flex-shrink: 0;
+    min-width: 40px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: calc(8.5px + var(--fs-off, 0px));
+}
+
+.li-f .li-level.info { color: #6897BB; }
+.li-f .li-level.ok   { color: #6DBF82; }
+.li-f .li-level.warn { color: #CE9178; }
+.li-f .li-level.err  { color: #E06C75; }
+.li-f .li-level.vrc  { color: #9876AA; }
+
+.li-f .li-msg { color: var(--tx2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.li-f .li-status { flex-shrink: 0; font-variant-numeric: tabular-nums; font-weight: 700; padding-left: 10px; }
+.li-f .li-status.ok   { color: #6DBF82; }
+.li-f .li-status.warn { color: #CE9178; }
+.li-f .li-status.err  { color: #E06C75; }
+.li-f .li-status.vrc  { color: #9876AA; }
+.li-f .li-status.info { color: #6897BB; }

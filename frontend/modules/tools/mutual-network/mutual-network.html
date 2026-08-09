@@ -1,0 +1,18 @@
+                <div class="net-root">
+                    <canvas id="netCanvas"></canvas>
+                    <div class="net-toolbar">
+                        <div class="search-bar-row net-search"><span class="msi search-ico">search</span><input type="text" id="netSearchInput" class="vrcn-input" placeholder="Search person..." data-i18n-placeholder="network.search_placeholder" oninput="networkSearch(this.value)"></div>
+                        <button class="vrcn-button" id="netFetchBtn" onclick="friendFetchStart()" disabled><span class="msi" style="font-size:14px;">cloud_download</span> <span class="ff-btn-label" data-i18n="friend_fetch.button">Fetch</span></button>
+                        <button class="vrcn-button" onclick="networkReFetch()" title="Clear cache and re-fetch all connections" data-i18n-title="network.refetch_title"><span class="msi" style="font-size:14px;">cloud_sync</span> <span data-i18n="network.refetch">Re-Fetch</span></button>
+                        <button class="vrcn-button active" id="netShowNf" onclick="networkToggleNonFriends(this)" title="Show or hide non-friends" data-i18n-title="network.show_nonfriends_title"><span class="msi" style="font-size:14px;">visibility</span> <span data-i18n="network.show_nonfriends">Show Non-Friends</span></button>
+                        <button class="vrcn-button" id="netCommunities" onclick="networkToggleCommunities(this)" title="Group people into communities and color them by community" data-i18n-title="network.communities_title"><span class="msi" style="font-size:14px;">hub</span> <span data-i18n="network.communities">Communities</span></button>
+                        <button class="vrcn-button" onclick="networkResetView()" title="Reset zoom/pan" data-i18n-title="network.reset_title"><span class="msi" style="font-size:14px;">center_focus_strong</span> <span data-i18n="network.reset">Reset</span></button>
+                    </div>
+                    <div class="net-comm-panel" id="netCommPanel" style="display:none;"></div>
+                    <div class="net-score-card" id="netScoreCard" style="display:none;"></div>
+                    <div class="net-progress" id="netProgress" style="display:none;">
+                        <span class="msi" style="font-size:14px;">sync</span>
+                        <span id="netProgressText" data-i18n="network.progress_initial">Loading connections: 0 / 0</span>
+                        <button class="net-progress-cancel" id="netProgressCancel" onclick="networkCancel()" title="Cancel" data-i18n-title="common.cancel">&#x2715;</button>
+                    </div>
+                </div>

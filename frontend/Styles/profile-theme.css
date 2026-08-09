@@ -1,0 +1,130 @@
+/* === VRC+ Profile Themes === */
+
+.pt-has-button {
+    --accent:     var(--pt-accent) !important;
+    --accent-lt:  var(--pt-accent-lt) !important;
+    --bg-card:    var(--pt-bg-card) !important;
+    --bg-hover:   var(--pt-bg-hover) !important;
+    --bg-input:   var(--pt-bg-input) !important;
+    --bg-btn:     var(--pt-bg-btn) !important;
+    --bg-btn-h:   var(--pt-bg-btn-h) !important;
+    --brd:        var(--pt-brd) !important;
+    --brd-lt:     var(--pt-brd) !important;
+}
+
+.pt-has-text {
+    --tx2: var(--pt-tx2) !important;
+    --tx3: var(--pt-tx3) !important;
+}
+
+.has-profile-theme .msi,
+.has-profile-theme .fd-info-icon,
+.has-profile-theme .vrcn-panel-card-header .msi {
+    color: var(--pt-icon, var(--accent));
+}
+
+.has-profile-theme .vrcn-badge .msi,
+.has-profile-theme .vrcn-supporter-badge .msi {
+    color: inherit;
+}
+
+.has-profile-theme .vrcn-badge {
+    --accent: #5C76FF;
+    --accent-lt: #5C76FF;
+    --tx2: #B7B7C3;
+    --tx3: #FFFFFF;
+    --ok: #2DD48C;
+    --warn: #FFBA37;
+    --err: #FF4B55;
+    --cyan: #8CA5FF;
+}
+
+.has-profile-theme .vrcn-badge { background: #1C1C1F; }
+
+.has-profile-theme .vrcn-badge.fd-tab-badge {
+    background: var(--pt-icon, var(--accent));
+    color: var(--pt-icon-fg, #fff);
+}
+.has-profile-theme .fd-lang-tags .vrcn-badge { background: var(--bg-hover); }
+
+.has-profile-theme .vrcn-badge.public,
+.has-profile-theme .vrcn-badge.ok      { background: color-mix(in srgb, #2DD48C 12%, #141414); }
+.has-profile-theme .vrcn-badge.friends { background: color-mix(in srgb, #42A5F5 12%, #141414); }
+.has-profile-theme .vrcn-badge.private,
+.has-profile-theme .vrcn-badge.invite  { background: color-mix(in srgb, #EF5350 12%, #141414); }
+.has-profile-theme .vrcn-badge.group   { background: color-mix(in srgb, #FFA726 12%, #141414); }
+.has-profile-theme .vrcn-badge.hidden  { background: color-mix(in srgb, #788CAF 12%, #141414); }
+
+.has-profile-theme .vrcn-badge.platform-pc    { background: color-mix(in srgb, var(--bdg-user-pc) 16%, #141414); }
+.has-profile-theme .vrcn-badge.platform-quest { background: color-mix(in srgb, var(--bdg-user-quest) 16%, #141414); }
+.has-profile-theme .vrcn-badge.platform-web   { background: color-mix(in srgb, var(--bdg-user-web) 18%, #141414); }
+.has-profile-theme .vrcn-badge.bdg-friend     { background: color-mix(in srgb, var(--bdg-user-friend) 14%, #141414); }
+
+.has-profile-theme .vrcn-badge.rank-visitor { background: color-mix(in srgb, var(--bdg-rank-visitor) 14%, #141414); }
+.has-profile-theme .vrcn-badge.rank-new     { background: color-mix(in srgb, var(--bdg-rank-new) 14%, #141414); }
+.has-profile-theme .vrcn-badge.rank-user    { background: color-mix(in srgb, var(--bdg-rank-user) 14%, #141414); }
+.has-profile-theme .vrcn-badge.rank-known   { background: color-mix(in srgb, var(--bdg-rank-known) 14%, #141414); }
+.has-profile-theme .vrcn-badge.rank-trusted { background: color-mix(in srgb, var(--bdg-rank-trusted) 14%, #141414); }
+
+.has-profile-theme .vrcn-badge.accent { background: color-mix(in srgb, #3884FF 18%, #141414); }
+.has-profile-theme .vrcn-badge.warn   { background: color-mix(in srgb, #FFBA37 18%, #141414); }
+.has-profile-theme .vrcn-badge.err    { background: color-mix(in srgb, #EF5350 15%, #141414); }
+.has-profile-theme .vrcn-badge.cyan   { background: color-mix(in srgb, #8CA5FF 18%, #141414); }
+
+.pt-stripes {
+    display: flex;
+    width: 100%;
+    height: 26px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid var(--brd);
+}
+.pt-stripes i { flex: 1; display: block; }
+
+.pt-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.pt-label {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx3);
+    width: 84px;
+    flex-shrink: 0;
+}
+.pt-preview {
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid var(--brd);
+    margin-bottom: 14px;
+    overflow: hidden;
+}
+.pt-preview .pt-stripes { height: 100%; border: none; border-radius: 0; }
+
+.pt-cell-actions {
+    display: flex;
+    gap: 4px;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.has-profile-theme,
+.has-profile-theme .modal-box,
+.has-profile-theme .fd-info-card,
+.has-profile-theme .fd-group-card,
+.has-profile-theme .fd-tabs,
+.has-profile-theme .fd-tab,
+.has-profile-theme .vrcn-user-item,
+.has-profile-theme .vrcn-button,
+.has-profile-theme .vrcn-button-round,
+.has-profile-theme .msi,
+.has-profile-theme .fd-modal-bar {
+    transition: background-color .35s ease, color .35s ease, border-color .35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .has-profile-theme,
+    .has-profile-theme * { transition: none !important; }
+}

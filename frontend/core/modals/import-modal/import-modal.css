@@ -1,0 +1,53 @@
+#importRows {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.imp-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg-input);
+    border: 1px solid var(--brd-lt);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.imp-row-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.imp-row-title {
+    font-size: calc(13px + var(--fs-off, 0px));
+    color: var(--tx1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.imp-row-count {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    margin-top: 2px;
+}
+
+.imp-row-arrow {
+    font-size: calc(16px + var(--fs-off, 0px));
+    color: var(--tx3);
+    flex-shrink: 0;
+}
+
+.imp-row-select {
+    min-width: 190px;
+    max-width: 220px;
+    flex-shrink: 0;
+}
+
+.imp-empty {
+    padding: 18px 0;
+    text-align: center;
+    color: var(--tx3);
+    font-size: calc(13px + var(--fs-off, 0px));
+}

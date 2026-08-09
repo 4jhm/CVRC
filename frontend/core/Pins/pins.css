@@ -1,0 +1,25 @@
+/* === Pins === */
+
+#pinsDropdown {
+    min-width: 300px;
+    max-width: 340px;
+}
+
+.pins-item {
+    cursor: pointer;
+    border-radius: 7px;
+}
+
+.pins-item-type {
+    font-size: calc(15px + var(--fs-off, 0px)) !important;
+    color: var(--tx3);
+    flex-shrink: 0;
+    margin-left: 6px;
+}
+
+.pins-empty {
+    padding: 12px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    white-space: nowrap;
+}

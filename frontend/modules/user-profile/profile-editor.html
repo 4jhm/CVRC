@@ -1,0 +1,26 @@
+<div class="vpe-header">
+    <span class="vpe-title">
+        <span class="vpe-plus-tag">VRCN+</span>
+        <span data-i18n="vrcnplus.editor.title">Profile Customization</span>
+    </span>
+    <button class="vrcn-button" onclick="closeVrcnPlusEditor()" style="padding:3px 8px;">
+        <span class="msi" style="font-size:14px;">close</span>
+    </button>
+</div>
+<div class="vpe-body vrcn-scrollbar">
+    <div id="vpeUpsell" class="vpe-upsell" style="display:none;">
+        <b data-i18n="vrcnplus.editor.upsell_title">VRCN+ required</b><br>
+        <span data-i18n="vrcnplus.editor.upsell_body">Profile customization is a VRCN+ perk. Saving is locked until your account is on the supporter list.</span>
+    </div>
+    <div id="vpeRows"></div>
+</div>
+<div class="vpe-footer">
+    <button class="vrcn-button vpe-reset" onclick="vrcnPlusResetEditor()">
+        <span class="msi" style="font-size:15px;">restart_alt</span>
+        <span data-i18n="vrcnplus.editor.reset">Reset</span>
+    </button>
+    <button class="vrcn-button vrcn-btn-primary vpe-save" onclick="vrcnPlusSaveFromEditor()">
+        <span class="msi" style="font-size:15px;">save</span>
+        <span data-i18n="vrcnplus.editor.save">Save</span>
+    </button>
+</div>

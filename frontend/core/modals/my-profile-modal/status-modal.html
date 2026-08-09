@@ -1,0 +1,17 @@
+        <div class="modal-box" style="max-width:418px;">
+            <div class="fd-modal-bar">
+                <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" data-i18n="profiles.status.modal_title">Change Status</span></div>
+                <div class="fd-modal-bar-actions">
+                    <div class="vrcn-keybind-row" aria-label="Keyboard shortcuts" style="margin-right:6px;"><span class="vrcn-keybind">CTRL I</span></div>
+                    <button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="document.getElementById('modalStatus').style.display='none'"><span class="msi" style="font-size:20px;">close</span></button>
+                </div>
+            </div>
+            <div id="statusOptions" style="margin-top:20px;"></div>
+            <div class="status-desc-row" style="display:flex;gap:8px;align-items:center;margin-top:12px;">
+                <select class="vrcn-dropdown status-desc-select" id="statusDescSelect" style="flex:1;min-width:0;"></select>
+                <textarea class="status-desc-input" id="statusDescInput" rows="1" maxlength="32" placeholder="Status message..." data-i18n-placeholder="profiles.status.message_placeholder" style="flex:1;min-width:0;margin-top:0;display:none;"></textarea>
+                <button class="vrcn-button-round" id="statusDescEditBtn" onclick="toggleStatusDescEdit()" title="Custom message" data-i18n-title="profiles.status.custom"><span class="msi" style="font-size:16px;">edit</span></button>
+            </div>
+            <div style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);margin-top:4px;margin-bottom:14px;text-align:right;" id="statusDescCount">0/32</div>
+            <div class="modal-btns"><button class="vrcn-button-round vrcn-btn-join" onclick="submitStatusChange()" data-i18n="profiles.status.update">Update</button></div>
+        </div>

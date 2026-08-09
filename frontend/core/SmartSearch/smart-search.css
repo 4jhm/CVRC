@@ -1,0 +1,434 @@
+/* === SmartSearch Topbar Badge & Dropdown === */
+
+.ss-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Badge trigger — styled as tb-sidebar-btn */
+.ss-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 100%;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: none;
+    cursor: pointer;
+    user-select: none;
+    outline: none;
+    color: var(--tx2);
+    /* animation out */
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity .18s ease, transform .18s ease, background .1s, color .1s;
+}
+
+.ss-badge:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--tx0);
+}
+
+.ss-badge.ss-badge-hidden {
+    opacity: 0;
+    transform: scale(0.78);
+    pointer-events: none;
+}
+
+.ss-badge .ss-icon {
+    font-size: calc(18px + var(--fs-off, 0px));
+    line-height: 1;
+}
+
+/* Expanded input row — animates via max-width + opacity */
+.ss-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0;
+    border-radius: 14px;
+    border: 1px solid var(--accent);
+    background: var(--bg-input);
+    overflow: hidden;
+    /* collapsed */
+    max-width: 0;
+    opacity: 0;
+    border-width: 0;
+    pointer-events: none;
+    transition: max-width .25s ease, opacity .2s ease, padding .22s ease, border-width .1s ease;
+}
+
+.ss-input-wrap.ss-visible {
+    max-width: 234px;
+    opacity: 1;
+    padding: 3px 10px;
+    border-width: 1px;
+    pointer-events: all;
+}
+
+.ss-input-wrap .ss-icon {
+    font-size: calc(13px + var(--fs-off, 0px));
+    color: var(--accent);
+    flex-shrink: 0;
+    line-height: normal;
+}
+
+.ss-input-wrap input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 500;
+    color: var(--tx0);
+    font-family: inherit;
+    min-width: 0;
+    width: 160px;
+}
+
+.ss-input-wrap input::placeholder {
+    color: var(--tx3);
+}
+
+/* Close button inside input-wrap */
+.ss-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--tx3);
+    padding: 0;
+    line-height: normal;
+    flex-shrink: 0;
+    font-size: calc(15px + var(--fs-off, 0px));
+    transition: color .15s;
+}
+
+.ss-close-btn:hover {
+    color: var(--tx1);
+}
+
+/* === Dropdown === */
+.ss-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 280px;
+    max-width: 340px;
+    max-height: 420px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    z-index: 9999;
+    padding: 6px 0;
+    /* animate in */
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+    pointer-events: none;
+    transition: opacity .18s ease, transform .18s ease;
+}
+
+.ss-dropdown.ss-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: all;
+}
+
+/* Friend status badge shadow — override --bg-side with dropdown bg */
+.ss-dropdown .vrc-friend-status-badge {
+    box-shadow: 0 0 0 2px var(--bg-card);
+}
+.ss-dropdown .vrc-friend-status-badge.vrc-status-ring {
+    background: var(--bg-card);
+}
+
+/* Section header */
+.ss-section-hdr {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+    color: var(--tx3);
+    padding: 8px 14px 4px;
+    margin-top: 2px;
+}
+
+.ss-section-hdr:first-child {
+    margin-top: 0;
+}
+
+.ss-search-in {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--brd);
+    min-width: 0;
+}
+
+.ss-search-in-label {
+    color: var(--tx3);
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.ss-search-in-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+/* Result item */
+.ss-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: background .15s;
+    min-width: 0;
+}
+
+.ss-item:hover,
+.ss-item.ss-item-focused {
+    background: rgba(255,255,255,.05);
+}
+
+.ss-search-in-actions .vrcn-button.ss-chip-focused {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+}
+
+.ss-item-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.ss-item-toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    padding: 0;
+    margin: 0 0 0 auto;
+    border: none;
+    background: transparent;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.ss-item-toggle-track {
+    display: block;
+    width: 36px;
+    height: 20px;
+    border-radius: 10px;
+    background: var(--brd);
+    position: relative;
+    transition: background .2s;
+}
+
+.ss-item-toggle.is-on .ss-item-toggle-track {
+    background: var(--accent);
+}
+
+.ss-item-toggle-knob {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: left .2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+
+.ss-item-toggle.is-on .ss-item-toggle-knob {
+    left: 18px;
+}
+
+.ss-item-toggle:focus-visible .ss-item-toggle-track {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.ss-item-toggle.ss-item-toggle-disabled {
+    cursor: not-allowed;
+    opacity: .45;
+}
+
+/* Thumbnail / avatar */
+.ss-item-img {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--bg-input);
+}
+
+.ss-item-img.ss-img-circle {
+    border-radius: 50%;
+}
+
+.ss-item-img-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    flex-shrink: 0;
+    background: var(--bg-input);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(13px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+}
+
+.ss-item-img-placeholder.ss-img-circle {
+    border-radius: 50%;
+}
+
+.ss-item-name {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 500;
+    color: var(--tx0);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+    flex: 1;
+}
+
+.ss-item-sub {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Empty / hint states */
+.ss-empty {
+    padding: 18px 14px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx3);
+    text-align: center;
+}
+
+.ss-hint {
+    padding: 12px 14px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.ss-hint .msi {
+    font-size: 22px;
+    color: var(--tx2);
+}
+
+/* === SmartSearch Modal === */
+.ss-modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10050;
+    background: rgba(0, 0, 0, 0.55);
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 72px;
+    animation: fadeIn .1s ease;
+}
+
+.ss-modal-overlay.ss-modal-open {
+    display: flex;
+}
+
+.ss-modal-box {
+    width: 520px;
+    max-width: calc(100vw - 48px);
+    background: var(--bg-card);
+    border: 1px solid var(--brd-lt);
+    border-radius: 14px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, .6);
+    overflow: hidden;
+    animation: tbDropIn .12s ease;
+}
+
+.ss-modal-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--brd);
+}
+
+.ss-modal-input-wrap > .msi {
+    font-size: 18px;
+    color: var(--accent);
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.ss-modal-input-wrap input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: calc(14px + var(--fs-off, 0px));
+    font-weight: 500;
+    color: var(--tx0);
+    font-family: inherit;
+    min-width: 0;
+}
+
+.ss-modal-input-wrap input::placeholder {
+    color: var(--tx3);
+}
+
+/* Dropdown inside modal: static flow, not absolute */
+.ss-modal-box .ss-dropdown {
+    position: static;
+    min-width: 0;
+    max-width: none;
+    width: 100%;
+    border: none;
+    border-radius: 0 0 14px 14px;
+    box-shadow: none;
+    background: transparent;
+    padding: 4px 0 6px;
+}
+
+.ss-modal-box .ss-dropdown.ss-visible {
+    transform: none;
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Settings row highlight when navigated to from search */
+@keyframes ss-setting-pulse {
+    0%   { background: transparent; }
+    25%  { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+    100% { background: transparent; }
+}
+
+.ss-setting-highlight {
+    border-radius: 8px;
+    animation: ss-setting-pulse 1.4s ease forwards;
+}

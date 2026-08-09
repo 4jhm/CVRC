@@ -1,0 +1,33 @@
+                <div class="tab-toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <button class="vrcn-button" id="libFavBtn" onclick="toggleFavFilter()"><span class="msi" style="font-size:16px;">favorite</span> <span data-i18n="library.favorites">Favorites</span></button>
+                        <div id="libFriendFilterWrap"></div>
+                        <div id="libWorldFilterWrap"></div>
+                        <select id="libFolderFilter" class="vrcn-dropdown" onchange="filterLibrary()"><option value="__all__" data-i18n="library.filters.all_folders">All Folders</option></select>
+                        <select id="libTypeFilter" class="vrcn-dropdown" onchange="filterLibrary()"><option value="all" data-i18n="library.filters.all_media">All Media</option><option value="image" data-i18n="library.filters.images">Images</option><option value="video" data-i18n="library.filters.videos">Videos</option><option value="gif" data-i18n="library.filters.gifs">GIFs</option></select>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="vrcn-button" id="libResetFiltersBtn" onclick="resetLibFilters()" style="display:none;" data-i18n="library.filters.reset">Reset</button>
+                        <button class="vrcn-button" id="libEditModeBtn" onclick="toggleLibEditMode()" title="Edit" data-i18n-title="library.edit.button"><span class="msi" style="font-size:16px;">edit</span> <span data-i18n="library.edit.button">Edit</span></button>
+                        <button class="vrcn-button" onclick="forceRefreshLibrary()"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="common.refresh">Refresh</span></button>
+                        <button class="vrcn-button sub-tab-btn active" id="libViewGrid" onclick="setLibViewMode('grid')" title="Grid View"><span class="msi" style="font-size:16px;">grid_view</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="libViewFolder" onclick="setLibViewMode('folder')" title="Folder View"><span class="msi" style="font-size:16px;">folder</span></button>
+                    </div>
+                </div>
+                <div id="libFolderBreadcrumb" style="display:none;align-items:center;gap:8px;margin-bottom:8px;flex-shrink:0;">
+                    <button class="vrcn-button" onclick="_backToFolderList()"><span class="msi" style="font-size:16px;">arrow_back</span></button>
+                    <span id="libFolderBreadcrumbName" style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);"></span>
+                </div>
+                <div class="lib-wrap">
+                    <div class="lib-top-fade" id="libTopFade"></div>
+                    <div id="libGrid" class="lib-grid"><div class="empty-msg" data-i18n="library.empty.watch_folders">Add watch folders in Settings.</div></div>
+                </div>
+                <div id="libPaginatorBar" class="tl-paginator-bar"></div>
+                <div id="libEditBar" class="lib-edit-bar" style="display:none;">
+                    <span id="libEditCount" class="lib-edit-count">0 selected</span>
+                    <button id="libEditSelectAllBtn" class="vrcn-button" onclick="libEditSelectAll()" data-i18n="library.edit.select_all">Select All</button>
+                    <span class="lib-edit-spacer"></span>
+                    <button id="libEditFavBtn" class="vrcn-button lib-edit-action" disabled onclick="libEditFavoriteSelected()"><span class="msi" style="font-size:14px;">favorite</span> <span class="lib-edit-action-label">Favorite</span></button>
+                    <button id="libEditHideBtn" class="vrcn-button lib-edit-action" disabled onclick="libEditHideSelected()"><span class="msi" style="font-size:14px;">visibility_off</span> <span class="lib-edit-action-label">Hide</span></button>
+                    <button id="libEditDeleteBtn" class="vrcn-button vrcn-btn-danger lib-edit-action" disabled onclick="libEditDeleteSelected()"><span class="msi" style="font-size:14px;">delete</span> <span class="lib-edit-action-label">Delete</span></button>
+                </div>

@@ -1,0 +1,191 @@
+/* === Voice Fight Module === */
+
+.vf-meter-wrap {
+    height: 8px;
+    background: var(--bg-input);
+    border-radius: 4px;
+    overflow: hidden;
+}
+.vf-meter-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--ok);
+    border-radius: 4px;
+    transition: width 0.08s ease, background 0.15s;
+}
+.vf-item {
+    background: var(--bg-input);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: background 0.15s;
+}
+.vf-item:last-child { margin-bottom: 0; }
+.vf-item-flash { background: rgba(56,132,255,.18) !important; }
+
+.vf-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+.vf-filename {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx0);
+    max-width: 200px;
+}
+.vf-length {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    font-weight: 600;
+    letter-spacing: .3px;
+}
+.vf-item-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+}
+.vf-btn-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: none;
+    background: var(--bg-hover);
+    color: var(--tx1);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.vf-btn-icon:hover { background: var(--accent); color: #fff; }
+.vf-btn-icon .msi { font-size: 16px; }
+.vf-btn-del:hover { background: var(--err) !important; }
+.vf-vol-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.vf-vol-label {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+    letter-spacing: .4px;
+    min-width: 24px;
+}
+.vf-vol-slider {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 4px;
+}
+.vf-vol-val {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx2);
+    min-width: 32px;
+    text-align: right;
+}
+.vf-recognized-wrap {
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+}
+.vf-recognized-text {
+    font-size: calc(14px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx3);
+    transition: color .15s;
+    word-break: break-word;
+}
+.vf-recognized-partial { color: var(--tx2); }
+.vf-recognized-final   { color: var(--accent); }
+.vf-blocked            { color: #e05555; text-decoration: line-through; opacity: .75; }
+.vf-block-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 6px;
+    min-height: 44px;
+    padding: 8px;
+    background: var(--bg-input);
+    border-radius: 8px;
+    cursor: text;
+}
+.vf-block-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(224,85,85,.15);
+    color: #e05555;
+    border-radius: 6px;
+    padding: 3px 8px 3px 10px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 600;
+    flex-shrink: 0;
+}
+.vf-block-chip-remove { padding: 0; color: inherit; opacity: .5; line-height: 1; transition: opacity .15s; }
+.vf-block-chip-remove:hover { opacity: 1; }
+.vf-block-inline-input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--tx1);
+    font-family: inherit;
+    font-size: calc(12px + var(--fs-off, 0px));
+    min-width: 120px;
+    flex: 1;
+    padding: 2px 0;
+    caret-color: var(--accent);
+}
+.vf-item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.vf-item-header .vrcn-edit-field { background: var(--bg-card); }
+.vf-item-header .vrcn-edit-field:focus { background: var(--bg-card-h, var(--bg-hover)); }
+.vf-sounds {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.vf-sound {
+    background: var(--bg-card);
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.vf-sound-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.vf-no-sounds {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    text-align: center;
+    padding: 4px 0;
+}
+.vf-add-btn {
+    gap: 4px;
+    width: 100%;
+    background: transparent;
+    border: 1.5px dashed var(--brd);
+    border-radius: 6px;
+    color: var(--tx2);
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-family: inherit;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+}
+.vf-add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(56,132,255,.06);
+}
+.vf-add-btn .msi { font-size: 14px; }

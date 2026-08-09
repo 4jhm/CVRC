@@ -1,0 +1,26 @@
+                <div class="sf-layout">
+                    <div class="vrcn-panel-card">
+                        <div class="pm-header">
+                            <div class="pm-header-left">
+                                <span class="msi" style="font-size:20px;color:var(--accent);">lock</span>
+                                <div>
+                                    <div class="pm-title" data-i18n="permini.title">Permini</div>
+                                </div>
+                            </div>
+                            <button class="vrcn-button" onclick="openPerminiPicker()">
+                                <span class="msi" style="font-size:16px;">person_add</span>
+                                <span data-i18n="permini.add_friend">Add Friend</span>
+                            </button>
+                        </div>
+                        <p class="pm-desc" data-i18n="permini.desc">Friends on this list will automatically receive an invite to your current instance when they send an invite request.</p>
+                        <p class="pm-desc" data-i18n="permini.desc2">For Invite-Only instances, this only works if they are the instance owner. For all other instance types, they can invite you.</p>
+                        <div style="margin-top:10px;padding:12px 14px;background:rgba(var(--err-rgb,220,50,50),.10);border:1px solid rgba(var(--err-rgb,220,50,50),.30);border-radius:10px;line-height:1.7;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <span class="msi" style="font-size:20px;color:var(--err);">warning</span>
+                                <span style="font-size:calc(13px + var(--fs-off, 0px));font-weight:700;color:var(--err);" data-i18n="permini.important.title">Important</span>
+                            </div>
+                            <p style="margin:0;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);" data-i18n="permini.important.text">Do Not Disturb invite requests only work when using VRCNext. Invite requests cannot be sent through VRChat or the website in this case, because they are blocked there. So if your friend wants to join you while your status is set to Do Not Disturb, they must use VRCNext.</p>
+                        </div>
+                    </div>
+                    <div id="pmList" class="pm-list"></div>
+                </div>

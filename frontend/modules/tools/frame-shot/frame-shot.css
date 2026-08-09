@@ -1,0 +1,104 @@
+/* === FrameShot Module === */
+/* Reuses .sf-* classes from space-flight.css for layout, status row, toggle row, controller chips. */
+
+.fs-howto {
+    margin: 4px 0 8px;
+    padding-left: 20px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx2);
+    line-height: 1.5;
+}
+.fs-howto li {
+    margin-bottom: 4px;
+}
+.fs-savepath {
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: var(--bg-input);
+    border-radius: 6px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    font-family: monospace;
+}
+
+.fs-keybind-grid {
+    display: grid;
+    grid-template-columns: 90px 1fr 1fr 1fr;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx1);
+}
+.fs-keybind-grid label {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+}
+.fs-keybind-head {
+    margin-bottom: 4px;
+}
+
+.fs-help {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    line-height: 1.45;
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: var(--bg-input);
+    border-radius: 6px;
+}
+.fs-keybind-head > span {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--tx3);
+    letter-spacing: 0.5px;
+    text-align: left;
+}
+
+.fs-gif-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+}
+.fs-gif-head {
+    margin-bottom: 4px;
+}
+.fs-video-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 12px;
+    row-gap: 6px;
+}
+.fs-gif-head > span {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--tx3);
+    letter-spacing: 0.5px;
+    text-align: left;
+    line-height: 1.25;
+}
+.fs-gif-grid .vrcn-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.fs-ctrl-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+    min-width: 0;
+}
+.fs-ctrl-col .vro-controller {
+    width: 100%;
+}
+.fs-ctrl-cap {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx2);
+}

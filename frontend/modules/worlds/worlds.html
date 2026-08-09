@@ -1,0 +1,76 @@
+                <div class="tab-toolbar tt-split" id="worldToolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <div id="worldFilterBtns" style="display:flex;gap:8px;align-items:center;">
+                        <button class="vrcn-button sub-tab-btn active" id="worldFilterFav" onclick="setWorldFilter('favorites')"><span class="msi" style="font-size:16px;">favorite</span> <span data-i18n="worlds.filters.favorites">Favorites</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="worldFilterRecent" onclick="setWorldFilter('recent')"><span class="msi" style="font-size:16px;">history</span> <span data-i18n="worlds.filters.recent">Recently Visited</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="worldFilterMine" onclick="setWorldFilter('mine')"><span class="msi" style="font-size:16px;">cloud_upload</span> <span data-i18n="worlds.filters.mine">My Worlds</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="worldFilterSearch" onclick="setWorldFilter('search')"><span class="msi" style="font-size:16px;">search</span> <span data-i18n="worlds.filters.search">Search</span></button>
+                    </div>
+                    <div id="worldEditBar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;flex:1;">
+                        <span id="worldEditCount" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);white-space:nowrap;">0 selected</span>
+                        <button id="worldEditSelectAllBtn" class="vrcn-button" onclick="worldEditSelectAll()" data-i18n="worlds.edit.select_all">Select All</button>
+                        <div style="position:relative;">
+                            <button id="worldEditMoveBtn" class="vrcn-button wd-edit-action" disabled onclick="worldEditShowMoveMenu(this)"><span class="msi" style="font-size:14px;">drive_file_move</span> <span data-i18n="worlds.edit.move_to">Move to...</span></button>
+                            <div id="worldEditMovePicker" class="vn-select-panel" style="display:none;min-width:180px;z-index:1200;"></div>
+                        </div>
+                        <button id="worldEditRemoveBtn" class="vrcn-button wd-edit-action" disabled onclick="worldEditRemoveSelected()"><span class="msi" style="font-size:14px;">favorite_border</span> <span data-i18n="worlds.edit.remove">Remove</span></button>
+                        <div style="position:relative;">
+                            <button id="worldCreateLocalBtn" class="vrcn-button" onclick="worldShowCreateLocalGroup(this)"><span class="msi" style="font-size:14px;">create_new_folder</span> <span data-i18n="favorites.create_local_group">Create Local Group</span></button>
+                            <div id="worldCreateLocalPanel" class="vn-select-panel" style="display:none;min-width:220px;z-index:1200;padding:8px;">
+                                <input type="text" id="worldCreateLocalInput" class="vrcn-input" maxlength="64" placeholder="Group name" data-i18n-placeholder="favorites.local_group_name" style="width:100%;margin-bottom:6px;" onkeydown="if(event.key==='Enter')worldSaveLocalGroup()">
+                                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                                    <button class="vrcn-button" onclick="worldCancelCreateLocalGroup()" data-i18n="common.cancel">Cancel</button>
+                                    <button class="vrcn-button vrcn-btn-primary" onclick="worldSaveLocalGroup()" data-i18n="common.create">Create</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:4px;align-items:center;">
+                        <button id="worldEditModeBtn" class="vrcn-button" onclick="toggleWorldEditMode()" title="Edit favorites" data-i18n-title="worlds.edit.button"><span class="msi" style="font-size:16px;">edit</span> <span data-i18n="worlds.edit.button">Edit</span></button>
+                        <button class="vrcn-button sub-tab-btn active" id="worldGridLarge" onclick="setGridSize('worlds','default');setWorldsViewMode('grid')" title="Large grid"><span class="msi" style="font-size:16px;">grid_on</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="worldGridSmall" onclick="setGridSize('worlds','compact');setWorldsViewMode('grid')" title="Compact grid"><span class="msi" style="font-size:14px;">apps</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="worldViewList" onclick="setWorldsViewMode('list')" title="List view" data-i18n-title="people.view.list"><span class="msi" style="font-size:14px;">format_list_bulleted</span></button>
+                    </div>
+                </div>
+                <div id="worldMineArea" style="display:none;">
+                    <div id="worldMineGrid" class="search-grid"><div class="empty-msg" data-i18n="worlds.mine.loading">Loading your worlds...</div></div>
+                    <div id="worldMinePaginatorBar" class="tl-paginator-bar"></div>
+                </div>
+                <div id="worldRecentArea" style="display:none;">
+                    <div id="worldRecentGrid" class="search-grid"><div class="empty-msg" data-i18n="common.loading">Loading...</div></div>
+                    <div id="worldRecentPaginatorBar" class="tl-paginator-bar"></div>
+                </div>
+                <div id="worldSearchArea" style="display:none;">
+                    <div class="tab-toolbar-body">
+                    <div class="search-bar-row">
+                        <select id="worldSortSelect" class="vrcn-dropdown" style="flex-shrink:0;">
+                            <option value="relevance" data-i18n="worlds.search.sort.relevance">Relevance</option>
+                            <option value="popularity" data-i18n="worlds.search.sort.popularity">Popularity</option>
+                            <option value="updated" data-i18n="worlds.search.sort.updated">Updated</option>
+                            <option value="created" data-i18n="worlds.search.sort.created">Created</option>
+                            <option value="shuffle" data-i18n="worlds.search.sort.shuffle">Shuffle</option>
+                        </select>
+                        <div style="position:relative;flex:1;display:flex;align-items:center;"><span class="msi search-ico">search</span><input type="text" id="searchWorldsInput" class="vrcn-input" style="width:100%;" placeholder="Search worlds..." data-i18n-placeholder="worlds.search.placeholder" onkeydown="if(event.key==='Enter')doSearch('worlds')"></div>
+                        <button class="vrcn-button" onclick="doSearch('worlds')" data-i18n="common.search">Search</button>
+                    </div>
+                    </div>
+                    <div id="searchWorldsResults" class="search-grid"><div class="empty-msg" data-i18n="worlds.search.empty_prompt">Search for VRChat worlds</div></div>
+                </div>
+                <div id="worldFavArea">
+                    <div class="tab-toolbar-body">
+                    <div id="favWorldGroupHeader" style="display:none;align-items:center;gap:6px;margin-bottom:10px;">
+                        <span id="favWorldGroupVrcPlusBadge" class="vrcn-supporter-badge" style="display:none;">VRC+</span>
+                        <span id="favWorldGroupLocalBadge" class="vrcn-local-badge" style="display:none;" data-i18n="favorites.local_badge">Local</span>
+                        <button id="favWorldGroupDeleteBtn" class="myp-edit-btn" onclick="deleteCurrentLocalWorldGroup(this)" style="display:none;" title="Delete local group" data-i18n-title="favorites.delete_local_group"><span class="msi" style="font-size:14px;">delete</span></button>
+                    </div>
+                    <!-- Dropdown + search -->
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+                        <select id="favWorldGroupFilter" class="vrcn-dropdown" onchange="setFavWorldGroup(this.value)" style="min-width:160px;max-width:220px;">
+                            <option value="" data-i18n="worlds.favorites.group.all">All Favorites</option>
+                        </select>
+                        <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:140px;"><span class="msi search-ico">search</span><input type="text" id="favWorldSearchInput" class="vrcn-input" placeholder="Filter favorite worlds..." data-i18n-placeholder="worlds.favorites.filter_placeholder" oninput="filterFavWorlds()"></div>
+                        <button id="favWorldsRefreshBtn" class="vrcn-button" onclick="refreshFavWorlds()" title="Refresh favorites" data-i18n-title="worlds.favorites.refresh_title"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="common.refresh">Refresh</span></button>
+                    </div>
+                    </div>
+                    <div id="favWorldsGrid" class="search-grid"><div class="empty-msg" data-i18n="worlds.favorites.loading">Loading favorite worlds...</div></div>
+                    <div id="favWorldsPaginatorBar" class="tl-paginator-bar"></div>
+                </div>

@@ -1,0 +1,491 @@
+/* === User Modal (Friend/Profile Detail) === */
+
+#modalFriendDetail .search-bar-row .vn-select .vn-select-trigger,
+#modalMyProfile .search-bar-row .vn-select .vn-select-trigger,
+#modalFriendDetail .fd-hm-header .vn-select .vn-select-trigger,
+#modalMyProfile .fd-hm-header .vn-select .vn-select-trigger,
+#modalFriendDetail .fd-hm-header .vrcn-button,
+#modalMyProfile .fd-hm-header .vrcn-button{ background: var(--bg-input); }
+#modalFriendDetail .search-bar-row .vn-select .vn-select-trigger:hover,
+#modalMyProfile .search-bar-row .vn-select .vn-select-trigger:hover,
+#modalFriendDetail .search-bar-row .vn-select.vn-open .vn-select-trigger,
+#modalMyProfile .search-bar-row .vn-select.vn-open .vn-select-trigger,
+#modalFriendDetail .fd-hm-header .vn-select .vn-select-trigger:hover,
+#modalMyProfile .fd-hm-header .vn-select .vn-select-trigger:hover,
+#modalFriendDetail .fd-hm-header .vn-select.vn-open .vn-select-trigger,
+#modalMyProfile .fd-hm-header .vn-select.vn-open .vn-select-trigger,
+#modalFriendDetail .fd-hm-header .vrcn-button:hover,
+#modalMyProfile .fd-hm-header .vrcn-button:hover{ background: var(--bg-input); filter: brightness(1.08); }
+
+#modalFriendDetail #fdInsightsWorlds .ts-item,
+#modalMyProfile #mypInsightsWorlds .ts-item,
+#modalFriendDetail #fdInsightsPersons .ts-item,
+#modalMyProfile #mypInsightsPersons .ts-item{
+    background: color-mix(in srgb, var(--bg-input) 85%, #000);
+}
+#modalFriendDetail #fdInsightsWorlds .ts-item:hover,
+#modalMyProfile #mypInsightsWorlds .ts-item:hover,
+#modalFriendDetail #fdInsightsPersons .ts-item:hover,
+#modalMyProfile #mypInsightsPersons .ts-item:hover{
+    background: color-mix(in srgb, var(--bg-input) 85%, #000);
+    filter: brightness(1.08);
+}
+
+
+.fd-info-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fd-info-top-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 305px;
+    gap: 10px;
+    align-items: stretch;
+}
+
+
+.fd-info-top-row .inst-item,
+.fd-info-top-row .vrcn-user-item {
+    background: transparent;
+    margin-bottom: 0;
+}
+
+.fd-info-top-row .inst-item-thumb {
+    width: 48px;
+    height: 36px;
+}
+
+.fd-info-top-row .vrcn-user-item-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.fd-info-cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 305px;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.fd-info-left,
+.fd-info-right {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.fd-info-left > :last-child,
+.fd-info-right > :last-child {
+    flex: 1;
+}
+
+.fd-info-card {
+    background: var(--bg-input);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.fd-info-card .fd-group-rep-label {
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--brd);
+}
+
+.fd-info-card .myp-section-header {
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--brd);
+}
+
+.fd-bio-translate { margin-left: auto; }
+.fd-bio-translate.active { color: var(--accent); }
+.fd-bio-translate[disabled] { opacity: .6; cursor: default; }
+.fd-bio-translate[disabled] .msi { animation: fd-bio-trans-spin 1s linear infinite; }
+@keyframes fd-bio-trans-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.fd-owner-col .vrcn-user-item-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 6px;
+}
+
+.fd-vrc-badge-tooltip-global {
+    position: fixed;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    min-width: 200px;
+    max-width: 280px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+    z-index: 10002;
+    box-shadow: 0 4px 16px rgba(0,0,0,.4);
+}
+
+.fd-vrc-badge-tip-img {
+    width: 38px;
+    height: 38px;
+    border-radius: 6px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.fd-vrc-badge-tip-text {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.fd-vrc-badge-tip-name {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx1);
+    line-height: 1.3;
+}
+
+.fd-vrc-badge-tip-desc {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    line-height: 1.4;
+    white-space: normal;
+}
+
+/*COMPACT MODE — two-column layout with left identity panel*/
+
+#modalFriendDetail.fd-style-compact,
+#modalMyProfile.fd-style-compact{ padding: calc(var(--tb-h) + 8px) 0 8px; }
+
+#modalFriendDetail.fd-style-compact .modal-box.wide,
+#modalMyProfile.fd-style-compact .modal-box.wide{
+    width: 1144px;
+    max-height: var(--fd-compact-h);
+    overflow: hidden;
+}
+
+#modalFriendDetail.fd-style-compact #friendDetailContent,
+#modalMyProfile.fd-style-compact #myProfileContent{
+    padding: 0;
+    height: var(--fd-compact-h);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+#modalFriendDetail.fd-style-compact #friendDetailContent .fd-modal-bar,
+#modalMyProfile.fd-style-compact #myProfileContent .fd-modal-bar{
+    margin: 0;
+    border-radius: 0;
+    flex-shrink: 0;
+}
+
+#modalFriendDetail.fd-style-compact .fd-layout,
+#modalMyProfile.fd-style-compact .fd-layout{
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 302px minmax(0, 1fr);
+    overflow: hidden;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left,
+#modalMyProfile.fd-style-compact .fd-left{
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--bg-card);
+    border-right: 1px solid var(--brd);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left-banner,
+#modalMyProfile.fd-style-compact .fd-left-banner{
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: 165px;
+    flex-shrink: 0;
+    background: var(--bg-hover);
+    overflow: hidden;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left-banner img,
+#modalMyProfile.fd-style-compact .fd-left-banner img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.72);
+}
+
+#modalFriendDetail.fd-style-compact .fd-left-banner .fd-banner-fade,
+#modalMyProfile.fd-style-compact .fd-left-banner .fd-banner-fade{
+    background: linear-gradient(to top, var(--bg-card) 0%, rgba(0,0,0,.08) 55%, transparent 100%);
+}
+
+#modalFriendDetail.fd-style-compact .fd-left-body,
+#modalMyProfile.fd-style-compact .fd-left-body{
+    position: relative;
+    z-index: 1;
+    margin-top: -58px;
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left-id,
+#modalMyProfile.fd-style-compact .fd-left-id{
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left-avatar-wrap,
+#modalMyProfile.fd-style-compact .fd-left-avatar-wrap{
+    position: relative;
+    flex-shrink: 0;
+    display: flex;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left .fd-avatar,
+#modalMyProfile.fd-style-compact .fd-left .fd-avatar{
+    position: relative;
+    z-index: 1;
+    width: 61px;
+    height: 61px;
+    border-radius: 14px;
+    flex-shrink: 0;
+}
+
+/* Above .user-frame-deco (z-index 3), which overhangs the avatar and would cover
+   the dot in this corner. */
+#modalFriendDetail.fd-style-compact .fd-left-status-dot {
+    position: absolute;
+    z-index: 4;
+    bottom: -2px;
+    right: -2px;
+    width: 11px !important;
+    height: 11px !important;
+    box-shadow: 0 0 0 2px var(--bg-card);
+}
+
+#modalFriendDetail.fd-style-compact .fd-left-status-dot.vrc-status-ring{
+    background: var(--bg-card);
+}
+
+#modalMyProfile.fd-style-compact .fd-left-status-dot{
+    display: none;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left-name-wrap,
+#modalMyProfile.fd-style-compact .fd-left-name-wrap{
+    min-width: 0;
+    padding-bottom: 2px;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left .fd-pronouns,
+#modalMyProfile.fd-style-compact .fd-left .fd-pronouns{ margin-top: 2px; }
+
+#modalFriendDetail.fd-style-compact .fd-left .fd-badges-row,
+#modalMyProfile.fd-style-compact .fd-left .fd-badges-row,
+#modalFriendDetail.fd-style-compact .fd-left .fd-lang-tags,
+#modalMyProfile.fd-style-compact .fd-left .fd-lang-tags{ margin-bottom: 0; }
+
+#modalFriendDetail.fd-style-compact .fd-left .fd-actions,
+#modalMyProfile.fd-style-compact .fd-left .fd-actions{
+    margin-bottom: 0;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left .fd-actions > button,
+#modalMyProfile.fd-style-compact .fd-left .fd-actions > button{
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+}
+
+#modalFriendDetail.fd-style-compact .fd-right,
+#modalMyProfile.fd-style-compact .fd-right{
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#modalFriendDetail.fd-style-compact .fd-right-scroll,
+#modalMyProfile.fd-style-compact .fd-right-scroll{
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 18px;
+}
+
+#modalFriendDetail.fd-style-compact .fd-right-scroll > .fd-tabs,
+#modalMyProfile.fd-style-compact .fd-right-scroll > .fd-tabs{
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    box-shadow: 0 -9px 0 18px var(--bg-card);
+}
+
+#modalFriendDetail.fd-style-compact #fdTabJson > .json-viewer,
+#modalMyProfile.fd-style-compact #mypTabJson > .json-viewer{
+    max-height: none !important;
+    height: calc(var(--fd-compact-h) - 88px) !important;
+    margin: 0 !important;
+}
+#modalFriendDetail.fd-style-compact .fd-modal-bar + .fd-layout #fdTabJson > .json-viewer,
+#modalMyProfile.fd-style-compact .fd-modal-bar + .fd-layout #mypTabJson > .json-viewer{
+    height: calc(var(--fd-compact-h) - 132px) !important;
+}
+
+#modalFriendDetail.fd-style-compact .fd-info-cols,
+#modalMyProfile.fd-style-compact .fd-info-cols{
+    grid-template-columns: minmax(0, 1fr) 244px;
+}
+
+#modalFriendDetail.fd-style-compact .fd-info-card .fd-group-card.fd-group-rep,
+#modalMyProfile.fd-style-compact .fd-info-card .fd-group-card.fd-group-rep,
+#modalFriendDetail.fd-style-compact .fd-info-card .vrcn-user-item,
+#modalMyProfile.fd-style-compact .fd-info-card .vrcn-user-item{
+    margin-bottom: 0;
+}
+
+#modalFriendDetail.fd-style-compact .fd-bio-badges-row,
+#modalMyProfile.fd-style-compact .fd-bio-badges-row{
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+#modalFriendDetail.fd-style-compact .fd-bio-badges-row .vrcn-id-clip,
+#modalMyProfile.fd-style-compact .fd-bio-badges-row .vrcn-id-clip{
+    min-width: 0;
+    flex: 0 1 auto;
+}
+#modalFriendDetail.fd-style-compact .fd-bio-badges-row .vrcn-id-text,
+#modalMyProfile.fd-style-compact .fd-bio-badges-row .vrcn-id-text{
+    max-width: 100%;
+}
+
+.fd-hm-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+.fd-hm-head-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.fd-hm-count {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx1);
+}
+.fd-hm-head-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.fd-hm-period-label { font-size: calc(11px + var(--fs-off, 0px)); color: var(--tx3); }
+.fd-hm-head-right .vrcn-dropdown { flex-shrink: 0; }
+
+.fd-hm-stats {
+    display: flex;
+    gap: 18px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    margin-bottom: 10px;
+    min-height: 14px;
+}
+.fd-hm-stats strong { color: var(--tx1); font-weight: 700; }
+
+.fd-hm-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.fd-hm-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.fd-hm-row-label {
+    width: 28px;
+    flex-shrink: 0;
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    text-align: right;
+}
+.fd-hm-cells {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+    gap: 2px;
+}
+.fd-hm-cell {
+    aspect-ratio: 1 / 1;
+    border-radius: 2px;
+    background: var(--bg-hover);
+}
+.has-profile-theme { --hm-online: var(--pt-icon, var(--accent)); }
+.has-profile-theme .ts-bar { background: var(--pt-icon, var(--accent)); }
+.fd-hm-axis {
+    display: flex;
+    gap: 6px;
+    margin-top: 4px;
+}
+.fd-hm-axis-spacer {
+    width: 28px;
+    flex-shrink: 0;
+}
+.fd-hm-axis-hours {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(24, 1fr);
+}
+.fd-hm-axis-h {
+    font-size: calc(9px + var(--fs-off, 0px));
+    color: var(--tx3);
+    white-space: nowrap;
+    overflow: visible;
+}
+
+.fd-hm-stats {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+}
+.fd-st-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx2);
+    white-space: nowrap;
+}
+.fd-st-cdot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+@keyframes fd-action-spin { to { transform: rotate(360deg); } }
+.fd-action-btn .msi.fd-action-spin { animation: fd-action-spin 0.8s linear infinite; }

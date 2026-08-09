@@ -1,0 +1,64 @@
+.theme-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dot-sm {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 2px;
+    flex-shrink: 0;
+}
+
+.fd-status-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+}
+
+.fd-status {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx1);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.sf-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.sf-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx3);
+}
+.sf-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.sf-dot.offline { background: var(--tx3); }
+.sf-dot.online { background: var(--ok); box-shadow: 0 0 6px var(--ok); }
+
+.iim-status-cell {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 170px;
+    overflow: hidden;
+}
+.iim-status-cell span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--tx2);
+}

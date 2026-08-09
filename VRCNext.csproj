@@ -1,0 +1,93 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <_LinuxBuild Condition="$(RuntimeIdentifier.StartsWith('linux'))">true</_LinuxBuild>
+    <TargetFramework Condition="'$(_LinuxBuild)'!='true'">net9.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework Condition="'$(_LinuxBuild)'=='true'">net9.0</TargetFramework>
+    <OutputType Condition="'$(_LinuxBuild)'!='true'">WinExe</OutputType>
+    <OutputType Condition="'$(_LinuxBuild)'=='true'">Exe</OutputType>
+    <RootNamespace>VRCNext</RootNamespace>
+    <AssemblyName>VRCNext</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationIcon Condition="'$(_LinuxBuild)'!='true'">logo.ico</ApplicationIcon>
+    <CETCompat>false</CETCompat>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <UseWindowsForms Condition="'$(_LinuxBuild)'!='true'">true</UseWindowsForms>
+  </PropertyGroup>
+  <!-- Define WINDOWS when targeting Windows (RID win-*), or when building on Windows without a specific RID (local dev build) -->
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win')) OR ($([MSBuild]::IsOSPlatform('Windows')) AND '$(RuntimeIdentifier)' == '')">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Photino.NET" Version="4.0.16" />
+    <PackageReference Include="NativeFileDialogSharp" Version="0.5.0" />
+    <PackageReference Include="Rsync.Delta" Version="1.0.1" />
+    <PackageReference Include="VRChat.API" Version="2.20.7" />
+    <PackageReference Include="System.Drawing.Common" Version="9.0.0" />
+    <PackageReference Include="SkiaSharp" Version="2.88.8" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="2.88.8" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.8" Condition="'$(_LinuxBuild)'=='true'" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.0" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="9.0.0" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="Vortice.Direct3D11" Version="3.8.2" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="Velopack" Version="0.0.915" />
+    <PackageReference Include="Vosk" Version="0.3.38" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="NAudio" Version="2.2.1" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="System.Speech" Version="9.0.0" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="NAudio.Vorbis" Version="1.5.0" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="DiscordRichPresence" Version="1.6.1.70" Condition="'$(_LinuxBuild)'!='true'" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile  Remove="REFS\**" />
+    <Content  Remove="REFS\**" />
+    <EmbeddedResource Remove="REFS\**" />
+    <None     Remove="REFS\**" />
+    <Compile  Remove="translations\**" />
+    <Content  Remove="translations\**" />
+    <EmbeddedResource Remove="translations\**" />
+    <None     Remove="translations\**" />
+    <Compile  Remove="kikitan-translator\**" />
+    <Content  Remove="kikitan-translator\**" />
+    <EmbeddedResource Remove="kikitan-translator\**" />
+    <None     Remove="kikitan-translator\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="frontend\**" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+  <None Update="voice\**\*" Condition="'$(_LinuxBuild)'!='true'">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Include="Services\Assets\SystemTray\*.png" Condition="'$(_LinuxBuild)'!='true'" Link="tray\%(Filename)%(Extension)">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Include="Services\Assets\FrameShot\*.wav" Condition="'$(_LinuxBuild)'!='true'" Link="frameshot\%(Filename)%(Extension)">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+  <None Update="Services\OpenVR\openvr_api.dll" Condition="'$(_LinuxBuild)'!='true'" Link="openvr_api.dll">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
+</ItemGroup>
+
+  <!-- Inject webhook key from build environment into a generated file (gitignored, never in source) -->
+  <Target Name="GenerateWhKeySecret" BeforeTargets="CoreCompile">
+    <WriteLinesToFile
+      File="$(MSBuildProjectDirectory)\BuildSecrets.cs"
+      Lines="namespace VRCNext%3B internal static class BuildSecrets { internal const string WhKey = %22$(VRCNextWhKey)%22%3B internal const string VrcnPlusAdminToken = %22$(VRCNextVrcnPlusAdminToken)%22%3B }"
+      Overwrite="true" />
+    <ItemGroup>
+      <Compile Include="$(MSBuildProjectDirectory)\BuildSecrets.cs" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Embed custom icon into apphost (VRCNext.exe) after each build on Windows -->
+  <Target Name="StampIconIntoAppHost" AfterTargets="Build" Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <Exec Command="powershell.exe -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\tools\stamp_icon.ps1&quot; -exe &quot;$(OutputPath)$(AssemblyName).exe&quot; -ico &quot;$(MSBuildProjectDirectory)\logo.ico&quot;" ContinueOnError="true" />
+  </Target>
+
+</Project>

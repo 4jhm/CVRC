@@ -1,0 +1,285 @@
+.af-layout {
+    height: 100%;
+    min-height: 0;
+}
+
+.af-toolbar-row {
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.af-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.af-flow-select.vn-select { width: 170px; }
+.af-flow-select.vn-select .vn-select-trigger { width: 170px; }
+#afLogToggleBtn.active { background: var(--bg-input); border-color: var(--accent); color: var(--accent); }
+
+.af-icon-btn { padding: 4px 8px; }
+
+.af-inline-toggle { margin-left: 0 !important; }
+.af-toggle-label  { font-size: calc(12px + var(--fs-off, 0px)); color: var(--tx2); }
+
+.af-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: var(--accent-soft, rgba(123, 138, 255, 0.12));
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    white-space: nowrap;
+}
+.af-badge .msi   { font-size: 13px; opacity: 0.85; }
+.af-badge.at-limit {
+    background: rgba(224, 108, 117, 0.12);
+    border-color: var(--err);
+    color: var(--err);
+}
+
+.af-editor-card {
+    flex: 1;
+    min-height: 0;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+}
+.af-blockly-host {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+.af-empty-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    background: var(--bg-card);
+    z-index: 2;
+}
+
+.af-spinner { animation: af-spin 1s linear infinite; }
+@keyframes af-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.af-log-card {
+    flex: 0 0 auto;
+    max-height: 180px;
+    display: flex;
+    flex-direction: column;
+}
+.af-log-list {
+    flex: 1;
+    overflow-y: auto;
+    font-family: 'Google Sans Mono', monospace;
+    font-size: calc(11px + var(--fs-off, 0px));
+    line-height: 1.5;
+    background: var(--bg-input);
+    border-radius: 6px;
+    padding: 6px 8px;
+    min-height: 60px;
+    margin-top: 8px;
+}
+.af-log-list .af-log-empty {
+    color: var(--tx3);
+    font-style: italic;
+    font-family: var(--font-app);
+    text-align: center;
+    padding: 8px;
+}
+.af-log-entry {
+    color: var(--tx2);
+    padding: 2px 0;
+    border-bottom: 1px dashed var(--brd-lt);
+    display: flex;
+    gap: 8px;
+}
+.af-log-entry:last-child { border-bottom: none; }
+.af-log-entry .af-log-time { color: var(--tx3); flex-shrink: 0; }
+.af-log-entry.ok  .af-log-msg { color: var(--ok); }
+.af-log-entry.err .af-log-msg { color: var(--err); }
+.af-log-entry.info .af-log-msg { color: var(--tx1); }
+
+.af-blockly-host .blocklyMainBackground {
+    stroke: none;
+    fill: var(--bg-input);
+}
+
+.af-blockly-host pattern line {
+    stroke: var(--brd) !important;
+}
+.af-blockly-host .blocklyScrollbarBackground { display: none; }
+.af-blockly-host .blocklyScrollbarHandle {
+    fill: var(--brd);
+    rx: 3;
+    ry: 3;
+    transition: fill .12s;
+}
+.af-blockly-host .blocklyScrollbarHandle:hover { fill: var(--accent); }
+.af-blockly-host .blocklyScrollbarVertical   .blocklyScrollbarHandle { transform: scaleX(0.35); transform-origin: right;  }
+.af-blockly-host .blocklyScrollbarHorizontal .blocklyScrollbarHandle { transform: scaleY(0.35); transform-origin: bottom; }
+.af-blockly-host .blocklyToolboxDiv {
+    background: var(--bg-card) !important;
+    border-right: 1px solid var(--brd-lt) !important;
+    color: var(--tx1) !important;
+    padding-top: 6px !important;
+    min-width: 175px !important;
+    max-height: 350px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+.af-blockly-host .blocklyToolboxDiv::-webkit-scrollbar { width: 8px; }
+.af-blockly-host .blocklyToolboxDiv::-webkit-scrollbar-thumb {
+    background: var(--brd-lt);
+    border-radius: 4px;
+}
+.af-blockly-host .blocklyToolboxDiv::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+.af-blockly-host .blocklyTreeRow {
+    color: var(--tx1) !important;
+    padding: 4px 8px !important;
+    height: auto !important;
+    line-height: 22px !important;
+    margin: 1px 4px !important;
+    border-radius: 6px !important;
+}
+.af-blockly-host .blocklyTreeRow:hover    { background: var(--bg-input) !important; }
+.af-blockly-host .blocklyTreeSelected     { background: var(--bg-input) !important; }
+.af-blockly-host .blocklyTreeLabel        { color: var(--tx1) !important; font-family: var(--font-app) !important; font-weight: 600 !important; font-size: calc(12px + var(--fs-off, 0px)) !important; }
+.af-blockly-host .blocklyFlyoutBackground { fill: var(--bg-card); fill-opacity: 0.96; }
+.af-blockly-host .blocklyText             { font-family: var(--font-app) !important; font-weight: 500 !important; }
+
+.af-blockly-host .blocklyWidgetDiv input,
+.af-blockly-host .blocklyHtmlInput {
+    font-family: 'Google Sans Mono', monospace !important;
+}
+
+.af-zoom-controls {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 3;
+}
+.af-zoom-btn {
+    width: 30px;
+    height: 30px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-card);
+    border: 1px solid var(--brd-lt);
+    border-radius: 6px;
+    color: var(--tx2);
+    cursor: pointer;
+    padding: 0;
+    transition: background .12s, color .12s, border-color .12s;
+}
+.af-zoom-btn:hover { background: var(--bg-input); color: var(--tx0); border-color: var(--brd); }
+.af-zoom-btn .msi  { font-size: 18px; line-height: 1; }
+.af-zoom-btn-danger:hover { color: var(--err); border-color: var(--err); }
+.af-blockly-host .blocklySelected > .blocklyPath,
+.af-blockly-host .blocklyDraggable.blocklySelected > .blocklyPath {
+    stroke: #7dd1ff !important;
+    stroke-width: 3px !important;
+}
+.af-blockly-host .blocklySelected > .blocklyPathLight {
+    stroke: #7dd1ff !important;
+}
+
+.af-blockly-host filter[id*="blocklySelectedGlowFilter"] feFlood {
+    flood-color: #7dd1ff !important;
+}
+
+.af-blockly-host .af-action-locked > .blocklyPath {
+    fill: #cc2a2a !important;
+    stroke: #ff5555 !important;
+    stroke-width: 2px !important;
+}
+.af-blockly-host .af-action-locked .blocklyText {
+    fill: #ffe5e5 !important;
+}
+
+/* ---- Conditions sidebar panel — pinned to the bottom-left of the editor
+   card, sized to match the (now-widened) Blockly toolbox so it visually
+   continues the toolbox column. ---- */
+.af-cond-panel {
+    position: absolute;
+    left: 0;
+    top: 350px;               /* sits right below the 10 toolbox categories */
+    bottom: 0;
+    width: 175px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border-top: 1px solid var(--brd-lt);
+    border-right: 1px solid var(--brd-lt);
+    z-index: 100;             /* must beat Blockly's toolbox (~70) */
+    overflow: hidden;
+}
+.af-cond-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 6px 6px 10px;
+    border-bottom: 1px solid var(--brd-lt);
+    flex: 0 0 auto;
+}
+.af-cond-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--tx2);
+    letter-spacing: 0.4px;
+}
+.af-cond-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px;
+    min-height: 40px;
+}
+.af-cond-empty {
+    padding: 8px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    font-style: italic;
+    text-align: center;
+}
+.af-cond-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 4px;
+    border-radius: 5px;
+    transition: background .1s;
+}
+.af-cond-row:hover { background: var(--bg-input); }
+.af-cond-name {
+    flex: 1;
+    min-width: 0;
+    height: 24px !important;
+    padding: 2px 6px !important;
+    font-size: calc(11px + var(--fs-off, 0px)) !important;
+    line-height: 18px !important;
+    background: transparent !important;
+    border-color: transparent !important;
+}
+.af-cond-name:focus,
+.af-cond-name:hover {
+    background: var(--bg-base) !important;
+    border-color: var(--brd-lt) !important;
+}
+.af-cond-remove { padding: 2px 4px !important; }
+.af-cond-remove:hover { color: var(--err) !important; border-color: var(--err) !important; }

@@ -1,0 +1,55 @@
+                <div class="sf-layout">
+                    <!-- Status -->
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status"><span class="sf-dot offline" id="vfDot"></span><span id="vfStatusText" data-i18n="voicefight.status.not_running">Not running</span></div>
+                            <div style="display:flex;gap:8px;">
+                                <button class="vrcn-button" onclick="openVfBlockModal()"><span class="msi" style="font-size:16px;">block</span> <span data-i18n="voicefight.block_words.title">Block Words</span></button>
+                                <button class="vrcn-button" id="vfConnBtn" onclick="vfConnect()"><span class="msi" style="font-size:16px;">play_arrow</span> <span data-i18n="common.start">Start</span></button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Launch -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">power_settings_new</span> <span data-i18n="common.launch">Launch</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="common.start_with_vrchat_vr">Start when launching VRChat in VR</span><label class="toggle"><input type="checkbox" id="setVfAutoStartVR" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><span data-i18n="common.start_with_vrchat_desktop">Start when launching VRChat on Desktop</span><label class="toggle"><input type="checkbox" id="setVfAutoStartDesktop" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                    </div>
+                    <!-- Device -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">mic</span> <span data-i18n="voicefight.input_device">Input Device</span></div>
+                        <select id="vfDeviceSelect" class="lib-filter-select" style="width:100%;margin-bottom:12px;" onchange="vfSetInputDevice(this.value)"><option data-i18n="common.loading">Loading...</option></select>
+                        <div class="vrcn-panel-card-header" style="margin-top:4px;"><span class="msi">graphic_eq</span> <span data-i18n="voicefight.mic_level">Mic Level</span></div>
+                        <div class="vf-meter-wrap">
+                            <div class="vf-meter-bar" id="vfMeterBar"></div>
+                        </div>
+                        <div class="vrcn-panel-card-header" style="margin-top:12px;"><span class="msi">volume_up</span> <span data-i18n="voicefight.output_device">Output Device</span></div>
+                        <select id="vfOutputDeviceSelect" class="lib-filter-select" style="width:100%;" onchange="vfSetOutputDevice(this.value)"><option data-i18n="common.loading">Loading...</option></select>
+                    </div>
+                    <!-- Recognized Words -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">hearing</span> <span data-i18n="voicefight.recognized.title">Recognized Words</span></div>
+                        <div class="vf-recognized-wrap">
+                            <span id="vfRecognizedText" class="vf-recognized-text">-</span>
+                        </div>
+                    </div>
+                    <!-- Stop Command -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">stop_circle</span> <span data-i18n="voicefight.stop_command.title">Stop Command</span></div>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <input id="vfStopWordInput" class="vrcn-edit-field" style="flex:1;" placeholder="Stop word..." data-i18n-placeholder="voicefight.stop_command.placeholder"
+                                oninput="vfStopWordChanged(this.value)"
+                                onblur="vfSetStopWord(this.value)">
+                            <button class="vf-btn-icon" onclick="vfStopSound()" title="Stop playback now" data-i18n-title="voicefight.stop_command.stop_now"><span class="msi">stop</span></button>
+                        </div>
+                        <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:6px;" data-i18n="voicefight.stop_command.hint">Say this word to instantly stop any playing sound.</div>
+                    </div>
+                    <!-- Sound Items -->
+                    <div class="vrcn-panel-card">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+                            <div class="vrcn-panel-card-header" style="margin-bottom:0;"><span class="msi">library_music</span> <span data-i18n="voicefight.sounds.title">Sounds</span></div>
+                            <button class="vrcn-button" onclick="vfAddSound()"><span class="msi" style="font-size:16px;">add</span> <span data-i18n="voicefight.sounds.add">Add Sound</span></button>
+                        </div>
+                        <div id="vfItems"><div class="empty-msg" data-i18n="voicefight.sounds.empty">No sounds added yet.</div></div>
+                    </div>
+                </div>

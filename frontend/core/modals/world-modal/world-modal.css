@@ -1,0 +1,512 @@
+/* === World Modal === */
+
+#modalDetail.wd-style-compact,
+#modalDetail.gd-style-compact { padding: calc(var(--tb-h) + 8px) 0 8px; }
+
+#modalDetail.wd-style-compact .modal-box,
+#modalDetail.gd-style-compact .modal-box {
+    width: 1144px;
+    max-height: var(--fd-compact-h);
+    overflow: hidden;
+}
+
+#modalDetail.wd-style-compact #detailModalContent,
+#modalDetail.gd-style-compact #detailModalContent {
+    padding: 0;
+    height: var(--fd-compact-h);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+#modalDetail.wd-style-compact #detailModalContent .fd-modal-bar,
+#modalDetail.gd-style-compact #detailModalContent .fd-modal-bar {
+    margin: 0;
+    border-radius: 0;
+    flex-shrink: 0;
+}
+
+#modalDetail.wd-style-compact .fd-layout,
+#modalDetail.gd-style-compact .fd-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 302px minmax(0, 1fr);
+    overflow: hidden;
+}
+
+#modalDetail.wd-style-compact .fd-left,
+#modalDetail.gd-style-compact .fd-left {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--bg-card);
+    border-right: 1px solid var(--brd);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+#modalDetail.wd-style-compact .fd-left-banner,
+#modalDetail.gd-style-compact .fd-left-banner {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: 165px;
+    flex-shrink: 0;
+    background: var(--bg-hover);
+    overflow: hidden;
+}
+#modalDetail.wd-style-compact .fd-left-banner img,
+#modalDetail.gd-style-compact .fd-left-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.72);
+}
+#modalDetail.wd-style-compact .fd-left-banner .fd-banner-fade,
+#modalDetail.gd-style-compact .fd-left-banner .fd-banner-fade {
+    background: linear-gradient(to top, var(--bg-card) 0%, rgba(0,0,0,.08) 55%, transparent 100%);
+}
+
+#modalDetail.wd-style-compact .fd-left-body,
+#modalDetail.gd-style-compact .fd-left-body {
+    position: relative;
+    z-index: 1;
+    margin-top: -58px;
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#modalDetail.wd-style-compact .fd-left-body h2 { margin: 0 0 2px; }
+#modalDetail.gd-style-compact .fd-left .fd-avatar {
+    position: relative;
+    z-index: 1;
+    width: 61px;
+    height: 61px;
+    border-radius: 14px;
+    flex-shrink: 0;
+}
+#modalDetail.gd-style-compact .fd-left-id {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+#modalDetail.gd-style-compact .fd-left-name-wrap {
+    min-width: 0;
+    padding-bottom: 2px;
+}
+
+#modalDetail.wd-style-compact .fd-right,
+#modalDetail.gd-style-compact .fd-right {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+#modalDetail.wd-style-compact .fd-right-scroll,
+#modalDetail.gd-style-compact .fd-right-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 18px;
+}
+
+#modalDetail.wd-style-compact .fd-right-scroll > .fd-tabs,
+#modalDetail.gd-style-compact .fd-right-scroll > .fd-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    box-shadow: 0 -9px 0 18px var(--bg-card);
+}
+
+#modalDetail.wd-style-compact #wdTabJson > .json-viewer,
+#modalDetail.gd-style-compact #gdTabJson > .json-viewer {
+    max-height: none !important;
+    height: calc(var(--fd-compact-h) - 88px) !important;
+    margin: 0 !important;
+}
+#modalDetail.wd-style-compact .fd-modal-bar + .fd-layout #wdTabJson > .json-viewer,
+#modalDetail.gd-style-compact .fd-modal-bar + .fd-layout #gdTabJson > .json-viewer {
+    height: calc(var(--fd-compact-h) - 132px) !important;
+}
+
+#modalDetail.wd-style-compact #wdTabInstances .wd-instances-list {
+    max-height: none !important;
+}
+
+#modalDetail.wd-style-compact .fd-left .fd-actions {
+    margin-bottom: 0;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+#modalDetail.wd-style-compact .fd-left .fd-actions > button {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+}
+#modalDetail.wd-style-compact .fd-left-body > .fd-badges-row {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0;
+}
+#modalDetail.wd-style-compact .fd-left-body > .fd-badges-row > .vrcn-badge {
+    flex: 1 0 auto;
+    justify-content: center;
+    white-space: nowrap;
+}
+#modalDetail.wd-style-compact .wd-compact-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+#modalDetail.wd-style-compact .fd-bio-badges-row,
+#modalDetail.gd-style-compact .fd-bio-badges-row {
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+#modalDetail.wd-style-compact .fd-bio-badges-row .vrcn-id-clip,
+#modalDetail.gd-style-compact .fd-bio-badges-row .vrcn-id-clip {
+    min-width: 0;
+    flex: 0 1 auto;
+}
+#modalDetail.wd-style-compact .fd-bio-badges-row .vrcn-id-text,
+#modalDetail.gd-style-compact .fd-bio-badges-row .vrcn-id-text {
+    max-width: 100%;
+}
+
+#modalAvatarDetail.av-style-compact { padding: calc(var(--tb-h) + 8px) 0 8px; }
+#modalAvatarDetail.av-style-compact .modal-box {
+    width: 1144px;
+    max-height: var(--fd-compact-h);
+    overflow: hidden;
+}
+#modalAvatarDetail.av-style-compact #avatarDetailContent {
+    padding: 0;
+    height: var(--fd-compact-h);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+#modalAvatarDetail.av-style-compact #avatarDetailContent .fd-modal-bar {
+    margin: 0;
+    border-radius: 0;
+    flex-shrink: 0;
+}
+#modalAvatarDetail.av-style-compact .fd-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 302px minmax(0, 1fr);
+    overflow: hidden;
+}
+#modalAvatarDetail.av-style-compact .fd-left {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--bg-card);
+    border-right: 1px solid var(--brd);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+#modalAvatarDetail.av-style-compact .fd-left-banner {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: 165px;
+    flex-shrink: 0;
+    background: var(--bg-hover);
+    overflow: hidden;
+}
+#modalAvatarDetail.av-style-compact .fd-left-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.72);
+}
+#modalAvatarDetail.av-style-compact .fd-left-banner .fd-banner-fade {
+    background: linear-gradient(to top, var(--bg-card) 0%, rgba(0,0,0,.08) 55%, transparent 100%);
+}
+#modalAvatarDetail.av-style-compact .fd-left-body {
+    position: relative;
+    z-index: 1;
+    margin-top: -58px;
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#modalAvatarDetail.av-style-compact .fd-left-id {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+#modalAvatarDetail.av-style-compact .fd-left-name-wrap {
+    min-width: 0;
+    padding-bottom: 2px;
+}
+#modalAvatarDetail.av-style-compact .fd-right {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+#modalAvatarDetail.av-style-compact .fd-right-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 18px;
+}
+
+#modalAvatarDetail.av-style-compact .fd-right-scroll > .fd-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    box-shadow: 0 -9px 0 18px var(--bg-card);
+}
+#modalAvatarDetail.av-style-compact #avTabJson > .json-viewer {
+    max-height: none !important;
+    height: calc(var(--fd-compact-h) - 88px) !important;
+    margin: 0 !important;
+}
+#modalAvatarDetail.av-style-compact .fd-modal-bar + .fd-layout #avTabJson > .json-viewer {
+    height: calc(var(--fd-compact-h) - 132px) !important;
+}
+#modalAvatarDetail.av-style-compact .fd-bio-badges-row {
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+#modalAvatarDetail.av-style-compact .fd-bio-badges-row .vrcn-id-clip {
+    min-width: 0;
+    flex: 0 1 auto;
+}
+#modalAvatarDetail.av-style-compact .fd-bio-badges-row .vrcn-id-text {
+    max-width: 100%;
+}
+
+
+/* World detail — friends/instance layout */
+.wd-instance-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0 4px;
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+}
+
+/* World detail — time spent */
+.wd-your-time {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--tx2);
+}
+
+/* World detail — section labels */
+.wd-section-label {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+    letter-spacing: .5px;
+    margin-bottom: 8px;
+}
+.wd-instances-label {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.wd-instances-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* === World Insights — charts === */
+.wi-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+}
+
+.wi-modes {
+    display: flex;
+    gap: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--bg-input);
+}
+
+.wi-mode-btn {
+    flex: 1;
+    border-radius: 0 !important;
+    font-size: calc(12px + var(--fs-off, 0px)) !important;
+    font-weight: 600 !important;
+    padding: 8px 0 !important;
+    background: transparent !important;
+    color: var(--tx3) !important;
+    border: none !important;
+    justify-content: center !important;
+}
+
+.wi-mode-btn.wi-active {
+    background: var(--bg-hover) !important;
+    color: var(--tx1) !important;
+}
+
+.wi-mode-btn:hover:not(.wi-active) {
+    color: var(--tx2) !important;
+}
+
+.wi-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.wi-range-label {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx2);
+    min-width: 140px;
+    text-align: center;
+}
+
+.wi-today-btn {
+    font-size: calc(11px + var(--fs-off, 0px)) !important;
+    padding: 5px 8px !important;
+}
+
+.wi-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.wi-stat {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 8px 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.wi-stat-val {
+    font-size: calc(15px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx1);
+}
+
+.wi-stat-lbl {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    text-align: center;
+}
+
+.wi-charts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.wi-chart-card {
+    background: var(--bg-card);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+}
+
+.wi-charts-grid .wi-chart-card {
+    margin-bottom: 0;
+}
+
+.wi-chart-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx2);
+    margin-bottom: 6px;
+}
+
+.wi-chart-card canvas {
+    width: 100%;
+    height: 120px;
+    display: block;
+}
+
+.wi-skel {
+    background: var(--bg-hover);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.wi-skel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+    animation: wi-shimmer 1.2s infinite;
+}
+
+@keyframes wi-shimmer {
+    100% { transform: translateX(100%); }
+}
+
+.wi-skel-stat-val {
+    display: block;
+    height: 16px;
+    width: 55%;
+}
+
+.wi-skel-stat-lbl {
+    display: block;
+    height: 11px;
+    width: 75%;
+}
+
+.wi-skel-title {
+    height: 13px;
+    width: 45%;
+    margin-bottom: 6px;
+}
+
+.wi-skel-chart {
+    height: 120px;
+    border-radius: 8px;
+}
+
+.wi-dp-wrap {
+    position: relative;
+}
+
+.wi-date-picker {
+    position: absolute !important;
+    top: 0;
+    right: 0;
+    z-index: 100;
+}
+
+@keyframes wi-spin { to { transform: rotate(360deg); } }
+.wi-spin .msi { animation: wi-spin .8s linear infinite; }

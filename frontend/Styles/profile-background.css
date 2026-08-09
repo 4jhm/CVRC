@@ -1,0 +1,136 @@
+/* === VRC+ Profile Backgrounds === */
+
+/* Normally the banner fades bottom-out into var(--bg-card) via an overlay, because the
+   panel behind it is that solid colour. With a profile background there is nothing back
+   there but the image, so the overlay is dropped and the banner itself is masked to
+   transparent instead - it dissolves straight into the background, no colour assumption
+   and no dark band. Selectors mirror the specificity of the rules they override. */
+
+#modalFriendDetail .modal-box.has-profile-bg .fd-banner-fade,
+#modalMyProfile .has-profile-bg .fd-banner-fade,
+#modalFriendDetail.fd-style-compact .fd-left.has-profile-bg .fd-left-banner .fd-banner-fade,
+#modalMyProfile.fd-style-compact .fd-left.has-profile-bg .fd-left-banner .fd-banner-fade,
+.fp-preview.has-profile-bg .fd-banner-fade {
+    background: none;
+}
+
+#modalFriendDetail .modal-box.has-profile-bg .fd-banner,
+#modalMyProfile .has-profile-bg .fd-banner,
+#modalFriendDetail.fd-style-compact .fd-left.has-profile-bg .fd-left-banner,
+#modalMyProfile.fd-style-compact .fd-left.has-profile-bg .fd-left-banner,
+.fp-preview.has-profile-bg .fd-banner {
+    -webkit-mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 40%, transparent 100%);
+    background-color: transparent;
+}
+
+/* Panels stacked on top of the background would otherwise hide it completely. */
+#modalFriendDetail .modal-box.has-profile-bg .fd-content,
+#modalMyProfile .has-profile-bg .fd-content,
+#modalFriendDetail.fd-style-compact .fd-left.has-profile-bg .fd-left-body,
+#modalMyProfile.fd-style-compact .fd-left.has-profile-bg .fd-left-body {
+    background: transparent;
+}
+
+#modalFriendDetail.fd-style-compact .fd-left.has-profile-bg,
+#modalMyProfile.fd-style-compact .fd-left.has-profile-bg {
+    background-position: top center;
+    background-size: cover;
+}
+
+/* --- Transparent profile cards (opt-in, default off) ---
+
+   Scoped to the two profile modals so the rest of the app keeps its solid panels.
+   States that carry an accent colour (.active, round-button hover) are excluded so
+   the interaction feedback stays readable, and hover sits at 75% instead of 50% so
+   pointing at a card still visibly lifts it. */
+
+html.profile-cards-transparent #modalFriendDetail .fd-info-card,
+html.profile-cards-transparent #modalMyProfile .fd-info-card,
+html.profile-cards-transparent #modalFriendDetail .fd-group-card,
+html.profile-cards-transparent #modalMyProfile .fd-group-card,
+html.profile-cards-transparent #modalFriendDetail .vrcn-user-item,
+html.profile-cards-transparent #modalMyProfile .vrcn-user-item,
+html.profile-cards-transparent #modalFriendDetail .inst-item,
+html.profile-cards-transparent #modalMyProfile .inst-item,
+html.profile-cards-transparent #modalFriendDetail .fd-tabs,
+html.profile-cards-transparent #modalMyProfile .fd-tabs {
+    background: color-mix(in srgb, var(--bg-input) 50%, transparent);
+}
+
+html.profile-cards-transparent #modalFriendDetail .fd-group-card:hover,
+html.profile-cards-transparent #modalMyProfile .fd-group-card:hover,
+html.profile-cards-transparent #modalFriendDetail .vrcn-user-item:hover,
+html.profile-cards-transparent #modalMyProfile .vrcn-user-item:hover,
+html.profile-cards-transparent #modalFriendDetail .inst-item:hover,
+html.profile-cards-transparent #modalMyProfile .inst-item:hover {
+    background: color-mix(in srgb, var(--bg-hover) 75%, transparent);
+}
+
+html.profile-cards-transparent #modalFriendDetail .fd-tab.active,
+html.profile-cards-transparent #modalMyProfile .fd-tab.active {
+    background: color-mix(in srgb, var(--bg-hover) 50%, transparent);
+}
+
+html.profile-cards-transparent #modalFriendDetail .fd-modal-bar,
+html.profile-cards-transparent #modalMyProfile .fd-modal-bar {
+    background: color-mix(in srgb, var(--bg-card) 50%, transparent);
+}
+
+html.profile-cards-transparent #modalFriendDetail .vrcn-button:not(.active),
+html.profile-cards-transparent #modalMyProfile .vrcn-button:not(.active) {
+    background: color-mix(in srgb, var(--bg-btn) 50%, transparent);
+}
+
+html.profile-cards-transparent #modalFriendDetail .vrcn-button:not(.active):hover,
+html.profile-cards-transparent #modalMyProfile .vrcn-button:not(.active):hover {
+    background: color-mix(in srgb, var(--bg-btn-h) 75%, transparent);
+}
+
+html.profile-cards-transparent #modalFriendDetail .vrcn-button-round:not(.active):not(:hover),
+html.profile-cards-transparent #modalMyProfile .vrcn-button-round:not(.active):not(:hover) {
+    background: color-mix(in srgb, var(--bg-hover) 50%, transparent);
+}
+
+/* --- Gradient picker (profile background) --- */
+
+.pbg-preview {
+    height: 96px;
+    border-radius: 10px;
+    border: 1px solid var(--brd);
+    margin-bottom: 14px;
+}
+
+.pbg-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.pbg-label {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx3);
+    width: 62px;
+    flex-shrink: 0;
+}
+
+/* Native colour input stripped down to a plain swatch. */
+.pbg-swatch {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--brd);
+    border-radius: 7px;
+    background: none;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+.pbg-swatch::-webkit-color-swatch-wrapper { padding: 2px; }
+.pbg-swatch::-webkit-color-swatch { border: none; border-radius: 5px; }
+
+.pbg-hex {
+    flex: 1;
+    font-family: 'Google Sans Mono', ui-monospace, monospace;
+}

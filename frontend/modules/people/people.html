@@ -1,0 +1,129 @@
+                <div class="tab-toolbar tt-split" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+                    <div id="peopleFilterBtns" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                        <button class="vrcn-button sub-tab-btn active" id="peopleFilterFav" onclick="setPeopleFilter('favorites')"><span class="msi" style="font-size:16px;">favorite</span> <span data-i18n="profiles.people.filters.favorites">Favorites</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="peopleFilterAll" onclick="setPeopleFilter('all')"><span class="msi" style="font-size:16px;">group</span> <span data-i18n="profiles.people.filters.all">All Friends</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="peopleFilterInstance" onclick="setPeopleFilter('instance')"><span class="msi" style="font-size:16px;">sensors</span> <span data-i18n="profiles.people.filters.instance">Instance</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="peopleFilterRecent" onclick="setPeopleFilter('recentseen')"><span class="msi" style="font-size:16px;">history</span> <span data-i18n="profiles.people.filters.recent_seen">Recently Seen</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="peopleFilterSearch" onclick="setPeopleFilter('search')"><span class="msi" style="font-size:16px;">search</span> <span data-i18n="common.search">Search</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="peopleFilterBlocked" onclick="setPeopleFilter('blocked')"><span class="msi" style="font-size:16px;">block</span> <span data-i18n="profiles.people.filters.blocked">Blocked</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="peopleFilterMuted" onclick="setPeopleFilter('muted')"><span class="msi" style="font-size:16px;">volume_off</span> <span data-i18n="profiles.people.filters.muted">Muted</span></button>
+                    </div>
+                    <div id="favFriendEditBar" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;flex:1;margin-left:8px;">
+                        <span id="favFriendEditCount" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);white-space:nowrap;">0 selected</span>
+                        <button id="favFriendEditSelectAllBtn" class="vrcn-button" onclick="friendEditSelectAll()" data-i18n="friends.edit.select_all">Select All</button>
+                        <div style="position:relative;">
+                            <button id="favFriendEditMoveBtn" class="vrcn-button wd-edit-action" disabled onclick="friendEditShowMoveMenu(this)">
+                                <span class="msi" style="font-size:14px;">drive_file_move</span> <span data-i18n="friends.edit.move_to">Move to...</span>
+                            </button>
+                            <div id="favFriendEditMovePicker" class="vn-select-panel" style="display:none;min-width:180px;z-index:1200;"></div>
+                        </div>
+                        <button id="favFriendEditRemoveBtn" class="vrcn-button wd-edit-action" disabled onclick="friendEditRemoveSelected()">
+                            <span class="msi" style="font-size:14px;">favorite_border</span> <span data-i18n="friends.edit.remove">Remove from Favorites</span>
+                        </button>
+                        <div style="position:relative;">
+                            <button id="friendCreateLocalBtn" class="vrcn-button" onclick="friendShowCreateLocalGroup(this)"><span class="msi" style="font-size:14px;">create_new_folder</span> <span data-i18n="favorites.create_local_group">Create Local Group</span></button>
+                            <div id="friendCreateLocalPanel" class="vn-select-panel" style="display:none;min-width:220px;z-index:1200;padding:8px;">
+                                <input type="text" id="friendCreateLocalInput" class="vrcn-input" maxlength="64" placeholder="Group name" data-i18n-placeholder="favorites.local_group_name" style="width:100%;margin-bottom:6px;" onkeydown="if(event.key==='Enter')friendSaveLocalGroup()">
+                                <div style="display:flex;gap:6px;justify-content:flex-end;">
+                                    <button class="vrcn-button" onclick="friendCancelCreateLocalGroup()" data-i18n="common.cancel">Cancel</button>
+                                    <button class="vrcn-button vrcn-btn-primary" onclick="friendSaveLocalGroup()" data-i18n="common.create">Create</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;">
+                        <button id="favFriendEditModeBtn" class="vrcn-button" onclick="toggleFriendEditMode()" data-i18n-title="friends.favorites.edit_title" title="Edit favorites">
+                            <span class="msi" style="font-size:16px;">edit</span> <span id="favFriendEditModeBtnLabel" data-i18n="friends.edit.button">Edit</span>
+                        </button>
+                        <button class="vrcn-button" id="peopleStatsBtn" onclick="togglePeopleStats()" title="Show time spent and meets for everyone" data-i18n-title="profiles.people.stats.title"><span class="msi" style="font-size:16px;">bar_chart</span> <span data-i18n="profiles.people.stats.button">Stats</span></button>
+                        <button class="vrcn-button" id="peopleFetchBtn" onclick="friendFetchStart()" disabled><span class="msi" style="font-size:16px;">cloud_download</span> <span class="ff-btn-label" data-i18n="friend_fetch.button">Fetch</span></button>
+                        <button class="vrcn-button" id="peopleRefreshBtn" onclick="refreshPeopleTab(true)" title="Refresh" data-i18n-title="common.refresh"><span class="msi" style="font-size:16px;">refresh</span></button>
+                        <div id="peopleViewBtns" style="display:flex;gap:4px;">
+                            <button class="vrcn-button sub-tab-btn active" id="peopleViewGrid" onclick="setPeopleViewMode('grid')" title="Grid view" data-i18n-title="people.view.grid"><span class="msi" style="font-size:16px;">grid_on</span></button>
+                            <button class="vrcn-button sub-tab-btn" id="peopleViewList" onclick="setPeopleViewMode('list')" title="List view" data-i18n-title="people.view.list"><span class="msi" style="font-size:14px;">format_list_bulleted</span></button>
+                        </div>
+                    </div>
+                </div>
+                <div id="peopleFavArea">
+                    <div class="tab-toolbar-body">
+                    <div id="favFriendGroupHeader" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;min-height:24px;">
+                        <span id="favFriendGroupLabel" style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);">All Favorites</span>
+                        <span id="favFriendGroupLocalBadge" class="vrcn-local-badge" style="display:none;" data-i18n="favorites.local_badge">Local</span>
+                        <button id="favFriendGroupEditBtn" class="myp-edit-btn" onclick="startEditFriendGroupName()" style="display:none;" data-i18n-title="friends.favorites.rename_category" title="Rename category">
+                            <span class="msi" style="font-size:14px;">edit</span>
+                        </button>
+                        <button id="favFriendGroupDeleteBtn" class="myp-edit-btn" onclick="deleteCurrentLocalFriendGroup(this)" style="display:none;" data-i18n-title="favorites.delete_local_group" title="Delete local group">
+                            <span class="msi" style="font-size:14px;">delete</span>
+                        </button>
+                        <span id="favFriendGroupVisLabel" style="display:none;font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);font-weight:400;"></span>
+                        <div id="favFriendGroupVisDropWrap" style="display:none;">
+                            <select id="favFriendGroupVisDrop" class="vrcn-dropdown" onchange="saveFavFriendGroupVisibility(this.value)" style="min-width:160px;">
+                                <option value="public" data-i18n="friends.favorites.visibility.public">Visible for everyone</option>
+                                <option value="friends" data-i18n="friends.favorites.visibility.friends">Visible for friends</option>
+                                <option value="private" data-i18n="friends.favorites.visibility.private">Visible only to you</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="favFriendGroupRenameRow" style="display:none;align-items:center;gap:6px;margin-bottom:10px;">
+                        <input type="text" id="favFriendGroupNameInput" class="vrcn-edit-field" maxlength="64" style="flex:1;max-width:280px;">
+                        <button class="vrcn-button vrcn-btn-primary" onclick="saveFriendGroupName()" data-i18n="common.save">Save</button>
+                        <button class="vrcn-button" onclick="cancelEditFriendGroupName()" data-i18n="common.cancel">Cancel</button>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+                        <select id="favFriendGroupFilter" class="vrcn-dropdown" onchange="setFavFriendGroup(this.value)" style="min-width:160px;max-width:220px;">
+                            <option value="" data-i18n="friends.favorites.group.all">All Favorites</option>
+                        </select>
+                        <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:140px;">
+                            <span class="msi search-ico">search</span>
+                            <input type="text" id="favFriendSearchInput" class="vrcn-input" placeholder="Filter favorite friends..." data-i18n-placeholder="friends.favorites.filter_placeholder" oninput="_dbFilterFavFriends()">
+                        </div>
+                    </div>
+                    </div>
+                    <div id="favFriendsGrid" class="search-grid"><div class="empty-msg" data-i18n="friends.favorites.loading">Loading favorite friends...</div></div>
+                </div>
+                <div id="peopleAllArea" style="display:none;">
+                    <div class="tab-toolbar-body">
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+                        <div style="display:flex;gap:4px;flex-shrink:0;">
+                            <button class="vrcn-button sub-tab-btn active" id="allFriendFilterAll" onclick="setAllFriendsStatusFilter('all')" data-i18n="profiles.people.status_filter.all">All</button>
+                            <button class="vrcn-button sub-tab-btn" id="allFriendFilterIngame" onclick="setAllFriendsStatusFilter('ingame')" data-i18n="profiles.people.status_filter.ingame">In-Game</button>
+                            <button class="vrcn-button sub-tab-btn" id="allFriendFilterActive" onclick="setAllFriendsStatusFilter('active')" data-i18n="profiles.people.status_filter.active">Active</button>
+                            <button class="vrcn-button sub-tab-btn" id="allFriendFilterOffline" onclick="setAllFriendsStatusFilter('offline')" data-i18n="profiles.people.status_filter.offline">Offline</button>
+                        </div>
+                        <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:140px;"><span class="msi search-ico">search</span><input type="text" id="allFriendSearchInput" class="vrcn-input" placeholder="Filter friends..." data-i18n-placeholder="profiles.people.all_search_placeholder" oninput="_dbFilterAllFriends()"></div>
+                    </div>
+                    </div>
+                    <div id="allFriendsGrid" class="search-grid"><div class="empty-msg" data-i18n="profiles.people.loading_all">Loading friends...</div></div>
+                </div>
+                <div id="peopleInstanceArea" style="display:none;">
+                    <div class="tab-toolbar-body">
+                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                            <span id="instancePlayersTitle" style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);"></span>
+                            <span id="instancePlayersCount" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"></span>
+                            <span style="flex:1;"></span>
+                            <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:140px;max-width:280px;"><span class="msi search-ico">search</span><input type="text" id="instancePlayersSearch" class="vrcn-input" placeholder="Filter players..." data-i18n-placeholder="profiles.people.instance.filter_placeholder" oninput="renderInstancePlayers()"></div>
+                        </div>
+                    </div>
+                    <div id="instancePlayersGrid"><div class="empty-msg" data-i18n="profiles.people.instance.empty">You are not in an instance</div></div>
+                </div>
+                <div id="peopleRecentArea" style="display:none;">
+                    <div class="tab-toolbar-body"><div class="search-bar-row" style="margin-bottom:0;"><span class="msi search-ico">search</span><input type="text" id="recentSeenSearchInput" class="vrcn-input" placeholder="Filter recently seen..." data-i18n-placeholder="profiles.people.recent_seen.filter_placeholder" oninput="filterRecentSeen()"></div></div>
+                    <div id="recentSeenGrid" class="search-grid"><div class="empty-msg" data-i18n="common.loading">Loading...</div></div>
+                </div>
+                <div id="peopleSearchArea" style="display:none;">
+                    <div class="tab-toolbar-body"><div class="search-bar-row"><span class="msi search-ico">search</span><input type="text" id="searchPeopleInput" class="vrcn-input" placeholder="Search people..." data-i18n-placeholder="profiles.people.search_people_placeholder" onkeydown="if(event.key==='Enter')doSearch('people')"><button class="vrcn-button" onclick="doSearch('people')" data-i18n="common.search">Search</button></div></div>
+                    <div id="searchPeopleResults" class="search-grid"><div class="empty-msg" data-i18n="profiles.people.search_prompt">Search for VRChat users</div></div>
+                </div>
+                <div id="peopleBlockedArea" style="display:none;">
+                    <div class="tab-toolbar-body"><div class="search-bar-row" style="margin-bottom:0;"><span class="msi search-ico">search</span><input type="text" id="blockedSearch" class="vrcn-input" placeholder="Filter blocked users..." data-i18n-placeholder="profiles.people.blocked_search_placeholder" oninput="_dbFilterBlocked()"></div></div>
+                    <div id="blockedList" class="search-grid"><div class="empty-msg" data-i18n="common.loading">Loading...</div></div>
+                </div>
+                <div id="peopleMutedArea" style="display:none;">
+                    <div class="tab-toolbar-body"><div class="search-bar-row" style="margin-bottom:0;"><span class="msi search-ico">search</span><input type="text" id="mutedSearch" class="vrcn-input" placeholder="Filter muted users..." data-i18n-placeholder="profiles.people.muted_search_placeholder" oninput="_dbFilterMuted()"></div></div>
+                    <div id="mutedList" class="search-grid"><div class="empty-msg" data-i18n="common.loading">Loading...</div></div>
+                </div>
+                <div id="peopleFavPaginatorBar" class="tl-paginator-bar"></div>
+                <div id="peopleAllPaginatorBar" class="tl-paginator-bar"></div>
+                <div id="peopleRecentPaginatorBar" class="tl-paginator-bar"></div>
+                <div id="peopleBlockedPaginatorBar" class="tl-paginator-bar"></div>
+                <div id="peopleMutedPaginatorBar" class="tl-paginator-bar"></div>

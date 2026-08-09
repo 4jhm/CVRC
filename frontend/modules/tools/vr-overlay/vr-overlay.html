@@ -1,0 +1,457 @@
+                <div class="sf-layout">
+
+                    <!-- Status card -->
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status">
+                                <span class="sf-dot offline" id="vroDot"></span>
+                                <span id="vroStatusText" data-i18n="vro.status.not_connected">Not connected</span>
+                            </div>
+                            <button class="vrcn-button" id="vroConnBtn" onclick="vroConnect()">
+                                <span class="msi" style="font-size:16px;">link</span> <span data-i18n="common.connect">Connect</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Overlay controls -->
+                    <div class="vrcn-panel-card" id="vroControlCard" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">visibility</span> <span data-i18n="vro.control.title">Overlay Control</span></div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="vrcn-button" id="vroShowBtn" onclick="vroToggleVisibility()" disabled style="flex:1;justify-content:center;min-width:120px;">
+                                <span class="msi" id="vroVisIcon" style="font-size:16px;">visibility</span>
+                                <span id="vroVisText" data-i18n="vro.control.show_overlay">Show Overlay</span>
+                            </button>
+                        </div>
+                        <div style="margin-top:10px;" class="vro-ctrl-btns">
+                            <div class="sf-ctrl" id="vroCtrlL"><span class="msi" style="font-size:14px;">back_hand</span> <span data-i18n="common.left">Left</span></div>
+                            <div class="sf-ctrl" id="vroCtrlR"><span class="msi" style="font-size:14px;">front_hand</span> <span data-i18n="common.right">Right</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Launch -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">power_settings_new</span> <span data-i18n="common.launch">Launch</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="common.start_with_vrchat_vr">Start when launching VRChat in VR</span><label class="toggle"><input type="checkbox" id="setVroAutoStartVR" onchange="vroAutoSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                    </div>
+
+                    <!-- Attachment -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">back_hand</span> <span data-i18n="vro.attachment.title">Attachment</span></div>
+                        <div class="vro-setting-row">
+                            <label data-i18n="vro.attachment.hand">Hand</label>
+                            <select id="vroAttachLeft" class="vrcn-select" onchange="vroMirrorAndSave()">
+                                <option value="left" data-i18n="common.left">Left</option>
+                                <option value="right" data-i18n="common.right">Right</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Keybind -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">gamepad</span> <span data-i18n="vro.keybind.title">Toggle Keybind</span>
+                            <button class="vrcn-button vro-view-toggle" onclick="vroToggleKeybindView(this)" title="Toggle legacy view" data-i18n-title="vro.keybind.toggle_view">
+                                <span class="msi" style="font-size:15px;">format_list_bulleted</span>
+                            </button>
+                        </div>
+
+                        <!-- Mode selector: Keybind | Double Tap -->
+                        <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;">
+                            <button class="vrcn-button sub-tab-btn active" id="vroModeCombo" onclick="vroSetMode(0)">
+                                <span class="msi" style="font-size:13px;">back_hand</span> <span data-i18n="vro.keybind.mode.keybind">Keybind</span>
+                            </button>
+                            <button class="vrcn-button sub-tab-btn" id="vroModeDoubleTap" onclick="vroSetMode(1)">
+                                <span class="msi" style="font-size:13px;">touch_app</span> <span data-i18n="vro.keybind.mode.double_tap">Double Tap</span>
+                            </button>
+                        </div>
+
+                        <!-- Controller button visual -->
+                        <div id="vroControllerVisual" class="vro-controller-visual">
+                            <div class="vro-ctrl-diagram">
+                                <div class="vro-ctrl-image">
+                                    <div class="vro-controller vro-controller-left">
+                                        <img class="vro-ctrl-base" src="assets/VR/Quest/Controller.png" alt="">
+                                        <div class="vro-btn" data-btn-id="2"  data-hl="grip"    data-side="left" title="Grip"        data-i18n-title="vro.keybind.button.grip"></div>
+                                        <div class="vro-btn" data-btn-id="33" data-hl="trigger" data-side="left" title="Trigger"     data-i18n-title="vro.keybind.button.trigger"></div>
+                                        <div class="vro-btn" data-btn-id="32" data-hl="stick"   data-side="left" title="Thumbstick"  data-i18n-title="vro.keybind.button.thumbstick"></div>
+                                        <div class="vro-btn" data-btn-id="7"  data-hl="a"       data-side="left" title="A / X"       data-i18n-title="vro.keybind.button.ax_title"></div>
+                                        <div class="vro-btn" data-btn-id="1"  data-hl="b"       data-side="left" title="B / Y"       data-i18n-title="vro.keybind.button.by_title"></div>
+                                    </div>
+                                    <div class="vro-controller vro-controller-right">
+                                        <img class="vro-ctrl-base" src="assets/VR/Quest/Controller.png" alt="">
+                                        <div class="vro-btn" data-btn-id="2"  data-hl="grip"    data-side="right" title="Grip"        data-i18n-title="vro.keybind.button.grip"></div>
+                                        <div class="vro-btn" data-btn-id="33" data-hl="trigger" data-side="right" title="Trigger"     data-i18n-title="vro.keybind.button.trigger"></div>
+                                        <div class="vro-btn" data-btn-id="32" data-hl="stick"   data-side="right" title="Thumbstick"  data-i18n-title="vro.keybind.button.thumbstick"></div>
+                                        <div class="vro-btn" data-btn-id="7"  data-hl="a"       data-side="right" title="A / X"       data-i18n-title="vro.keybind.button.ax_title"></div>
+                                        <div class="vro-btn" data-btn-id="1"  data-hl="b"       data-side="right" title="B / Y"       data-i18n-title="vro.keybind.button.by_title"></div>
+                                    </div>
+                                </div>
+                                <div class="vro-ctrl-legacy">
+                                    <div class="vro-ctrl-left">
+                                        <div class="vro-btn" data-btn-id="2"  title="Grip"       data-i18n="vro.keybind.button.grip" data-i18n-title="vro.keybind.button.grip">Grip</div>
+                                        <div class="vro-btn" data-btn-id="33" title="Trigger"    data-i18n="vro.keybind.button.trigger" data-i18n-title="vro.keybind.button.trigger">Trigger</div>
+                                        <div class="vro-btn" data-btn-id="32" title="Thumbstick" data-i18n="vro.keybind.button.thumbstick_short" data-i18n-title="vro.keybind.button.thumbstick">Stick</div>
+                                    </div>
+                                    <div class="vro-ctrl-right">
+                                        <div class="vro-btn" data-btn-id="7" title="A (right) / X (left)" data-i18n="vro.keybind.button.ax" data-i18n-title="vro.keybind.button.ax_title">A / X</div>
+                                        <div class="vro-btn" data-btn-id="1" title="B (right) / Y (left)" data-i18n="vro.keybind.button.by" data-i18n-title="vro.keybind.button.by_title">B / Y</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current keybind display -->
+                        <div class="vro-keybind-row">
+                            <div id="vroKeybindDisplay" class="vro-keybind-display">
+                                <span style="color:var(--tx3);font-style:italic;" data-i18n="vro.keybind.none">No keybind set</span>
+                            </div>
+                            <button class="vrcn-button" onclick="vroClearKeybind()" title="Clear keybind" data-i18n-title="vro.keybind.clear" style="padding:4px 8px;">
+                                <span class="msi" style="font-size:14px;">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Record / Edit Manual buttons (idle) -->
+                        <div id="vroIdleButtons" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="vrcn-button" id="vroRecordBtn" onclick="vroStartRecording()"
+                                style="flex:1;justify-content:center;">
+                                <span class="msi" style="font-size:15px;">radio_button_checked</span> <span data-i18n="vro.keybind.record">Record</span>
+                            </button>
+                            <button class="vrcn-button" onclick="vroStartManualEdit()"
+                                style="flex:1;justify-content:center;">
+                                <span class="msi" style="font-size:15px;">edit</span> <span data-i18n="vro.keybind.edit_manual">Edit Manual</span>
+                            </button>
+                        </div>
+                        <!-- Cancel (recording VR) -->
+                        <div id="vroRecordingButtons" style="margin-top:8px;display:none;gap:8px;flex-wrap:wrap;">
+                            <button class="vrcn-button" onclick="vroCancelRecording()"
+                                style="flex:1;justify-content:center;border-color:var(--warn);">
+                                <span class="msi" style="font-size:15px;">stop_circle</span> <span data-i18n="common.cancel">Cancel</span>
+                            </button>
+                        </div>
+                        <!-- Manual edit panel -->
+                        <div id="vroManualEditPanel" style="margin-top:8px;display:none;">
+                            <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap;">
+                                <span style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);" data-i18n="vro.keybind.hand.label">Hand:</span>
+                                <button class="vrcn-button sub-tab-btn active" id="vroHandAny"   onclick="vroSetManualHand(0)" data-i18n="vro.keybind.hand.any">Any</button>
+                                <button class="vrcn-button sub-tab-btn"        id="vroHandLeft"  onclick="vroSetManualHand(1)" data-i18n="vro.keybind.hand.left">Left</button>
+                                <button class="vrcn-button sub-tab-btn"        id="vroHandRight" onclick="vroSetManualHand(2)" data-i18n="vro.keybind.hand.right">Right</button>
+                            </div>
+                            <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-bottom:6px;" data-i18n="vro.keybind.hint.manual_edit">Click the buttons above to select your keybind (up to 4).</div>
+                            <div style="display:flex;gap:8px;">
+                                <button class="vrcn-button" onclick="vroConfirmManual()"
+                                    style="flex:1;justify-content:center;border-color:var(--ok);">
+                                    <span class="msi" style="font-size:15px;">check_circle</span> <span data-i18n="vro.keybind.confirm">Confirm</span>
+                                </button>
+                                <button class="vrcn-button" onclick="vroStopManualEdit()"
+                                    style="flex:1;justify-content:center;border-color:var(--warn);">
+                                    <span class="msi" style="font-size:15px;">close</span> <span data-i18n="common.cancel">Cancel</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="vroRecordHint" style="margin-top:6px;font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);"></div>
+                    </div>
+
+                    <!-- Overlay Visibility -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">blur_on</span> <span data-i18n="vro.visibility.title">Overlay Visibility</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="vro.visibility.enable">Enable Dynamic Visibility</span><label class="toggle"><input type="checkbox" id="vroDynVis" onchange="vroAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="vro.visibility.desc">When enabled, the overlay fades out while it is away from your headset and becomes fully visible and clickable once you move it close to your face. While faded it stays slightly visible but cannot be clicked, so you can keep it open all the time without accidental clicks.</div>
+                        <div class="sf-section-label" data-i18n="vro.visibility.focus_radius">Focus Radius</div>
+                        <div class="vro-axis-row">
+                            <span class="vro-axis-lbl" style="width:24px;color:var(--tx2);">R</span>
+                            <input type="range" id="vroFocusRadius" min="20" max="60" step="1" value="35" class="vro-slider" oninput="vroUpdateFocusRadius()">
+                            <span class="vro-axis-val" id="vroFocusRadiusVal">35 cm</span>
+                        </div>
+                    </div>
+
+                    <!-- Transform -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">open_with</span> <span data-i18n="vro.transform.title">Transform</span></div>
+                        <div class="sf-section-label" data-i18n="vro.transform.position">Position (meters)</div>
+                        <div class="vro-transform-grid">
+                            <div class="vro-axis-row">
+                                <span class="vro-axis-lbl vro-x">X</span>
+                                <input type="range" id="vroPosX" min="-0.3" max="0.3" step="0.005" value="-0.10" class="vro-slider" oninput="vroUpdateTransformLabel('vroPosX');vroAutoSave()">
+                                <span class="vro-axis-val" id="vroPosXVal">-0.10</span>
+                            </div>
+                            <div class="vro-axis-row">
+                                <span class="vro-axis-lbl vro-y">Y</span>
+                                <input type="range" id="vroPosY" min="-0.2" max="0.3" step="0.005" value="-0.03" class="vro-slider" oninput="vroUpdateTransformLabel('vroPosY');vroAutoSave()">
+                                <span class="vro-axis-val" id="vroPosYVal">-0.03</span>
+                            </div>
+                            <div class="vro-axis-row">
+                                <span class="vro-axis-lbl vro-z">Z</span>
+                                <input type="range" id="vroPosZ" min="-0.3" max="0.2" step="0.005" value="0.11" class="vro-slider" oninput="vroUpdateTransformLabel('vroPosZ');vroAutoSave()">
+                                <span class="vro-axis-val" id="vroPosZVal">0.11</span>
+                            </div>
+                        </div>
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.transform.rotation">Rotation (degrees)</div>
+                        <div class="vro-transform-grid">
+                            <div class="vro-axis-row">
+                                <span class="vro-axis-lbl vro-x">X</span>
+                                <input type="range" id="vroRotX" min="-180" max="180" step="1" value="-180" class="vro-slider" oninput="vroUpdateTransformLabel('vroRotX');vroAutoSave()">
+                                <span class="vro-axis-val" id="vroRotXVal">-180</span>
+                            </div>
+                            <div class="vro-axis-row">
+                                <span class="vro-axis-lbl vro-y">Y</span>
+                                <input type="range" id="vroRotY" min="-180" max="180" step="1" value="46" class="vro-slider" oninput="vroUpdateTransformLabel('vroRotY');vroAutoSave()">
+                                <span class="vro-axis-val" id="vroRotYVal">46</span>
+                            </div>
+                            <div class="vro-axis-row">
+                                <span class="vro-axis-lbl vro-z">Z</span>
+                                <input type="range" id="vroRotZ" min="-180" max="180" step="1" value="85" class="vro-slider" oninput="vroUpdateTransformLabel('vroRotZ');vroAutoSave()">
+                                <span class="vro-axis-val" id="vroRotZVal">85</span>
+                            </div>
+                        </div>
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.transform.overlay_width">Overlay Width</div>
+                        <div class="vro-axis-row">
+                            <span class="vro-axis-lbl" style="width:24px;color:var(--tx2);">W</span>
+                            <input type="range" id="vroWidth" min="0.05" max="0.5" step="0.01" value="0.16" class="vro-slider" oninput="vroUpdateTransformLabel('vroWidth');vroAutoSave()">
+                            <span class="vro-axis-val" id="vroWidthVal">0.16</span>
+                        </div>
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.transform.control_radius">Control Radius</div>
+                        <div class="vro-axis-row">
+                            <span class="vro-axis-lbl" style="width:24px;color:var(--tx2);">R</span>
+                            <input type="range" id="vroControlRadius" min="3" max="28" step="1" value="16" class="vro-slider" oninput="vroUpdateControlRadius()">
+                            <span class="vro-axis-val" id="vroControlRadiusVal">16 cm</span>
+                        </div>
+                        <button class="vrcn-button sub-tab-btn" style="margin-top:12px;width:100%;" onclick="vroResetTransform()">
+                            <span class="msi" style="font-size:14px;">restart_alt</span> <span data-i18n="vro.transform.reset">Reset Transform</span>
+                        </button>
+                    </div>
+
+                    <!-- Overlay Notifications -->
+                    <div class="vrcn-panel-card collapsed">
+                        <div class="vrcn-panel-card-header vrcn-card-collapse-trigger" onclick="vrcnToggleCollapse(this)"><span class="msi">notifications_active</span> <span data-i18n="vro.notifications.title">Overlay Notifications</span></div>
+                        <div class="vrcn-card-collapse-body">
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="vro.notifications.desc">HMD-attached toast notifications that appear in front of you when friend events happen.</div>
+                        <div class="sf-toggle-row"><span data-i18n="vro.notifications.enable">Enable</span><label class="toggle"><input type="checkbox" id="vroToastEnabled" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><span data-i18n="vro.notifications.favorites_only">Favorites only</span><label class="toggle"><input type="checkbox" id="vroToastFavOnly" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="vro.notifications.favorites_only_desc">Only show notifications for favorited friends.</div>
+
+                        <div class="sf-section-label" style="margin-top:4px;" data-i18n="vro.notifications.size">Size</div>
+                        <div class="vro-axis-row">
+                            <span class="vro-axis-lbl" style="width:24px;color:var(--tx2);">%</span>
+                            <input type="range" id="vroToastSize" min="0" max="100" step="1" value="50" class="vro-slider" oninput="vroToastUpdateLabel('vroToastSize');vroToastAutoSave()">
+                            <span class="vro-axis-val" id="vroToastSizeVal">50%</span>
+                        </div>
+
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.notifications.position">Position</div>
+                        <div class="vro-transform-grid">
+                            <div class="vro-axis-row">
+                                <span class="vro-axis-lbl vro-x">X</span>
+                                <input type="range" id="vroToastOffsetX" min="-0.3" max="0.3" step="0.01" value="0" class="vro-slider" oninput="vroToastUpdateLabel('vroToastOffsetX');vroToastAutoSave()">
+                                <span class="vro-axis-val" id="vroToastOffsetXVal">0.00</span>
+                            </div>
+                            <div class="vro-axis-row">
+                                <span class="vro-axis-lbl vro-y">Y</span>
+                                <input type="range" id="vroToastOffsetY" min="-0.4" max="0.2" step="0.01" value="-0.12" class="vro-slider" oninput="vroToastUpdateLabel('vroToastOffsetY');vroToastAutoSave()">
+                                <span class="vro-axis-val" id="vroToastOffsetYVal">-0.12</span>
+                            </div>
+                        </div>
+
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.notifications.duration">Duration</div>
+                        <div class="vro-axis-row">
+                            <span class="vro-axis-lbl" style="width:24px;color:var(--tx2);"><span class="msi" style="font-size:15px;">schedule</span></span>
+                            <input type="range" id="vroToastDuration" min="2" max="10" step="1" value="8" class="vro-slider" oninput="vroToastUpdateLabel('vroToastDuration');vroToastAutoSave()">
+                            <span class="vro-axis-val" id="vroToastDurationVal">8s</span>
+                        </div>
+
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.notifications.stack">Stack</div>
+                        <div class="set-desc" style="margin-bottom:6px;" data-i18n="vro.notifications.stack_desc">How many notifications can be shown at the same time.</div>
+                        <div class="vro-axis-row">
+                            <span class="vro-axis-lbl" style="width:24px;color:var(--tx2);"><span class="msi" style="font-size:15px;">layers</span></span>
+                            <input type="range" id="vroToastStack" min="1" max="4" step="1" value="2" class="vro-slider" oninput="vroToastUpdateLabel('vroToastStack');vroToastAutoSave()">
+                            <span class="vro-axis-val" id="vroToastStackVal">2</span>
+                        </div>
+
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.notifications.when">Show notification when</div>
+                        <div class="vro-notif-head"><span></span><div class="vro-notif-toggles"><span data-i18n="vro.notifications.col_tts">TTS</span><span data-i18n="vro.notifications.col_show">Show</span></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.online">Friend comes online (Game)</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastOnlineTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastOnline" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.offline">Friend goes offline (Game)</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastOfflineTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastOffline" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.joined_instance">Friend joins your instance</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastJoinedTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastJoined" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.joined_world">Friend joined a world</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastGpsTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastGps" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.changed_status">Friend changed status</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastStatusTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastStatus" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.changed_status_text">Friend changed status text</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastStatusDescTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastStatusDesc" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.updated_bio">Friend updated bio</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastBioTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastBio" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.notifications.vrc_notifs">VRChat Notifications</div>
+                        <div class="vro-notif-head"><span></span><div class="vro-notif-toggles"><span data-i18n="vro.notifications.col_tts">TTS</span><span data-i18n="vro.notifications.col_show">Show</span></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.friend_request">Friend Request</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastFriendReqTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastFriendReq" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.world_invite">World Invite</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastInviteTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastInvite" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+                        <div class="sf-toggle-row vro-notif-row"><span data-i18n="vro.notifications.group_invite">Group Invite</span><div class="vro-notif-toggles"><label class="toggle"><input type="checkbox" id="vroToastGroupInvTts" onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label><label class="toggle"><input type="checkbox" id="vroToastGroupInv" checked onchange="vroToastAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div></div>
+
+                        <div class="sf-section-label" style="margin-top:12px;" data-i18n="vro.notifications.tts_title">Text to Speech</div>
+                        <div class="set-desc" data-i18n="vro.notifications.tts_desc">Notifications with TTS enabled above are read out loud. Choose an output device and route it through apps like Voicemeeter.</div>
+                        <div class="sf-row" style="margin-top:10px;">
+                            <label style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);min-width:110px;" data-i18n="tts.engine">Engine</label>
+                            <select id="vroTtsEngine" class="vrcn-dropdown" style="flex:1;min-width:180px;" onchange="vroTtsEngineChanged()">
+                                <option value="sapi" data-i18n="tts.engine.sapi">Windows (offline)</option>
+                                <option value="edge" data-i18n="tts.engine.edge">Microsoft Neural (online)</option>
+                            </select>
+                        </div>
+                        <div class="sf-row" style="margin-top:8px;">
+                            <label style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);min-width:110px;" data-i18n="vro.notifications.tts_device">Output Device</label>
+                            <select id="vroTtsDevice" class="vrcn-dropdown" style="flex:1;min-width:180px;" onchange="vroToastAutoSave()"></select>
+                        </div>
+                        <div class="sf-row vro-edge-only" style="margin-top:8px;">
+                            <label style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);min-width:110px;" data-i18n="tts.language">Language</label>
+                            <select id="vroTtsLang" class="vrcn-dropdown" style="flex:1;min-width:180px;" onchange="vroTtsFilterChanged()"></select>
+                        </div>
+                        <div class="sf-row vro-edge-only" style="margin-top:8px;">
+                            <label style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);min-width:110px;" data-i18n="tts.gender">Gender</label>
+                            <select id="vroTtsGender" class="vrcn-dropdown" style="flex:1;min-width:180px;" onchange="vroTtsFilterChanged()"></select>
+                        </div>
+                        <div class="sf-row" style="margin-top:8px;">
+                            <label style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);min-width:110px;" data-i18n="vro.notifications.tts_voice">Voice</label>
+                            <select id="vroTtsVoice" class="vrcn-dropdown" data-vn-hover="vroTtsPreviewVoice" style="flex:1;min-width:180px;" onchange="vroToastAutoSave()"></select>
+                        </div>
+                        <div style="margin-top:10px;">
+                            <button class="vrcn-button" onclick="vroTtsTest()"><span class="msi" style="font-size:16px;">volume_up</span> <span data-i18n="vro.notifications.tts_test">Test Voice</span></button>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- Avatar Scaler (VR Scale Tab) -->
+                    <div class="vrcn-panel-card collapsed">
+                        <div class="vrcn-panel-card-header vrcn-card-collapse-trigger" onclick="vrcnToggleCollapse(this)"><span class="msi">height</span> <span data-i18n="vro.scale.title">Avatar Scaler</span></div>
+                        <div class="vrcn-card-collapse-body">
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="vro.scale.desc">Adds a Size tab to the VR overlay. Hold a keybind and move the thumbstick to scale your avatar.</div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="vro.scale.tab_label">Avatar Scaling Tab</span>
+                            <label class="toggle"><input type="checkbox" id="vroScaleEnabled" checked onchange="vroScaleAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+
+                        <div class="sf-section-label" style="margin-top:10px;" data-i18n="vro.scale.thumbstick.title">Thumbstick</div>
+                        <div class="sf-toggle-row"><span data-i18n="vro.scale.thumbstick.left">Use Left Thumbstick</span><label class="toggle"><input type="checkbox" id="vroScaleLeftThumb" onchange="vroScaleAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row"><span data-i18n="vro.scale.thumbstick.right">Use Right Thumbstick</span><label class="toggle"><input type="checkbox" id="vroScaleRightThumb" checked onchange="vroScaleAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+
+                        <div class="sf-section-label" style="margin-top:10px;" data-i18n="vro.scale.sensitivity">Sensitivity</div>
+                        <div class="vro-axis-row">
+                            <span class="vro-axis-lbl" style="width:24px;color:var(--tx2);">%</span>
+                            <input type="range" id="vroScaleSensitivity" min="1" max="100" step="1" value="25" class="vro-slider" oninput="vroScaleUpdateSensitivityLabel();vroScaleAutoSave()">
+                            <span class="vro-axis-val" id="vroScaleSensitivityVal">25%</span>
+                        </div>
+
+                        <div style="display:flex;align-items:center;margin-top:10px;">
+                            <span class="sf-section-label" style="margin-top:0;" data-i18n="vro.scale.keybind.title">Hold Keybind to Scale</span>
+                            <button class="vrcn-button vro-view-toggle" onclick="vroToggleScaleView(this)" title="Toggle legacy view" data-i18n-title="vro.keybind.toggle_view">
+                                <span class="msi" style="font-size:15px;">format_list_bulleted</span>
+                            </button>
+                        </div>
+                        <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-bottom:6px;" data-i18n="vro.scale.keybind.desc">Hold these buttons while moving the thumbstick to scale your avatar in VR.</div>
+
+                        <!-- Keybind controller visual (same structure as toggle keybind) -->
+                        <div id="vroScaleControllerVisual" class="vro-controller-visual">
+                            <div class="vro-ctrl-diagram">
+                                <div class="vro-ctrl-image">
+                                    <div class="vro-controller vro-controller-left">
+                                        <img class="vro-ctrl-base" src="assets/VR/Quest/Controller.png" alt="">
+                                        <div class="vro-btn" data-scale-btn-id="2"  data-hl="grip"    data-side="left" title="Grip"></div>
+                                        <div class="vro-btn" data-scale-btn-id="33" data-hl="trigger" data-side="left" title="Trigger"></div>
+                                        <div class="vro-btn" data-scale-btn-id="32" data-hl="stick"   data-side="left" title="Thumbstick"></div>
+                                        <div class="vro-btn" data-scale-btn-id="7"  data-hl="a"       data-side="left" title="A / X"></div>
+                                        <div class="vro-btn" data-scale-btn-id="1"  data-hl="b"       data-side="left" title="B / Y"></div>
+                                    </div>
+                                    <div class="vro-controller vro-controller-right">
+                                        <img class="vro-ctrl-base" src="assets/VR/Quest/Controller.png" alt="">
+                                        <div class="vro-btn" data-scale-btn-id="2"  data-hl="grip"    data-side="right" title="Grip"></div>
+                                        <div class="vro-btn" data-scale-btn-id="33" data-hl="trigger" data-side="right" title="Trigger"></div>
+                                        <div class="vro-btn" data-scale-btn-id="32" data-hl="stick"   data-side="right" title="Thumbstick"></div>
+                                        <div class="vro-btn" data-scale-btn-id="7"  data-hl="a"       data-side="right" title="A / X"></div>
+                                        <div class="vro-btn" data-scale-btn-id="1"  data-hl="b"       data-side="right" title="B / Y"></div>
+                                    </div>
+                                </div>
+                                <div class="vro-ctrl-legacy">
+                                    <div class="vro-ctrl-left">
+                                        <div class="vro-btn" data-scale-btn-id="2"  title="Grip"       data-i18n="vro.keybind.button.grip">Grip</div>
+                                        <div class="vro-btn" data-scale-btn-id="33" title="Trigger"    data-i18n="vro.keybind.button.trigger">Trigger</div>
+                                        <div class="vro-btn" data-scale-btn-id="32" title="Thumbstick" data-i18n="vro.keybind.button.thumbstick_short">Stick</div>
+                                    </div>
+                                    <div class="vro-ctrl-right">
+                                        <div class="vro-btn" data-scale-btn-id="7" title="A / X" data-i18n="vro.keybind.button.ax">A / X</div>
+                                        <div class="vro-btn" data-scale-btn-id="1" title="B / Y" data-i18n="vro.keybind.button.by">B / Y</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Current scale keybind display -->
+                        <div class="vro-keybind-row">
+                            <div id="vroScaleKeybindDisplay" class="vro-keybind-display">
+                                <span style="color:var(--tx3);font-style:italic;" data-i18n="vro.keybind.none">No keybind set</span>
+                            </div>
+                            <button class="vrcn-button" onclick="vroScaleClearKeybind()" style="padding:4px 8px;" title="Clear">
+                                <span class="msi" style="font-size:14px;">close</span>
+                            </button>
+                        </div>
+
+                        <!-- Hand selector -->
+                        <div style="display:flex;gap:6px;align-items:center;margin:6px 0;flex-wrap:wrap;">
+                            <span style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);" data-i18n="vro.keybind.hand.label">Hand:</span>
+                            <button class="vrcn-button sub-tab-btn active" id="vroScaleHandAny"   onclick="vroScaleSetHand(0)" data-i18n="vro.keybind.hand.any">Any</button>
+                            <button class="vrcn-button sub-tab-btn"        id="vroScaleHandLeft"  onclick="vroScaleSetHand(1)" data-i18n="vro.keybind.hand.left">Left</button>
+                            <button class="vrcn-button sub-tab-btn"        id="vroScaleHandRight" onclick="vroScaleSetHand(2)" data-i18n="vro.keybind.hand.right">Right</button>
+                        </div>
+
+                        <!-- Record / Cancel buttons -->
+                        <div id="vroScaleIdleButtons" style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="vrcn-button" id="vroScaleRecordBtn" onclick="vroScaleStartRecord()" style="flex:1;justify-content:center;">
+                                <span class="msi" style="font-size:15px;">radio_button_checked</span> <span data-i18n="vro.keybind.record">Record</span>
+                            </button>
+                            <button class="vrcn-button" onclick="vroScaleStartManual()" style="flex:1;justify-content:center;">
+                                <span class="msi" style="font-size:15px;">edit</span> <span data-i18n="vro.keybind.edit_manual">Edit Manual</span>
+                            </button>
+                        </div>
+                        <div id="vroScaleRecordingButtons" style="margin-top:6px;display:none;gap:8px;">
+                            <button class="vrcn-button" onclick="vroScaleCancelRecord()" style="flex:1;justify-content:center;border-color:var(--warn);">
+                                <span class="msi" style="font-size:15px;">stop_circle</span> <span data-i18n="common.cancel">Cancel</span>
+                            </button>
+                        </div>
+                        <div id="vroScaleManualPanel" style="margin-top:6px;display:none;">
+                            <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-bottom:6px;" data-i18n="vro.keybind.hint.manual_edit">Click the buttons above to select your keybind (up to 4).</div>
+                            <div style="display:flex;gap:8px;">
+                                <button class="vrcn-button" onclick="vroScaleConfirmManual()" style="flex:1;justify-content:center;border-color:var(--ok);">
+                                    <span class="msi" style="font-size:15px;">check_circle</span> <span data-i18n="vro.keybind.confirm">Confirm</span>
+                                </button>
+                                <button class="vrcn-button" onclick="vroScaleStopManual()" style="flex:1;justify-content:center;border-color:var(--warn);">
+                                    <span class="msi" style="font-size:15px;">close</span> <span data-i18n="common.cancel">Cancel</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="vroScaleRecordHint" style="margin-top:4px;font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);"></div>
+                        </div>
+                    </div>
+
+                    <!-- Water Reminder -->
+                    <div class="vrcn-panel-card collapsed">
+                        <div class="vrcn-panel-card-header vrcn-card-collapse-trigger" onclick="vrcnToggleCollapse(this)"><span class="msi">water_drop</span> <span data-i18n="vro.water.title">Water Reminder</span></div>
+                        <div class="vrcn-card-collapse-body">
+                        <div class="set-desc" data-i18n="vro.water.desc">Shows a reminder in the VR dashboard to drink water at a set interval.</div>
+                        <div class="sf-toggle-row" style="margin-top:8px;">
+                            <span data-i18n="vro.water.enabled">Enabled</span>
+                            <label class="toggle"><input type="checkbox" id="vroWaterEnabled" onchange="vroWaterAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="sf-section-label" style="margin-top:8px;" data-i18n="vro.water.interval">Reminder Interval</div>
+                        <div style="display:flex;gap:8px;align-items:center;margin-top:4px;">
+                            <select class="vrcn-select" id="vroWaterHours" onchange="vroWaterAutoSave()">
+                                <option value="0">0h</option>
+                                <option value="1" selected>1h</option>
+                                <option value="2">2h</option>
+                                <option value="3">3h</option>
+                                <option value="4">4h</option>
+                            </select>
+                            <select class="vrcn-select" id="vroWaterMinutes" onchange="vroWaterAutoSave()">
+                                <option value="0" selected>0m</option>
+                                <option value="1">1m</option>
+                                <option value="5">5m</option>
+                                <option value="10">10m</option>
+                                <option value="15">15m</option>
+                                <option value="30">30m</option>
+                                <option value="45">45m</option>
+                            </select>
+                        </div>
+                        </div>
+                    </div>
+
+
+                </div>

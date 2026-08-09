@@ -1,0 +1,228 @@
+/* === People Module === */
+
+/* Tab layout — flex column so paginator sticks to bottom like Timeline */
+#tab3.active {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+#peopleFavArea,
+#peopleAllArea,
+#peopleRecentArea,
+#peopleSearchArea,
+#peopleBlockedArea,
+#peopleInstanceArea,
+#peopleMutedArea {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#peopleFavArea .search-bar-row,
+#peopleAllArea .search-bar-row,
+#peopleRecentArea .search-bar-row,
+#peopleSearchArea .search-bar-row,
+#peopleBlockedArea .search-bar-row,
+#peopleMutedArea .search-bar-row {
+    flex-shrink: 0;
+}
+
+#allFriendsGrid,
+#favFriendsGrid,
+#recentSeenGrid,
+#blockedList,
+#mutedList,
+#searchPeopleResults {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    align-content: start;
+    gap: 10px;
+}
+
+/* Sidebar profile card */
+.vrc-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.vrc-profile:hover {
+    background: var(--bg-hover);
+}
+
+.vrc-profile-status {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+}
+
+/* Same-location instance cards */
+.sloc-inst-card {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+.sloc-inst-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.15);
+    z-index: 0;
+}
+.sloc-inst-content {
+    position: relative;
+    z-index: 1;
+}
+.sloc-inst-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx2);
+    padding: 8px 8px 10px;
+    letter-spacing: .04em;
+    overflow: hidden;
+}
+.sloc-inst-label > span.sloc-inst-count {
+    flex-shrink: 0;
+}
+.sloc-inst-label > .vrcn-badge {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.sloc-inst-count {
+    color: var(--tx3);
+    font-weight: 400;
+}
+.sloc-inst-card .vrc-friend-card:hover {
+    background: rgba(255,255,255,.08);
+}
+
+/* Sidebar login box */
+.vrc-login-box {
+    padding: 16px;
+    text-align: center;
+}
+
+.vrc-login-box input[type="text"],
+.vrc-login-box input[type="password"] {
+    width: 100%;
+    background: var(--bg-input);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--tx1);
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-family: inherit;
+    outline: none;
+    margin-bottom: 8px;
+}
+
+.vrc-login-box .vrcn-button {
+    width: 100%;
+    justify-content: center;
+}
+
+/* People list view */
+#favFriendsGrid:has(.tl-list-wrap),
+#allFriendsGrid:has(.tl-list-wrap),
+#recentSeenGrid:has(.tl-list-wrap),
+#searchPeopleResults:has(.tl-list-wrap),
+#blockedList:has(.tl-list-wrap),
+#mutedList:has(.tl-list-wrap) { overflow-x: auto; position: relative; z-index: 2; }
+#favFriendsGrid .tl-list-wrap,
+#allFriendsGrid .tl-list-wrap,
+#recentSeenGrid .tl-list-wrap,
+#searchPeopleResults .tl-list-wrap,
+#blockedList .tl-list-wrap,
+#mutedList .tl-list-wrap { padding: 4px 0 0; }
+.pl-profile { width: 46px; }
+.pl-av {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--bg-hover) center/cover no-repeat;
+    flex-shrink: 0;
+}
+.pl-av-letter {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+}
+.pl-name {
+    font-weight: 700;
+    color: var(--tx1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pl-status {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--tx2);
+}
+.pl-status-txt { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.pl-langs { white-space: nowrap; }
+.pl-lang { margin-right: 4px; font-size: calc(13px + var(--fs-off, 0px)); }
+.pl-bios { white-space: nowrap; }
+.pl-bio-link {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 5px;
+    cursor: pointer;
+    opacity: .75;
+    transition: opacity .12s;
+}
+.pl-bio-link:hover { opacity: 1; }
+.pl-bio-ico {
+    width: 14px;
+    height: 14px;
+    font-size: 14px !important;
+    fill: var(--tx2);
+    color: var(--tx2);
+}
+.pl-num { color: var(--tx2); }
+.pl-date { white-space: nowrap; color: var(--tx2); }
+
+#instancePlayersGrid {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+#instancePlayersGrid:has(.tl-list-wrap) { overflow-x: auto; position: relative; z-index: 2; }
+#instancePlayersGrid .tl-list-wrap { padding: 4px 0 0; }
+#instancePlayersGrid .tl-list-table { table-layout: fixed; }
+.ip-age { color: #3ba55d; border-color: #3ba55d30; background: #3ba55d18; }
+.ip-bar-cell { padding-right: 14px !important; }
+.ip-bar-cell .tl-player-bar-wrap { width: 100%; }
+
+/* Keep the horizontal scrollbar clear of the window resize edge */
+#instancePlayersGrid,
+#favFriendsGrid:has(.tl-list-wrap),
+#allFriendsGrid:has(.tl-list-wrap),
+#recentSeenGrid:has(.tl-list-wrap),
+#searchPeopleResults:has(.tl-list-wrap),
+#blockedList:has(.tl-list-wrap),
+#mutedList:has(.tl-list-wrap) { margin-bottom: 8px; }

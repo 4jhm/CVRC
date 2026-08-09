@@ -1,0 +1,80 @@
+/* === Groups Module === */
+
+.gp-modal {
+    background: var(--bg-card);
+    border: 1px solid var(--brd);
+    border-radius: 16px;
+    width: 480px;
+    max-width: calc(100vw - 32px);
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 24px 80px rgba(0,0,0,.55);
+    overflow: hidden;
+}
+
+.gp-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px 14px;
+    font-size: calc(15px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx0);
+    flex-shrink: 0;
+}
+
+.gp-modal-header > span:last-of-type { flex: 1; }
+.gp-modal-body {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.gp-label {
+    display: block;
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx2);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 6px;
+}
+
+.gp-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: none;
+    border-radius: 8px;
+    color: var(--tx0);
+    font-size: calc(13px + var(--fs-off, 0px));
+    font-family: inherit;
+    padding: 9px 12px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.gp-textarea {
+    width: 100%;
+    background: var(--bg-input);
+    border: none;
+    border-radius: 8px;
+    color: var(--tx0);
+    font-size: calc(13px + var(--fs-off, 0px));
+    font-family: inherit;
+    padding: 9px 12px;
+    outline: none;
+    box-sizing: border-box;
+    resize: vertical;
+    min-height: 90px;
+    max-height: 200px;
+    line-height: 1.5;
+}
+
+.gp-modal-footer {
+    padding: 14px 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-start;
+    flex-shrink: 0;
+}

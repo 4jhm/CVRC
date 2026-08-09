@@ -1,0 +1,233 @@
+/* === Timeline Modal === */
+
+.tl-detail-av {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--bg-input) center/cover no-repeat;
+    flex-shrink: 0;
+}
+
+.tl-detail-av-letter {
+    font-size: calc(24px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx2);
+}
+
+.tl-detail-sect {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--tx3);
+    text-transform: uppercase;
+    margin: 16px 0 8px;
+}
+
+.tl-player-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--bg-input);
+    border-radius: 10px;
+    transition: background .1s;
+    cursor: default;
+}
+
+.tl-player-card:hover {
+    background: var(--bg-hover);
+}
+
+.tl-player-card.clickable {
+    cursor: pointer;
+}
+
+.tl-player-card-av {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg-card) center/cover no-repeat;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(13px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+}
+
+.tl-player-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.tl-player-card-name {
+    font-size: calc(12.5px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx0);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.tl-player-card-name > span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.tl-player-card-times {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    margin-top: 2px;
+}
+
+
+.tl-players-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+}
+
+.tl-players-card {
+    margin-top: 14px;
+    overflow-y: auto;
+    max-height: 420px;
+}
+
+.tl-player-bar-wrap {
+    height: 4px;
+    background: var(--bg-hover);
+    border-radius: 2px;
+    position: relative;
+    margin-top: 5px;
+    overflow: hidden;
+}
+
+.tl-player-bar {
+    position: absolute;
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    cursor: help;
+    transition: filter .12s;
+}
+
+.tl-player-bar:hover {
+    filter: brightness(1.35);
+}
+
+.tl-player-bar.friend {
+    background: var(--ok);
+}
+
+/* === Compact two-column layout (instance detail) === */
+
+.modal-overlay.tl-style-compact #detailModalContent,
+.modal-overlay.tl-style-compact #detailModalContent2,
+.modal-overlay.tl-style-compact #ftGpsDetailContent {
+    padding: 0;
+    height: min(calc(100vh - var(--tb-h, 0px) - 80px), 420px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-overlay.tl-style-compact #detailModalContent .fd-modal-bar,
+.modal-overlay.tl-style-compact #detailModalContent2 .fd-modal-bar,
+.modal-overlay.tl-style-compact #ftGpsDetailContent .fd-modal-bar {
+    margin: 0;
+    border-radius: 0;
+    flex-shrink: 0;
+}
+
+.modal-overlay.tl-style-compact .fd-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    overflow: hidden;
+}
+
+.modal-overlay.tl-style-compact .fd-left {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    background: var(--bg-card);
+    border-right: 1px solid var(--brd);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.modal-overlay.tl-style-compact .fd-left-banner {
+    position: relative;
+    z-index: 0;
+    width: 100%;
+    height: 165px;
+    flex-shrink: 0;
+    background: var(--bg-hover);
+    overflow: hidden;
+}
+
+.modal-overlay.tl-style-compact .fd-left-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    filter: brightness(0.72);
+}
+
+.modal-overlay.tl-style-compact .fd-left-banner .fd-banner-fade {
+    background: linear-gradient(to top, var(--bg-card) 0%, rgba(0,0,0,.08) 55%, transparent 100%);
+}
+
+.modal-overlay.tl-style-compact .fd-left-body {
+    position: relative;
+    z-index: 1;
+    margin-top: -58px;
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.modal-overlay.tl-style-compact .fd-left-body h2 { margin: 0 0 2px; }
+
+.modal-overlay.tl-style-compact .fd-left .fd-actions {
+    margin-bottom: 0;
+    gap: 6px;
+    flex-wrap: nowrap;
+}
+
+.modal-overlay.tl-style-compact .fd-left .fd-actions > button {
+    flex: 1 1 0;
+    min-width: 0;
+    justify-content: center;
+}
+
+.modal-overlay.tl-style-compact .fd-right {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.modal-overlay.tl-style-compact .tl-players-head {
+    flex-shrink: 0;
+    padding: 18px 18px 12px;
+    border-bottom: 1px solid var(--brd);
+}
+
+.modal-overlay.tl-style-compact .fd-right-scroll {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 12px 18px 18px;
+}

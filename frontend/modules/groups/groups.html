@@ -1,0 +1,27 @@
+                <div class="tab-toolbar tt-split" style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;">
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <button class="vrcn-button sub-tab-btn active" id="groupFilterJoined" onclick="setGroupFilter('joined')"><span class="msi" style="font-size:16px;">groups</span> <span data-i18n="groups.filters.joined">Joined Groups</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="groupFilterMine" onclick="setGroupFilter('mine')"><span class="msi" style="font-size:16px;">workspace_premium</span> <span data-i18n="groups.filters.mine">My Groups</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="groupFilterMod" onclick="setGroupFilter('mod')"><span class="msi" style="font-size:16px;">shield_person</span> <span data-i18n="groups.filters.moderate">Moderate Groups</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="groupFilterSearch" onclick="setGroupFilter('search')"><span class="msi" style="font-size:16px;">search</span> <span data-i18n="common.search">Search</span></button>
+                    </div>
+                    <div style="display:flex;gap:6px;align-items:center;margin-left:auto;">
+                        <button id="groupsRefreshBtn" class="vrcn-button" onclick="refreshGroups()" title="Refresh my groups" data-i18n-title="groups.mine.refresh_title"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="common.refresh">Refresh</span></button>
+                        <button class="vrcn-button sub-tab-btn active" id="groupGridLarge" onclick="setGridSize('groups','default');setGroupsViewMode('grid')" title="Large grid"><span class="msi" style="font-size:16px;">grid_on</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="groupGridSmall" onclick="setGridSize('groups','compact');setGroupsViewMode('grid')" title="Compact grid"><span class="msi" style="font-size:14px;">apps</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="groupViewList" onclick="setGroupsViewMode('list')" title="List view" data-i18n-title="people.view.list"><span class="msi" style="font-size:14px;">format_list_bulleted</span></button>
+                    </div>
+                </div>
+                <div id="groupMineArea">
+                    <div class="tab-toolbar-body">
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+                        <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:140px;"><span class="msi search-ico">search</span><input type="text" id="filterGroupsInput" class="vrcn-input" placeholder="Filter my groups..." data-i18n-placeholder="groups.mine.filter_placeholder" oninput="filterMyGroups()"></div>
+                    </div>
+                    </div>
+                    <div id="myGroupsGrid" class="search-grid"></div>
+                    <div id="groupsPaginatorBar" class="tl-paginator-bar"></div>
+                </div>
+                <div id="groupSearchArea" style="display:none;">
+                    <div class="tab-toolbar-body"><div class="search-bar-row"><span class="msi search-ico">search</span><input type="text" id="searchGroupsInput" class="vrcn-input" placeholder="Search groups..." data-i18n-placeholder="groups.search.placeholder" onkeydown="if(event.key==='Enter')doSearch('groups')"><button class="vrcn-button" onclick="doSearch('groups')" data-i18n="common.search">Search</button></div></div>
+                    <div id="searchGroupsResults" class="search-grid"><div class="empty-msg" data-i18n="groups.search.empty_prompt">Search for VRChat groups</div></div>
+                </div>

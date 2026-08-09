@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VRCNext Setup</title>
+    <link rel="stylesheet" href="../Fonts/fonts.css">
+    <link rel="stylesheet" href="setup.css">
+</head>
+<body>
+
+    <!-- Background -->
+    <div class="setup-bg">
+        <img src="background.png" onerror="this.style.display='none'">
+        <div class="setup-bg-fade"></div>
+    </div>
+
+    <!-- Titlebar (draggable, Windows only — Linux uses native window frame) -->
+    <div class="setup-titlebar" id="titlebar" data-windows-only>
+        <div class="tb-brand">VRCNext</div>
+        <div class="tb-drag"></div>
+        <div class="tb-win-group">
+            <button class="tb-win-btn" title="Minimize" onclick="winMin()">
+                <svg width="12" height="2" viewBox="0 0 12 2"><rect width="12" height="1.5" y="0.25" fill="currentColor"/></svg>
+            </button>
+            <button class="tb-win-btn" id="tbMaximize" title="Maximize / Restore" onclick="winMax()">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <rect class="tb-icon-max" x="0.5" y="0.5" width="9" height="9" stroke="currentColor" stroke-width="1.1"/>
+                    <path class="tb-icon-restore" d="M3.5 0.5h6v6M0.5 3.5v6h6" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+            <button class="tb-win-btn tb-close" title="Close" onclick="winClose()">
+                <svg width="10" height="10" viewBox="0 0 10 10"><path d="M1 1L9 9M9 1L1 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Setup Card -->
+    <div class="setup-container">
+        <div class="setup-card">
+            <!-- Progress Bar -->
+            <div class="setup-progress"><div class="setup-progress-fill" id="progressFill" style="width:8%"></div></div>
+            <div class="setup-step" id="stepCounter">STEP 1 OF 12</div>
+
+            <div class="setup-pages" id="setupPages">
+            <!-- ═══ Page 1: Language ═══ -->
+            <div class="setup-page active" data-page="0">
+                <div class="setup-icon"><span class="msi">language</span></div>
+                <div class="setup-title" data-i18n="setup.page1.title">Choose Your Language</div>
+                <div class="setup-desc" data-i18n="setup.page1.desc">Select your preferred language for VRCNext. You can change this at any time in Settings.</div>
+                <div class="lang-grid" id="setupLangGrid"></div>
+            </div>
+
+            <!-- ═══ Page 2: Welcome ═══ -->
+            <div class="setup-page" data-page="1">
+                <div class="setup-icon"><span class="msi">rocket_launch</span></div>
+                <div class="setup-title" data-i18n="setup.page2.title">Welcome to VRCNext</div>
+                <div class="setup-desc" data-i18n="setup.page2.desc">VRCNext is your VRChat companion app with powerful tools and features to enhance your experience. In this Setup Wizard we'll walk you through the important steps. It is recommended not to skip!</div>
+                <div class="step-list">
+                    <div class="step-item">
+                        <div class="step-num">1</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step1_title">Login to VRChat</strong><br><span data-i18n="setup.page2.step1_desc">Connect your account to unlock all features</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">2</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step2_title">Locate VRChat</strong><br><span data-i18n="setup.page2.step2_desc">Set your VRChat installation path for quick launching</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">3</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step3_title">VRChat Image Library</strong><br><span data-i18n="setup.page2.step3_desc">Point VRCNext to your VRChat screenshot folder</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">4</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step4_title">Camera Settings</strong><br><span data-i18n="setup.page2.step4_desc">Enable metadata for photo world tracking</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">5</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step5_title">VRChat Plus Decorations</strong><br><span data-i18n="setup.page2.step5_desc">Show icon frames, name plates, backgrounds and themes</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">6</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step6_title">Friends Sidebar</strong><br><span data-i18n="setup.page2.step6_desc">Choose what you see next to each of your friends</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">7</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step7_title">Preview Profiles</strong><br><span data-i18n="setup.page2.step7_desc">Peek at a friend's profile without opening it</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">8</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step8_title">Navigation</strong><br><span data-i18n="setup.page2.step8_desc">Pick the classic or the compact modal layout</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">9</div>
+                        <div class="step-text"><strong data-i18n="setup.page2.step9_title">Direct Modal Navigation</strong><br><span data-i18n="setup.page2.step9_desc">Move the history and actions into the modal itself</span></div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-num">10</div>
+                        <div class="step-text"><strong id="welcomeStep10Title" data-i18n="setup.page2.step10_title">Start with Windows</strong><br><span id="welcomeStep10Desc" data-i18n="setup.page2.step10_desc">Launch VRCNext automatically when your system boots</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ Page 3: Login ═══ -->
+            <div class="setup-page" data-page="2">
+                <div class="setup-icon"><span class="msi">login</span></div>
+                <div class="setup-title" data-i18n="setup.page3.title">Login to VRChat</div>
+                <div class="setup-desc" data-i18n-html="setup.page3.desc_html">First, you need to log in to VRChat in order to use all features of this app. Without logging in, you'll miss out on almost <strong>90% of the functionality</strong>. This step is optional, you can skip it if you prefer.</div>
+                <div id="loginBox" class="login-box">
+                    <input type="text" id="loginUser" class="login-input" data-i18n-placeholder="setup.page3.username_placeholder" placeholder="VRChat Username" onkeydown="if(event.key==='Enter')document.getElementById('loginPass').focus()">
+                    <input type="password" id="loginPass" class="login-input" data-i18n-placeholder="setup.page3.password_placeholder" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+                    <button class="login-btn" id="loginBtn" onclick="doLogin()">
+                        <span class="msi" style="font-size:18px;">login</span> <span data-i18n="setup.page3.connect_btn">Connect</span>
+                    </button>
+                    <div class="login-status" id="loginStatus"></div>
+                </div>
+            </div>
+
+            <!-- ═══ Page 4: VRChat Path ═══ -->
+            <div class="setup-page" data-page="3">
+                <div class="setup-icon"><span class="msi">folder_open</span></div>
+                <div class="setup-title" data-i18n="setup.page4.title">VRChat Launch Location</div>
+                <div class="setup-desc" id="vrcPathDesc" data-i18n-html="setup.page4.desc_html">Please locate the <strong>launch.exe</strong> in your VRChat root folder. This is usually found in your Steam library folder. If you can't find it, right-click VRChat in Steam → Properties → Installed Files → Browse.</div>
+                <div class="path-row">
+                    <input type="text" id="vrcPathInput" class="path-input" placeholder="C:\Program Files\Steam\steamapps\common\VRChat\launch.exe" readonly>
+                    <button class="browse-btn" id="vrcBrowseBtn" onclick="browseVrcPath()">
+                        <span class="msi" style="font-size:16px;">folder_open</span> <span data-i18n="setup.page4.browse_btn">Browse</span>
+                    </button>
+                </div>
+                <div class="path-hint" id="vrcPathHint">
+                    <span class="msi" style="font-size:13px;vertical-align:middle;color:var(--accent);">info</span>
+                    Default: <code>C:\Program Files (x86)\Steam\steamapps\common\VRChat\launch.exe</code>
+                </div>
+            </div>
+
+            <!-- ═══ Page 5: VRChat Image Library ═══ -->
+            <div class="setup-page" data-page="4">
+                <div class="setup-icon"><span class="msi">photo_library</span></div>
+                <div class="setup-title" data-i18n="setup.page5.title">VRChat Image Library</div>
+                <div class="setup-desc" data-i18n="setup.page5.desc">Point VRCNext to your VRChat screenshot folder so the app can monitor new photos, show them in your media library, and track which worlds they were taken in.</div>
+                <div class="path-row">
+                    <input type="text" id="photoDirInput" class="path-input" placeholder="C:\Users\YourName\Pictures\VRChat" readonly>
+                    <button class="browse-btn" onclick="browsePhotoDir()">
+                        <span class="msi" style="font-size:16px;">folder_open</span> <span data-i18n="setup.page5.browse_btn">Browse</span>
+                    </button>
+                </div>
+                <div class="path-hint">
+                    <span class="msi" style="font-size:13px;vertical-align:middle;color:var(--accent);">info</span>
+                    Default: <code>C:\Users\YourName\Pictures\VRChat</code>
+                </div>
+            </div>
+
+            <!-- ═══ Page 6: Camera ═══ -->
+            <div class="setup-page" data-page="5">
+                <div class="setup-icon"><span class="msi">photo_camera</span></div>
+                <div class="setup-title" data-i18n="setup.page6.title">Camera Settings</div>
+                <div class="setup-desc" data-i18n-html="setup.page6.desc_html">Make sure to enable <strong>Metadata</strong> in your VRChat camera settings. This allows VRCNext to track which world each photo was taken in, so you can easily find that world again, even months later!</div>
+                <div class="cam-steps">
+                    <div class="cam-step">
+                        <div class="cam-step-icon"><span class="msi">photo_camera</span></div>
+                        <div class="cam-step-text" data-i18n-html="setup.page6.step1">Open the <strong>Camera</strong> in VRChat via the quick menu</div>
+                    </div>
+                    <div class="cam-step">
+                        <div class="cam-step-icon"><span class="msi">settings</span></div>
+                        <div class="cam-step-text" data-i18n-html="setup.page6.step2">Go to the camera <strong>Settings</strong> panel</div>
+                    </div>
+                    <div class="cam-step">
+                        <div class="cam-step-icon"><span class="msi">toggle_on</span></div>
+                        <div class="cam-step-text" data-i18n-html="setup.page6.step3">Enable <strong>"Save Metadata to Photo"</strong> which embeds world info into each screenshot</div>
+                    </div>
+                    <div class="cam-step">
+                        <div class="cam-step-icon"><span class="msi">check_circle</span></div>
+                        <div class="cam-step-text" data-i18n-html="setup.page6.step4"><strong>Done!</strong> VRCNext will automatically read this data and show the world on your photos</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══ Page 7: VRChat Plus Decorations ═══ -->
+            <div class="setup-page" data-page="6">
+                <div class="setup-icon"><span class="msi">workspace_premium</span></div>
+                <div class="setup-title" data-i18n="setup.vrcplus.title">VRChat Plus Decorations</div>
+                <div class="setup-desc" data-i18n="setup.vrcplus.desc">VRChat Plus users can decorate their profile with icon frames, name plates, backgrounds and themes. VRCNext can show all of that inside the app.</div>
+                <div class="setup-question" data-i18n="setup.vrcplus.question">Do you want to use the new VRChat Plus profile decorations?</div>
+                <div class="startup-toggle-card">
+                    <div class="startup-toggle-label">
+                        <span class="msi">auto_awesome</span>
+                        <div>
+                            <div class="startup-toggle-title" data-i18n="setup.vrcplus.toggle_title">Show VRChat Plus decorations</div>
+                            <div class="startup-toggle-sub" data-i18n="setup.vrcplus.toggle_sub">Turns on the recommended set of decoration options</div>
+                        </div>
+                    </div>
+                    <label class="sw-toggle">
+                        <input type="checkbox" id="setupVrcPlusDeco" onchange="onVrcPlusDecoToggle(this.checked)">
+                        <div class="sw-track"><div class="sw-knob"></div></div>
+                    </label>
+                </div>
+                <div class="deco-list" id="decoPillList">
+                    <div class="deco-pill"><span class="msi">crop_free</span><span data-i18n="setup.vrcplus.item.frames">Profile Frames</span></div>
+                    <div class="deco-pill"><span class="msi">crop_square</span><span data-i18n="setup.vrcplus.item.square">Non-Frame Profiles as Square</span></div>
+                    <div class="deco-pill"><span class="msi">badge</span><span data-i18n="setup.vrcplus.item.nameplate">Name Plate Decoration</span></div>
+                    <div class="deco-pill"><span class="msi">wallpaper</span><span data-i18n="setup.vrcplus.item.background">Profile Backgrounds</span></div>
+                    <div class="deco-pill"><span class="msi">palette</span><span data-i18n="setup.vrcplus.item.theme">Profile Themes</span></div>
+                    <div class="deco-pill"><span class="msi">contrast</span><span data-i18n="setup.vrcplus.item.contrast">Keep Theme Text Readable</span></div>
+                    <div class="deco-pill"><span class="msi">dashboard</span><span data-i18n="setup.vrcplus.item.dashboard">Effects on Dashboard</span></div>
+                </div>
+                <div class="setup-note" data-i18n="setup.vrcplus.note">You can fine-tune every single one of these later in Settings → VRC+ Decorations.</div>
+            </div>
+
+            <!-- ═══ Page 8: Friends Sidebar ═══ -->
+            <div class="setup-page" data-page="7">
+                <div class="setup-icon"><span class="msi">groups</span></div>
+                <div class="setup-title" data-i18n="setup.sidebar.title">Friends Sidebar</div>
+                <div class="setup-desc" data-i18n="setup.sidebar.desc">The friends sidebar lists everyone you are friends with. Choose how much you want to see at a glance.</div>
+
+                <div class="setup-question" data-i18n="setup.sidebar.rank_question">Do you want to see the Trusted rank as a badge or as a colored name?</div>
+                <div class="startup-toggle-card">
+                    <div class="startup-toggle-label">
+                        <span class="msi">military_tech</span>
+                        <div>
+                            <div class="startup-toggle-title" data-i18n="setup.sidebar.rank_toggle_title">Use Trusted Rank color instead of badge</div>
+                            <div class="startup-toggle-sub" data-i18n="setup.sidebar.rank_toggle_sub">Off: the rank is shown as a badge. On: the name is colored instead.</div>
+                        </div>
+                    </div>
+                    <label class="sw-toggle">
+                        <input type="checkbox" id="setupSidebarRankColor">
+                        <div class="sw-track"><div class="sw-knob"></div></div>
+                    </label>
+                </div>
+
+                <div class="setup-question" style="margin-top:18px;" data-i18n="setup.sidebar.location_question">Do you want to see the location or the status?</div>
+                <div class="startup-toggle-card">
+                    <div class="startup-toggle-label">
+                        <span class="msi">location_on</span>
+                        <div>
+                            <div class="startup-toggle-title" data-i18n="setup.sidebar.location_toggle_title">Show only location when available</div>
+                            <div class="startup-toggle-sub" data-i18n="setup.sidebar.location_toggle_sub">Friends in a world show the world name, everyone else keeps their status.</div>
+                        </div>
+                    </div>
+                    <label class="sw-toggle">
+                        <input type="checkbox" id="setupSidebarLocationOnly">
+                        <div class="sw-track"><div class="sw-knob"></div></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ═══ Page 9: Preview Profiles ═══ -->
+            <div class="setup-page" data-page="8">
+                <div class="setup-icon"><span class="msi">preview</span></div>
+                <div class="setup-title" data-i18n="setup.preview.title">Preview Profiles</div>
+                <div class="setup-desc" data-i18n="setup.preview.desc">When the friends sidebar is collapsed you only see the profile pictures. A preview shows you who that is without opening the full profile.</div>
+                <div class="setup-question" data-i18n="setup.preview.question">Do you want to see a profile preview of your friend when the sidebar is collapsed?</div>
+                <div class="startup-toggle-card">
+                    <div class="startup-toggle-label">
+                        <span class="msi">contact_page</span>
+                        <div>
+                            <div class="startup-toggle-title" data-i18n="setup.preview.toggle_title">Show preview profile when collapsed</div>
+                            <div class="startup-toggle-sub" data-i18n="setup.preview.toggle_sub">Hovering a friend opens a small profile card next to the sidebar.</div>
+                        </div>
+                    </div>
+                    <label class="sw-toggle">
+                        <input type="checkbox" id="setupSidebarPreviewCollapsed">
+                        <div class="sw-track"><div class="sw-knob"></div></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ═══ Page 10: Navigation (modal style) ═══ -->
+            <div class="setup-page" data-page="9">
+                <div class="setup-icon"><span class="msi">alt_route</span></div>
+                <div class="setup-title" data-i18n="setup.navigation.title">Navigation</div>
+                <div class="setup-desc" data-i18n="setup.navigation.desc">Choose how profiles, worlds, groups and avatars are laid out. Classic shows a wide top banner with a single column below, Compact splits the details onto a left column with the content next to it. Your choice is used for all four modals.</div>
+                <div class="profile-style-picker" id="setupStylePicker">
+                    <button type="button" class="profile-style-option" data-style="classic" onclick="setSetupModalStyle('classic')">
+                        <div class="profile-style-skeleton sk-classic">
+                            <div class="sk-banner"></div>
+                            <div class="sk-row sk-row-header">
+                                <div class="sk-avatar"></div>
+                                <div class="sk-name-block">
+                                    <div class="sk-name"></div>
+                                    <div class="sk-line short"></div>
+                                </div>
+                            </div>
+                            <div class="sk-badges">
+                                <div class="sk-chip"></div>
+                                <div class="sk-chip"></div>
+                                <div class="sk-chip"></div>
+                            </div>
+                            <div class="sk-tabs">
+                                <div class="sk-tab"></div>
+                                <div class="sk-tab"></div>
+                                <div class="sk-tab"></div>
+                            </div>
+                            <div class="sk-content">
+                                <div class="sk-block"></div>
+                                <div class="sk-block short"></div>
+                            </div>
+                        </div>
+                        <div class="profile-style-label" data-i18n="setup.navigation.classic">Classic</div>
+                    </button>
+                    <button type="button" class="profile-style-option" data-style="compact" onclick="setSetupModalStyle('compact')">
+                        <div class="profile-style-skeleton sk-compact">
+                            <div class="sk-left">
+                                <div class="sk-banner sk-banner-left"></div>
+                                <div class="sk-row sk-row-tight">
+                                    <div class="sk-avatar small"></div>
+                                    <div class="sk-name-block">
+                                        <div class="sk-name short"></div>
+                                        <div class="sk-line tiny"></div>
+                                    </div>
+                                </div>
+                                <div class="sk-mini-card"></div>
+                                <div class="sk-mini-card short"></div>
+                                <div class="sk-mini-card"></div>
+                            </div>
+                            <div class="sk-right">
+                                <div class="sk-tabs">
+                                    <div class="sk-tab"></div>
+                                    <div class="sk-tab"></div>
+                                    <div class="sk-tab"></div>
+                                </div>
+                                <div class="sk-content">
+                                    <div class="sk-block"></div>
+                                    <div class="sk-block short"></div>
+                                    <div class="sk-block"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profile-style-label" data-i18n="setup.navigation.compact">Compact</div>
+                    </button>
+                </div>
+                <div class="setup-note" data-i18n="setup.navigation.note">Applies to the profile, world, group and avatar modal. Each one can still be changed separately in Settings.</div>
+            </div>
+
+            <!-- ═══ Page 11: Direct Modal Navigation ═══ -->
+            <div class="setup-page" data-page="10">
+                <div class="setup-icon"><span class="msi">low_priority</span></div>
+                <div class="setup-title" data-i18n="setup.directnav.title">Use Direct Modal Navigation</div>
+                <div class="setup-desc" data-i18n="setup.directnav.desc">With direct modal navigation the breadcrumb history and all modal actions sit in a bar at the top of the modal instead of in the taskbar. This makes navigating easier in fullscreen or on larger screens.</div>
+                <div class="startup-toggle-card">
+                    <div class="startup-toggle-label">
+                        <span class="msi">low_priority</span>
+                        <div>
+                            <div class="startup-toggle-title" data-i18n="setup.directnav.toggle_title">Use Direct Modal Navigation</div>
+                            <div class="startup-toggle-sub" data-i18n="setup.directnav.toggle_sub">Recommended when you run VRCNext in fullscreen.</div>
+                        </div>
+                    </div>
+                    <label class="sw-toggle">
+                        <input type="checkbox" id="setupDirectModalNav">
+                        <div class="sw-track"><div class="sw-knob"></div></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- ═══ Page 12: Start with System ═══ -->
+            <div class="setup-page" data-page="11">
+                <div class="setup-icon"><span class="msi">rocket_launch</span></div>
+                <div class="setup-title" id="startupPageTitle" data-i18n="setup.page7.title">Start with Windows</div>
+                <div class="setup-desc" id="startupPageDesc" data-i18n="setup.page7.desc">Should VRCNext launch automatically when Windows starts? It will open minimized in the taskbar so it is ready when you need it.</div>
+                <div class="startup-toggle-card">
+                    <div class="startup-toggle-label">
+                        <span class="msi">power_settings_new</span>
+                        <div>
+                            <div class="startup-toggle-title" id="startupToggleTitle" data-i18n="setup.page7.toggle_title">Auto-start with Windows</div>
+                            <div class="startup-toggle-sub" id="startupToggleSub" data-i18n="setup.page7.toggle_sub">Opens minimized when Windows boots</div>
+                        </div>
+                    </div>
+                    <label class="sw-toggle">
+                        <input type="checkbox" id="setupStartWithWindows">
+                        <div class="sw-track"><div class="sw-knob"></div></div>
+                    </label>
+                </div>
+            </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="setup-nav">
+                <button class="btn-skip" id="btnSkip" onclick="skipSetup()" data-i18n="setup.nav.skip">Skip Setup</button>
+                <button class="btn-next" id="btnNext" onclick="nextPage()">Next <span class="msi" style="font-size:16px;vertical-align:middle;">arrow_forward</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2FA Modal -->
+    <div class="modal-overlay" id="modal2FA" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-box">
+            <div class="modal-title" data-i18n="setup.tfa.title">Two-Factor Authentication</div>
+            <div class="modal-msg" id="tfaMsg">Enter the 6-digit code from your authenticator app.</div>
+            <input type="text" class="tfa-input" id="tfaCode" maxlength="6" placeholder="000000" autocomplete="one-time-code" onkeydown="if(event.key==='Enter')submit2FA()">
+            <div class="tfa-error" id="tfaError"></div>
+            <div class="modal-btns">
+                <button class="modal-btn modal-btn-cancel" data-i18n="setup.tfa.cancel" onclick="document.getElementById('modal2FA').style.display='none'">Cancel</button>
+                <button class="modal-btn modal-btn-accent" data-i18n="setup.tfa.verify" onclick="submit2FA()">Verify</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="setup.js"></script>
+</body>
+</html>

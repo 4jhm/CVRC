@@ -1,0 +1,258 @@
+                <div class="sf-layout">
+
+                    <!-- Status card -->
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status">
+                                <span class="sf-dot offline" id="fsDot"></span>
+                                <span id="fsStatusText" data-i18n="frameshot.status.not_connected">Not Connected</span>
+                            </div>
+                            <button class="vrcn-button" id="fsConnBtn" onclick="fsConnect()">
+                                <span class="msi" style="font-size:16px;">link</span> <span data-i18n="common.connect">Connect</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Launch -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">power_settings_new</span> <span data-i18n="common.launch">Launch</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="common.start_with_vrchat_vr">Start when launching VRChat in VR</span>
+                            <label class="toggle"><input type="checkbox" id="setFsAutoStartVR" onchange="fsAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                    </div>
+
+                    <!-- Frame Keybind -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">gamepad</span> <span data-i18n="frameshot.keybind.title">Frame Keybind</span>
+                            <button class="vrcn-button vro-view-toggle" onclick="fsToggleView(this)" title="Toggle legacy view" data-i18n-title="vro.keybind.toggle_view">
+                                <span class="msi" style="font-size:15px;">format_list_bulleted</span>
+                            </button>
+                        </div>
+
+                        <div class="fd-tabs" id="fsKeybindPills" style="margin-bottom:10px;">
+                            <button class="fd-tab active" id="fsModeFrame" onclick="fsSetMode('frame')" data-i18n="frameshot.keybind.frame">Frame</button>
+                            <button class="fd-tab" id="fsModeGif" onclick="fsSetMode('gif')" data-i18n="frameshot.keybind.record">Record (GIF)</button>
+                            <button class="fd-tab" id="fsModeVideo" onclick="fsSetMode('video')" data-i18n="frameshot.keybind.video">Record (Video)</button>
+                        </div>
+
+                        <div id="fsControllerVisual" class="vro-controller-visual editing">
+                            <div class="vro-ctrl-diagram">
+                                <div class="fs-ctrl-col">
+                                    <div class="vro-controller vro-controller-left">
+                                        <img class="vro-ctrl-base" src="assets/VR/Quest/Controller.png" alt="">
+                                        <div class="vro-btn" data-fs-btn-id="2"  data-hl="grip"    data-side="left" title="Grip"       data-i18n-title="vro.keybind.button.grip"    onclick="fsKeybindClick(this)"></div>
+                                        <div class="vro-btn" data-fs-btn-id="33" data-hl="trigger" data-side="left" title="Trigger"    data-i18n-title="vro.keybind.button.trigger" onclick="fsKeybindClick(this)"></div>
+                                        <div class="vro-btn" data-fs-btn-id="32" data-hl="stick"   data-side="left" title="Thumbstick" data-i18n-title="vro.keybind.button.thumbstick" onclick="fsKeybindClick(this)"></div>
+                                        <div class="vro-btn" data-fs-btn-id="7"  data-hl="a"       data-side="left" title="A / X"      data-i18n-title="vro.keybind.button.ax_title" onclick="fsKeybindClick(this)"></div>
+                                        <div class="vro-btn" data-fs-btn-id="1"  data-hl="b"       data-side="left" title="B / Y"      data-i18n-title="vro.keybind.button.by_title" onclick="fsKeybindClick(this)"></div>
+                                    </div>
+                                    <span class="fs-ctrl-cap" data-i18n="common.left_hand">Left Hand</span>
+                                </div>
+                                <div class="fs-ctrl-col">
+                                    <div class="vro-controller vro-controller-right">
+                                        <img class="vro-ctrl-base" src="assets/VR/Quest/Controller.png" alt="">
+                                        <div class="vro-btn" data-fs-btn-id="2"  data-hl="grip"    data-side="right" title="Grip"       data-i18n-title="vro.keybind.button.grip"    onclick="fsKeybindClick(this)"></div>
+                                        <div class="vro-btn" data-fs-btn-id="33" data-hl="trigger" data-side="right" title="Trigger"    data-i18n-title="vro.keybind.button.trigger" onclick="fsKeybindClick(this)"></div>
+                                        <div class="vro-btn" data-fs-btn-id="32" data-hl="stick"   data-side="right" title="Thumbstick" data-i18n-title="vro.keybind.button.thumbstick" onclick="fsKeybindClick(this)"></div>
+                                        <div class="vro-btn" data-fs-btn-id="7"  data-hl="a"       data-side="right" title="A / X"      data-i18n-title="vro.keybind.button.ax_title" onclick="fsKeybindClick(this)"></div>
+                                        <div class="vro-btn" data-fs-btn-id="1"  data-hl="b"       data-side="right" title="B / Y"      data-i18n-title="vro.keybind.button.by_title" onclick="fsKeybindClick(this)"></div>
+                                    </div>
+                                    <span class="fs-ctrl-cap" data-i18n="common.right_hand">Right Hand</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="fsLegacyView" style="display:none;">
+                            <div class="fs-keybind-grid fs-keybind-head">
+                                <span></span>
+                                <span data-i18n="frameshot.keybind.frame">Frame</span>
+                                <span data-i18n="frameshot.keybind.record">Record (GIF)</span>
+                                <span data-i18n="frameshot.keybind.video">Record (Video)</span>
+                            </div>
+
+                            <div class="fs-keybind-grid">
+                                <label data-i18n="common.left_hand">Left Hand</label>
+                                <select id="fsLeftButton" class="vrcn-select" onchange="fsAutoSave();fsRenderKeybind()">
+                                    <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
+                                    <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
+                                    <option value="32" data-i18n="vro.keybind.button.thumbstick">Stick</option>
+                                    <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
+                                    <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
+                                </select>
+                                <select id="fsLeftRecord" class="vrcn-select" onchange="fsAutoSave();fsRenderKeybind()">
+                                    <option value="0"  data-i18n="frameshot.keybind.none">None</option>
+                                    <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
+                                    <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
+                                    <option value="32" data-i18n="vro.keybind.button.thumbstick">Stick</option>
+                                    <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
+                                    <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
+                                </select>
+                                <select id="fsLeftVideo" class="vrcn-select" onchange="fsAutoSave();fsRenderKeybind()">
+                                    <option value="0"  data-i18n="frameshot.keybind.none">None</option>
+                                    <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
+                                    <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
+                                    <option value="32" data-i18n="vro.keybind.button.thumbstick">Stick</option>
+                                    <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
+                                    <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
+                                </select>
+                            </div>
+
+                            <div class="fs-keybind-grid">
+                                <label data-i18n="common.right_hand">Right Hand</label>
+                                <select id="fsRightButton" class="vrcn-select" onchange="fsAutoSave();fsRenderKeybind()">
+                                    <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
+                                    <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
+                                    <option value="32" data-i18n="vro.keybind.button.thumbstick">Stick</option>
+                                    <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
+                                    <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
+                                </select>
+                                <select id="fsRightRecord" class="vrcn-select" onchange="fsAutoSave();fsRenderKeybind()">
+                                    <option value="0"  data-i18n="frameshot.keybind.none">None</option>
+                                    <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
+                                    <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
+                                    <option value="32" data-i18n="vro.keybind.button.thumbstick">Stick</option>
+                                    <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
+                                    <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
+                                </select>
+                                <select id="fsRightVideo" class="vrcn-select" onchange="fsAutoSave();fsRenderKeybind()">
+                                    <option value="0"  data-i18n="frameshot.keybind.none">None</option>
+                                    <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
+                                    <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
+                                    <option value="32" data-i18n="vro.keybind.button.thumbstick">Stick</option>
+                                    <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
+                                    <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="sf-controllers" style="margin-top:10px;">
+                            <div class="sf-ctrl" id="fsCtrlL"><span class="msi" style="font-size:14px;">back_hand</span> <span data-i18n="common.left">Left</span></div>
+                            <div class="sf-ctrl" id="fsCtrlR"><span class="msi" style="font-size:14px;">front_hand</span> <span data-i18n="common.right">Right</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Photo Settings -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">photo_camera</span> <span data-i18n="frameshot.photo.title">Photo Settings</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="frameshot.photo.use_hmd_rotations">Use HMD Rotations</span>
+                            <label class="toggle"><input type="checkbox" id="fsUseHmdRotations" onchange="fsAutoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="fs-help" data-i18n="frameshot.photo.use_hmd_rotations.help">When enabled, the frame tilts and rotates together with your headset, including head roll. When disabled (default), the frame stays in a fixed upright rotation regardless of how you move your head recommended for clean, level photos.</div>
+                    </div>
+
+                    <!-- Video Settings -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">videocam</span> <span data-i18n="frameshot.video.title">Video Settings</span></div>
+                        <div class="fs-video-grid">
+                            <div class="sf-row">
+                                <label data-i18n="frameshot.video.target_fps">Target FPS</label>
+                                <select id="fsVideoFps" class="vrcn-select" onchange="fsAutoSave()">
+                                    <option value="25">25</option>
+                                    <option value="30" selected>30</option>
+                                    <option value="60">60</option>
+                                </select>
+                            </div>
+                            <div class="sf-row">
+                                <label data-i18n="frameshot.video.video_quality">Video Quality</label>
+                                <select id="fsVideoQuality" class="vrcn-select" onchange="fsAutoSave()">
+                                    <option value="720p">720p</option>
+                                    <option value="1080p" selected>1080p</option>
+                                    <option value="1440p">1440p</option>
+                                </select>
+                            </div>
+                            <div class="sf-row">
+                                <label data-i18n="frameshot.video.input_a">Input Device A</label>
+                                <select id="fsVideoDeviceA" class="vrcn-select" onchange="fsAutoSave()">
+                                    <option value="" data-i18n="frameshot.video.no_input">No input</option>
+                                </select>
+                            </div>
+                            <div class="sf-row">
+                                <label data-i18n="frameshot.video.bitrate_quality">Bitrate Quality</label>
+                                <select id="fsVideoBitrateQuality" class="vrcn-select" onchange="fsAutoSave()">
+                                    <option value="low"    data-i18n="frameshot.video.bitrate.low">Low</option>
+                                    <option value="medium" selected data-i18n="frameshot.video.bitrate.medium">Medium</option>
+                                    <option value="high"   data-i18n="frameshot.video.bitrate.high">High</option>
+                                </select>
+                            </div>
+                            <div class="sf-row">
+                                <label data-i18n="frameshot.video.audio_quality">Audio Quality</label>
+                                <select id="fsAudioKbps" class="vrcn-select" onchange="fsAutoSave()">
+                                    <option value="128">128 kbps</option>
+                                    <option value="256" selected>256 kbps</option>
+                                    <option value="320">320 kbps (High)</option>
+                                </select>
+                            </div>
+                            <div class="sf-row">
+                                <label data-i18n="frameshot.video.input_b">Input Device B</label>
+                                <select id="fsVideoDeviceB" class="vrcn-select" onchange="fsAutoSave()">
+                                    <option value="" data-i18n="frameshot.video.no_input">No input</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="fs-help" data-i18n="frameshot.video.help">Record up to 30 seconds of MP4 video with two mixed audio inputs (e.g. system sound + microphone).</div>
+                        <div style="margin-top:12px;padding:10px;background:var(--bg2);border-radius:6px;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <span class="msi" style="font-size:16px;">video_settings</span>
+                                <span style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;" data-i18n="frameshot.ffmpeg.title">Video Encoder (ffmpeg)</span>
+                                <span id="fsFfmpegStatus" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-left:auto;"></span>
+                            </div>
+                            <div id="fsFfmpegProgressWrap" style="display:none;margin-bottom:8px;">
+                                <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx2);margin-bottom:4px;" id="fsFfmpegProgressLabel" data-i18n="frameshot.ffmpeg.downloading">Downloading...</div>
+                                <div style="background:var(--brd);border-radius:4px;height:6px;overflow:hidden;">
+                                    <div id="fsFfmpegProgressBar" style="height:100%;background:var(--accent);width:0%;transition:width .3s;border-radius:4px;"></div>
+                                </div>
+                            </div>
+                            <button class="vrcn-button" id="fsFfmpegInstallBtn" onclick="fsInstallFfmpeg()">
+                                <span class="msi" style="font-size:16px;">download</span>
+                                <span data-i18n="frameshot.ffmpeg.install">Install ffmpeg</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- GIF Quality -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">movie</span> <span data-i18n="frameshot.gif.title">GIF Quality</span></div>
+                        <div class="fs-gif-grid fs-gif-head">
+                            <span data-i18n="frameshot.gif.max_resolution">Max Resolution</span>
+                            <span data-i18n="frameshot.gif.max_fps">Max FPS</span>
+                        </div>
+                        <div class="fs-gif-grid">
+                            <select id="fsGifMaxResolution" class="vrcn-select" onchange="fsAutoSave()">
+                                <option value="256">256 px</option>
+                                <option value="512" selected>512 px</option>
+                                <option value="1024">1024 px</option>
+                            </select>
+                            <select id="fsGifMaxFps" class="vrcn-select" onchange="fsAutoSave()">
+                                <option value="8">8 FPS</option>
+                                <option value="10" selected>10 FPS</option>
+                                <option value="15">15 FPS</option>
+                                <option value="20">20 FPS</option>
+                                <option value="30">30 FPS</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Activation Radius -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">adjust</span> <span data-i18n="frameshot.activation.title">Activation Radius</span></div>
+                        <div class="sf-row">
+                            <label data-i18n="frameshot.activation.label">Max Hand Distance</label>
+                            <input type="range" id="fsActivationRadius" min="5" max="30" step="1" value="15" oninput="fsUpdateActivationRadius()">
+                            <span id="fsActivationRadiusVal" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx2);min-width:42px;text-align:right;">15 cm</span>
+                        </div>
+                    </div>
+
+                    <!-- Audio Output -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">volume_up</span> <span data-i18n="frameshot.audio.title">Sound Output</span></div>
+                        <div class="sf-row">
+                            <label data-i18n="frameshot.audio.device">Output Device</label>
+                            <select id="fsOutputDevice" class="vrcn-select" onchange="fsOutputDeviceChange()">
+                                <option value="" data-i18n="frameshot.audio.default">System Default</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>

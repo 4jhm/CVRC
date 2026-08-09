@@ -1,0 +1,434 @@
+/* Universal User Item */
+.vrcn-user-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: var(--bg-input);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: background .15s;
+    user-select: none;
+    min-width: 0;
+}
+.vrcn-user-item:hover { background: var(--bg-hover); }
+.search-grid .vrcn-user-item { margin-bottom: 0; }
+
+.vrcn-user-item-avatar-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+.vrcn-user-item-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    object-fit: cover;
+    display: block;
+    background: var(--bg-hover);
+}
+.vrcn-user-item-avatar-letter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(14px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx2);
+}
+.vrcn-user-item-dot {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 9px !important;
+    height: 9px !important;
+    box-shadow: 0 0 0 2px var(--bg-input);
+}
+.vrcn-user-item-dot.vrc-status-ring {
+    background: var(--bg-input);
+}
+.vrcn-user-item:hover .vrcn-user-item-dot {
+    box-shadow: 0 0 0 2px var(--bg-hover);
+}
+.vrcn-user-item:hover .vrcn-user-item-dot.vrc-status-ring {
+    background: var(--bg-hover);
+}
+
+.vrcn-user-item-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.vrcn-user-item-name {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.vrcn-user-item-plat {
+    flex-shrink: 0;
+    display: inline-flex;
+}
+.vrcn-user-item-status {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vrcn-user-item-world {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    min-height: 14px;
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vrcn-user-item-world .msi { font-size: 11px; flex-shrink: 0; }
+.vrcn-user-item-world-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vrcn-user-item-stats {
+    flex-shrink: 0;
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+.vrcn-user-item-stats-meta {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx2);
+    white-space: nowrap;
+}
+.vrcn-user-item-stats-meta .msi { font-size: 12px; color: var(--tx3); }
+.vrcn-user-item-stats-dot { color: var(--tx3); margin: 0 1px; }
+.vrcn-user-item-stats-bar-wrap {
+    width: 84px;
+    height: 4px;
+    background: var(--bg-hover);
+    border-radius: 2px;
+    overflow: hidden;
+}
+.vrcn-user-item-stats-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+    transition: width .3s ease;
+}
+.vrcn-user-item-stats-empty .vrcn-user-item-stats-meta,
+.vrcn-user-item-stats-empty .vrcn-user-item-stats-meta .msi { color: var(--tx3); }
+
+.fd-profile-item-small {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 10px;
+    transition: background .1s;
+}
+
+.fd-profile-item-small:hover {
+    background: var(--bg-hover);
+}
+
+.fd-pi-sm-av {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--bg-input);
+    flex-shrink: 0;
+}
+
+.fd-pi-sm-av-letter {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+    background: var(--bg-card);
+}
+
+.fd-pi-sm-name {
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.fd-pi-sm-badge {
+    font-size: calc(9px + var(--fs-off, 0px));
+    color: var(--ok);
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+
+/* Instance Item */
+.inst-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: var(--bg-input);
+    border-radius: 8px;
+    transition: background .15s;
+}
+.inst-item:hover {
+    background: var(--bg-hover);
+}
+.inst-item-thumb {
+    width: 64px;
+    height: 48px;
+    border-radius: 6px;
+    background: var(--bg-card) center/cover no-repeat;
+    flex-shrink: 0;
+}
+.inst-item-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.inst-item-owner {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx1);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.inst-item-owner-sep {
+    color: var(--tx3);
+    font-weight: 400;
+    flex-shrink: 0;
+}
+.inst-item-owner-tag {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx2);
+    flex-shrink: 0;
+}
+.inst-item-owner-num {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 400;
+    color: var(--tx3);
+}
+.inst-owner-group-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 600;
+    background: var(--bg-hover);
+    color: var(--tx2);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.inst-owner-group-badge:hover {
+    color: var(--tx1);
+}
+.inst-owner-group-sep {
+    opacity: .5;
+    font-weight: 400;
+}
+.inst-item-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.inst-item-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+.inst-item-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.inst-item-region {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx2);
+}
+.inst-item-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+}
+.inst-item-join { height: 24px !important; padding: 0 10px !important; font-size: calc(11px + var(--fs-off, 0px)) !important; }
+
+/* Instance Card (Layout A — world modal, matches instance modal style) */
+.inst-item-card {
+    background: var(--bg-input);
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--brd) 60%, transparent);
+    flex-shrink: 0;
+}
+.inst-item-card-hdr {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    padding: 9px 12px;
+}
+.inst-item-card-hdr-sep {
+    border-bottom: 1px solid color-mix(in srgb, var(--brd) 50%, transparent);
+}
+.inst-item-card-title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx2);
+    flex-wrap: wrap;
+}
+.inst-item-card-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+/* Instance Friend Strip */
+.inst-friends-strip {
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.inst-av-sm {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-input);
+    object-fit: cover;
+    margin-left: -6px;
+    background: var(--bg-hover);
+}
+
+.inst-av-sm:first-child { margin-left: 0; }
+
+.inst-av-sm-letter {
+    font-size: calc(9px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+}
+
+.inst-av-extra {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+/* Mini Content Item (profile Content tab — Worlds & Avatars) */
+.vrcn-mini-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+}
+.vrcn-mini-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: var(--bg-input);
+    cursor: pointer;
+    transition: background .15s;
+    user-select: none;
+    min-width: 0;
+}
+.vrcn-mini-content:hover {
+    background: var(--bg-hover);
+}
+.vrcn-mini-content-thumb {
+    width: 56px;
+    height: 38px;
+    border-radius: 6px;
+    background: var(--bg-base) center/cover no-repeat;
+    flex-shrink: 0;
+}
+.vrcn-mini-content-info {
+    flex: 1;
+    min-width: 0;
+}
+.vrcn-mini-content-name {
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx0);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.vrcn-mini-content-meta {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+.vrcn-mini-content-meta .msi { font-size: 11px; }
+.vrcn-mini-content-badges {
+    display: flex;
+    gap: 3px;
+    margin-top: 3px;
+    flex-wrap: wrap;
+}
+.vrcn-mini-content-badges .vrcn-badge { font-size: calc(9px + var(--fs-off, 0px)); }
+
+
+/* Stats mode: fade long names instead of hard-cutting, reveal them on hover */
+.vrcn-user-item:has(.vrcn-user-item-stats) .vrcn-user-item-info {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent 100%);
+    mask-image: linear-gradient(to right, #000 calc(100% - 20px), transparent 100%);
+}
+.vrcn-user-item:has(.vrcn-user-item-stats) .vrcn-user-item-name,
+.vrcn-user-item:has(.vrcn-user-item-stats) .vrcn-user-item-status,
+.vrcn-user-item:has(.vrcn-user-item-stats) .vrcn-user-item-world {
+    text-overflow: clip;
+}
+.vrcn-user-item:has(.vrcn-user-item-stats):hover .vrcn-user-item-info {
+    -webkit-mask-image: none;
+    mask-image: none;
+}
+.vrcn-user-item:has(.vrcn-user-item-stats) .vrcn-user-item-stats {
+    max-width: 160px;
+    overflow: hidden;
+    transition: opacity .14s ease, max-width .18s ease;
+}
+.vrcn-user-item:has(.vrcn-user-item-stats):hover .vrcn-user-item-stats {
+    opacity: 0;
+    max-width: 0;
+    pointer-events: none;
+}

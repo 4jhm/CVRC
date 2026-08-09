@@ -1,0 +1,1555 @@
+                <div class="settings-layout">
+                    <nav class="settings-nav">
+                        <div class="search-bar-row settings-search" id="settingsSearchWrap">
+                            <span class="msi search-ico">search</span>
+                            <input type="text" id="settingsSearchInput" class="vrcn-input" placeholder="Search settings..." data-i18n-placeholder="settings.search.placeholder" oninput="_dbSettingsSearch()">
+                            <button class="settings-search-clear" onclick="clearSettingsSearch()" title="Clear" data-i18n-title="common.clear"><span class="msi">close</span></button>
+                        </div>
+                        <button class="settings-nav-item active" onclick="switchSettingsSection('general',this)"><span class="msi">tune</span><span data-i18n="settings.nav.general">General</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('appearance',this)"><span class="msi">palette</span><span data-i18n="settings.nav.appearance">Appearance</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('friends',this)"><span class="msi">group</span><span data-i18n="settings.nav.friends">Friends</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('sidebar',this)"><span class="msi">view_sidebar</span><span data-i18n="settings.nav.sidebar">Sidebar</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('navigation',this)"><span class="msi">alt_route</span><span data-i18n="settings.nav.navigation">Navigation</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('notifications',this)"><span class="msi">notifications</span><span data-i18n="settings.nav.notifications">Notifications</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('vrchat',this)"><span class="msi">sports_esports</span><span data-i18n="settings.nav.vrchat">VRChat</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('data',this)"><span class="msi">folder_open</span><span data-i18n="settings.nav.data">Data</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('performance',this)"><span class="msi">speed</span><span data-i18n="settings.nav.performance">Performance</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('community',this)"><span class="msi">manage_search</span><span data-i18n="settings.nav.avatarsearch">Avatar Search</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('advanced',this)"><span class="msi">bug_report</span><span data-i18n="settings.nav.advanced">Advanced</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('vrcx',this)"><span class="msi">download</span><span data-i18n="settings.nav.vrcx">VRCX</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('about',this)"><span class="msi">info</span><span data-i18n="settings.nav.about">About</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('accounts',this)"><span class="msi">account_circle</span><span data-i18n="settings.nav.accounts">Accounts</span></button>
+                        <button class="settings-nav-item" onclick="switchSettingsSection('attribution',this)"><span class="msi">copyright</span><span data-i18n="settings.nav.attribution">Attribution</span></button>
+                    </nav>
+                    <div class="settings-content">
+
+                    <!-- UPDATE VRCNEXT -->
+                    <div class="vrcn-panel-card" data-section="general">
+                        <div class="vrcn-panel-card-header"><span class="msi">system_update_alt</span> <span data-i18n="settings.update.title">Update VRCNext</span></div>
+                        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                            <button class="vrcn-button-round" id="setUpdCheckBtn" onclick="settingsCheckUpdate()"><span class="msi" style="font-size:15px;">refresh</span> <span data-i18n="settings.update.check_btn">Check for Update</span></button>
+                            <span id="setUpdStatus" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);"></span>
+                        </div>
+                        <div class="sf-toggle-row" style="margin-top:10px;">
+                            <div>
+                                <div data-i18n="settings.update.auto_update">Auto-Update VRCNext</div>
+                                <div class="sf-desc" data-i18n="settings.update.auto_update_desc">Automatically download and install updates on startup.</div>
+                            </div>
+                            <label class="toggle">
+                                <input type="checkbox" id="setAutoUpdate" checked onchange="autoSave()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div id="setUpdInstallWrap" style="display:none;margin-top:12px;">
+                            <div style="font-size:calc(13px + var(--fs-off, 0px));color:var(--tx1);margin-bottom:8px;">
+                                <span data-i18n="settings.update.available_label">New version available:</span> <strong id="setUpdVersion" style="color:var(--accent);"></strong>
+                            </div>
+                            <button class="vrcn-button-round vrcn-btn-join" id="setUpdInstallBtn" onclick="settingsInstallUpdate()"><span class="msi" style="font-size:15px;">download</span> <span data-i18n="settings.update.install_btn">Download &amp; Install</span></button>
+                            <div id="setUpdProgressWrap" style="display:none;margin-top:10px;">
+                                <div class="upd-progress-bar"><div class="upd-progress-fill" id="setUpdProgressFill"></div></div>
+                                <div id="setUpdProgressStatus" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:4px;" data-i18n="update.downloading">Downloading...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CRASH REPORTING -->
+                    <div class="vrcn-panel-card" data-section="general">
+                        <div class="vrcn-panel-card-header"><span class="msi">bug_report</span> <span data-i18n="settings.crash.title">Crash Reporting</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.crash.label">Send anonymous crash reports</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setSendCrashData" checked onchange="autoSave()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.crash.desc">If VRCNext crashes, the stack trace is sent anonymously to help fix issues. No personal data is included: no file paths, usernames, or machine names. Only the crash stack trace.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.crash.restart_after_crash">Restart After Crash</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setRestartAfterCrash" checked onchange="autoSave()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.crash.restart_after_crash_desc">VRCNext will automatically restart after an unexpected crash. Does not apply when the app is closed normally or force-quit via Task Manager.</div>
+                    </div>
+
+                    <!-- LANGUAGE -->
+                    <div class="vrcn-panel-card" data-section="general">
+                        <div class="vrcn-panel-card-header"><span class="msi">translate</span> <span data-i18n="language.title">Language</span></div>
+                        <div class="set-desc">Cambia tu idioma · Change ta langue · Cambia lingua · 言語を変えて · 언어를 바꿔 · 更改你的语言 · Change Language · Sprache Ändern</div>
+                        <div class="theme-grid" id="languageGrid"></div>
+                        <div id="langRestartHint" style="display:none;margin-top:10px;">
+                            <span class="set-desc" data-i18n="settings.language.restart_hint">It is recommended to restart the app once you change the language.</span>
+                            <button class="vrcn-button" style="margin-top:8px;" onclick="sendToCS({action:'restartApp'})"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="settings.language.restart_btn">Restart VRCNext</span></button>
+                        </div>
+                    </div>
+
+                    <!-- PERFORMANCE -->
+                    <div class="vrcn-panel-card" data-windows-only data-section="performance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">speed</span> <span data-i18n="settings.perf.title">Performance</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.perf.gpu_accel.label">Enable Hardware Acceleration</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setPerfGpuAccel" checked onchange="onPerfSettingChange()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.perf.gpu_accel.desc">Enables GPU hardware acceleration for the WebView2 renderer. May improve rendering performance but can cause visual glitches on some systems.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.perf.shader_cache.label">Enable GPU Shader Cache</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setPerfShaderCache" onchange="onPerfSettingChange()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.perf.shader_cache.desc">Caches compiled GPU shaders to disk. Reduces GPU startup overhead on subsequent launches.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.perf.v8_heap.label">Use 128 MB V8 Heap</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setPerfV8Heap" onchange="onPerfSettingChange()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.perf.v8_heap.desc">Increases the JavaScript engine memory limit from 64 MB to 128 MB. Useful if VRCNext runs sluggishly with large friend lists or many open tabs.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.perf.render_proc.label">Use 2 Render Processes</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setPerfRenderProc" onchange="onPerfSettingChange()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.perf.render_proc.desc">Allows WebView2 to use up to 2 renderer processes instead of 1. Can help with stability but uses slightly more memory.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.perf.efficiency.label">Efficiency Mode</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setPerfEfficiency" onchange="autoSave()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.perf.efficiency.desc">Runs the VRCNext process and its WebView processes in Windows Efficiency Mode (EcoQoS). Lowers power usage and background CPU impact; the leaf icon appears in Task Manager. May slightly reduce responsiveness. Applies immediately, no restart needed.</div>
+                        <div id="perfRestartHint" style="display:none;margin-top:10px;">
+                            <span class="set-desc" data-i18n="settings.perf.restart_hint">A restart is required to apply performance changes.</span>
+                            <button class="vrcn-button" style="margin-top:8px;" onclick="sendToCS({action:'restartApp'})"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="settings.language.restart_btn">Restart VRCNext</span></button>
+                        </div>
+                    </div>
+
+                    <!-- PERFORMANCE (cross-platform) -->
+                    <div class="vrcn-panel-card" data-section="performance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">speed</span> <span data-i18n="settings.perf.title">Performance</span></div>
+                        <div class="sf-toggle-row" data-linux-only style="display:none;">
+                            <span data-i18n="settings.perf.linux_gpu.label">Enable Hardware Acceleration</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setLinuxGpuAccel" onchange="onPerfSettingChange()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-linux-only style="display:none;" data-i18n="settings.perf.linux_gpu.desc">Lets WebKitGTK use the GPU for rendering. Recommended on real hardware with working graphics drivers. Keep it off in virtual machines or when the window stays blank or shows glitches; VRCNext then uses safe software rendering.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.perf.animations.label">Animations and Transitions</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setPerfAnimations" checked onchange="applyAnimationsSetting(this.checked);autoSave()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.perf.animations.desc">Disables all animations and transitions in VRCNext. This can speed up opening dialogs and switching between them, and may also save a little bit of CPU costs.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.perf.blur.label">Blur Filters</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setPerfBlur" checked onchange="applyBlurSetting(this.checked);autoSave()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.perf.blur.desc">Disables blur filters on modals and overlays. Instead of a blurred background, a dark overlay (75%) is shown. Especially useful when GPU acceleration is disabled, as blur effects are CPU-intensive. It is recommended to disable Blur Filters when using the app without GPU acceleration.</div>
+                        <div id="linuxPerfRestartHint" style="display:none;margin-top:10px;">
+                            <span class="set-desc" data-i18n="settings.perf.restart_hint">A restart is required to apply performance changes.</span>
+                            <button class="vrcn-button" style="margin-top:8px;" onclick="sendToCS({action:'restartApp'})"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="settings.language.restart_btn">Restart VRCNext</span></button>
+                        </div>
+                    </div>
+
+                    <!-- BACKGROUND -->
+                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">wallpaper</span> <span data-i18n="settings.design.tabs.background">Background</span></div>
+                        <div class="sf-section-label" style="margin-top:14px;" data-i18n="settings.design.dashboard_background">Dashboard Background</div>
+                        <div class="bg-skeleton">
+                            <div class="bgsk-side">
+                                <div class="bgsk-badge"></div>
+                                <div class="bgsk-line w85"></div>
+                                <div class="bgsk-line w65"></div>
+                                <div class="bgsk-line w45"></div>
+                            </div>
+                            <div class="bgsk-main">
+                                <div class="bgsk-bar"></div>
+                                <div class="bgsk-hero" id="dashBgPreviewHero">
+                                    <div class="bgsk-hero-fade"></div>
+                                    <div class="bgsk-hero-text">
+                                        <div class="bgsk-line bgsk-line-lg w45"></div>
+                                        <div class="bgsk-line w65"></div>
+                                    </div>
+                                </div>
+                                <div class="bgsk-body">
+                                    <div class="bgsk-card"></div>
+                                    <div class="bgsk-card"></div>
+                                    <div class="bgsk-card"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                            <button class="vrcn-button" onclick="browseDashBg()"><span class="msi" style="font-size:16px;">perm_media</span> <span data-i18n="settings.design.choose_background">Choose Image / Video</span></button>
+                            <span id="dashBgName" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;"></span>
+                        </div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.design.random_background">Random background from watch folders on launch</span><label class="toggle"><input type="checkbox" id="setRandomBg" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                    </div>
+
+                    <!-- COLORS -->
+                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">palette</span> <span data-i18n="settings.design.tabs.colors">Colors</span></div>
+                        <div class="sf-section-label" style="margin-top:14px;" data-i18n="settings.design.theme">Theme</div>
+                        <div class="theme-grid theme-preview-grid" id="themeGrid"></div>
+                        <div id="customThemeSection" style="display:none;">
+                            <div class="sf-section-label" style="margin-top:16px;" data-i18n="settings.design.custom_theme">Custom Theme</div>
+                            <div class="theme-grid theme-preview-grid" id="customThemeGrid"></div>
+                        </div>
+                        <div style="margin-top:12px;margin-bottom:4px;">
+                            <button class="vrcn-button" onclick="openThemeEditor()">
+                                <span class="msi" style="font-size:15px;">palette</span>
+                                <span data-i18n="settings.design.theme_editor">Theme Editor</span>
+                            </button>
+                        </div>
+                        <div class="sf-section-label" style="margin-top:16px;" data-i18n="settings.design.special_themes">Special Themes</div>
+                        <div class="theme-grid theme-preview-grid" id="specialThemeGrid"></div>
+                        <div class="sf-section-label" style="margin-top:16px;" data-i18n="settings.design.custom_cursor">Custom Cursor</div>
+                        <div class="theme-grid" id="cursorThemeGrid"></div>
+                        <div class="sf-row" id="autoAccuracyRow" style="margin-top:8px;display:none;">
+                            <label style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);" data-i18n="settings.design.color_accuracy">Color Accuracy</label>
+                            <input type="range" id="setAutoAccuracy" min="0" max="100" value="50" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('autoAccuracyVal').textContent=this.value+'%';setAutoColorAccuracy(this.value);autoSave()">
+                            <span id="autoAccuracyVal" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);margin-left:8px;min-width:35px;text-align:right;">50%</span>
+                        </div>
+                    </div>
+
+                    <!-- ADDITIONAL OPTIONS -->
+                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="settings.design.additional.title">Additional Options</span></div>
+                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="settings.design.additional.desc">Choose whether the taskbar and both sidebars are separated from the content by a thin line.</div>
+                        <div class="profile-style-picker" id="designStylePicker">
+                            <button type="button" class="profile-style-option" data-style="flat" onclick="setDesignStyle('flat')">
+                                <div class="design-skeleton">
+                                    <div class="dsk-bar"></div>
+                                    <div class="dsk-row">
+                                        <div class="dsk-side"></div>
+                                        <div class="dsk-main">
+                                            <div class="dsk-block"></div>
+                                            <div class="dsk-block short"></div>
+                                        </div>
+                                        <div class="dsk-side dsk-side-r"></div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.design.additional.flat">Flat Design</div>
+                            </button>
+                            <button type="button" class="profile-style-option" data-style="line" onclick="setDesignStyle('line')">
+                                <div class="design-skeleton lines">
+                                    <div class="dsk-bar"></div>
+                                    <div class="dsk-row">
+                                        <div class="dsk-side"></div>
+                                        <div class="dsk-main">
+                                            <div class="dsk-block"></div>
+                                            <div class="dsk-block short"></div>
+                                        </div>
+                                        <div class="dsk-side dsk-side-r"></div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.design.additional.line">Line Design</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- FONTS -->
+                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">text_fields</span> <span data-i18n="settings.design.fonts.title">Fonts</span></div>
+                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="settings.design.fonts.desc">Choose the font VRCNext uses for its interface. All fonts ship with the app, so nothing is downloaded while you browse them.</div>
+                        <div class="font-grid" id="fontGrid"></div>
+                        <div class="sf-section-label" style="margin-top:18px;" data-i18n="settings.design.fonts.custom">Installed Font</div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.design.fonts.custom_desc">Pick any font installed on your system. Choosing one overrides the selection above.</div>
+                        <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap;">
+                            <select id="setCustomFont" class="vrcn-dropdown" style="min-width:220px;max-width:320px;" onchange="setCustomFont(this.value)">
+                                <option value="" data-i18n="settings.design.fonts.custom_none">None</option>
+                            </select>
+                            <div class="fs-slider-block">
+                                <div class="fs-slider-head">
+                                    <span data-i18n="settings.design.fonts.size">Font Size</span>
+                                    <span class="fs-slider-val" id="fontSizeVal">0 px</span>
+                                </div>
+                                <div class="fs-slider-wrap">
+                                    <div class="fs-ticks"></div>
+                                    <input type="range" id="setFontSize" class="fs-slider" min="-5" max="5" step="1" value="0"
+                                           oninput="setFontSizeOffset(this.value)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- OTHER -->
+                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="settings.design.tabs.other">Other</span></div>
+                        <div class="sf-toggle-row" style="margin-top:14px;"><span data-i18n="settings.design.clock_enabled">Enable Clock</span><label class="toggle"><input type="checkbox" id="setClockEnabled" checked onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row" style="margin-top:8px;"><span data-i18n="settings.design.clock_ampm">Use AM/PM</span><label class="toggle"><input type="checkbox" id="setClockAmPm" onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                    </div>
+
+                    <!-- THEMES -->
+                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">brush</span> <span data-i18n="settings.design.tabs.themes">Themes</span></div>
+                        <div class="set-desc" style="margin-top:12px;" data-i18n="settings.design.themes.desc">Drop theme folders into the <code>custom-themes</code> folder next to VRCNext. Each folder can contain any number of CSS files.</div>
+                        <div id="customThemesList" style="margin-top:10px;display:flex;flex-direction:column;gap:6px;"></div>
+                    </div>
+
+                    <!-- WINDOW BEHAVIOR -->
+                    <div class="vrcn-panel-card" data-section="general">
+                        <div class="vrcn-panel-card-header"><span class="msi">open_in_full</span> <span data-i18n="settings.window.title">Window Behavior</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.window.remember_size">Remember Window Size</span>
+                            <label class="toggle"><input type="checkbox" id="setRememberWindowSize" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.window.remember_size_desc">Restores the window to its last used size when VRCNext starts.</div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.window.remember_position">Remember Window Position</span>
+                            <label class="toggle"><input type="checkbox" id="setRememberWindowPosition" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.window.remember_position_desc">Restores the window to its last screen position when VRCNext starts. Resets to the default monitor if the previous monitor is no longer connected.</div>
+                        <div class="sf-toggle-row" style="margin-top:6px;">
+                            <span data-i18n="settings.debug.text_tools.label">Enable Text Tools</span>
+                            <label class="toggle"><input type="checkbox" id="setTextToolsEnabled" onchange="toggleTextTools(this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.debug.text_tools.desc">When enabled, all text in VRCNext becomes selectable. You can copy it via the right-click context menu or with Ctrl&nbsp;+&nbsp;C.</div>
+                    </div>
+
+                    <!-- SYSTEM TRAY -->
+                    <div class="vrcn-panel-card" data-section="general">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">notifications_active</span> <span data-i18n="settings.system.tray.title">System Tray</span></div>
+                        <div class="sf-toggle-row">
+                            <span id="labelStartWithSystem" data-i18n="settings.launch.auto_start_windows">Auto-start VRCNext with Windows</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setStartWithWindows" onchange="autoSave()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" id="descStartWithSystem" data-i18n="settings.launch.auto_start_windows_desc">VRCNext launches automatically when Windows starts. It will appear in the system tray.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;" data-windows-only>
+                            <span data-i18n="settings.system.hide_in_tray">Hide in System Tray</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setMinimizeToTray" onchange="autoSave(); updateTrayNotifToggle()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-windows-only data-i18n="settings.system.hide_in_tray_desc">When closing VRCNext, it minimizes to the system tray instead of exiting. Click the tray icon to restore the window.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;" id="trayNotifRow" data-windows-only>
+                            <span data-i18n="settings.system.tray.notifications">Show notifications on system tray</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setTrayNotifications" onchange="autoSave()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" id="trayNotifDesc" data-windows-only data-i18n="settings.system.tray.notifications_desc">Displays a notification when a new VRChat notification arrives while VRCNext is hidden in the system tray.</div>
+                    </div>
+
+                    <!-- VRC+ DECORATIONS -->
+                    <div class="vrcn-panel-card" data-section="general">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">workspace_premium</span> <span data-i18n="settings.decorations.title">VRC+ Decorations</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.decorations.icon_frames">Enable Profile Icon Frames</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setEnableIconFrames" onchange="settings.enableProfileIconFrames=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();if(typeof updateSquareFrameToggle==='function')updateSquareFrameToggle();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.icon_frames_desc">When enabled all profile icons including your own will be round instead of square, and the profile frame decoration is shown on every player that has one.</div>
+                        <div class="sf-toggle-row" style="margin-top:10px;">
+                            <span data-i18n="settings.decorations.square_frames">Show Non-Icon-Frame Profiles as Square</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setSquareIconFrames" onchange="settings.squareIconFrames=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.square_frames_desc">When enabled, every profile without an icon frame decoration stays a square image. Only profiles that have a decoration get a round image.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.decorations.nameplate">Enable Name Plate Decoration</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setEnableNameplateDeco" onchange="settings.enableNameplateDecoration=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.nameplate_desc">When enabled, a player's VRC+ nameplate decoration is shown behind their entry in the friends sidebar and other places they appear.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.decorations.profile_effect">Enable Profile Effects</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setEnableProfileEffect" onchange="settings.enableProfileEffects=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.profile_effect_desc">When enabled, a player's VRC+ profile effect is shown as a frame over the banner in their profile modal.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.decorations.profile_background">Enable Profile Backgrounds</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setEnableProfileBg" onchange="settings.enableProfileBackgrounds=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.profile_background_desc">When enabled, VRCN will show your and your friends VRChat Background they have set on their profile.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.decorations.profile_theme">Enable Profile Themes</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setEnableProfileThemes" onchange="settings.enableProfileThemes=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.profile_theme_desc">When enabled, a player's VRC+ profile theme colours are applied to their profile modal. The button colour also tints the modal itself, about 25% darker.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.decorations.theme_vrcn_override">Prefer VRCN+ Colours</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setThemeVrcnOverride" onchange="settings.profileThemeVrcnOverride=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.theme_vrcn_override_desc">When enabled, VRCN+ profile colours take precedence over a player's VRC+ profile theme.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.decorations.theme_contrast">Keep Theme Text Readable</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setProfileThemeContrast" onchange="settings.profileThemeContrast=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.theme_contrast_desc">When enabled, text and icons of a VRC+ profile theme are darkened or lightened just enough to stay readable on the theme's own background. Turn this off to show the raw theme colours.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.decorations.transparent_cards">Transparent Profile Cards</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setTransparentProfileCards" onchange="settings.transparentProfileCards=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.transparent_cards_desc">When enabled, the content cards, tab bar and buttons inside profile modals become 50% transparent so the profile background image stays visible behind them.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.decorations.on_dashboard">Show Effects on Dashboard</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setDecoOnDashboard" onchange="settings.showDecorationsOnDashboard=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.on_dashboard_desc">When enabled, VRC+ decorations are also shown on the Dashboard, for example in the Friends Location (Small) section.</div>
+                    </div>
+
+                    <!-- FRIENDS SIDEBAR -->
+                    <div class="vrcn-panel-card" data-section="friends" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">group</span> <span data-i18n="settings.friends.title">Friends And User Settings</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.friends.always_stats">Show Always Stats</span><label class="toggle"><input type="checkbox" id="setPeopleAlwaysStats" onchange="settings.peopleAlwaysStats=this.checked;autoSave();if(typeof applyPeopleAlwaysStats==='function'){if(!this.checked)window._peopleStatsMode=false;applyPeopleAlwaysStats();}"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-i18n="settings.friends.always_stats_desc">When enabled, every person in the People tab always shows a bar with how much time you spent with them and how many meets you have, instead of clicking the "Stats" button. While this is on, the Stats button is hidden because it is always active.</div>
+                    </div>
+
+                    <div class="vrcn-panel-card" data-section="sidebar" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">groups</span> <span data-i18n="settings.sidebar.title">Friends Sidebar</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.sidebar.location_only">Show only location when available</span><label class="toggle"><input type="checkbox" id="setFriendsSidebarLocationOnly" onchange="settings.friendsSidebarLocationOnly=this.checked;autoSave();if(typeof renderVrcFriends==='function'&&typeof vrcFriendsData!=='undefined'&&vrcFriendsData?.length)renderVrcFriends(vrcFriendsData);"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-i18n="settings.sidebar.location_only_desc">When enabled, friends who are in a world show the instance's region flag and world name instead of their status. Friends who aren't in a world keep showing their status text.</div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.sidebar.rank_color">Use Trusted Rank Color instead of Badge</span><label class="toggle"><input type="checkbox" id="setFriendsSidebarRankColor" onchange="settings.friendsSidebarRankColor=this.checked;autoSave();if(typeof renderVrcFriends==='function'&&typeof vrcFriendsData!=='undefined'&&vrcFriendsData?.length)renderVrcFriends(vrcFriendsData);"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-i18n="settings.sidebar.rank_color_desc">When enabled, the friend's username will have the color of their Trusted rank and the Trusted badge will be removed from the sidebar.</div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.sidebar.preview_collapsed">Show Preview Profile when collapsed</span><label class="toggle"><input type="checkbox" id="setFriendsSidebarPreviewCollapsed" onchange="settings.friendsSidebarPreviewCollapsed=this.checked;autoSave();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-i18n="settings.sidebar.preview_collapsed_desc">Shows a friend's profile as a small preview when you hover over them while the friends sidebar is collapsed.</div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.sidebar.preview_open">Show Preview Profile when sidebar is open</span><label class="toggle"><input type="checkbox" id="setFriendsSidebarPreviewOpen" onchange="settings.friendsSidebarPreviewOpen=this.checked;autoSave();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-i18n="settings.sidebar.preview_open_desc">Shows the profile preview even when the sidebar is open. You have to hover over the profile image for at least 1.5 seconds; it will not appear when hovering any other part of the friend entry.</div>
+                    </div>
+
+                    <!-- NAVIGATION SIDEBAR -->
+                    <div class="vrcn-panel-card" data-section="sidebar" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">folder</span> <span data-i18n="settings.navsidebar.title">Navigation Sidebar</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.navsidebar.modern_folders">Use Modern Folder Layout</span><label class="toggle"><input type="checkbox" id="setModernFolderLayout" onchange="settings.modernFolderLayout=this.checked;autoSave();if(typeof applyNavFolderMode==='function')applyNavFolderMode();if(typeof closeNavFolderPopout==='function')closeNavFolderPopout();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-i18n="settings.navsidebar.modern_folders_desc">When enabled, clicking a folder (like "Tools" or your own custom folders) opens a compact pop-out grid right next to the sidebar instead of expanding a long list of items inline so you don't have to scroll through the whole sidebar. Turn this off to use the classic layout where folder items expand directly inside the sidebar.</div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.navsidebar.hover_text">Show Hover Text on Collapsed Navigation</span><label class="toggle"><input type="checkbox" id="setNavSidebarHoverText" onchange="settings.navSidebarHoverText=this.checked;autoSave();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-i18n="settings.navsidebar.hover_text_desc">When enabled, the navigation sidebar shows a hover text when collapsed. This makes it easier to navigate and is especially useful when you want to know which menu entry you are hovering over.</div>
+                    </div>
+
+                    <!-- MODAL NAVIGATION -->
+                    <div class="vrcn-panel-card" data-section="navigation" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">alt_route</span> <span data-i18n="settings.navigation.title">Modal Navigation</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.navigation.direct">Use Direct Modal Navigation</span><label class="toggle"><input type="checkbox" id="setDirectModalNav" onchange="settings.directModalNav=this.checked;autoSave();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-i18n="settings.navigation.direct_desc">When enabled, the breadcrumb history and all modal actions are shown in a bar at the top of the modal instead of in the taskbar. This makes navigating easier in fullscreen or on larger screens. It's recommended to leave this off when not running VRCNext in fullscreen.</div>
+                    </div>
+
+                    <!-- PROFILE / WORLD MODAL STYLE -->
+                    <div class="vrcn-panel-card-pair" data-section="navigation" style="display:none;">
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">badge</span> <span data-i18n="settings.navigation.profile_style.title">Profile Modal Style</span></div>
+                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.navigation.profile_style.desc">Choose how user profiles are laid out. Classic shows a wide top banner with a single column below. Compact splits identity onto a left sidebar with the content area on the right.</div>
+                        <div class="profile-style-picker" id="profileStylePicker">
+                            <button type="button" class="profile-style-option" data-style="classic" onclick="setProfileModalStyle('classic')">
+                                <div class="profile-style-skeleton sk-classic">
+                                    <div class="sk-banner"></div>
+                                    <div class="sk-row sk-row-header">
+                                        <div class="sk-avatar"></div>
+                                        <div class="sk-name-block">
+                                            <div class="sk-name"></div>
+                                            <div class="sk-line short"></div>
+                                        </div>
+                                    </div>
+                                    <div class="sk-badges">
+                                        <div class="sk-chip"></div>
+                                        <div class="sk-chip"></div>
+                                        <div class="sk-chip"></div>
+                                    </div>
+                                    <div class="sk-tabs">
+                                        <div class="sk-tab"></div>
+                                        <div class="sk-tab"></div>
+                                        <div class="sk-tab"></div>
+                                    </div>
+                                    <div class="sk-content">
+                                        <div class="sk-block"></div>
+                                        <div class="sk-block short"></div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.classic">Classic</div>
+                            </button>
+                            <button type="button" class="profile-style-option" data-style="compact" onclick="setProfileModalStyle('compact')">
+                                <div class="profile-style-skeleton sk-compact">
+                                    <div class="sk-left">
+                                        <div class="sk-banner sk-banner-left"></div>
+                                        <div class="sk-row sk-row-tight">
+                                            <div class="sk-avatar small"></div>
+                                            <div class="sk-name-block">
+                                                <div class="sk-name short"></div>
+                                                <div class="sk-line tiny"></div>
+                                            </div>
+                                        </div>
+                                        <div class="sk-mini-card"></div>
+                                        <div class="sk-mini-card short"></div>
+                                        <div class="sk-mini-card"></div>
+                                    </div>
+                                    <div class="sk-right">
+                                        <div class="sk-tabs">
+                                            <div class="sk-tab"></div>
+                                            <div class="sk-tab"></div>
+                                            <div class="sk-tab"></div>
+                                        </div>
+                                        <div class="sk-content">
+                                            <div class="sk-block"></div>
+                                            <div class="sk-block short"></div>
+                                            <div class="sk-block"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.compact">Compact</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">travel_explore</span> <span data-i18n="settings.navigation.world_style.title">World Modal Style</span></div>
+                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.navigation.world_style.desc">Choose how world details are laid out. Classic shows a wide top banner with a single column below. Compact splits the world image and key info onto a left column with description, history and stats next to it.</div>
+                        <div class="profile-style-picker" id="worldStylePicker">
+                            <button type="button" class="profile-style-option" data-style="classic" onclick="setWorldModalStyle('classic')">
+                                <div class="profile-style-skeleton sk-classic">
+                                    <div class="sk-banner"></div>
+                                    <div class="sk-row sk-row-header">
+                                        <div class="sk-avatar"></div>
+                                        <div class="sk-name-block">
+                                            <div class="sk-name"></div>
+                                            <div class="sk-line short"></div>
+                                        </div>
+                                    </div>
+                                    <div class="sk-badges">
+                                        <div class="sk-chip"></div>
+                                        <div class="sk-chip"></div>
+                                        <div class="sk-chip"></div>
+                                    </div>
+                                    <div class="sk-tabs">
+                                        <div class="sk-tab"></div>
+                                        <div class="sk-tab"></div>
+                                        <div class="sk-tab"></div>
+                                    </div>
+                                    <div class="sk-content">
+                                        <div class="sk-block"></div>
+                                        <div class="sk-block short"></div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.classic">Classic</div>
+                            </button>
+                            <button type="button" class="profile-style-option" data-style="compact" onclick="setWorldModalStyle('compact')">
+                                <div class="profile-style-skeleton sk-compact">
+                                    <div class="sk-left">
+                                        <div class="sk-banner sk-banner-left"></div>
+                                        <div class="sk-row sk-row-tight">
+                                            <div class="sk-avatar small"></div>
+                                            <div class="sk-name-block">
+                                                <div class="sk-name short"></div>
+                                                <div class="sk-line tiny"></div>
+                                            </div>
+                                        </div>
+                                        <div class="sk-mini-card"></div>
+                                        <div class="sk-mini-card short"></div>
+                                        <div class="sk-mini-card"></div>
+                                    </div>
+                                    <div class="sk-right">
+                                        <div class="sk-tabs">
+                                            <div class="sk-tab"></div>
+                                            <div class="sk-tab"></div>
+                                            <div class="sk-tab"></div>
+                                        </div>
+                                        <div class="sk-content">
+                                            <div class="sk-block"></div>
+                                            <div class="sk-block short"></div>
+                                            <div class="sk-block"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.compact">Compact</div>
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- GROUP / AVATAR MODAL STYLE -->
+                    <div class="vrcn-panel-card-pair" data-section="navigation" style="display:none;">
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">groups</span> <span data-i18n="settings.navigation.group_style.title">Group Modal Style</span></div>
+                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.navigation.group_style.desc">Choose how group details are laid out. Classic shows a wide top banner with a single column below. Compact splits the group identity onto a left column with the tabs and content next to it.</div>
+                        <div class="profile-style-picker" id="groupStylePicker">
+                            <button type="button" class="profile-style-option" data-style="classic" onclick="setGroupModalStyle('classic')">
+                                <div class="profile-style-skeleton sk-classic">
+                                    <div class="sk-banner"></div>
+                                    <div class="sk-row sk-row-header">
+                                        <div class="sk-avatar"></div>
+                                        <div class="sk-name-block">
+                                            <div class="sk-name"></div>
+                                            <div class="sk-line short"></div>
+                                        </div>
+                                    </div>
+                                    <div class="sk-badges">
+                                        <div class="sk-chip"></div>
+                                        <div class="sk-chip"></div>
+                                        <div class="sk-chip"></div>
+                                    </div>
+                                    <div class="sk-tabs">
+                                        <div class="sk-tab"></div>
+                                        <div class="sk-tab"></div>
+                                        <div class="sk-tab"></div>
+                                    </div>
+                                    <div class="sk-content">
+                                        <div class="sk-block"></div>
+                                        <div class="sk-block short"></div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.classic">Classic</div>
+                            </button>
+                            <button type="button" class="profile-style-option" data-style="compact" onclick="setGroupModalStyle('compact')">
+                                <div class="profile-style-skeleton sk-compact">
+                                    <div class="sk-left">
+                                        <div class="sk-banner sk-banner-left"></div>
+                                        <div class="sk-row sk-row-tight">
+                                            <div class="sk-avatar small"></div>
+                                            <div class="sk-name-block">
+                                                <div class="sk-name short"></div>
+                                                <div class="sk-line tiny"></div>
+                                            </div>
+                                        </div>
+                                        <div class="sk-mini-card"></div>
+                                        <div class="sk-mini-card short"></div>
+                                        <div class="sk-mini-card"></div>
+                                    </div>
+                                    <div class="sk-right">
+                                        <div class="sk-tabs">
+                                            <div class="sk-tab"></div>
+                                            <div class="sk-tab"></div>
+                                            <div class="sk-tab"></div>
+                                        </div>
+                                        <div class="sk-content">
+                                            <div class="sk-block"></div>
+                                            <div class="sk-block short"></div>
+                                            <div class="sk-block"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.compact">Compact</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">checkroom</span> <span data-i18n="settings.navigation.avatar_style.title">Avatar Modal Style</span></div>
+                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.navigation.avatar_style.desc">Choose how avatar details are laid out. Classic shows a wide top banner with a single column below. Compact splits the avatar image and the Infos/Visibility card onto a left column, with description and tags next to it.</div>
+                        <div class="profile-style-picker" id="avatarStylePicker">
+                            <button type="button" class="profile-style-option" data-style="classic" onclick="setAvatarModalStyle('classic')">
+                                <div class="profile-style-skeleton sk-classic">
+                                    <div class="sk-banner"></div>
+                                    <div class="sk-row sk-row-header">
+                                        <div class="sk-avatar"></div>
+                                        <div class="sk-name-block">
+                                            <div class="sk-name"></div>
+                                            <div class="sk-line short"></div>
+                                        </div>
+                                    </div>
+                                    <div class="sk-badges">
+                                        <div class="sk-chip"></div>
+                                        <div class="sk-chip"></div>
+                                        <div class="sk-chip"></div>
+                                    </div>
+                                    <div class="sk-tabs">
+                                        <div class="sk-tab"></div>
+                                        <div class="sk-tab"></div>
+                                        <div class="sk-tab"></div>
+                                    </div>
+                                    <div class="sk-content">
+                                        <div class="sk-block"></div>
+                                        <div class="sk-block short"></div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.classic">Classic</div>
+                            </button>
+                            <button type="button" class="profile-style-option" data-style="compact" onclick="setAvatarModalStyle('compact')">
+                                <div class="profile-style-skeleton sk-compact">
+                                    <div class="sk-left">
+                                        <div class="sk-banner sk-banner-left"></div>
+                                        <div class="sk-row sk-row-tight">
+                                            <div class="sk-avatar small"></div>
+                                            <div class="sk-name-block">
+                                                <div class="sk-name short"></div>
+                                                <div class="sk-line tiny"></div>
+                                            </div>
+                                        </div>
+                                        <div class="sk-mini-card"></div>
+                                        <div class="sk-mini-card short"></div>
+                                        <div class="sk-mini-card"></div>
+                                    </div>
+                                    <div class="sk-right">
+                                        <div class="sk-tabs">
+                                            <div class="sk-tab"></div>
+                                            <div class="sk-tab"></div>
+                                            <div class="sk-tab"></div>
+                                        </div>
+                                        <div class="sk-content">
+                                            <div class="sk-block"></div>
+                                            <div class="sk-block short"></div>
+                                            <div class="sk-block"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.compact">Compact</div>
+                            </button>
+                        </div>
+                    </div>
+                    </div>
+
+                    <!-- SOUNDS -->
+                    <div class="vrcn-panel-card" data-section="notifications" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">volume_up</span> <span data-i18n="settings.sounds.title">Sounds</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.sounds.notifications">Notification Sounds</span><label class="toggle"><input type="checkbox" id="setNotifySoundEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.sounds.notifications_desc">Plays a sound when you receive a new notification such as friend requests, invites and more.</div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.sounds.messages">Message Sounds</span><label class="toggle"><input type="checkbox" id="setMessageSoundEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.sounds.messages_desc">Plays a sound when you get a boop or when someone sends you a message through the VRCN Messenger.</div>
+                        <div class="sf-toggle-row" data-windows-only><span data-i18n="settings.sounds.media_relay">Media Relay Success Sounds</span><label class="toggle"><input type="checkbox" id="setMediaRelaySoundEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-windows-only style="margin-bottom:10px;" data-i18n="settings.sounds.media_relay_desc">Plays a sound when Media Relay successfully sends an image to one of your Discord channels.</div>
+                        <div class="sf-toggle-row" data-windows-only><span data-i18n="settings.sounds.overlay">VR Overlay Notification Sounds</span><label class="toggle"><input type="checkbox" id="setSteamOverlaySoundEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" data-windows-only style="margin-bottom:10px;" data-i18n="settings.sounds.overlay_desc">Plays a sound when a notification toast appears in the SteamVR overlay.</div>
+                    </div>
+
+                    <!-- FRIENDS NOTIFICATION TOASTS -->
+                    <div class="vrcn-panel-card" data-section="notifications" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">person_check</span> <span data-i18n="settings.friend_toast.title">Friends Notification Toasts</span></div>
+                        <div class="sf-toggle-row"><span data-i18n="settings.friend_toast.enabled">Friend Online Cards</span><label class="toggle"><input type="checkbox" id="setFriendOnlineToastEnabled" onchange="_fotUpdateFavOnly();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" style="margin-bottom:6px;" data-i18n="settings.friend_toast.enabled_desc">Shows a toast card in the bottom-right corner when a friend comes online.</div>
+                        <div class="sf-toggle-row" id="fotFavRow"><span data-i18n="settings.friend_toast.fav_only">Favorites only</span><label class="toggle"><input type="checkbox" id="setFriendOnlineToastFavOnly" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="set-desc" style="margin-bottom:6px;" data-i18n="settings.friend_toast.fav_only_desc">Only show toast cards for friends you have favorited.</div>
+                        <div class="set-desc" style="margin-top:10px;padding:8px 0;background:var(--bg2);border-radius:6px;line-height:1.6;" data-i18n-html="settings.friend_toast.how_it_works">Right-click a friend's toast to set a per-friend override. <b>Always notify</b> always shows a toast, even if "Favorites only" is on and they are not favorited. <b>Default</b> follows the global setting. <b>Never notify</b> suppresses toasts for that friend regardless of the global setting.</div>
+                    </div>
+
+                    <!-- VRCHAT LAUNCH OPTIONS -->
+                    <div class="vrcn-panel-card" data-section="vrchat" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">rocket_launch</span> <span data-i18n="settings.launch.title">VRChat Launch Options</span></div>
+                        <div class="sf-section-label" data-i18n="settings.launch.path">VRChat Path</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+                            <input type="text" id="setVrcPath" class="vrcn-edit-field" placeholder="C:\...\VRChat.exe" oninput="autoSave()" style="flex:1;">
+                            <button class="vrcn-button" id="browseVrcBtn" onclick="browseExe('vrchat')"><span class="msi" style="font-size:16px;">folder_open</span> <span data-i18n="common.browse">Browse</span></button>
+                        </div>
+                        <div class="sf-section-label" data-i18n="settings.launch.apps_desktop">Start With Desktop</div>
+                        <div class="set-desc" style="margin-bottom:8px;" data-i18n="settings.launch.apps_desktop_desc">Apps launched when starting VRChat in Desktop mode.</div>
+                        <div class="exe-list" id="extraExeDesktopList"><div class="folder-empty" data-i18n="common.none">None</div></div>
+                        <div class="folder-btns" style="margin-top:10px;margin-bottom:14px;">
+                            <button class="vrcn-button" onclick="browseExe('extra-desktop')"><span class="msi" style="font-size:16px;">add</span> <span data-i18n="settings.launch.add_app">Add App</span></button>
+                        </div>
+                        <div class="sf-section-label" data-i18n="settings.launch.apps_vr">Start With VR</div>
+                        <div class="set-desc" style="margin-bottom:8px;" data-i18n="settings.launch.apps_vr_desc">Apps launched when starting VRChat in VR mode.</div>
+                        <div class="exe-list" id="extraExeVRList"><div class="folder-empty" data-i18n="common.none">None</div></div>
+                        <div class="folder-btns" style="margin-top:10px;margin-bottom:14px;">
+                            <button class="vrcn-button" onclick="browseExe('extra-vr')"><span class="msi" style="font-size:16px;">add</span> <span data-i18n="settings.launch.add_app">Add App</span></button>
+                        </div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.launch.close_with_vrc">Close with VRChat</span>
+                            <label class="toggle"><input type="checkbox" id="setCloseWithVrc" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.launch.close_with_vrc_desc">When enabled, all startup apps that were launched with VRChat will be closed when the game is closed.</div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.launch.start_always_with_vrc">Start always with VRChat</span>
+                            <label class="toggle"><input type="checkbox" id="setStartAlwaysWithVrc" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.launch.start_always_with_vrc_desc">When enabled, VRCNext will launch the startup apps even if VRChat is started outside of VRCNext, for example when you start VRChat through Steam.</div>
+                    </div>
+
+                    <!-- AUTO-BACKUPS -->
+                    <div class="vrcn-panel-card" data-section="data" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">backup</span> <span data-i18n="settings.backup.title">Auto-Backups</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.backup.registry_enabled">Enable VRChat Registry Backups</span>
+                            <label class="toggle"><input type="checkbox" id="setRegBackupEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.backup.registry_enabled_desc">Automatically backs up your VRChat registry settings at the selected interval. Backups are saved to your VRCNext data folder.</div>
+                        <div class="sf-section-label" data-i18n="settings.backup.registry_cycle">Registry Backup Cycle</div>
+                        <select id="setRegBackupCycle" class="vrcn-dropdown" onchange="autoSave()" style="margin-bottom:14px;">
+                            <option value="14" data-i18n="settings.backup.days_14">14 Days</option>
+                            <option value="30" data-i18n="settings.backup.days_30">30 Days</option>
+                            <option value="60" data-i18n="settings.backup.days_60">60 Days</option>
+                            <option value="120" data-i18n="settings.backup.days_120">120 Days</option>
+                        </select>
+                        <div class="sf-toggle-row" style="margin-top:4px;">
+                            <span data-i18n="settings.backup.db_enabled">Enable VRCN Database Backups</span>
+                            <label class="toggle"><input type="checkbox" id="setDbAutoBackupEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.backup.db_enabled_desc">Automatically backs up your VRCNext database at the selected interval. Backups are saved to your VRCNext data folder.</div>
+                        <div class="sf-section-label" data-i18n="settings.backup.db_cycle">Database Backup Cycle</div>
+                        <select id="setDbAutoBackupCycle" class="vrcn-dropdown" onchange="autoSave()" style="margin-bottom:14px;">
+                            <option value="60" data-i18n="settings.backup.days_60">60 Days</option>
+                            <option value="120" data-i18n="settings.backup.days_120">120 Days</option>
+                            <option value="240" data-i18n="settings.backup.days_240">240 Days</option>
+                            <option value="356" data-i18n="settings.backup.days_356">356 Days</option>
+                        </select>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="vrcn-button" id="btnManualDbBackup" onclick="manualDbBackup()"><span class="msi" style="font-size:16px;">backup</span> <span data-i18n="settings.backup.btn_db">Create Database Backup</span></button>
+                            <button class="vrcn-button" id="btnManualRegBackup" onclick="manualRegBackup()"><span class="msi" style="font-size:16px;">app_registration</span> <span data-i18n="settings.backup.btn_registry">Create VRChat Registry Backup</span></button>
+                        </div>
+                        <div id="manualBackupResult" style="display:none;margin-top:10px;"></div>
+                    </div>
+
+                    <!-- WATCH FOLDERS -->
+                    <div class="vrcn-panel-card" data-section="vrchat" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">folder_open</span> <span data-i18n="settings.watch_folders.title">Watch Folders</span></div>
+                        <div class="set-desc" data-i18n="settings.watch_folders.desc">Watch folders monitor for new images you create. Add your VRChat screenshot folder here. You can also add folders from apps like VHF (VR Hands Frame) to track world location and friends list for those images too.</div>
+                        <div class="folder-list" id="folderList"><div class="folder-empty" data-i18n="settings.watch_folders.empty">No folders added</div></div>
+                        <div class="folder-btns" style="margin-top:10px;">
+                            <button class="vrcn-button" onclick="addFolder()"><span class="msi" style="font-size:16px;">create_new_folder</span> <span data-i18n="settings.watch_folders.add">Add Folder</span></button>
+                            <button class="vrcn-button" onclick="removeFolder()"><span class="msi" style="font-size:16px;">folder_delete</span> <span data-i18n="settings.watch_folders.remove">Remove</span></button>
+                        </div>
+                    </div>
+
+                    <!-- DEBUGGING -->
+                    <div class="vrcn-panel-card" data-section="advanced" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">bug_report</span> <span data-i18n="settings.debug.title">Debugging</span></div>
+                        <div class="set-desc" style="margin-bottom:12px;" data-i18n="settings.debug.desc">Use these options if something isn't working correctly or you want to reconfigure VRCNext from scratch.</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="vrcn-button" onclick="sendToCS({action:'resetSetup'})"><span class="msi" style="font-size:16px;">restart_alt</span> <span data-i18n="settings.debug.redo_setup">Redo Setup Wizard</span></button>
+                            <button class="vrcn-button" id="btnForceFfc" onclick="forceFfcAll()"><span class="msi" style="font-size:16px;">cloud_download</span> <span data-i18n="settings.debug.force_ffc_all">Force FFC All</span></button>
+                        </div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
+                            <span data-i18n="settings.debug.memory_trim">Enable Memory Trim</span>
+                            <label class="toggle"><input type="checkbox" id="setMemoryTrimEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.debug.memory_trim_desc">Memory Trim periodically frees unused memory from VRCNext. While the app already cleans up automatically during normal use, enabling this triggers a more frequent garbage collection pass every 10 minutes.</div>
+                        <button class="vrcn-button" onclick="sendToCS({action:'forceTrim'})"><span class="msi" style="font-size:16px;">memory</span> <span data-i18n="settings.debug.force_memory_trim">Force Memory Trim</span></button>
+                        <div id="ffcProgressWrap" style="display:none;margin-top:12px;">
+                            <div style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);margin-bottom:6px;" id="ffcProgressLabel" data-i18n="settings.debug.ffc_progress.caching">Caching...</div>
+                            <div style="background:var(--brd);border-radius:4px;height:6px;overflow:hidden;">
+                                <div id="ffcProgressBar" style="height:100%;background:var(--accent);width:0%;transition:width .3s;border-radius:4px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WINDOWS FIXES -->
+                    <div class="vrcn-panel-card" data-windows-only data-section="advanced" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">healing</span> <span data-i18n="settings.windowsfixes.title">Windows Fixes</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.windowsfixes.npsm_label">Fix NPSMSvc (Now Playing service)</span>
+                            <label class="toggle"><input type="checkbox" id="setMediaFixEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.windowsfixes.npsm_desc">When this fix is enabled, it will attempt to resolve the Windows Media Control issue introduced in build 10.0.26100, which can cause media controls to completely break. This also fixes an issue where pressing Fn + F5, Fn + F6 or Fn + F7 could cause Windows Explorer to crash. Furthermore, this fixes issues where the OSC Custom Chatbox and VR Overlay may not show the current song information correctly. It checks roughly every 10 minutes and safely restarts the hung service if needed.</div>
+                    </div>
+
+                    <!-- SEARCH DEBOUNCE PERFORMANCE -->
+                    <div class="vrcn-panel-card" data-section="advanced" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">speed</span> <span data-i18n="settings.search_debounce.title">Performance</span></div>
+                        <div class="sf-section-label" style="margin-bottom:6px;" data-i18n="settings.search_debounce.label">Search Index Debounce Speed</div>
+                        <select id="setSearchDebounceMs" class="vrcn-dropdown" onchange="onSearchDebounceMsChange()" style="margin-bottom:10px;">
+                            <option value="15" data-i18n="settings.search_debounce.ms_15">15 ms</option>
+                            <option value="50" data-i18n="settings.search_debounce.ms_50">50 ms</option>
+                            <option value="100" data-i18n="settings.search_debounce.ms_100">100 ms</option>
+                            <option value="200" data-i18n="settings.search_debounce.ms_200">200 ms</option>
+                            <option value="300" data-i18n="settings.search_debounce.ms_300">300 ms</option>
+                            <option value="500" selected data-i18n="settings.search_debounce.ms_500">500 ms (Default)</option>
+                            <option value="750" data-i18n="settings.search_debounce.ms_750">750 ms</option>
+                            <option value="900" data-i18n="settings.search_debounce.ms_900">900 ms</option>
+                        </select>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.search_debounce.desc">Search Index Debounce determines how many milliseconds it takes until it starts searching the database or certain entries after your last key press. Default is 500ms which works fine for almost every user. If you have more than 1000 Friends, 500ms is perfect. If you have more than 2500 Friends, it is recommended to use 750ms.</div>
+                        <div class="set-desc" style="color:var(--warn,#e8a020);" data-i18n="settings.search_debounce.warning">Do not change this to a value below 500ms, especially when you have a large friends list, many groups, many saved avatars and worlds!</div>
+                    </div>
+
+                    <!-- IMAGE CACHE + FAST FETCH CACHE -->
+                    <div class="vrcn-panel-card-pair" data-section="performance" style="display:none;">
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">cached</span> <span data-i18n="settings.image_cache.title">Image Cache</span></div>
+                        <div class="set-desc" data-i18n="settings.image_cache.desc">VRCNext caches avatar, world, and profile images locally for instant loading. Over time this can grow to several gigabytes. Set a limit and the oldest cached images will be removed automatically when it is reached (~2 GB per cleanup pass).</div>
+                        <div class="sf-toggle-row" style="margin-top:10px;">
+                            <div>
+                                <span data-i18n="settings.image_cache.optimize.label">Optimize Caching</span>
+                                <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:2px;" data-i18n="settings.image_cache.optimize.desc">PNG images &gt; 1.5 MB are compressed to JPEG automatically</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="setImgCacheOptimizeEnabled" checked onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div id="imgCacheLimitRow" style="margin-top:12px;">
+                            <div class="sf-row">
+                                <label style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);flex-shrink:0;margin-right:10px;" data-i18n="settings.image_cache.max_size">Max Cache Size</label>
+                                <input type="range" id="setImgCacheLimit" min="5" max="30" step="1" value="5" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('imgCacheLimitVal').textContent=this.value+' GB';sendToCS({action:'getImgCacheSize'});autoSave()">
+                                <span id="imgCacheLimitVal" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);margin-left:10px;min-width:44px;text-align:right;">5 GB</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+                                <span id="imgCacheSizeLabel" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);">— MB used</span>
+                            </div>
+                            <div class="ts-bar-wrap" style="margin-top:4px;">
+                                <div id="imgCacheSizeBar" class="ts-bar" style="width:0%;"></div>
+                            </div>
+                            <div style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);margin-top:6px;" data-i18n="settings.image_cache.limit_hint">When the limit is reached, the oldest ~2 GB of cached images are removed automatically.</div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+                            <button class="vrcn-button" id="btnForceOptimize" onclick="startForceOptimize()"><span class="msi" style="font-size:16px;">compress</span> <span data-i18n="settings.image_cache.force_optimize">Force Optimization</span></button>
+                        </div>
+                        <div id="imgOptimizeProgress" style="display:none;margin-top:8px;">
+                            <div class="ts-bar-wrap">
+                                <div id="imgOptimizeBar" class="ts-bar" style="width:0%;background:var(--accent);"></div>
+                            </div>
+                            <span id="imgOptimizeLabel" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:4px;display:block;">Optimizing…</span>
+                        </div>
+                    </div>
+
+                    <!-- FAST FETCH CACHE -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">bolt</span> <span data-i18n="settings.ffc.title">Fast Fetch Cache</span></div>
+                        <div class="set-desc" data-i18n="settings.ffc.desc">Fast Fetch Cache stores user profiles, worlds, groups, and avatars locally to improve load times. When enabled, VRCNext instantly shows cached content (descriptions, texts, images) while silently refreshing it in the background. When disabled, all data is freshly downloaded on every request with no cache stored or used.</div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.ffc.enable">Enable FFC</span>
+                            <label class="toggle"><input type="checkbox" id="setFfcEnabled" checked onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <button class="vrcn-button" style="margin-top:12px;" onclick="sendToCS({action:'clearFfcCache'})"><span class="msi" style="font-size:16px;">delete_sweep</span> <span data-i18n="settings.ffc.clear">Clear FFC Cache</span></button>
+                    </div>
+                    </div><!-- /vrcn-panel-card-pair -->
+
+                    <!-- DATABASE SETTINGS -->
+                    <div class="vrcn-panel-card" data-section="data" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">database</span> <span data-i18n="settings.db.title">Database Settings</span></div>
+                        <div class="set-desc" style="margin-bottom:12px;" data-i18n="settings.db.desc">Limits how many timeline entries are loaded into memory at startup. Keeps the Timeline fast with large databases. A restart is required to apply changes.</div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="settings.db.optimize">Optimize Database</span>
+                            <label class="toggle"><input type="checkbox" id="setDbOptimize" checked onchange="onDbOptimizeChange();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div id="dbOptimizeEntriesRow" style="margin-top:12px;">
+                            <div class="sf-row">
+                                <label style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);flex-shrink:0;margin-right:10px;" data-i18n="settings.db.entries_label">Optimized Database Entries</label>
+                                <div style="display:flex;align-items:center;gap:10px;flex:1;">
+                                    <input type="range" id="setDbOptimizeMaxEntries" min="500" max="250000" step="500" value="500" style="flex:1;" oninput="document.getElementById('dbOptimizeEntriesVal').textContent=this.value;autoSave()">
+                                    <span id="dbOptimizeEntriesVal" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);min-width:44px;text-align:right;">500</span>
+                                </div>
+                            </div>
+                            <div class="set-desc" style="margin-top:6px;" data-i18n="settings.db.entries_desc">Min: 500, Max: 250,000. Loads the N most recent entries for Personal and Friends separately.</div>
+                        </div>
+                        <div id="dbOptimizeOffWarning" style="display:none;margin-top:12px;color:var(--red,#e55);" class="set-desc" data-i18n="settings.db.optimize_off_warning">Warning: Optimize Database is disabled. All entries will be loaded on startup. This may significantly impact performance with large databases.</div>
+                    </div>
+
+                    <!-- DATABASE OPTIMIZATION -->
+                    <div class="vrcn-panel-card" data-section="data" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">cleaning_services</span> Database Optimization</div>
+                        <div class="set-desc" style="margin-bottom:8px;color:var(--err);" data-i18n="settings.db.cleanup.danger">Danger Zone! This Database Optimization will delete certain things from the database.</div>
+                        <div class="set-desc" style="margin-bottom:8px;" data-i18n="settings.db.cleanup.user_cache">It will delete all cached non-friended users from the whole database. This is mostly safe as it does not contain any important information. Time Spent and Meet Counts are still present on those profiles and will not be wiped.</div>
+                        <div class="set-desc" style="margin-bottom:8px;" data-i18n="settings.db.cleanup.events">It will also delete certain events in your Personal and Friends Timeline. In the Personal Timeline, all notifications and URL entries will be wiped. In the Friends Timeline, all "Online", "Offline", and "Status Change" entries, for example "Ask Me" > "Join Me", will be wiped.</div>
+                        <div class="set-desc" style="margin-bottom:4px;" data-i18n="settings.db.cleanup.instructions">Run the analysis first. After that, you will see what will be wiped. It is recommended to create a backup of your database in case you still need those entries. Your database is usually stored at:</div>
+                        <div class="set-desc" id="dbPathHint" style="font-family:monospace;color:var(--tx2);">C:\Users\USERNAME\AppData\Roaming\VRCNext</div>
+                        <div style="margin-top:12px;padding:10px 12px;border:1px solid var(--warn);border-radius:8px;background:color-mix(in srgb, var(--warn) 12%, transparent);">
+                            <div style="font-weight:700;color:var(--warn);margin-bottom:6px;display:flex;align-items:center;gap:6px;"><span class="msi" style="font-size:16px;">warning</span> <span data-i18n="settings.db.warn.title">What gets deleted, and what stays</span></div>
+                            <div style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx1);line-height:1.5;">
+                                <div style="font-weight:600;margin-top:2px;" data-i18n="settings.db.warn.friends_head">Friends Timeline</div>
+                                <div data-i18n="settings.db.warn.friends_body">Status changes, status texts, online and offline states, bio changes and avatar changes get trimmed. The most recent entries always remain (the last 1000 online and offline states, the last 200 status texts and bio changes, the last 100 status changes and avatar changes). Only the older, bloated history is removed.</div>
+                                <div style="font-weight:600;margin-top:8px;" data-i18n="settings.db.warn.personal_head">Personal Timeline</div>
+                                <div data-i18n="settings.db.warn.personal_body">Notifications, video URLs and avatar switches get trimmed to the last 100 each. The player lists of past instances are also trimmed, the players are kept only for your most recent 100 instances.</div>
+                                <div style="font-weight:600;margin-top:8px;" data-i18n="settings.db.warn.users_head">Cached Users and Bio Links</div>
+                                <div data-i18n="settings.db.warn.users_body">Cached data of non friended users is cleared (Time Spent and Meet Counts stay). Bio links of all profiles are cleared. All of this is re-fetched from VRChat when needed.</div>
+                                <div style="margin-top:8px;color:var(--tx2);" data-i18n="settings.db.warn.note">So not everything is gone, only the bloated data that is not really needed. The database is then compacted to free up disk space. If you still want to keep the old entries, create a backup before running optimization.</div>
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+                            <button class="vrcn-button" id="btnDbAnalyze" onclick="dbRunAnalysis()"><span class="msi" style="font-size:16px;">analytics</span> Run Analysis</button>
+                            <button class="vrcn-button" id="btnDbMemory" onclick="dbMemoryUsage()"><span class="msi" style="font-size:16px;">memory</span> <span data-i18n="settings.db.memory_usage">Memory Usage</span></button>
+                            <button class="vrcn-button" id="btnDbBackup" onclick="dbCreateBackup()"><span class="msi" style="font-size:16px;">backup</span> Create Backup</button>
+                            <button class="vrcn-button" id="btnDbOptimize" onclick="dbRunOptimize()" style="display:none;"><span class="msi" style="font-size:16px;">cleaning_services</span> Run Optimization</button>
+                        </div>
+                        <div id="dbOptProgressWrap" style="display:none;margin-top:12px;">
+                            <div class="ts-bar-wrap">
+                                <div id="dbOptProgressBar" class="ts-bar" style="width:0%;background:var(--accent);"></div>
+                            </div>
+                            <span id="dbOptProgressLabel" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:4px;display:block;">Analyzing…</span>
+                        </div>
+                        <div id="dbAnalysisResults" style="display:none;margin-top:14px;"></div>
+                    </div>
+
+                    <div class="vrcn-panel-card" data-section="community" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">database</span> <span data-i18n="settings.avtrdb.title">Avatar Avtrdb and Avtr.icu Community Support</span></div>
+                        <div class="fd-tabs" style="margin-top:10px;">
+                            <button class="fd-tab active" onclick="switchAvtrdbTab('support',this)" data-i18n="settings.avtrdb.tabs.support">Support</button>
+                            <button class="fd-tab" onclick="switchAvtrdbTab('reports',this)" data-i18n="settings.avtrdb.tabs.reports">Reports</button>
+                        </div>
+                        <div id="avtrdbTabSupport">
+                            <div class="set-desc" data-i18n="settings.avtrdb.support.deleted_desc">Help improve the avatar databases by reporting deleted avatars. When enabled, VRCNext will notify the respective database whenever you encounter a deleted or DMCA'd avatar, but only if that avatar exists in that database.</div>
+                            <div class="sf-toggle-row">
+                                <span data-i18n="settings.avtrdb.support.deleted_toggle">Report deleted avatars to Avtrdb</span>
+                                <label class="toggle"><input type="checkbox" id="setAvtrdbReport" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                            </div>
+                            <div class="sf-toggle-row" style="margin-top:8px;">
+                                <span data-i18n="settings.avtrdb.support.deleted_toggle_icu">Report deleted avatars to Avtr.icu</span>
+                                <label class="toggle"><input type="checkbox" id="setAvtrIcuReport" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                            </div>
+                            <div class="set-desc" style="margin-top:14px;" data-i18n="settings.avtrdb.support.submit_desc">Submit new public avatars you encounter in-game to the avatar databases. When you switch to an avatar that isn't indexed yet, VRCNext will automatically submit it. This helps expand the databases and makes more avatars discoverable for everyone.</div>
+                            <div class="sf-toggle-row">
+                                <span data-i18n="settings.avtrdb.support.submit_toggle">Submit new avatars to Avtrdb</span>
+                                <label class="toggle"><input type="checkbox" id="setAvtrdbSubmit" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                            </div>
+                            <div class="sf-toggle-row" style="margin-top:8px;">
+                                <span data-i18n="settings.avtrdb.support.submit_toggle_icu">Submit new avatars to Avtr.icu</span>
+                                <label class="toggle"><input type="checkbox" id="setAvtrIcuSubmit" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                            </div>
+                        </div>
+                        <div id="avtrdbTabReports" style="display:none;">
+                            <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.avtrdb.reports.desc">All reports sent to avatar databases during this session. Avtrdb reports include a ticket link to check status.</div>
+                            <div id="avtrdbReportsList"><div class="empty-msg" data-i18n="settings.avtrdb.reports.empty">No reports sent yet this session.</div></div>
+                        </div>
+                    </div>
+
+                    <div class="vrcn-panel-card" data-section="community" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">hub</span> <span data-i18n="settings.vrcndb.title">VRCNDb Community Database</span></div>
+                        <div class="fd-tabs" style="margin-top:10px;">
+                            <button class="fd-tab active" onclick="switchVrcndbTab('support',this)" data-i18n="settings.vrcndb.tabs.support">Support</button>
+                            <button class="fd-tab" onclick="switchVrcndbTab('reports',this)" data-i18n="settings.vrcndb.tabs.reports">Reports</button>
+                        </div>
+                        <div id="vrcndbTabSupport">
+                            <div class="set-desc" data-i18n="settings.vrcndb.submit_desc">Submit avatar IDs you encounter in-game to the official VRCNDb database (db.vrcnext.com). Only the ID is sent. The server verifies the avatar itself, stores only public avatars, and downloads the image on its own. This helps build the community avatar search.</div>
+                            <div class="sf-toggle-row">
+                                <span data-i18n="settings.vrcndb.submit_toggle">Submit avatars to VRCNDb</span>
+                                <label class="toggle"><input type="checkbox" id="setVrcndbSubmit" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                            </div>
+                            <div class="set-desc" style="margin-top:14px;" data-i18n="settings.vrcndb.deleted_desc">Report avatars that appear to be deleted so VRCNDb re-verifies them. An avatar is only removed from the database if VRChat itself confirms it no longer exists.</div>
+                            <div class="sf-toggle-row">
+                                <span data-i18n="settings.vrcndb.deleted_toggle">Report deleted avatars to VRCNDb</span>
+                                <label class="toggle"><input type="checkbox" id="setVrcndbReport" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                            </div>
+                        </div>
+                        <div id="vrcndbTabReports" style="display:none;">
+                            <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.vrcndb.reports.desc">Avatar IDs submitted to VRCNDb during this session.</div>
+                            <div id="vrcndbReportsList"><div class="empty-msg" data-i18n="settings.vrcndb.reports.empty">No submissions sent yet this session.</div></div>
+                        </div>
+                    </div>
+
+                    <div class="vrcn-panel-card" id="vrcxImportCard" data-section="vrcx" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">download</span> <span data-i18n="settings.vrcx.title">Import data from VRCX</span></div>
+                        <div class="set-desc"><span data-i18n="settings.vrcx.desc_prefix">Imports your VRCX history into VRCNext: world time, friend time, instance joins, GPS events, online/offline, status and bio changes. Existing data is preserved and values are added on top. Select your</span> <code>VRCX.sqlite3</code> <span data-i18n="settings.vrcx.desc_suffix">file to begin.</span></div>
+                        <div style="margin-top:10px;padding:12px 14px;background:rgba(var(--err-rgb,220,50,50),.10);border:1px solid rgba(var(--err-rgb,220,50,50),.30);border-radius:10px;line-height:1.7;">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <span class="msi" style="font-size:20px;color:var(--err);">warning</span>
+                                <span style="font-size:calc(13px + var(--fs-off, 0px));font-weight:700;color:var(--err);" data-i18n="settings.vrcx.warning.title">Experimental Feature</span>
+                            </div>
+                            <p style="margin:0 0 8px;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);" data-i18n="settings.vrcx.warning.line1">Importing the VRCX database will only add necessary information. This feature is highly experimental and some data may be missing. Instance information works differently in VRCN, so some images or other details might not appear.</p>
+                            <p style="margin:0 0 8px;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);" data-i18n="settings.vrcx.warning.line2">If your VRCX database is very important to you, it is recommended to continue using VRCX, as the data will not be fully merged with the VRCN database.</p>
+                            <p style="margin:0;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);" data-i18n="settings.vrcx.warning.line3">Full instance data will not be available and some elements may not display correctly.</p>
+                        </div>
+                        <button class="vrcn-button" style="margin-top:12px;" id="vrcxSelectBtn" onclick="vrcxSelectFile()"><span class="msi" style="font-size:16px;">storage</span> <span data-i18n="settings.vrcx.select_db">Select VRCX Database</span></button>
+                        <div id="vrcxPreviewBox" style="display:none;margin-top:14px;">
+                            <div class="set-desc" style="margin-bottom:8px;opacity:.7;" id="vrcxFileName"></div>
+                            <div id="vrcxPreviewRows" style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:14px;"></div>
+                            <div id="vrcxProgressWrap" style="display:none;margin-bottom:14px;">
+                                <div style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);margin-bottom:6px;" id="vrcxProgressLabel" data-i18n="settings.vrcx.progress.reading_database">Reading database...</div>
+                                <div style="background:var(--bg-input);border-radius:6px;height:6px;overflow:hidden;">
+                                    <div id="vrcxProgressBar" style="height:100%;width:0%;background:var(--accent);border-radius:6px;transition:width .4s ease;"></div>
+                                </div>
+                            </div>
+                            <div id="vrcxSuccessCard" style="display:none;background:var(--bg-input);border-radius:10px;padding:20px 16px;margin-bottom:12px;text-align:center;">
+                                <span class="msi" style="font-size:40px;color:var(--ok);display:block;margin-bottom:10px;">check_circle</span>
+                                <div style="font-size:calc(14px + var(--fs-off, 0px));font-weight:600;color:var(--tx0);margin-bottom:6px;" data-i18n="settings.vrcx.import_complete">Import Complete</div>
+                                <div id="vrcxSuccessDetail" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);line-height:1.6;"></div>
+                            </div>
+                            <div id="vrcxImportError" style="display:none;margin-bottom:10px;font-size:calc(13px + var(--fs-off, 0px));color:var(--err);"></div>
+                            <div id="vrcxActionBtns" style="display:flex;gap:8px;">
+                                <button class="vrcn-button" id="vrcxStartBtn" onclick="vrcxStartImport()"><span class="msi" style="font-size:16px;">upload</span> <span data-i18n="settings.vrcx.start_import">Start Import</span></button>
+                                <button class="vrcn-button" id="vrcxCancelBtn" onclick="vrcxReset()"><span class="msi" style="font-size:16px;">close</span> <span data-i18n="common.cancel">Cancel</span></button>
+                            </div>
+                            <div id="vrcxDoneBtn" style="display:none;">
+                                <button class="vrcn-button" onclick="vrcxReset()" data-i18n="common.done">Done</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- COPYRIGHT AND INFORMATION -->
+                    <div class="vrcn-panel-card" data-section="about" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">info</span> <span data-i18n="settings.info.title">Copyright And Information</span></div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.info.p1">VRCNext is a VRChat assistant application that brings together tools and ideas from different applications into one unified app. It is designed for managing friends, groups, worlds, and analytics, and also provides communication features and a toolbox to make everything easier in a single place.</div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.info.p2">VRCNext is not endorsed by VRChat and does not reflect the views or opinions of the VRChat staff or anyone officially involved in the development or management of VRChat. VRChat is a registered trademark of VRChat Inc.</div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.info.p3">Shinyflvres and all contributors are not responsible for any issues that may be caused by VRCNext. In general, VRCNext is not a problem for VRChat, but misuse such as abusing features, exploiting others, or generating excessive request spam may result in moderation by VRChat.</div>
+                        <div class="set-desc" data-i18n="settings.info.p4">Your User ID and the VRCNext Client ID are used to communicate with the VRChat API. Use VRCNext respectfully and do not attempt to exploit, manipulate, or generate spam requests, as this may lead to moderation.</div>
+                    </div>
+
+                    <!-- ACCOUNTS -->
+                    <div class="vrcn-panel-card" data-section="accounts" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">account_circle</span> <span data-i18n="settings.accounts.title">Accounts</span></div>
+                        <div class="set-desc" style="margin-bottom:14px;"><span data-i18n="settings.accounts.desc">Manage your VRChat accounts. The primary account uses the main database, secondary accounts each get their own database. Credentials are stored locally and encrypted.</span> <span data-i18n="settings.accounts.warning.body">Switching Accounts is an experimental feature. It creates a separate database for each secondary account so the main database is not overloaded with data. Things might not work correctly on secondary accounts, expect bugs here and there. Secondary accounts do not get auto-backups, only your main account does. Some settings might not work as intended. Be warned.</span></div>
+
+                        <div id="accountsList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
+
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                            <button class="vrcn-button" onclick="showAddAccountForm()" id="btnAddAccountToggle"><span class="msi" style="font-size:16px;">person_add</span> <span data-i18n="settings.accounts.add">Add Account</span></button>
+                        </div>
+
+                        <div id="addAccountForm" style="display:none;border-top:1px solid var(--brd);margin-top:6px;padding-top:12px;">
+                            <div class="sf-section-label" data-i18n="settings.accounts.add_credentials">New Account Credentials</div>
+                            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+                                <input type="text" id="addAccUser" class="vrcn-edit-field" placeholder="VRChat username" data-i18n-placeholder="settings.api.username">
+                                <input type="password" id="addAccPass" class="vrcn-edit-field" placeholder="VRChat password" data-i18n-placeholder="settings.api.password">
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <button class="vrcn-button" onclick="submitAddAccount()"><span class="msi" style="font-size:16px;">login</span> <span data-i18n="settings.accounts.add_submit">Add</span></button>
+                                <button class="vrcn-button" onclick="cancelAddAccount()"><span class="msi" style="font-size:16px;">close</span> <span data-i18n="common.cancel">Cancel</span></button>
+                                <span id="addAccountStatus" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);"></span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ATTRIBUTION -->
+                    <div class="vrcn-panel-card" data-section="attribution" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">copyright</span> <span data-i18n="settings.attribution.title">Third-Party Licenses</span></div>
+                        <div class="set-desc" style="margin-bottom:16px;" data-i18n="settings.attribution.desc">VRCNext is built with the following open-source libraries. All copyright notices are retained as required by their respective licenses.</div>
+                        <div style="display:flex;flex-direction:column;gap:4px;">
+
+                            <!-- DiscordRichPresence -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">DiscordRichPresence <span class="attrib-ver">1.2.1.24</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Lachee</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) Lachee
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/Lachee/discord-rpc-csharp'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- Microsoft.Data.Sqlite -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">Microsoft.Data.Sqlite <span class="attrib-ver">9.0.0</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© .NET Foundation and Contributors</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) .NET Foundation and Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/dotnet/efcore'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- NAudio -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">NAudio <span class="attrib-ver">2.2.1</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Mark Heath</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) Mark Heath
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/naudio/NAudio'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- NAudio.Vorbis -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">NAudio.Vorbis <span class="attrib-ver">1.5.0</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Mark Heath</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) Mark Heath
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/naudio/NVorbis'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- NativeFileDialogSharp -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">NativeFileDialogSharp <span class="attrib-ver">0.5.0</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Daniel Spurling</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) Daniel Spurling
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/milleniumbug/NativeFileDialogSharp'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- Newtonsoft.Json -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">Newtonsoft.Json <span class="attrib-ver">13.0.3</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© James Newton-King</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) James Newton-King
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/JamesNK/Newtonsoft.Json'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- Photino.NET -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">Photino.NET <span class="attrib-ver">4.0.16</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© tryphotino</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) tryphotino
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/tryphotino/photino.NET'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- Rsync.Delta -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">Rsync.Delta <span class="attrib-ver">1.0.1</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Logan Dam</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) Logan Dam
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/ldunsmore/rsyncdelta'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- SkiaSharp -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">SkiaSharp <span class="attrib-ver">2.88.8</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Microsoft Corporation</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) Microsoft Corporation
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/mono/SkiaSharp'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- System.Diagnostics.PerformanceCounter -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">System.Diagnostics.PerformanceCounter <span class="attrib-ver">9.0.0</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© .NET Foundation and Contributors</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) .NET Foundation and Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/dotnet/runtime'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- System.Drawing.Common -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">System.Drawing.Common <span class="attrib-ver">9.0.0</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© .NET Foundation and Contributors</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) .NET Foundation and Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/dotnet/runtime'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- System.Security.Cryptography.ProtectedData -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">System.Security.Cryptography.ProtectedData <span class="attrib-ver">9.0.0</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© .NET Foundation and Contributors</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) .NET Foundation and Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/dotnet/runtime'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- Velopack -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">Velopack <span class="attrib-ver">0.0.915</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Velopack Contributors</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) Velopack Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/velopack/velopack'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- Vosk -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">Vosk <span class="attrib-ver">0.3.38</span></div>
+                                    <span class="attrib-badge attrib-apache">Apache 2.0</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Alpha Cephei Inc.</div>
+                                    <pre class="attrib-license-text">Apache License
+Version 2.0, January 2004
+
+Copyright (c) Alpha Cephei Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/alphacep/vosk-api'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- Vortice.Direct3D11 -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">Vortice.Direct3D11 <span class="attrib-ver">3.8.2</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© Amer Koleci and Contributors</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) Amer Koleci and Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/amerkoleci/Vortice.Windows'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- VRChat.API -->
+                            <div class="attrib-item">
+                                <div class="attrib-header" onclick="toggleAttrib(this)">
+                                    <div class="attrib-name">VRChat.API <span class="attrib-ver">2.20.7</span></div>
+                                    <span class="attrib-badge attrib-mit">MIT</span>
+                                    <span class="msi attrib-chevron">expand_more</span>
+                                </div>
+                                <div class="attrib-body">
+                                    <div class="attrib-copy">© VRChat API Client Contributors</div>
+                                    <pre class="attrib-license-text">MIT License
+
+Copyright (c) VRChat API Client Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+                                    <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/vrchatapi/vrchatapi-csharp'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                </div>
+                            </div>
+
+                            <!-- FONTS -->
+                            <div style="margin-top:8px;padding-top:12px;border-top:1px solid var(--brd);">
+                                <div style="font-size:calc(11px + var(--fs-off, 0px));font-weight:600;color:var(--tx3);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em;" data-i18n="settings.attribution.fonts">Fonts (bundled)</div>
+                                <div style="display:flex;flex-direction:column;gap:4px;">
+
+                                    <!-- Material Symbols Rounded -->
+                                    <div class="attrib-item">
+                                        <div class="attrib-header" onclick="toggleAttrib(this)">
+                                            <div class="attrib-name">Material Symbols Rounded</div>
+                                            <span class="attrib-badge attrib-apache">Apache 2.0</span>
+                                            <span class="msi attrib-chevron">expand_more</span>
+                                        </div>
+                                        <div class="attrib-body">
+                                            <div class="attrib-copy">© Google LLC</div>
+                                            <pre class="attrib-license-text">Apache License
+Version 2.0, January 2004
+
+Material Symbols Rounded is bundled with VRCNext in the Fonts folder, subsetted to the icons the app actually uses. It is not fetched from the Google Fonts API at runtime.
+
+Copyright (c) Google LLC
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at
+
+    https://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.</pre>
+                                            <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://github.com/google/material-design-icons'})"><span class="msi" style="font-size:15px;">open_in_new</span> View Source</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Google Sans -->
+                                    <div class="attrib-item">
+                                        <div class="attrib-header" onclick="toggleAttrib(this)">
+                                            <div class="attrib-name">Google Sans &amp; Google Sans Mono</div>
+                                            <span class="attrib-badge attrib-gfonts">Google Fonts</span>
+                                            <span class="msi attrib-chevron">expand_more</span>
+                                        </div>
+                                        <div class="attrib-body">
+                                            <div class="attrib-copy">© Google LLC</div>
+                                            <pre class="attrib-license-text">Google Sans and Google Sans Mono are bundled with VRCNext in the Fonts folder. They are not fetched from the Google Fonts API at runtime.
+
+Copyright (c) Google LLC
+
+Use of these fonts is subject to the Google Fonts Terms of Service:
+https://developers.google.com/fonts/terms</pre>
+                                            <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://fonts.google.com/'})"><span class="msi" style="font-size:15px;">open_in_new</span> View on Google Fonts</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Interface fonts -->
+                                    <div class="attrib-item">
+                                        <div class="attrib-header" onclick="toggleAttrib(this)">
+                                            <div class="attrib-name">Interface Fonts</div>
+                                            <span class="attrib-badge attrib-gfonts">SIL Open Font License 1.1</span>
+                                            <span class="msi attrib-chevron">expand_more</span>
+                                        </div>
+                                        <div class="attrib-body">
+                                            <div class="attrib-copy">© the respective font authors</div>
+                                            <pre class="attrib-license-text">The fonts selectable under Appearance &gt; Fonts are bundled with VRCNext in the Fonts folder and are never fetched at runtime:
+
+Inter, Roboto, Open Sans, Lato, Montserrat, Poppins, Nunito, Rubik, Manrope, Quicksand
+
+Each is licensed under the SIL Open Font License, Version 1.1. Copyright remains with the respective authors.
+
+This Font Software is licensed under the SIL Open Font License, Version 1.1. This license is available with a FAQ at:
+https://openfontlicense.org</pre>
+                                            <button class="vrcn-button attrib-src-btn" onclick="sendToCS({action:'openUrl',url:'https://openfontlicense.org'})"><span class="msi" style="font-size:15px;">open_in_new</span> View License</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    </div><!-- /settings-content -->
+                </div><!-- /settings-layout -->

@@ -1,0 +1,80 @@
+                <div class="sf-layout">
+
+                    <!-- Status card -->
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status">
+                                <span class="sf-dot offline" id="asDot"></span>
+                                <span id="asStatusText" data-i18n="as.status.not_connected">Not connected</span>
+                            </div>
+                            <button class="vrcn-button" id="asConnBtn" onclick="asToggleEnabled()"><span class="msi" style="font-size:16px;">link</span> <span data-i18n="common.connect">Connect</span></button>
+                        </div>
+                    </div>
+
+                    <!-- Enable / Launch -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">power_settings_new</span> <span data-i18n="as.title">Avatar Scaling</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="common.start_with_vrchat_desktop">Start when launching VRChat on Desktop</span>
+                            <label class="toggle"><input type="checkbox" id="setAsAutoStartDesktop" onchange="asSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="sf-toggle-row" style="margin-top:4px;">
+                            <span data-i18n="common.start_with_vrchat_vr">Start when launching VRChat in VR</span>
+                            <label class="toggle"><input type="checkbox" id="setAsAutoStartVR" onchange="asSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                    </div>
+
+                    <!-- Scale -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">height</span> <span data-i18n="as.scale.title">Scale</span></div>
+                        <div class="sf-section-label" data-i18n="as.scale.section">Avatar Scale</div>
+                        <div class="as-slider-row">
+                            <span id="asScaleMinLabel" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);min-width:36px;">0.01 m</span>
+                            <input type="range" class="as-slider" id="asScaleSlider" min="0.01" max="10000" step="0.01" value="1.00" oninput="asScaleSliderInput()">
+                            <span id="asScaleMaxLabel" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);min-width:42px;text-align:right;">10000 m</span>
+                            <span class="as-slider-val" id="asScaleVal">1.00 m</span>
+                        </div>
+                        <div class="sf-toggle-row" style="margin-top:10px;">
+                            <span data-i18n="as.scale.save_worlds">Save Scale between Worlds</span>
+                            <label class="toggle"><input type="checkbox" id="asSaveScale" onchange="asSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                    </div>
+
+                    <!-- Safety Settings -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">security</span> <span data-i18n="as.safety.title">Safety Settings</span></div>
+                        <div class="sf-toggle-row">
+                            <span data-i18n="as.safety.use">Use Safety Settings</span>
+                            <label class="toggle"><input type="checkbox" id="asUseSafety" onchange="asToggleSafety()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div id="asSafetyRangeCard" style="display:none;margin-top:8px;">
+                            <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);line-height:1.6;" data-i18n-html="as.safety.range_desc">Limits avatar scale to a safe range:<br>Minimum <span style="color:var(--tx2);">0.1 m</span> — Maximum <span style="color:var(--tx2);">100 m</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Keybinds -->
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">keyboard</span> <span data-i18n="as.keybind.title">Keybinds</span></div>
+                        <div class="sf-section-label" data-i18n="as.keybind.scale_up">Scale Up</div>
+                        <div class="as-keybind-row">
+                            <div class="as-keybind-display" id="asKeyUpDisplay" data-i18n="as.keybind.not_set">Not set</div>
+                            <button class="vrcn-button" onclick="asStartRecord('up')" style="padding:4px 10px;flex-shrink:0;"><span class="msi" style="font-size:14px;">radio_button_checked</span> <span data-i18n="vro.keybind.record">Record</span></button>
+                            <button class="vrcn-button" onclick="asClearKey('up')" style="padding:4px 8px;flex-shrink:0;"><span class="msi" style="font-size:14px;">close</span></button>
+                        </div>
+                        <div class="sf-section-label" style="margin-top:10px;" data-i18n="as.keybind.scale_down">Scale Down</div>
+                        <div class="as-keybind-row">
+                            <div class="as-keybind-display" id="asKeyDownDisplay" data-i18n="as.keybind.not_set">Not set</div>
+                            <button class="vrcn-button" onclick="asStartRecord('down')" style="padding:4px 10px;flex-shrink:0;"><span class="msi" style="font-size:14px;">radio_button_checked</span> <span data-i18n="vro.keybind.record">Record</span></button>
+                            <button class="vrcn-button" onclick="asClearKey('down')" style="padding:4px 8px;flex-shrink:0;"><span class="msi" style="font-size:14px;">close</span></button>
+                        </div>
+                        <div class="sf-section-label" style="margin-top:14px;" data-i18n="as.speed.title">Scaling Speed</div>
+                        <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-bottom:6px;" data-i18n="as.speed.desc">Low value = fast, high value = smooth (slow)</div>
+                        <div class="as-slider-row">
+                            <span style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);min-width:28px;" data-i18n="as.speed.fast">Fast</span>
+                            <input type="range" class="as-slider" id="asSmoothSlider" min="0" max="100" step="1" value="30" oninput="asSmoothnessInput()">
+                            <span style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);min-width:28px;text-align:right;" data-i18n="as.speed.slow">Slow</span>
+                            <span class="as-slider-val" id="asSmoothVal">30</span>
+                        </div>
+                    </div>
+
+                </div>

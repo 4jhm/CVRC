@@ -1,0 +1,674 @@
+using System;
+using System.IO;
+using System.Numerics;
+using System.Runtime.InteropServices;
+using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
+using Valve.VR;
+
+namespace VRCNext.Services
+{
+    public class SteamVRService : IDisposable
+    {
+        public float DragMultiplier { get; set; } = 1.0f;
+        public bool LockX { get; set; }
+        public bool LockY { get; set; }
+        public bool LockZ { get; set; }
+        // Per-hand button assignments — 0 means "None" (that hand has no action).
+        // Defaults: left Thumbstick = Reset, right Thumbstick = Drag.
+        public uint LeftResetButton  { get; set; } = (uint)EVRButtonId.k_EButton_Axis0; // 32
+        public uint RightResetButton { get; set; } = 0;
+        public uint LeftDragButton   { get; set; } = 0;
+        public uint RightDragButton  { get; set; } = (uint)EVRButtonId.k_EButton_Axis0; // 32
+
+        public bool IsConnected { get; private set; }
+        public bool IsDragging { get; private set; }
+        public float OffsetX { get; private set; }
+        public float OffsetY { get; private set; }
+        public float OffsetZ { get; private set; }
+        public string? LastError { get; private set; }
+
+        private CVRSystem? _vrSystem;
+        private CancellationTokenSource? _cts;
+        private bool _running;
+        private bool _disposed;
+        private readonly Action<string> _log;
+        private Action<object>? _onUpdate;
+
+        private bool _leftDragging;
+        private bool _rightDragging;
+        private Vector3 _leftRawAnchor;
+        private Vector3 _rightRawAnchor;
+        private Vector3 _leftOffsetAtGrab;
+        private Vector3 _rightOffsetAtGrab;
+        // Edge detection for Reset — fire ResetOffset once per press, not every poll.
+        private bool _leftResetHeldPrev;
+        private bool _rightResetHeldPrev;
+
+        public float Gravity { get; set; } = 9.8f;
+        public uint LeftGravityButton  { get; set; } = 0;
+        public uint RightGravityButton { get; set; } = 0;
+        private bool _leftGravDragging;
+        private bool _rightGravDragging;
+        private Vector3 _leftGravRawAnchor;
+        private Vector3 _rightGravRawAnchor;
+        private Vector3 _leftGravOffsetAtGrab;
+        private Vector3 _rightGravOffsetAtGrab;
+        private Vector3 _offsetVel;
+        private Vector3 _prevOffset;
+        private bool _ballistic;
+        private Vector3 _ballVel;
+        private const float DT = 0.011f;
+        private const float GRAV_AIR_DRAG = 0.1f;
+
+        private uint _leftIdx = OpenVR.k_unTrackedDeviceIndexInvalid;
+        private uint _rightIdx = OpenVR.k_unTrackedDeviceIndexInvalid;
+        private readonly TrackedDevicePose_t[] _rawPoses = new TrackedDevicePose_t[OpenVR.k_unMaxTrackedDeviceCount];
+
+        public event Action? OnVRQuit;
+
+        private volatile bool _vrQuit;
+        private bool _loggedRightPress;
+        private bool _loggedLeftPress;
+        private ulong _overlayHandle;
+        private ulong _thumbHandle;
+        private bool _previewActive;
+
+        private HmdMatrix34_t _baseStandingPose;
+        private HmdMatrix34_t _baseSeatedPose;
+        private bool _hasBaseStandingPose;
+        private bool _hasBaseSeatedPose;
+
+        private static readonly ulong GRIP_MASK = 1UL << (int)EVRButtonId.k_EButton_Grip;
+        private static readonly ulong STICK_CLICK_MASK = 1UL << (int)EVRButtonId.k_EButton_Axis0;
+        private static readonly ulong A_BUTTON_MASK = 1UL << (int)EVRButtonId.k_EButton_A;
+        private bool _ownedInit = false;
+
+        public SteamVRService(Action<string> log)
+        {
+            _log = log;
+        }
+
+        public void SetUpdateCallback(Action<object> cb) => _onUpdate = cb;
+
+        public bool Connect()
+        {
+            if (IsConnected) return true;
+            LastError = null;
+            _vrQuit = false;
+
+            try
+            {
+                if (OpenVR.System != null)
+                {
+                    // OpenVR already initialized by another service (e.g., VROverlayService); reuse it
+                    _vrSystem = OpenVR.System;
+                    _log("[SteamVR] Reusing existing OpenVR session");
+                }
+                else
+                {
+                    var err = EVRInitError.None;
+                    _vrSystem = OpenVR.Init(ref err, EVRApplicationType.VRApplication_Overlay);
+                    if (err != EVRInitError.None)
+                    {
+                        _log($"[SteamVR] Overlay init: {err}, fallback Background...");
+                        try { OpenVR.Shutdown(); } catch { }
+                        err = EVRInitError.None;
+                        _vrSystem = OpenVR.Init(ref err, EVRApplicationType.VRApplication_Background);
+                        if (err != EVRInitError.None)
+                        {
+                            LastError = $"OpenVR: {err}";
+                            _log($"[SteamVR] {LastError}");
+                            return false;
+                        }
+                        _log("[SteamVR] Init: Background");
+                    }
+                    else
+                    {
+                        _log("[SteamVR] Init: Overlay");
+                    }
+                }
+                OpenVRSession.Acquire();
+                _ownedInit = true;
+
+                if (OpenVR.Overlay != null)
+                {
+                    var oErr = OpenVR.Overlay.CreateDashboardOverlay("vrcnext.spaceflight", "VRCNext Space Flight", ref _overlayHandle, ref _thumbHandle);
+                    if (oErr == EVROverlayError.KeyInUse)
+                        OpenVR.Overlay.FindOverlay("vrcnext.spaceflight", ref _overlayHandle);
+                    _log($"[SteamVR] Overlay: {oErr}");
+                }
+
+                RegisterManifest();
+                IsConnected = true;
+                UpdateControllerIndices();
+                CacheBasePoses();
+
+                if (_hasBaseStandingPose)
+                {
+                    _log($"[SteamVR] StandingPose base=({_baseStandingPose.m3:F4}, {_baseStandingPose.m7:F4}, {_baseStandingPose.m11:F4})");
+                    OpenVR.ChaperoneSetup?.ShowWorkingSetPreview();
+                    OpenVR.ChaperoneSetup?.HideWorkingSetPreview();
+                    _log("[SteamVR] ShowWorkingSetPreview: OK");
+                }
+
+                _log($"[SteamVR] Connected L={_leftIdx != OpenVR.k_unTrackedDeviceIndexInvalid} R={_rightIdx != OpenVR.k_unTrackedDeviceIndexInvalid}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                LastError = ex.Message;
+                _log($"[SteamVR] Error: {ex.Message}");
+                return false;
+            }
+        }
+
+        private void RegisterManifest()
+        {
+            try
+            {
+                var dir = AppDomain.CurrentDomain.BaseDirectory;
+                var exe = Path.GetFileName(Environment.ProcessPath ?? "VRCNext.exe");
+                var path = Path.Combine(dir, "vrcnext.vrmanifest");
+                var json = JsonSerializer.Serialize(new
+                {
+                    source = "builtin",
+                    applications = new[]
+                    {
+                        new
+                        {
+                            app_key = "vrcnext.spaceflight.overlay",
+                            launch_type = "binary",
+                            binary_path_windows = exe,
+                            is_dashboard_overlay = true,
+                            strings = new { en_us = new { name = "VRCNext Space Flight" } }
+                        }
+                    }
+                }, new JsonSerializerOptions { WriteIndented = true });
+                File.WriteAllText(path, json);
+                if (OpenVR.Applications != null)
+                    _log($"[SteamVR] Manifest: {OpenVR.Applications.AddApplicationManifest(path, true)}");
+            }
+            catch (Exception ex)
+            {
+                _log($"[SteamVR] Manifest: {ex.Message}");
+            }
+        }
+
+        private void CacheBasePoses()
+        {
+            if (OpenVR.ChaperoneSetup == null) return;
+
+            try
+            {
+                OpenVR.ChaperoneSetup.RevertWorkingCopy();
+
+                var standing = new HmdMatrix34_t();
+                _hasBaseStandingPose = OpenVR.ChaperoneSetup.GetWorkingStandingZeroPoseToRawTrackingPose(ref standing);
+                if (_hasBaseStandingPose) _baseStandingPose = standing;
+
+                var seated = new HmdMatrix34_t();
+                _hasBaseSeatedPose = OpenVR.ChaperoneSetup.GetWorkingSeatedZeroPoseToRawTrackingPose(ref seated);
+                if (_hasBaseSeatedPose) _baseSeatedPose = seated;
+            }
+            catch (Exception ex)
+            {
+                _hasBaseStandingPose = false;
+                _hasBaseSeatedPose = false;
+                _log($"[SteamVR] BasePose cache failed: {ex.Message}");
+            }
+        }
+
+        public void Disconnect()
+        {
+            StopPolling();
+            if (!IsConnected) return;
+
+            if (_previewActive && OpenVR.ChaperoneSetup != null)
+            {
+                try
+                {
+                    OpenVR.ChaperoneSetup.HideWorkingSetPreview();
+                    OpenVR.ChaperoneSetup.RevertWorkingCopy();
+                }
+                catch { }
+            }
+
+            if (_overlayHandle != 0 && OpenVR.Overlay != null)
+            {
+                try { OpenVR.Overlay.DestroyOverlay(_overlayHandle); } catch { }
+                _overlayHandle = 0;
+            }
+
+            if (_ownedInit)
+            {
+                OpenVRSession.Release();
+                _ownedInit = false;
+            }
+
+            IsConnected = false;
+            IsDragging = false;
+            _vrSystem = null;
+            _hasBaseStandingPose = false;
+            _hasBaseSeatedPose = false;
+            _log("[SteamVR] Disconnected");
+        }
+
+        public void StartPolling()
+        {
+            if (_running) return;
+            _cts = new CancellationTokenSource();
+            _running = true;
+            StartVrserverMonitor(_cts.Token);
+            _ = PollLoopAsync(_cts.Token);
+        }
+
+        public void StopPolling()
+        {
+            _running = false;
+            _cts?.Cancel();
+        }
+
+        private async Task PollLoopAsync(CancellationToken ct)
+        {
+            _log("[SteamVR] Polling started");
+            try
+            {
+                while (!ct.IsCancellationRequested)
+                {
+                    try
+                    {
+                        ProcessFrame();
+                        EmitState();
+                        await Task.Delay(11, ct);
+                    }
+                    catch (OperationCanceledException) { break; }
+                    catch (Exception ex)
+                    {
+                        _log($"[SteamVR] {ex.Message}");
+                        CrashHandler.AddBreadcrumb($"SteamVR.PollLoop: {ex.GetType().Name}: {ex.Message}");
+                        CrashHandler.WriteEntry("SteamVRService.PollLoop", ex);
+                        try { await Task.Delay(500, ct); }
+                        catch (OperationCanceledException) { break; }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CrashHandler.WriteEntry("SteamVRService.PollLoop.Outer", ex);
+            }
+            _running = false;
+        }
+
+        private void ProcessFrame()
+        {
+            if (_vrQuit || _vrSystem == null) return;
+
+            var evt = new VREvent_t();
+            while (_vrSystem.PollNextEvent(ref evt, (uint)Marshal.SizeOf<VREvent_t>()))
+            {
+                if ((EVREventType)evt.eventType == EVREventType.VREvent_Quit)
+                {
+                    _vrQuit = true;
+                    _vrSystem = null; // null immediately — no further P/Invoke calls reach dead memory
+                    try { OpenVR.System?.AcknowledgeQuit_Exiting(); } catch { }
+                    _cts?.Cancel();
+                    // Fire OnVRQuit on a thread pool thread — handlers (e.g. Disconnect) make OpenVR
+                    // calls that would AV if called synchronously from inside ProcessFrame while
+                    // SteamVR is mid-teardown.
+                    _ = Task.Run(() => OnVRQuit?.Invoke());
+                    return;
+                }
+            }
+
+            _vrSystem.GetDeviceToAbsoluteTrackingPose(ETrackingUniverseOrigin.TrackingUniverseRawAndUncalibrated, 0, _rawPoses);
+            UpdateControllerIndices();
+
+            // Read controller states once per hand
+            ulong leftBtns  = ReadButtons(_leftIdx);
+            ulong rightBtns = ReadButtons(_rightIdx);
+
+            // RESET — edge-triggered, fires once per press (any configured hand)
+            bool leftResetHeld  = IsBitSet(leftBtns,  LeftResetButton);
+            bool rightResetHeld = IsBitSet(rightBtns, RightResetButton);
+            if (leftResetHeld  && !_leftResetHeldPrev)  ResetOffset();
+            if (rightResetHeld && !_rightResetHeldPrev) ResetOffset();
+            _leftResetHeldPrev  = leftResetHeld;
+            _rightResetHeldPrev = rightResetHeld;
+
+            // DRAG — per hand, held while button is pressed
+            bool lp = false, rp = false;
+            Vector3 lRaw = default, rRaw = default;
+
+            if (LeftDragButton != 0 && _leftIdx != OpenVR.k_unTrackedDeviceIndexInvalid)
+            {
+                lp = IsBitSet(leftBtns, LeftDragButton);
+                if (lp) lRaw = GetRawPos(_leftIdx);
+                if (lp && !_loggedLeftPress)
+                {
+                    _loggedLeftPress = true;
+                    _log($"[SteamVR] L-DRAG raw=({lRaw.X:F3},{lRaw.Y:F3},{lRaw.Z:F3})");
+                }
+                if (!lp) _loggedLeftPress = false;
+            }
+            if (RightDragButton != 0 && _rightIdx != OpenVR.k_unTrackedDeviceIndexInvalid)
+            {
+                rp = IsBitSet(rightBtns, RightDragButton);
+                if (rp) rRaw = GetRawPos(_rightIdx);
+                if (rp && !_loggedRightPress)
+                {
+                    _loggedRightPress = true;
+                    _log($"[SteamVR] R-DRAG raw=({rRaw.X:F3},{rRaw.Y:F3},{rRaw.Z:F3})");
+                }
+                if (!rp) _loggedRightPress = false;
+            }
+
+            if (LeftDragButton != 0)
+                HandleHandDrag(ref _leftDragging, lp, lRaw, ref _leftRawAnchor, ref _leftOffsetAtGrab);
+            else
+                _leftDragging = false;
+
+            if (RightDragButton != 0)
+                HandleHandDrag(ref _rightDragging, rp, rRaw, ref _rightRawAnchor, ref _rightOffsetAtGrab);
+            else
+                _rightDragging = false;
+
+            bool gravWasDragging = _leftGravDragging || _rightGravDragging;
+
+            bool lgp = false, rgp = false;
+            Vector3 lgRaw = default, rgRaw = default;
+            if (LeftGravityButton != 0 && _leftIdx != OpenVR.k_unTrackedDeviceIndexInvalid)
+            {
+                lgp = IsBitSet(leftBtns, LeftGravityButton);
+                if (lgp) lgRaw = GetRawPos(_leftIdx);
+            }
+            if (RightGravityButton != 0 && _rightIdx != OpenVR.k_unTrackedDeviceIndexInvalid)
+            {
+                rgp = IsBitSet(rightBtns, RightGravityButton);
+                if (rgp) rgRaw = GetRawPos(_rightIdx);
+            }
+
+            if (LeftGravityButton != 0)
+                HandleHandDrag(ref _leftGravDragging, lgp, lgRaw, ref _leftGravRawAnchor, ref _leftGravOffsetAtGrab);
+            else
+                _leftGravDragging = false;
+
+            if (RightGravityButton != 0)
+                HandleHandDrag(ref _rightGravDragging, rgp, rgRaw, ref _rightGravRawAnchor, ref _rightGravOffsetAtGrab);
+            else
+                _rightGravDragging = false;
+
+            bool gravNowDragging = _leftGravDragging || _rightGravDragging;
+            bool anyHold = _leftDragging || _rightDragging || gravNowDragging;
+
+            if (anyHold)
+            {
+                _ballistic = false;
+            }
+            else if (gravWasDragging && !gravNowDragging)
+            {
+                _ballistic = true;
+                _ballVel = _offsetVel;
+            }
+
+            var curOff = new Vector3(OffsetX, OffsetY, OffsetZ);
+            var instVel = (curOff - _prevOffset) / DT;
+            _offsetVel = Vector3.Lerp(_offsetVel, instVel, 0.6f);
+            _prevOffset = curOff;
+
+            if (_ballistic && !anyHold)
+                StepBallistic();
+
+            IsDragging = _rightDragging || _leftDragging || gravNowDragging || _ballistic;
+        }
+
+        private void StepBallistic()
+        {
+            _ballVel.Y += Gravity * DT;
+            _ballVel *= (1f - GRAV_AIR_DRAG * DT);
+
+            var target = new Vector3(OffsetX, OffsetY, OffsetZ) + _ballVel * DT;
+
+            bool landed = false;
+            if (target.Y > 0f) { target.Y = 0f; landed = true; }
+
+            ApplyOffset(target);
+
+            if (landed
+                || _ballVel.Length() < 0.03f
+                || MathF.Abs(target.X) > 300f || MathF.Abs(target.Z) > 300f || target.Y < -300f)
+            {
+                _ballistic = false;
+                _ballVel = Vector3.Zero;
+            }
+        }
+
+        private ulong ReadButtons(uint deviceIdx)
+        {
+            if (_vrSystem == null || deviceIdx == OpenVR.k_unTrackedDeviceIndexInvalid) return 0;
+            var s = new VRControllerState_t();
+            return _vrSystem.GetControllerState(deviceIdx, ref s, (uint)Marshal.SizeOf<VRControllerState_t>())
+                ? s.ulButtonPressed
+                : 0;
+        }
+
+        private static bool IsBitSet(ulong buttons, uint buttonId)
+            => buttonId != 0 && (buttons & (1UL << (int)buttonId)) != 0;
+
+        private void HandleHandDrag(ref bool wasDragging, bool pressed, Vector3 rawPos, ref Vector3 rawAnchor, ref Vector3 offsetAtGrab)
+        {
+            if (pressed && !wasDragging)
+            {
+                wasDragging = true;
+                rawAnchor = rawPos;
+                offsetAtGrab = new Vector3(OffsetX, OffsetY, OffsetZ);
+                return;
+            }
+
+            if (pressed && wasDragging)
+            {
+                var rawDelta = rawPos - rawAnchor;
+                if (MathF.Abs(rawDelta.X) > 10f || MathF.Abs(rawDelta.Y) > 10f || MathF.Abs(rawDelta.Z) > 10f)
+                {
+                    rawAnchor = rawPos;
+                    offsetAtGrab = new Vector3(OffsetX, OffsetY, OffsetZ);
+                    return;
+                }
+
+                var target = offsetAtGrab;
+                var mult = DragMultiplier;
+
+                if (!LockX) target.X += rawDelta.X * mult;
+                if (!LockY) target.Y += rawDelta.Y * mult;
+                if (!LockZ) target.Z += rawDelta.Z * mult;
+
+                ApplyOffset(target);
+                return;
+            }
+
+            if (!pressed && wasDragging)
+            {
+                wasDragging = false;
+            }
+        }
+
+        private void ApplyOffset(Vector3 off, bool verbose = false)
+        {
+            if (OpenVR.ChaperoneSetup == null) return;
+            if (!_hasBaseStandingPose) CacheBasePoses();
+            if (!_hasBaseStandingPose) return;
+
+            off.X = Math.Clamp(off.X, -500f, 500f);
+            off.Y = Math.Clamp(off.Y, -500f, 500f);
+            off.Z = Math.Clamp(off.Z, -500f, 500f);
+
+            OffsetX = off.X;
+            OffsetY = off.Y;
+            OffsetZ = off.Z;
+
+            OpenVR.ChaperoneSetup.RevertWorkingCopy();
+
+            var standing = _baseStandingPose;
+            standing.m3 += off.X;
+            standing.m7 += off.Y;
+            standing.m11 += off.Z;
+            OpenVR.ChaperoneSetup.SetWorkingStandingZeroPoseToRawTrackingPose(ref standing);
+
+            if (_hasBaseSeatedPose)
+            {
+                var seated = _baseSeatedPose;
+                seated.m3 += off.X;
+                seated.m7 += off.Y;
+                seated.m11 += off.Z;
+                OpenVR.ChaperoneSetup.SetWorkingSeatedZeroPoseToRawTrackingPose(ref seated);
+            }
+
+            OpenVR.ChaperoneSetup.ShowWorkingSetPreview();
+            _previewActive = true;
+            OpenVR.ChaperoneSetup.CommitWorkingCopy(EChaperoneConfigFile.Live);
+
+            if (verbose)
+                _log($"[SteamVR] Offset ({off.X:F3},{off.Y:F3},{off.Z:F3})");
+        }
+
+        public void ResetOffset()
+        {
+            OffsetX = 0;
+            OffsetY = 0;
+            OffsetZ = 0;
+            _leftDragging = false;
+            _rightDragging = false;
+            _leftRawAnchor = Vector3.Zero;
+            _rightRawAnchor = Vector3.Zero;
+            _leftOffsetAtGrab = Vector3.Zero;
+            _rightOffsetAtGrab = Vector3.Zero;
+            _leftGravDragging = false;
+            _rightGravDragging = false;
+            _ballistic = false;
+            _ballVel = Vector3.Zero;
+            _offsetVel = Vector3.Zero;
+            _prevOffset = Vector3.Zero;
+
+            if (OpenVR.ChaperoneSetup != null)
+            {
+                OpenVR.ChaperoneSetup.RevertWorkingCopy();
+
+                if (_hasBaseStandingPose)
+                {
+                    var standing = _baseStandingPose;
+                    OpenVR.ChaperoneSetup.SetWorkingStandingZeroPoseToRawTrackingPose(ref standing);
+                }
+
+                if (_hasBaseSeatedPose)
+                {
+                    var seated = _baseSeatedPose;
+                    OpenVR.ChaperoneSetup.SetWorkingSeatedZeroPoseToRawTrackingPose(ref seated);
+                }
+
+                OpenVR.ChaperoneSetup.ShowWorkingSetPreview();
+                OpenVR.ChaperoneSetup.CommitWorkingCopy(EChaperoneConfigFile.Live);
+                OpenVR.ChaperoneSetup.HideWorkingSetPreview();
+                _previewActive = false;
+            }
+
+            try { OpenVR.Chaperone?.ForceBoundsVisible(false); } catch { }
+
+            _log("[SteamVR] Reset");
+        }
+
+        public void SetOffset(float x, float y, float z)
+        {
+            ApplyOffset(new Vector3(x, y, z), true);
+        }
+
+        private Vector3 GetRawPos(uint i)
+        {
+            if (i < _rawPoses.Length && _rawPoses[i].bPoseIsValid)
+            {
+                return new Vector3(
+                    _rawPoses[i].mDeviceToAbsoluteTracking.m3,
+                    _rawPoses[i].mDeviceToAbsoluteTracking.m7,
+                    _rawPoses[i].mDeviceToAbsoluteTracking.m11);
+            }
+
+            return Vector3.Zero;
+        }
+
+        private void UpdateControllerIndices()
+        {
+            if (_vrSystem == null) return;
+            _leftIdx = _vrSystem.GetTrackedDeviceIndexForControllerRole(ETrackedControllerRole.LeftHand);
+            _rightIdx = _vrSystem.GetTrackedDeviceIndexForControllerRole(ETrackedControllerRole.RightHand);
+        }
+
+        private void EmitState()
+        {
+            _onUpdate?.Invoke(new
+            {
+                connected = IsConnected,
+                dragging = IsDragging,
+                offsetX = MathF.Round(OffsetX, 3),
+                offsetY = MathF.Round(OffsetY, 3),
+                offsetZ = MathF.Round(OffsetZ, 3),
+                leftController = _leftIdx != OpenVR.k_unTrackedDeviceIndexInvalid,
+                rightController = _rightIdx != OpenVR.k_unTrackedDeviceIndexInvalid,
+                error = (string?)null
+            });
+        }
+
+        public void ApplyConfig(float dragMultiplier, bool lockX, bool lockY, bool lockZ,
+                                uint leftResetBtn, uint rightResetBtn,
+                                uint leftDragBtn,  uint rightDragBtn,
+                                uint leftGravityBtn, uint rightGravityBtn, float gravity)
+        {
+            DragMultiplier    = Math.Clamp(dragMultiplier, 0.1f, 100f);
+            LockX             = lockX;
+            LockY             = lockY;
+            LockZ             = lockZ;
+            LeftResetButton   = leftResetBtn;
+            RightResetButton  = rightResetBtn;
+            LeftDragButton    = leftDragBtn;
+            RightDragButton   = rightDragBtn;
+            LeftGravityButton = leftGravityBtn;
+            RightGravityButton= rightGravityBtn;
+            Gravity           = Math.Clamp(gravity, 1.0f, 20.0f);
+        }
+
+        // Monitors vrserver.exe with WaitForExitAsync — zero overhead in the poll loop.
+        // If vrserver hard-crashes (no VREvent_Quit), sets _vrQuit and cancels the CTS
+        // before the next ProcessFrame tick so no further P/Invoke calls reach dead memory.
+        private void StartVrserverMonitor(CancellationToken ct)
+        {
+            var procs = System.Diagnostics.Process.GetProcessesByName("vrserver");
+            if (procs.Length == 0) return;
+            var proc = procs[0];
+            for (int i = 1; i < procs.Length; i++) procs[i].Dispose();
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await proc.WaitForExitAsync(ct);
+                    if (!ct.IsCancellationRequested && !_vrQuit)
+                    {
+                        _log("[SteamVR] vrserver.exe exited — nulling OpenVR interface");
+                        _vrQuit = true;
+                        _vrSystem = null;
+                        _cts?.Cancel();
+                        _ = Task.Run(() => OnVRQuit?.Invoke());
+                    }
+                }
+                catch { }
+                finally { proc.Dispose(); }
+            }, CancellationToken.None); // use None so monitor survives ct cancellation during cleanup
+        }
+
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+            Disconnect();
+            _cts?.Dispose();
+        }
+    }
+}

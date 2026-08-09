@@ -1,0 +1,176 @@
+/* === OSC Tool Module === */
+
+.vrcn-badge.osc-float { background: rgba(206,145,120,0.15);  color: #CE9178; }
+.vrcn-badge.osc-int   { background: rgba(109,191,130,0.15);  color: #6DBF82; }
+
+.osc-param-list {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.osc-empty {
+    color: var(--tx3);
+    font-size: calc(12px + var(--fs-off, 0px));
+    text-align: center;
+    padding: 32px 16px;
+    line-height: 1.7;
+}
+.osc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 6px 4px;
+    border-bottom: 1px solid var(--brd);
+}
+.osc-row:last-child { border-bottom: none; }
+.osc-row-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+}
+
+.osc-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.osc-toggle { margin: 0; }
+
+.osc-float-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.osc-float-slider {
+    width: 90px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+.osc-float-num {
+    width: 54px;
+    background: var(--bg-input);
+    border: 1px solid var(--brd);
+    border-radius: 4px;
+    color: var(--tx1);
+    font-size: calc(11px + var(--fs-off, 0px));
+    padding: 2px 4px;
+    text-align: right;
+    outline: none;
+}
+
+.osc-int-inp {
+    width: 64px;
+    background: var(--bg-input);
+    border: 1px solid var(--brd);
+    border-radius: 4px;
+    color: var(--tx1);
+    font-size: calc(12px + var(--fs-off, 0px));
+    padding: 3px 6px;
+    text-align: right;
+    outline: none;
+}
+.osc-int-inp:focus, .osc-float-num:focus {
+    border-color: var(--accent);
+}.osc-emote-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+    gap: 8px;
+}
+
+.osc-emote-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    background: var(--bg-input);
+    border: 1px solid var(--brd);
+    border-radius: 8px;
+    padding: 10px 4px;
+    color: var(--tx1);
+    cursor: pointer;
+    transition: background .15s, border-color .15s, opacity .15s, transform .1s;
+}
+
+.osc-emote-btn .msi { font-size: 20px; color: var(--accent); }
+.osc-emote-btn span:last-child { font-size: calc(10px + var(--fs-off, 0px)); color: var(--tx2); }
+
+.osc-emote-btn:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--accent); }
+.osc-emote-btn:active:not(:disabled) { transform: scale(.94); }
+
+.osc-emote-btn:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+.osc-height-unit {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    flex-shrink: 0;
+    min-width: 52px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.osc-height-apply-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.osc-height-apply-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 7px;
+    color: #fff;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity .15s;
+}
+
+.osc-height-apply-btn:hover:not(:disabled) { opacity: .85; }
+.osc-height-apply-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+.osc-emote-hint {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+.osc-badge-count {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    font-weight: 400;
+}
+.osc-output-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(206,145,120,0.1);
+    border: 1px solid rgba(206,145,120,0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx2);
+}
+.osc-banner-text { flex: 1; line-height: 1.4; }
+.osc-enable-btn {
+    flex-shrink: 0;
+    font-size: calc(11px + var(--fs-off, 0px));
+    padding: 4px 10px;
+    gap: 4px;
+}

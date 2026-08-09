@@ -1,0 +1,76 @@
+/* No Animations */
+html.no-animations *, html.no-animations *::before, html.no-animations *::after {
+    transition-duration: 0.001ms !important;
+    transition-delay: 0.001ms !important;
+    animation-duration: 0.001ms !important;
+    animation-delay: 0.001ms !important;
+}
+html.no-animations .modal-box.nav-leaving {
+    animation: none !important;
+}
+
+/* No Blur */
+html.no-blur *,
+html.no-blur *::before,
+html.no-blur *::after {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+html.no-blur .modal-overlay,
+html.no-blur #modalNavBackdrop {
+    background: rgba(0,0,0,.75) !important;
+}
+
+@keyframes pulse {
+    0%,100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: .4;
+    }
+}
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes modalPop {
+    from {
+        opacity: 0;
+        transform: scale(.92) translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes sk-shimmer {
+    0%   { background-position: -600px 0 }
+    100% { background-position:  600px 0 }
+}
+.sk-block {
+    background: linear-gradient(90deg,
+        var(--bg-input) 25%,
+        var(--bg-hover) 50%,
+        var(--bg-input) 75%);
+    background-size: 1200px 100%;
+    animation: sk-shimmer 1.4s linear 2;
+    border-radius: 6px;
+}

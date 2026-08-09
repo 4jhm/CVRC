@@ -1,0 +1,12 @@
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--brd);flex-shrink:0;">
+        <span style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);" data-i18n="settings.design.theme_editor">Theme Editor</span>
+        <button class="vrcn-button" onclick="closeThemeEditor()" style="padding:3px 8px;"><span class="msi" style="font-size:14px;">close</span></button>
+    </div>
+    <div id="teColorRows" style="overflow-y:auto;padding:8px 12px;flex:1;min-height:0;"></div>
+    <div style="padding:10px 12px;border-top:1px solid var(--brd);flex-shrink:0;display:flex;flex-direction:column;gap:6px;">
+        <input type="text" class="vrcn-input" id="teThemeName" placeholder="Theme name..." data-i18n-placeholder="settings.design.theme_editor_name_placeholder">
+        <button class="vrcn-button" onclick="teSaveTheme()" style="width:100%;justify-content:center;">
+            <span class="msi" style="font-size:15px;">save</span>
+            <span data-i18n="settings.design.theme_editor_save">Save Theme</span>
+        </button>
+    </div>

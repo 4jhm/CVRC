@@ -1,0 +1,148 @@
+/* === Group Modal === */
+
+/* Role cards + permissions */
+.gd-role-card {
+    background: var(--bg-input);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    border: 1px solid var(--brd);
+    overflow: hidden;
+}
+.gd-role-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    user-select: none;
+}
+.gd-role-header:hover { background: var(--bg-hover); }
+.gd-role-meta { font-size: calc(11px + var(--fs-off, 0px)); color: var(--tx3); margin-top: 1px; }
+.gd-role-body { padding: 0 14px 14px; }
+.gd-role-section { margin-top: 14px; }
+.gd-role-section-title {
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    color: var(--tx3);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.gd-perm-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--brd) 50%, transparent);
+}
+.gd-perm-row:last-child { border-bottom: none; }
+.gd-perm-label { font-size: calc(12px + var(--fs-off, 0px)); color: var(--tx1); font-weight: 500; }
+.gd-perm-desc { font-size: calc(10px + var(--fs-off, 0px)); color: var(--tx3); margin-top: 2px; line-height: 1.4; }
+
+/* Group detail tabs */
+.gd-tabs {
+    flex-wrap: nowrap;
+}
+
+.gd-tabs .fd-tab {
+    flex: 1 1 0;
+    padding: 7px 4px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    min-width: 0;
+    white-space: nowrap;
+}
+
+/* Expand link */
+.gd-expand {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--accent);
+    cursor: pointer;
+}
+
+.gd-expand:hover {
+    text-decoration: underline;
+}
+
+/* Gallery grid */
+.gd-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.gd-gallery-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: opacity .15s;
+}
+
+.gd-gallery-img:hover {
+    opacity: .8;
+}
+
+/* Group event date/time picker */
+.gev-dt-trigger {
+    cursor: pointer;
+    min-height: 38px;
+    display: flex;
+    align-items: center;
+    color: var(--tx2);
+    font-size: calc(13px + var(--fs-off, 0px));
+    transition: background .12s;
+}
+.gev-dt-trigger:empty::before {
+    content: 'Select date & time...';
+    color: var(--tx3);
+}
+.gev-dt-trigger:hover { background: var(--bg-input-h, color-mix(in srgb, var(--bg-input) 80%, var(--tx0) 5%)); }
+
+.gev-dp-time-input {
+    width: 38px;
+    background: var(--bg-input);
+    border: none;
+    border-radius: 6px;
+    color: var(--tx1);
+    font-size: calc(13px + var(--fs-off, 0px));
+    font-weight: 600;
+    font-family: inherit;
+    padding: 5px 4px;
+    text-align: center;
+    outline: none;
+    -moz-appearance: textfield;
+}
+.gev-dp-time-input::-webkit-outer-spin-button,
+.gev-dp-time-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.gev-dp-ampm-btn {
+    background: var(--bg-btn);
+    border: none;
+    border-radius: 6px;
+    color: var(--tx2);
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 700;
+    font-family: inherit;
+    padding: 5px 8px;
+    cursor: pointer;
+    transition: all .15s;
+    min-width: 34px;
+}
+.gev-dp-ampm-btn:hover { background: var(--bg-btn-h); color: var(--tx1); }
+
+.gev-dp-24h-btn {
+    background: transparent;
+    border: 1px solid var(--brd-lt);
+    border-radius: 6px;
+    color: var(--tx3);
+    font-size: calc(10px + var(--fs-off, 0px));
+    font-weight: 700;
+    font-family: inherit;
+    padding: 4px 7px;
+    cursor: pointer;
+    transition: all .15s;
+    margin-left: auto;
+}
+.gev-dp-24h-btn:hover { color: var(--tx2); }
+.gev-dp-24h-btn.active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent-lt); border-color: transparent; }

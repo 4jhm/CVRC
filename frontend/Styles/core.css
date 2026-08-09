@@ -1,0 +1,61 @@
+.mini-badge[data-tooltip] {
+    cursor: pointer;
+}
+
+.vn-tooltip {
+    position: fixed;
+    display: block;
+    visibility: hidden;
+    opacity: 0;
+    background: var(--bg-card);
+    border: 1px solid color-mix(in srgb, var(--tx2) 25%, transparent);
+    color: var(--tx1);
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 500;
+    letter-spacing: .2px;
+    padding: 4px 9px;
+    border-radius: 7px;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 30000;
+    transition: opacity .15s ease, visibility .15s ease;
+}
+
+.vn-tooltip.vn-tooltip-visible {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Collapsible card */
+.vrcn-card-collapse-trigger {
+    cursor: pointer;
+    user-select: none;
+}
+.vrcn-card-collapse-trigger::after {
+    content: 'expand_more';
+    font-family: 'Material Symbols Rounded';
+    font-weight: normal;
+    font-style: normal;
+    font-size: calc(18px + var(--fs-off, 0px));
+    line-height: 1;
+    margin-left: auto;
+    color: var(--tx3);
+    transition: transform 0.2s ease;
+}
+.vrcn-panel-card.collapsed .vrcn-card-collapse-trigger {
+    margin-bottom: 0;
+}
+.vrcn-panel-card.collapsed .vrcn-card-collapse-trigger::after {
+    transform: rotate(-90deg);
+}
+.vrcn-card-collapse-body {
+    overflow: visible;
+    max-height: 3000px;
+    opacity: 1;
+    transition: max-height 0.3s ease, opacity 0.2s ease;
+}
+.vrcn-panel-card.collapsed .vrcn-card-collapse-body {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+}

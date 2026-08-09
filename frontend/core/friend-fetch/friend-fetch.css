@@ -1,0 +1,6 @@
+@keyframes ff-spin { to { transform: rotate(360deg); } }
+
+#peopleFetchBtn:disabled,
+#netFetchBtn:disabled { opacity: .55; cursor: default; }
+#peopleFetchBtn.active .msi,
+#netFetchBtn.active .msi { animation: ff-spin 1.4s linear infinite; }

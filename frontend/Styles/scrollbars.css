@@ -1,0 +1,21 @@
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--brd); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+::-webkit-scrollbar-corner { background: transparent; }
+.vrcn-scrollbar ::-webkit-scrollbar { width: 5px; }
+.vrcn-scrollbar ::-webkit-scrollbar-track { background: transparent; }
+.vrcn-scrollbar ::-webkit-scrollbar-thumb { background: var(--brd); border-radius: 3px; }
+.vrcn-scrollbar ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+.content { scrollbar-width: none; }
+.content::-webkit-scrollbar { display: none; }
+
+/* Horizontal scrollbars sit near the window edge where the resize hitbox lives,
+   so they need a bigger grab area than the vertical ones. */
+::-webkit-scrollbar:horizontal { height: 12px; }
+::-webkit-scrollbar-thumb:horizontal {
+    border: 3px solid transparent;
+    background-clip: content-box;
+    min-width: 40px;
+}

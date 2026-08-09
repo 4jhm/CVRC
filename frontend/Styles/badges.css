@@ -1,0 +1,55 @@
+:root {
+    --bdg-user-pc: #64AAFF;
+    --bdg-user-quest: #38DC78;
+    --bdg-user-web: #FFA726;
+    --bdg-user-friend: #2DD48C;
+
+    --bdg-rank-visitor: #CCCCCC;
+    --bdg-rank-new: #1778FF;
+    --bdg-rank-user: #2BCF5C;
+    --bdg-rank-known: #FF7B42;
+    --bdg-rank-trusted: #8143E6;
+}
+
+.vrcn-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: calc(9px + var(--fs-off, 0px));
+    font-weight: 600;
+    padding: 3px 7px;
+    border-radius: 5px;
+    background: var(--bg-hover);
+    color: var(--tx2);
+    letter-spacing: .3px;
+    flex-shrink: 0;
+}
+.vrcn-badge.public     { background: rgba(45,212,140,.12);  color: var(--ok); }
+.vrcn-badge.friends    { background: rgba(66,165,245,.12);  color: #42A5F5; }
+.vrcn-badge.private,
+.vrcn-badge.invite     { background: rgba(239,83,80,.12);   color: #EF5350; }
+.vrcn-badge.group      { background: rgba(255,167,38,.12);  color: #FFA726; }
+.vrcn-badge.hidden     { background: rgba(120,140,175,.12); color: var(--tx2); }
+
+.vrcn-badge.platform-pc    { color: var(--bdg-user-pc);    background: color-mix(in srgb, var(--bdg-user-pc) 16%, transparent); }
+.vrcn-badge.platform-quest { color: var(--bdg-user-quest); background: color-mix(in srgb, var(--bdg-user-quest) 16%, transparent); }
+.vrcn-badge.platform-ios   { color: var(--bdg-user-ios, #9CA3B8); background: color-mix(in srgb, var(--bdg-user-ios, #9CA3B8) 16%, transparent); }
+.vrcn-badge.platform-web   { color: var(--bdg-user-web);   background: color-mix(in srgb, var(--bdg-user-web) 18%, transparent); }
+.vrcn-badge.bdg-friend     { color: var(--bdg-user-friend);background: color-mix(in srgb, var(--bdg-user-friend) 14%, transparent); }
+
+.vrcn-badge.rank-visitor   { color: var(--bdg-rank-visitor);background: color-mix(in srgb, var(--bdg-rank-visitor) 14%, transparent); }
+.vrcn-badge.rank-new       { color: var(--bdg-rank-new);    background: color-mix(in srgb, var(--bdg-rank-new) 14%, transparent); }
+.vrcn-badge.rank-user      { color: var(--bdg-rank-user);   background: color-mix(in srgb, var(--bdg-rank-user) 14%, transparent); }
+.vrcn-badge.rank-known     { color: var(--bdg-rank-known);  background: color-mix(in srgb, var(--bdg-rank-known) 14%, transparent); }
+.vrcn-badge.rank-trusted   { color: var(--bdg-rank-trusted);background: color-mix(in srgb, var(--bdg-rank-trusted) 14%, transparent); }
+.vrcn-badge.accent       { background: rgba(56,132,255,.18); color: var(--accent); }
+
+.vrcn-badge.ok   { background: rgba(45,212,140,.12);  color: var(--ok); }
+.vrcn-badge.warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.vrcn-badge.err  { background: rgba(239,83,80,.15);   color: var(--err); }
+.vrcn-badge.cyan { background: color-mix(in srgb, var(--cyan) 18%, transparent); color: var(--cyan); }
+.vrcn-supporter-badge { display: inline-flex; align-items: center; gap: 2px; font-size: calc(7px + var(--fs-off, 0px)); font-weight: 600; padding: 2px 5px; border-radius: 4px; background: #000; color: #FFD700; border: 1px solid #FFD700; box-shadow: 0 0 6px #FFD70066; letter-spacing: .4px; }
+.vrcn-local-badge { display: inline-flex; align-items: center; gap: 2px; font-size: calc(7px + var(--fs-off, 0px)); font-weight: 600; padding: 2px 5px; border-radius: 4px; background: #2a0a1f; color: #ff5fbf; border: 1px solid #ff5fbf; box-shadow: 0 0 7px #ff5fbf88; text-shadow: 0 0 5px #ff5fbf99; letter-spacing: .4px; }
+.vrcn-badge.db-avtrdb  { background: var(--accent); color: #fff; }
+.vrcn-badge.db-avtricu { background: #e879f9; color: #fff; }
+.vrcn-badge.db-vrcndb  { background: #2DD48C; color: #fff; }

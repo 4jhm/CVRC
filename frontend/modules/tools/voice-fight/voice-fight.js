@@ -1,0 +1,350 @@
+// Voice Fight - voice-triggered soundboard using VOSK
+let vfRunning = false;
+let vfItems = [];
+let _vfWordTimers = {};
+let _vfDevicesPayload = null;
+let _vfStopWordTimer = null;
+let _vfClearTimer = null;
+let _vfBlockWords = [];
+
+function vfOnTabOpen() {
+    sendToCS({ action: 'vfGetDevices' });
+    sendToCS({ action: 'vfGetItems' });
+}
+
+function vfButtonHtml() {
+    return vfRunning
+        ? `<span class="msi" style="font-size:16px;">stop</span> ${t('common.stop', 'Stop')}`
+        : `<span class="msi" style="font-size:16px;">play_arrow</span> ${t('common.start', 'Start')}`;
+}
+
+function vfStatusText() {
+    return vfRunning
+        ? t('voicefight.status.listening', 'Listening...')
+        : t('voicefight.status.not_running', 'Not running');
+}
+
+function vfSyncStateUi() {
+    const dot = document.getElementById('vfDot');
+    const txt = document.getElementById('vfStatusText');
+    const btn = document.getElementById('vfConnBtn');
+    if (dot) dot.className = vfRunning ? 'sf-dot online' : 'sf-dot offline';
+    if (txt) txt.textContent = vfStatusText();
+    if (btn) btn.innerHTML = vfButtonHtml();
+    if (typeof updateDashQuickControls === 'function') updateDashQuickControls();
+    const vfBadge = document.getElementById('badgeVoice');
+    if (vfBadge) {
+        vfBadge.classList.toggle('tb-active', vfRunning);
+    }
+}
+
+function rerenderVoiceFightTranslations() {
+    vfSyncStateUi();
+    if (_vfDevicesPayload) populateVfDevices(_vfDevicesPayload);
+    renderVfItems(vfItems);
+    renderVfBlockChips();
+}
+
+document.documentElement.addEventListener('languagechange', rerenderVoiceFightTranslations);
+
+function handleVfState(p) {
+    vfRunning = !!p.running;
+    vfSyncStateUi();
+    if (!vfRunning) updateVfMeter(0);
+}
+
+function vfConnect() {
+    if (vfRunning) {
+        sendToCS({ action: 'vfStop' });
+    } else {
+        const sel = document.getElementById('vfDeviceSelect');
+        const rawIdx = sel ? parseInt(sel.value, 10) : NaN;
+        const deviceIndex = isNaN(rawIdx) ? 0 : rawIdx;
+        const outSel = document.getElementById('vfOutputDeviceSelect');
+        const rawOutIdx = outSel ? parseInt(outSel.value, 10) : NaN;
+        const outputDeviceIndex = isNaN(rawOutIdx) ? -1 : rawOutIdx;
+        sendToCS({ action: 'vfStart', deviceIndex, outputDeviceIndex });
+    }
+}
+
+function populateVfDevices(p) {
+    _vfDevicesPayload = p;
+
+    const sel = document.getElementById('vfDeviceSelect');
+    if (sel) {
+        sel.innerHTML = '';
+        const devices = p.devices || [];
+        if (devices.length === 0) {
+            sel.innerHTML = `<option value="0">${t('voicefight.devices.no_microphone', 'No microphone found')}</option>`;
+            if (sel._vnRefresh) sel._vnRefresh();
+        } else {
+            const targetIndex = Math.min(p.savedIndex ?? 0, devices.length - 1);
+            devices.forEach((name, i) => {
+                const opt = document.createElement('option');
+                opt.value = String(i);
+                opt.textContent = name;
+                sel.appendChild(opt);
+            });
+            sel.selectedIndex = targetIndex;
+            if (sel._vnRefresh) sel._vnRefresh();
+        }
+    }
+
+    const outSel = document.getElementById('vfOutputDeviceSelect');
+    if (outSel) {
+        outSel.innerHTML = '';
+        const outputDevices = p.outputDevices || [];
+        const defOpt = document.createElement('option');
+        defOpt.value = '-1';
+        defOpt.textContent = t('voicefight.devices.windows_default', 'Windows Default');
+        outSel.appendChild(defOpt);
+        outputDevices.forEach((name, i) => {
+            const opt = document.createElement('option');
+            opt.value = String(i);
+            opt.textContent = name;
+            outSel.appendChild(opt);
+        });
+        const savedOut = p.savedOutputIndex ?? -1;
+        outSel.value = String(savedOut);
+        if (outSel.value === '') outSel.selectedIndex = 0;
+        if (outSel._vnRefresh) outSel._vnRefresh();
+    }
+
+    const stopInput = document.getElementById('vfStopWordInput');
+    if (stopInput && p.stopWord != null) stopInput.value = p.stopWord;
+}
+
+function vfSetInputDevice(val) {
+    const idx = parseInt(val, 10) || 0;
+    sendToCS({ action: 'vfSetInputDevice', deviceIndex: idx });
+}
+
+function vfSetOutputDevice(val) {
+    const idx = parseInt(val, 10);
+    sendToCS({ action: 'vfSetOutputDevice', deviceIndex: isNaN(idx) ? -1 : idx });
+}
+
+function updateVfMeter(level) {
+    const bar = document.getElementById('vfMeterBar');
+    if (!bar) return;
+    const pct = Math.round(Math.min(1, Math.max(0, level)) * 100);
+    bar.style.width = pct + '%';
+    bar.style.background = pct > 80 ? 'var(--err)' : pct > 50 ? 'var(--warn)' : 'var(--ok)';
+}
+
+function renderVfItems(items) {
+    vfItems = items || [];
+    const el = document.getElementById('vfItems');
+    if (!el) return;
+    if (vfItems.length === 0) {
+        el.innerHTML = `<div class="empty-msg">${t('voicefight.sounds.empty', 'No sounds added yet.')}</div>`;
+        return;
+    }
+    el.innerHTML = vfItems.map((item, i) => buildVfItemHtml(item, i)).join('');
+}
+
+function buildVfItemHtml(item, i) {
+    const word = esc(item.word || '');
+    const files = item.files || [];
+    const filesHtml = files.map((f, si) => buildVfSoundHtml(f, i, si)).join('');
+    return `<div class="vf-item" data-idx="${i}">
+  <div class="vf-item-header">
+    <input class="vrcn-edit-field" style="flex:1;" placeholder="${esc(t('voicefight.item.trigger_placeholder', 'Trigger word...'))}" value="${word}"
+      oninput="vfWordChanged(${i}, this.value)"
+      onblur="vfSetWord(${i}, this.value)">
+    <button class="vf-btn-icon vf-btn-del" onclick="vfDeleteItem(${i})" title="${esc(t('voicefight.item.remove_title', 'Remove item'))}"><span class="msi">delete</span></button>
+  </div>
+  <div class="vf-sounds" data-item="${i}">${filesHtml || `<div class="vf-no-sounds">${t('voicefight.item.no_sounds', 'No sounds yet')}</div>`}</div>
+  <button class="vf-add-btn" onclick="vfAddSoundToItem(${i})"><span class="msi">add</span> ${t('voicefight.sounds.add', 'Add Sound')}</button>
+</div>`;
+}
+
+function buildVfSoundHtml(file, i, si) {
+    const name = esc(file.fileName || file.filePath?.split(/[\\/]/).pop() || t('voicefight.sound.unknown', 'Unknown'));
+    const dur = formatVfTime(file.durationMs || 0);
+    const vol = Math.round(file.volumePercent ?? 100);
+    return `<div class="vf-sound" data-item-idx="${i}" data-sound-idx="${si}">
+  <div class="vf-sound-top">
+    <div class="vf-item-info">
+      <span class="vf-filename">${name}</span>
+      <span class="vf-length">${tf('voicefight.sound.length', { duration: dur }, 'Length: {duration}')}</span>
+    </div>
+    <div class="vf-item-actions">
+      <button class="vf-btn-icon" onclick="vfPlaySound(${i},${si})" title="${esc(t('voicefight.sound.test_play', 'Test play'))}"><span class="msi">play_arrow</span></button>
+      <button class="vf-btn-icon" onclick="vfStopSound()" title="${esc(t('voicefight.sound.stop_playback', 'Stop playback'))}"><span class="msi">stop</span></button>
+      <button class="vf-btn-icon vf-btn-del" onclick="vfDeleteSound(${i},${si})" title="${esc(t('common.remove', 'Remove'))}"><span class="msi">close</span></button>
+    </div>
+  </div>
+  <div class="vf-vol-row">
+    <span class="vf-vol-label">${t('voicefight.sound.volume_label', 'VOL')}</span>
+    <input type="range" class="vf-vol-slider" min="0" max="100" value="${vol}"
+      oninput="this.nextElementSibling.textContent=this.value+'%';vfSetVolume(${i},${si},this.value)">
+    <span class="vf-vol-val">${vol}%</span>
+  </div>
+</div>`;
+}
+
+function vfOnItemAdded(p) {
+    vfItems.push(p);
+    const el = document.getElementById('vfItems');
+    if (!el) return;
+    if (vfItems.length === 1) el.innerHTML = '';
+    const div = document.createElement('div');
+    div.innerHTML = buildVfItemHtml(p, vfItems.length - 1);
+    el.appendChild(div.firstElementChild);
+}
+
+function vfOnSoundAdded(p) {
+    const item = vfItems[p.itemIndex];
+    if (!item) return;
+    if (!item.files) item.files = [];
+    item.files.push(p);
+    const soundsEl = document.querySelector(`.vf-sounds[data-item="${p.itemIndex}"]`);
+    if (!soundsEl) return;
+    const noSounds = soundsEl.querySelector('.vf-no-sounds');
+    if (noSounds) noSounds.remove();
+    const div = document.createElement('div');
+    div.innerHTML = buildVfSoundHtml(p, p.itemIndex, p.soundIndex);
+    soundsEl.appendChild(div.firstElementChild);
+}
+
+function vfAddSound() {
+    sendToCS({ action: 'vfAddSound' });
+}
+
+function vfAddSoundToItem(i) {
+    sendToCS({ action: 'vfAddSoundToItem', itemIndex: i });
+}
+
+function vfDeleteItem(i) {
+    sendToCS({ action: 'vfDeleteItem', index: i });
+}
+
+function vfDeleteSound(i, si) {
+    sendToCS({ action: 'vfDeleteSound', itemIndex: i, soundIndex: si });
+}
+
+function vfPlaySound(i, si) {
+    sendToCS({ action: 'vfPlaySound', itemIndex: i, soundIndex: si });
+}
+
+function vfWordChanged(i, word) {
+    clearTimeout(_vfWordTimers[i]);
+    _vfWordTimers[i] = setTimeout(() => vfSetWord(i, word), 600);
+}
+
+function vfSetWord(i, word) {
+    clearTimeout(_vfWordTimers[i]);
+    if (vfItems[i]) vfItems[i].word = word;
+    sendToCS({ action: 'vfSetWord', index: i, word });
+}
+
+function vfSetVolume(i, si, vol) {
+    if (vfItems[i]?.files?.[si]) vfItems[i].files[si].volumePercent = parseFloat(vol);
+    sendToCS({ action: 'vfSetVolume', itemIndex: i, soundIndex: si, volume: parseFloat(vol) });
+}
+
+function vfStopWordChanged(word) {
+    clearTimeout(_vfStopWordTimer);
+    _vfStopWordTimer = setTimeout(() => vfSetStopWord(word), 600);
+}
+
+function vfSetStopWord(word) {
+    clearTimeout(_vfStopWordTimer);
+    sendToCS({ action: 'vfSetStopWord', word });
+}
+
+function vfStopSound() {
+    sendToCS({ action: 'vfStopSound' });
+}
+
+function vfOnRecognized(text, isPartial) {
+    const el = document.getElementById('vfRecognizedText');
+    if (!el) return;
+    el.innerHTML = text || '-';
+    el.classList.toggle('vf-recognized-partial', !!isPartial);
+    el.classList.toggle('vf-recognized-final', !isPartial);
+    if (!isPartial) {
+        clearTimeout(_vfClearTimer);
+        _vfClearTimer = setTimeout(() => {
+            const target = document.getElementById('vfRecognizedText');
+            if (target) {
+                target.classList.remove('vf-recognized-final');
+                target.innerHTML = '-';
+            }
+        }, 3000);
+    }
+}
+
+function vfOnKeyword(word) {
+    const items = document.querySelectorAll('.vf-item');
+    items.forEach(el => {
+        const idx = parseInt(el.dataset.idx, 10);
+        const item = vfItems[idx];
+        if (item && (item.word || '').toLowerCase().trim() === word.toLowerCase().trim()) {
+            el.classList.add('vf-item-flash');
+            setTimeout(() => el.classList.remove('vf-item-flash'), 600);
+        }
+    });
+}
+
+function openVfBlockModal() {
+    sendToCS({ action: 'vfGetBlockList' });
+    document.getElementById('modalVfBlock').style.display = 'flex';
+}
+
+function handleVfBlockList(words) {
+    _vfBlockWords = words || [];
+    renderVfBlockChips();
+    setTimeout(() => document.getElementById('vfBlockInlineInput')?.focus(), 50);
+}
+
+function renderVfBlockChips() {
+    const el = document.getElementById('vfBlockChips');
+    if (!el) return;
+    const chips = _vfBlockWords.map(w =>
+        `<span class="vf-block-chip">${esc(w)}<button class="vf-block-chip-remove" onclick='vfBlockRemove(${JSON.stringify(w)})' title="${esc(t('common.remove', 'Remove'))}"><span class="msi" style="font-size:11px;">close</span></button></span>`
+    ).join('');
+    const placeholder = _vfBlockWords.length === 0 ? t('voicefight.block_words.placeholder', 'Type a word and press Enter...') : '';
+    el.innerHTML = chips + `<input id="vfBlockInlineInput" class="vf-block-inline-input" placeholder="${esc(placeholder)}" onkeydown="vfBlockInputKey(event)">`;
+}
+
+function vfBlockInputKey(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        vfBlockAdd();
+    } else if (e.key === 'Backspace' && e.target.value === '' && _vfBlockWords.length > 0) {
+        e.preventDefault();
+        _vfBlockWords.pop();
+        renderVfBlockChips();
+        document.getElementById('vfBlockInlineInput')?.focus();
+        sendToCS({ action: 'vfSetBlockList', words: _vfBlockWords });
+    }
+}
+
+function vfBlockAdd() {
+    const inp = document.getElementById('vfBlockInlineInput');
+    if (!inp) return;
+    const word = inp.value.trim().toLowerCase();
+    inp.value = '';
+    if (!word || _vfBlockWords.includes(word)) return;
+    _vfBlockWords.push(word);
+    renderVfBlockChips();
+    document.getElementById('vfBlockInlineInput')?.focus();
+    sendToCS({ action: 'vfSetBlockList', words: _vfBlockWords });
+}
+
+function vfBlockRemove(word) {
+    _vfBlockWords = _vfBlockWords.filter(w => w !== word);
+    renderVfBlockChips();
+    document.getElementById('vfBlockInlineInput')?.focus();
+    sendToCS({ action: 'vfSetBlockList', words: _vfBlockWords });
+}
+
+function formatVfTime(ms) {
+    if (!ms || ms <= 0) return '00:00';
+    const s = Math.round(ms / 1000);
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+}
