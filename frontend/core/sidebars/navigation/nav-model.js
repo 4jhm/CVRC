@@ -28,6 +28,7 @@ const NAV_ITEMS_DEF = {
     'action-flow':      { icon: 'auto_awesome',    tab: 25, i18n: 'nav.action_flow',        label: 'Action Flow'      },
     'status-schedule':  { icon: 'event_available', tab: 27, i18n: 'nav.status_schedule',    label: 'Status Schedule',  defaultFolder: 'folder-tools' },
     'vrc-accounts':     { icon: 'switch_account',  tab: 28, i18n: 'nav.vrc_accounts',       label: 'VRChat Accounts',  defaultFolder: 'folder-tools' },
+    'avatar-database':  { icon: 'view_in_ar',      tab: 29, i18n: 'nav.avatar_database',    label: 'Avatar Database',  defaultFolder: 'folder-tools' },
 };
 
 const NAV_ICON_OPTIONS = [
@@ -87,7 +88,7 @@ const NAV_DEFAULT_LAYOUT = [
             'chatbox','media-relay','space-flight','frame-shot','osc-tool','youtube-fix',
             'activity-log','mutual-network','time-spent','voice-fight',
             'discord-presence','vr-overlay','permini','kikitan-xd','event-snipe','avatar-scaling','action-flow',
-            'status-schedule','vrc-accounts',
+            'status-schedule','vrc-accounts','avatar-database',
         ],
     },
     { type: 'item', key: 'settings' },

@@ -1,0 +1,86 @@
+/* === Avatar Database Module === */
+
+.avdb-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.avdb-sort-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.avdb-sort-label {
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    margin-right: 4px;
+}
+
+.avdb-sort-btn {
+    padding: 5px 12px;
+    font-size: calc(12px + var(--fs-off, 0px));
+}
+
+.avdb-sort-btn.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+.avdb-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+}
+
+@media (max-width: 1100px) { .avdb-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 900px)  { .avdb-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 680px)  { .avdb-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 460px)  { .avdb-grid { grid-template-columns: 1fr; } }
+
+.avdb-card {
+    background: var(--bg-card, #1e1e22);
+    border: 1px solid var(--brd);
+    border-radius: 10px;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    transition: border-color .15s;
+}
+
+.avdb-card:hover { border-color: var(--accent); }
+
+.avdb-card-icon {
+    font-size: 34px;
+    color: var(--accent);
+}
+
+.avdb-card-name {
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx1);
+    word-break: break-word;
+    line-height: 1.3;
+    min-height: 2.6em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.avdb-card-meta {
+    font-size: calc(10.5px + var(--fs-off, 0px));
+    color: var(--tx3);
+}
+
+.avdb-card-download {
+    width: 100%;
+    justify-content: center;
+    margin-top: 4px;
+}

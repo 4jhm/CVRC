@@ -1,0 +1,21 @@
+                <div class="sf-layout">
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">view_in_ar</span> <span data-i18n="avdb.title">Avatar Database</span></div>
+                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="avdb.desc">Downloadable avatars, browsable and sortable right here.</div>
+                        <div class="avdb-toolbar">
+                            <div class="avdb-sort-group">
+                                <span class="avdb-sort-label" data-i18n="avdb.sort_by">Sort by</span>
+                                <button class="vrcn-button avdb-sort-btn active" id="avdbSortName" onclick="avdbSetSort('name')"><span data-i18n="avdb.sort.name">Name</span></button>
+                                <button class="vrcn-button avdb-sort-btn" id="avdbSortSize" onclick="avdbSetSort('size')"><span data-i18n="avdb.sort.size">Size</span></button>
+                                <button class="vrcn-button avdb-sort-btn" id="avdbSortDate" onclick="avdbSetSort('date')"><span data-i18n="avdb.sort.date">Date Uploaded</span></button>
+                                <button class="vrcn-button-round" id="avdbSortDirBtn" onclick="avdbToggleDirection()" title="Toggle sort direction" data-i18n-title="avdb.sort.toggle_direction"><span class="msi" id="avdbSortDirIcon">arrow_upward</span></button>
+                            </div>
+                            <button class="vrcn-button" id="avdbRefreshBtn" onclick="avdbLoad(true)"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="common.refresh">Refresh</span></button>
+                        </div>
+                    </div>
+                    <div class="vrcn-panel-card" id="avdbGridCard">
+                        <div class="avdb-grid" id="avdbGrid">
+                            <div class="osc-empty" id="avdbEmptyMsg" data-i18n="avdb.loading">Loading avatars...</div>
+                        </div>
+                    </div>
+                </div>

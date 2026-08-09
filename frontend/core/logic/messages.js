@@ -1046,6 +1046,9 @@ case 'vrcNews':
             case 'vrcAccountsLaunchResult':
                 if (typeof handleVrcAccountsLaunchResult === 'function') handleVrcAccountsLaunchResult(payload);
                 break;
+            case 'avatarDbResult':
+                if (typeof handleAvatarDbResult === 'function') handleAvatarDbResult(payload);
+                break;
             case 'chatboxUpdate':
                 handleChatboxUpdate(payload);
                 break;

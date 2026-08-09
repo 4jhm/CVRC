@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="modules/tools/osc-tool/osc-tool.css">
     <link rel="stylesheet" href="modules/tools/avatar-scaling/avatar-scaling.css">
     <link rel="stylesheet" href="modules/tools/vrc-accounts/vrc-accounts.css">
+    <link rel="stylesheet" href="modules/tools/avatar-database/avatar-database.css">
     <link rel="stylesheet" href="modules/tools/activity-log/activity-log.css">
     <link rel="stylesheet" href="modules/tools/mutual-network/mutual-network.css">
     <link rel="stylesheet" href="modules/tools/time-spent/time-spent.css">
@@ -128,7 +129,7 @@
     <div class="sidebar" id="sidebarEl">
         <div class="sidebar-resizer" id="sidebarResizer" data-side="left"></div>
         <div class="sidebar-sep"></div>
-        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.4</div></div></div>
+        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.5</div></div></div>
         <div class="nav vrcn-scrollbar" id="navEl"></div>
         <div class="clock-area"><div class="clock-time" id="clock">00:00:00</div><div class="clock-date" id="clockDate"></div></div>
         <div class="play-area"><button class="btn-play" onclick="playVRChat()" data-i18n-title="sidebar.play_vrchat" title="Play VRChat"><span class="play-icon-wrap"><span class="msi play-icon">play_arrow</span></span><span class="play-copy pl"><strong class="play-title" data-i18n="sidebar.play_vrchat">Play VRChat</strong><span class="play-sub" id="playSubText"></span></span><span class="msi play-arrow pl">chevron_right</span></button></div>
@@ -243,6 +244,7 @@
                             <div class="tb-dd-item" data-windows-only onclick="showTab(22)"><span class="msi">translate</span><span data-i18n="nav.kikitan_xd">Kikitan XD</span></div>
                             <div class="tb-dd-item" data-windows-only onclick="showTab(24)"><span class="msi">height</span><span data-i18n="nav.avatar_scaling">Avatar Scaling</span></div>
                             <div class="tb-dd-item" onclick="showTab(28)"><span class="msi">switch_account</span><span data-i18n="nav.vrc_accounts">VRChat Accounts</span></div>
+                            <div class="tb-dd-item" onclick="showTab(29)"><span class="msi">view_in_ar</span><span data-i18n="nav.avatar_database">Avatar Database</span></div>
                         </div>
                     </div>
                     <div class="tb-menu-item" id="tbMenuPins"><span data-i18n="tb.pins">Pins</span>
@@ -445,6 +447,9 @@
 
             <!-- Tab 28: VRChat Accounts -->
             <div class="tab" id="tab28"></div>
+
+            <!-- Tab 29: Avatar Database -->
+            <div class="tab" id="tab29"></div>
 
         </div>
     </div>
@@ -740,6 +745,7 @@
             tab26: 'modules/tools/frame-shot/frame-shot.html',
             tab27: 'modules/tools/status-schedule/status-schedule.html',
             tab28: 'modules/tools/vrc-accounts/vrc-accounts.html',
+            tab29: 'modules/tools/avatar-database/avatar-database.html',
         };
 
         const modalFragments = {
@@ -849,6 +855,7 @@
             'modules/tools/action-flow/action-flow.js',
             'modules/tools/status-schedule/status-schedule.js',
             'modules/tools/vrc-accounts/vrc-accounts.js',
+            'modules/tools/avatar-database/avatar-database.js',
             'core/logic/init.js',
             'core/debounce/debounce.js',
             'core/SmartSearch/smart-search.js',

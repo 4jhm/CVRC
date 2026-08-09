@@ -2956,6 +2956,11 @@ public partial class AppShell
                     _relayCtrl.HandleMessage(action, msg);
                     break;
 
+                case "avatarDbLoad":
+                case "avatarDbOpenLink":
+                    _avatarDbCtrl.HandleMessage(action, msg);
+                    break;
+
                 // Current instance
                 case "vrcGetCurrentInstance":
                     await _instance.HandleMessage(action, msg);

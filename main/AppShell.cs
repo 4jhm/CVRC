@@ -60,6 +60,7 @@ public partial class AppShell
     private KikitanXDController _kxdCtrl = null!;
     private AvatarScalingController _asCtrl = null!;
     private RelayController _relayCtrl = null!;
+    private AvatarDatabaseController _avatarDbCtrl = null!;
     private SnipeController _snipeCtrl = null!;
     private ActionFlowController _afCtrl = null!;
     private StatusScheduleController _ssCtrl = null!;
@@ -225,6 +226,7 @@ public partial class AppShell
         _afCtrl.TrayServiceProvider = () => _trayService;
 #endif
         _relayCtrl = new RelayController(_core, _friends, _instance, _notifications, _vroCtrl);
+        _avatarDbCtrl = new AvatarDatabaseController(_core);
         _ssCtrl.Start();
         _windowCtrl = new WindowController(_core);
 #if WINDOWS
