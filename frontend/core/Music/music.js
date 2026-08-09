@@ -14,7 +14,24 @@ function initBackgroundMusic() {
     _bgMusic = new Audio();
     _bgMusic.loop = true;
     _bgMusic.volume = 0.1;
+    _suppressMediaSession();
     _loadMusicSrc('/custommusic?_=' + Date.now(), /* isFallback */ false);
+}
+
+// Without this, Chromium registers the <audio> element with Windows' System Media
+// Transport Controls — which this app's own OSC "Now Playing" chatbox feature reads,
+// so the background music shows up in VRChat as if it were a song someone is playing.
+function _suppressMediaSession() {
+    if (!('mediaSession' in navigator)) return;
+    try {
+        navigator.mediaSession.metadata = null;
+        navigator.mediaSession.playbackState = 'none';
+        const actions = ['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'seekto',
+            'previoustrack', 'nexttrack', 'skipad', 'togglemicrophone', 'togglecamera', 'hangup'];
+        for (const action of actions) {
+            try { navigator.mediaSession.setActionHandler(action, null); } catch {}
+        }
+    } catch {}
 }
 
 // Always routes src changes through here so a leftover error listener from a previous
@@ -48,6 +65,7 @@ function _startMusicPlayback() {
     _bgMusic.play().then(() => {
         _bgMusic.muted = userMuted;
         _updateMusicButton();
+        _suppressMediaSession();
         if (typeof addLog === 'function') addLog(`[Music] playing "${_bgMusic.currentSrc}" (muted=${userMuted})`, 'sec');
     }).catch((err) => {
         _updateMusicButton();
