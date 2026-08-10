@@ -563,6 +563,8 @@ function loadSettingsToUI(s) {
     document.getElementById('cbSuppressSound').checked = s.CbSuppressSound ?? s.cbSuppressSound ?? true;
     document.getElementById('cbHideBackground').checked = s.CbHideBackground ?? s.cbHideBackground ?? false;
     if (typeof syncCbPreviewBg === 'function') syncCbPreviewBg(document.getElementById('cbHideBackground').checked);
+    _cbSavedMediaSource = s.CbMediaSource || s.cbMediaSource || '';
+    if (typeof cbRefreshMediaSources === 'function') cbRefreshMediaSources();
     const cbAfkOn = s.CbShowAfk ?? s.cbShowAfk ?? false;
     document.getElementById('cbAfkCard').style.display = cbAfkOn ? '' : 'none';
     const cbTf = s.CbTimeFormat || s.cbTimeFormat || 'hh:mm tt';

@@ -8,6 +8,7 @@ const UI_LANGUAGES = {
     fr: { label: 'Fran\u00E7ais', flag: '\uD83C\uDDEB\uD83C\uDDF7', locale: 'fr-FR' },
     ja: { label: '\u65E5\u672C\u8A9E', flag: '\uD83C\uDDEF\uD83C\uDDF5', locale: 'ja-JP' },
     'zh-cn': { label: '\u7B80\u4F53\u4E2D\u6587', flag: '\uD83C\uDDE8\uD83C\uDDF3', locale: 'zh-CN' },
+    'zh-tw': { label: '\u7E41\u9AD4\u4E2D\u6587(\u53F0\u7063)', flag: '\uD83C\uDDF9\uD83C\uDDFC', locale: 'zh-TW' },
     ru: { label: '\u0420\u0443\u0441\u0441\u043A\u0438\u0439', flag: '\uD83C\uDDF7\uD83C\uDDFA', locale: 'ru-RU' },
 };
 

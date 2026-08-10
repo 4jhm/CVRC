@@ -1,0 +1,55 @@
+/* === Direct Access Module === */
+
+.da-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.da-input-icon {
+    font-size: 20px;
+    color: var(--tx3);
+    transition: color .15s;
+}
+
+.da-input-icon.da-icon-match { color: var(--accent); }
+
+.da-input {
+    flex: 1;
+    min-width: 0;
+}
+
+.da-result {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px 14px;
+    background: var(--bg-card, #1e1e22);
+    border: 1px solid var(--brd);
+    border-radius: 10px;
+}
+
+.da-result-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    color: var(--tx2);
+    font-size: calc(13px + var(--fs-off, 0px));
+}
+
+.da-result-info .msi { color: var(--accent); flex-shrink: 0; }
+
+.da-result-id {
+    color: var(--tx3);
+    font-size: calc(11px + var(--fs-off, 0px));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.da-result.da-result-none .da-result-info { color: var(--tx3); }
+.da-result.da-result-none .msi { color: var(--tx3); }

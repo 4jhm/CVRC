@@ -18,6 +18,8 @@ public class VRCNPlusService : IDisposable
         _db = Database.OpenVRCNPlusConnection();
         InitSchema();
         _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        _http.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+        _http.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
         _http.DefaultRequestHeaders.UserAgent.ParseAdd("VRCNext/1.0");
     }
 

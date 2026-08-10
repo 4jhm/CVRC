@@ -45,6 +45,9 @@ namespace VRCNext
         public bool HideChatboxBackground { get; set; } = false;
         public string TimeFormat { get; set; } = "hh:mm tt";
         public string Separator { get; set; } = " | ";
+        // Empty = auto-detect (first Playing session, same as before). Non-empty = only ever show
+        // this specific SourceAppUserModelId, even if something else starts playing at the same time.
+        public string MediaSource { get; set; } = "";
         public int IntervalMs { get; set; } = 5000;
         public List<string> CustomLines { get; set; } = new();
         private int _customLineIndex;
@@ -283,10 +286,22 @@ namespace VRCNext
                 _log($"[Chatbox/SMTC] {sessions.Count} session(s) found");
                 foreach (var sess in sessions)
                     _log($"[Chatbox/SMTC]   app={sess.SourceAppUserModelId} status={sess.GetPlaybackInfo()?.PlaybackStatus}");
-                var s = sessions.FirstOrDefault(sess =>
-                            sess.GetPlaybackInfo()?.PlaybackStatus ==
-                            GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
-                        ?? mgr.GetCurrentSession();
+
+                GlobalSystemMediaTransportControlsSession? s;
+                if (!string.IsNullOrEmpty(MediaSource))
+                {
+                    // A specific source is pinned — only ever show that one, even if something
+                    // else is also playing. If it's not currently open, show no media at all
+                    // rather than silently falling back to whatever else happens to be playing.
+                    s = sessions.FirstOrDefault(sess => sess.SourceAppUserModelId == MediaSource);
+                }
+                else
+                {
+                    s = sessions.FirstOrDefault(sess =>
+                                sess.GetPlaybackInfo()?.PlaybackStatus ==
+                                GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
+                            ?? mgr.GetCurrentSession();
+                }
                 if (s == null)
                 {
                     _log("[Chatbox/SMTC] No session selected → no media");
@@ -393,7 +408,7 @@ namespace VRCNext
         public void ApplyConfig(bool enabled, bool showTime, bool showMedia, bool showPlaytime,
             bool showCustomText, bool showSystemStats, bool showAfk, string afkMessage,
             bool suppressSound, string timeFormat, string separator,
-            int intervalMs, List<string> customLines, bool hideBackground = false)
+            int intervalMs, List<string> customLines, bool hideBackground = false, string mediaSource = "")
         {
             var was = Enabled; Enabled = enabled;
             ShowTime = showTime; ShowMedia = showMedia; ShowPlaytime = showPlaytime;
@@ -406,8 +421,35 @@ namespace VRCNext
             IntervalMs = Math.Max(intervalMs, MIN_INTERVAL_MS);
             CustomLines = customLines ?? new();
             HideChatboxBackground = hideBackground;
+            MediaSource = mediaSource ?? "";
             if (enabled && !was) Start(); else if (!enabled && was) Stop();
         }
+
+#if WINDOWS
+        // Snapshot of currently active media sessions, for populating the source picker.
+        public async Task<List<(string Id, string Title, string Artist)>> GetAvailableMediaSourcesAsync()
+        {
+            var result = new List<(string, string, string)>();
+            try
+            {
+                var mgr = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync()
+                    .AsTask().WaitAsync(TimeSpan.FromSeconds(5));
+                foreach (var sess in mgr.GetSessions())
+                {
+                    string title = "", artist = "";
+                    try
+                    {
+                        var p = await sess.TryGetMediaPropertiesAsync().AsTask().WaitAsync(TimeSpan.FromSeconds(3));
+                        if (p != null) { title = p.Title ?? ""; artist = p.Artist ?? ""; }
+                    }
+                    catch { }
+                    result.Add((sess.SourceAppUserModelId, title, artist));
+                }
+            }
+            catch (Exception ex) { _log($"[Chatbox/SMTC] GetAvailableMediaSourcesAsync error: {ex.Message}"); }
+            return result;
+        }
+#endif
 
         public void SendDirect(string text)
         {

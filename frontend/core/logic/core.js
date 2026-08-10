@@ -847,6 +847,7 @@ function getPageTitle(i) {
         t('page.status_schedule', 'Status Schedule'),
         t('page.vrc_accounts', 'VRChat Accounts'),
         t('page.avatar_database', 'Avatar Database'),
+        t('page.direct_access', 'Direct Access'),
     ][i] ?? '';
 }
 

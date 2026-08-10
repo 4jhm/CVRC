@@ -37,6 +37,13 @@
                         <div class="cb-form-row"><label data-i18n="chatbox.format.time">Time</label><select id="cbTimeFormat" class="cb-select" onchange="updateChatboxConfig()"><option value="hh:mm tt" data-i18n="chatbox.format.time.12h">12h (02:45 PM)</option><option value="HH:mm" data-i18n="chatbox.format.time.24h">24h (14:45)</option><option value="hh:mm:ss tt" data-i18n="chatbox.format.time.12h_sec">12h + sec</option><option value="HH:mm:ss" data-i18n="chatbox.format.time.24h_sec">24h + sec</option></select></div>
                         <div class="cb-form-row"><label data-i18n="chatbox.format.separator">Separator</label><select id="cbSeparator" class="cb-select" onchange="updateChatboxConfig()"><option value=" | " data-i18n="chatbox.format.separator.pipe">| pipe</option><option value=" · " data-i18n="chatbox.format.separator.dot">· dot</option><option value=" ♪ " data-i18n="chatbox.format.separator.note">♪ note</option><option value=" — " data-i18n="chatbox.format.separator.dash">— dash</option><option value="&#10;" data-i18n="chatbox.format.separator.new_line">↵ new line</option></select></div>
                         <div class="cb-form-row"><label data-i18n="chatbox.format.update_rate">Update Rate</label><select id="cbInterval" class="cb-select" onchange="updateChatboxConfig()"><option value="3000" data-i18n="chatbox.format.interval.3s">3s (relaxed)</option><option value="5000" data-i18n="chatbox.format.interval.5s">5s (recommended)</option><option value="8000" data-i18n="chatbox.format.interval.8s">8s (slow)</option><option value="10000" data-i18n="chatbox.format.interval.10s">10s (minimal)</option><option value="15000" data-i18n="chatbox.format.interval.15s">15s (very slow)</option></select></div>
+                        <div class="cb-form-row">
+                            <label data-i18n="chatbox.format.media_source">Media Source</label>
+                            <select id="cbMediaSource" class="cb-select" onchange="updateChatboxConfig()">
+                                <option value="" data-i18n="chatbox.format.media_source.auto">Auto-detect</option>
+                            </select>
+                            <button class="vrcn-button-round" onclick="cbRefreshMediaSources()" title="Refresh sources" data-i18n-title="chatbox.format.media_source.refresh"><span class="msi" style="font-size:16px;">refresh</span></button>
+                        </div>
                     </div>
 
                     <!-- Row 3: Launch | Custom Text Lines -->

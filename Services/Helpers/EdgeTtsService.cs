@@ -44,6 +44,8 @@ public static class EdgeTtsService
         try
         {
             using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(20) };
+            http.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+            http.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
             http.DefaultRequestHeaders.Add("User-Agent", UserAgent);
             var url = Query("https://speech.platform.bing.com/consumer/speech/synthesize/readaloud/voices/list");
             var json = await http.GetStringAsync(url);

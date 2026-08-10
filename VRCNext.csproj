@@ -1,12 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <_LinuxBuild Condition="$(RuntimeIdentifier.StartsWith('linux'))">true</_LinuxBuild>
+    <!-- Detect Linux OS directly, or via -r linux-x64 flag if cross-compiling -->
+    <_LinuxBuild Condition="$([MSBuild]::IsOSPlatform('Linux')) or ($(RuntimeIdentifier) != '' and $(RuntimeIdentifier.StartsWith('linux')))">true</_LinuxBuild>
+
     <TargetFramework Condition="'$(_LinuxBuild)'!='true'">net9.0-windows10.0.19041.0</TargetFramework>
     <TargetFramework Condition="'$(_LinuxBuild)'=='true'">net9.0</TargetFramework>
+
     <OutputType Condition="'$(_LinuxBuild)'!='true'">WinExe</OutputType>
     <OutputType Condition="'$(_LinuxBuild)'=='true'">Exe</OutputType>
+
     <RootNamespace>VRCNext</RootNamespace>
     <AssemblyName>CVRC</AssemblyName>
+    <RollForward>latestMajor</RollForward>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon Condition="'$(_LinuxBuild)'!='true'">logo.ico</ApplicationIcon>

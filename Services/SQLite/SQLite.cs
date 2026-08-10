@@ -881,7 +881,7 @@ public class UnifiedTimeEngine : IDisposable
             using var jr = new JsonTextReader(sr) { DateParseHandling = DateParseHandling.None };
             p = JObject.Load(jr);
         }
-        catch { return; }
+        catch (Exception ex) { CrashHandler.WriteEntry("SaveUserProfileCache.Parse", ex); return; }
         var now = DateTime.UtcNow.ToString("o");
         lock (_lock)
         {
@@ -970,7 +970,7 @@ public class UnifiedTimeEngine : IDisposable
                 cmd.Parameters.AddWithValue("$ths",    p["themeSubtextColor"]?.ToString() ?? "");
                 cmd.ExecuteNonQuery();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("SaveUserProfileCache.Write", ex); }
         }
     }
 
@@ -991,7 +991,7 @@ public class UnifiedTimeEngine : IDisposable
                 cmd.Parameters.AddWithValue("$id", userId); cmd.Parameters.AddWithValue("$gj", groupsJson); cmd.Parameters.AddWithValue("$cat", now);
                 cmd.ExecuteNonQuery();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("SaveUserGroupsCache", ex); }
         }
     }
 
@@ -1009,7 +1009,7 @@ public class UnifiedTimeEngine : IDisposable
                 cmd.Parameters.AddWithValue("$ca", json);
                 cmd.ExecuteNonQuery();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("SetAvatarInfoCache", ex); }
         }
     }
 
@@ -1030,7 +1030,7 @@ public class UnifiedTimeEngine : IDisposable
                 cmd.Parameters.AddWithValue("$id", userId); cmd.Parameters.AddWithValue("$cj", contentJson); cmd.Parameters.AddWithValue("$cat", now);
                 cmd.ExecuteNonQuery();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("SaveUserContentCache", ex); }
         }
     }
 
@@ -1051,7 +1051,7 @@ public class UnifiedTimeEngine : IDisposable
                 cmd.Parameters.AddWithValue("$id", userId); cmd.Parameters.AddWithValue("$mj", mutualsJson); cmd.Parameters.AddWithValue("$cat", now);
                 cmd.ExecuteNonQuery();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("SaveUserMutualsCache", ex); }
         }
     }
 
@@ -1072,7 +1072,7 @@ public class UnifiedTimeEngine : IDisposable
                 cmd.Parameters.AddWithValue("$id", userId); cmd.Parameters.AddWithValue("$mgj", mutualGroupsJson); cmd.Parameters.AddWithValue("$cat", now);
                 cmd.ExecuteNonQuery();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("SaveUserMutualGroupsCache", ex); }
         }
     }
 
@@ -1164,7 +1164,7 @@ public class UnifiedTimeEngine : IDisposable
                     upd.ExecuteNonQuery();
                 }
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("CleanMutualCaches", ex); }
         }
     }
 
@@ -1246,7 +1246,7 @@ public class UnifiedTimeEngine : IDisposable
                 cmd.Parameters.AddWithValue("$cat",  now);
                 cmd.ExecuteNonQuery();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("SaveEventDetail", ex); }
         }
     }
 
@@ -1279,7 +1279,7 @@ public class UnifiedTimeEngine : IDisposable
                 cmd.Parameters.AddWithValue("$img", rec.Image);
                 cmd.ExecuteNonQuery();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("UpdateUserInfo", ex); }
         }
     }
 
@@ -1338,7 +1338,7 @@ public class UnifiedTimeEngine : IDisposable
                 }
                 tx.Commit();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("UpdateFriendTracking", ex); }
         }
     }
 
@@ -2328,109 +2328,146 @@ public class UnifiedTimeEngine : IDisposable
     private class UserLegacy { public Dictionary<string, UserRecord>? Users { get; set; } }
     private class WorldLegacy { public Dictionary<string, WorldRecord>? Worlds { get; set; } }
 
-    public static string? ExtractWorldIdFromPng(string filePath)
+    private const int PngHeadBytes = 16384;
+    private const int PngTailBytes = 16384;
+    private const int PngMaxTextChunk = 131072;
+
+    private static void FillBuffer(FileStream fs, byte[] buf, int count)
     {
+        int done = 0;
+        while (done < count)
+        {
+            int n = fs.Read(buf, done, count - done);
+            if (n <= 0) break;
+            done += n;
+        }
+    }
+
+    private static void ScanChunksInBuffer(byte[] buf, int length, List<string> texts)
+    {
+        int p = 0;
+        while (p + 8 <= length)
+        {
+            int chunkLen = (buf[p] << 24) | (buf[p + 1] << 16) | (buf[p + 2] << 8) | buf[p + 3];
+            if (chunkLen < 0) break;
+            var type = System.Text.Encoding.ASCII.GetString(buf, p + 4, 4);
+            if (type == "IEND") break;
+            int dataStart = p + 8;
+            if (type is "tEXt" or "iTXt" or "zTXt" && chunkLen > 0 && chunkLen < PngMaxTextChunk)
+            {
+                if (dataStart + chunkLen > length) break;
+                texts.Add(System.Text.Encoding.UTF8.GetString(buf, dataStart, chunkLen));
+            }
+            long next = (long)dataStart + chunkLen + 4;
+            if (next <= p || next > length) break;
+            p = (int)next;
+        }
+    }
+
+    private static void ScanTailForTextChunks(byte[] buf, int length, List<string> texts)
+    {
+        for (int i = 4; i + 8 <= length; i++)
+        {
+            if (buf[i] != (byte)'t' && buf[i] != (byte)'i' && buf[i] != (byte)'z') continue;
+            var type = System.Text.Encoding.ASCII.GetString(buf, i, 4);
+            if (type is not ("tEXt" or "iTXt" or "zTXt")) continue;
+            int chunkLen = (buf[i - 4] << 24) | (buf[i - 3] << 16) | (buf[i - 2] << 8) | buf[i - 1];
+            if (chunkLen <= 0 || chunkLen >= PngMaxTextChunk) continue;
+            int dataStart = i + 4;
+            if (dataStart + chunkLen + 4 > length) continue;
+            texts.Add(System.Text.Encoding.UTF8.GetString(buf, dataStart, chunkLen));
+            i = dataStart + chunkLen + 3;
+        }
+    }
+
+    // Reads every PNG text chunk in one head read plus, when the file is larger, one tail read.
+    // Metadata written before the image data is always covered by the head; trailing metadata by the tail.
+    private static List<string> ReadPngTextChunks(string filePath)
+    {
+        var texts = new List<string>();
         try
         {
-            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                                          PngHeadBytes, FileOptions.SequentialScan);
             var sig = new byte[8];
-            if (fs.Read(sig, 0, 8) != 8) return null;
-            if (sig[0] != 137 || sig[1] != 80 || sig[2] != 78 || sig[3] != 71) return null;
+            if (fs.Read(sig, 0, 8) != 8) return texts;
+            if (sig[0] != 137 || sig[1] != 80 || sig[2] != 78 || sig[3] != 71) return texts;
 
-            while (fs.Position < fs.Length - 8)
+            long len = fs.Length;
+            int headLen = (int)Math.Min(len - 8, PngHeadBytes);
+            if (headLen <= 0) return texts;
+            var head = new byte[headLen];
+            FillBuffer(fs, head, headLen);
+            ScanChunksInBuffer(head, headLen, texts);
+
+            long covered = 8L + headLen;
+            if (covered < len)
             {
-                var lenBuf = new byte[4];
-                if (fs.Read(lenBuf, 0, 4) != 4) break;
-                int chunkLen = (lenBuf[0] << 24) | (lenBuf[1] << 16) | (lenBuf[2] << 8) | lenBuf[3];
-
-                var typeBuf = new byte[4];
-                if (fs.Read(typeBuf, 0, 4) != 4) break;
-                var chunkType = System.Text.Encoding.ASCII.GetString(typeBuf);
-
-                if (chunkType == "IEND") break;
-
-                if ((chunkType == "tEXt" || chunkType == "iTXt" || chunkType == "zTXt") && chunkLen > 0 && chunkLen < 131072)
+                int tailLen = (int)Math.Min(len - covered, PngTailBytes);
+                if (tailLen > 8)
                 {
-                    var data = new byte[chunkLen];
-                    if (fs.Read(data, 0, chunkLen) != chunkLen) break;
-
-                    var text = System.Text.Encoding.UTF8.GetString(data);
-
-                    if (text.Contains("wrld_"))
-                    {
-                        var idx = text.IndexOf("wrld_");
-                        var end = idx;
-                        while (end < text.Length && (char.IsLetterOrDigit(text[end]) || text[end] == '_' || text[end] == '-'))
-                            end++;
-                        var worldId = text.Substring(idx, end - idx);
-                        if (worldId.Length > 10) return worldId;
-                    }
-
-                    fs.Seek(4, SeekOrigin.Current);
-                    continue;
+                    fs.Seek(len - tailLen, SeekOrigin.Begin);
+                    var tail = new byte[tailLen];
+                    FillBuffer(fs, tail, tailLen);
+                    ScanTailForTextChunks(tail, tailLen, texts);
                 }
-
-                fs.Seek(chunkLen + 4, SeekOrigin.Current);
             }
         }
         catch { }
+        return texts;
+    }
+
+    private static string? WorldIdFromTexts(List<string> texts)
+    {
+        foreach (var text in texts)
+        {
+            var idx = text.IndexOf("wrld_", StringComparison.Ordinal);
+            if (idx < 0) continue;
+            var end = idx;
+            while (end < text.Length && (char.IsLetterOrDigit(text[end]) || text[end] == '_' || text[end] == '-'))
+                end++;
+            var worldId = text.Substring(idx, end - idx);
+            if (worldId.Length > 10) return worldId;
+        }
         return null;
     }
 
-    public static (string? name, string? id) ExtractPhotoAuthorFromPng(string filePath)
+    private static (string? name, string? id) AuthorFromTexts(List<string> texts)
     {
         string? name = null, id = null;
-        try
+        foreach (var text in texts)
         {
-            using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var sig = new byte[8];
-            if (fs.Read(sig, 0, 8) != 8) return (null, null);
-            if (sig[0] != 137 || sig[1] != 80 || sig[2] != 78 || sig[3] != 71) return (null, null);
-
-            while (fs.Position < fs.Length - 8)
+            if (name == null)
             {
-                var lenBuf = new byte[4];
-                if (fs.Read(lenBuf, 0, 4) != 4) break;
-                int chunkLen = (lenBuf[0] << 24) | (lenBuf[1] << 16) | (lenBuf[2] << 8) | lenBuf[3];
-
-                var typeBuf = new byte[4];
-                if (fs.Read(typeBuf, 0, 4) != 4) break;
-                var chunkType = System.Text.Encoding.ASCII.GetString(typeBuf);
-
-                if (chunkType == "IEND") break;
-
-                if ((chunkType == "tEXt" || chunkType == "iTXt" || chunkType == "zTXt") && chunkLen > 0 && chunkLen < 131072)
+                var nm = System.Text.RegularExpressions.Regex.Match(text, @"<[A-Za-z]*:?Author>\s*([^<]+?)\s*</");
+                if (nm.Success)
                 {
-                    var data = new byte[chunkLen];
-                    if (fs.Read(data, 0, chunkLen) != chunkLen) break;
-
-                    var text = System.Text.Encoding.UTF8.GetString(data);
-
-                    if (name == null)
-                    {
-                        var nm = System.Text.RegularExpressions.Regex.Match(text, @"<[A-Za-z]*:?Author>\s*([^<]+?)\s*</");
-                        if (nm.Success)
-                        {
-                            var v = nm.Groups[1].Value.Trim();
-                            if (v.Length > 0) name = v;
-                        }
-                    }
-
-                    if (id == null)
-                    {
-                        var im = System.Text.RegularExpressions.Regex.Match(text, @"AuthorID>\s*(usr_[0-9a-fA-F\-]+)");
-                        if (im.Success) id = im.Groups[1].Value;
-                    }
-
-                    fs.Seek(4, SeekOrigin.Current);
-                    if (name != null && id != null) break;
-                    continue;
+                    var v = nm.Groups[1].Value.Trim();
+                    if (v.Length > 0) name = v;
                 }
-
-                fs.Seek(chunkLen + 4, SeekOrigin.Current);
             }
+            if (id == null)
+            {
+                var im = System.Text.RegularExpressions.Regex.Match(text, @"AuthorID>\s*(usr_[0-9a-fA-F\-]+)");
+                if (im.Success) id = im.Groups[1].Value;
+            }
+            if (name != null && id != null) break;
         }
-        catch { }
         return (name, id);
     }
+
+    // Single-pass variant: world id and author from one file read instead of two.
+    public static (string? worldId, string? authorName, string? authorId) ExtractPhotoMetaFromPng(string filePath)
+    {
+        var texts = ReadPngTextChunks(filePath);
+        if (texts.Count == 0) return (null, null, null);
+        var (an, aid) = AuthorFromTexts(texts);
+        return (WorldIdFromTexts(texts), an, aid);
+    }
+
+    public static string? ExtractWorldIdFromPng(string filePath)
+        => WorldIdFromTexts(ReadPngTextChunks(filePath));
+
+    public static (string? name, string? id) ExtractPhotoAuthorFromPng(string filePath)
+        => AuthorFromTexts(ReadPngTextChunks(filePath));
 }

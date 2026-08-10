@@ -225,6 +225,8 @@ public class SystemTrayService : IDisposable
             else
             {
                 using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                http.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+                http.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
                 bytes = await http.GetByteArrayAsync(url);
             }
 
@@ -365,6 +367,8 @@ public class SystemTrayService : IDisposable
             else
             {
                 using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+                http.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+                http.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
                 bytes = await http.GetByteArrayAsync(url);
             }
             if (bytes == null || bytes.Length == 0) return;

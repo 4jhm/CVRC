@@ -1052,6 +1052,9 @@ case 'vrcNews':
             case 'chatboxUpdate':
                 handleChatboxUpdate(payload);
                 break;
+            case 'chatboxMediaSources':
+                if (typeof handleChatboxMediaSources === 'function') handleChatboxMediaSources(payload);
+                break;
             case 'sfUpdate':
                 handleSfUpdate(payload);
                 break;

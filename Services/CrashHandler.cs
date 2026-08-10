@@ -171,7 +171,7 @@ internal static class CrashHandler
             var sb = new StringBuilder();
 
             sb.AppendLine("═══════════════════════════════════════════════════════════════");
-            sb.AppendLine("                    VRCNext Crash Report");
+            sb.AppendLine("                    CVRC Crash Report");
             sb.AppendLine("═══════════════════════════════════════════════════════════════");
             sb.AppendLine();
 
@@ -281,7 +281,10 @@ internal static class CrashHandler
             // Mark crash as pending so the next startup shows the report modal
             if (isTerminating) WritePendingCrashMarker(path);
         }
-        catch { }
+        catch (Exception writeEx)
+        {
+            try { Console.Error.WriteLine($"CrashHandler.WriteCrashReport failed: {writeEx}"); } catch { }
+        }
     }
 
     // ── Pending-crash helpers (called from AppShell on next startup) ────────

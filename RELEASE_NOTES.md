@@ -1,69 +1,64 @@
-**2026.41.2**
+**2026.41.5**
 
-**HOTFIX**
-* Fixed an bug in avatar tab causing flickering between list and grid view.
-* Fixed an bug in world tab causing flickering between list and grid view.
-* Fixed an bug in group tab causing flickering between list and grid view.
-* Fixed an bug in people tab causing flickering between list and grid view.
-* Fixed an bug where TTS settings are not saved/loaded properly in VR Overlay.
-
-**Live Instance List**
-* This is already a thing when you look at the friends sidebar or click the world modal it shows all player slive. However alot of you did use VRCX before so theres a new tab in People > Instance which shows all players with additional filters live.
-* Added Bio links to the existing modal.
-* Enhanced instance view shows: timer, joined, display name, presence, rank, status, 18+, platform, pronouns, meets, time spent, date joined, last seen, language and more.
-* Allowing sorting for cells in list modal.
-
-**VRChat Config**
-* Added "Save" Prints players.
-* Added **Custom Cache Folder Location** with a folder picker.
-* Added **Custom Picture Folder Location** with a folder picker.
-* Added **Camera Resolution**, **Spout Resolution** and **Screenshot Resolution** presets from 720p up to 4K, and 8K for the camera.
-* Added **Sort pictures into folders by date** toggle.
-* Added **Disable Discord Rich Presence** toggle.
-* Settings that match VRChat's own default are no longer written to the config file, so the file stays clean.
-
-**Wiki**
-* Added "Wiki" button to Taskbar > Help > Wiki
-
-**People Tab**
-* Added grid and list views to **Favorites** and **All Friends**.
-* The list view now shows more information, including Profile, Username, Trust Rank, Status, Language, Bio Links, Meets, Date Joined, Last Login, and more.
-* Added sorting and filtering options when using list view.
-* Added **Time Spent** and **Pronouns** columns to the list view.
-
-**Worlds Tab**
-* Added a list view to **Favorites** and **My Worlds**, showing World, Name, Visits, Time Spent, and Last Visited.
-
-**Groups Tab**
-* Added a list view to **Joined**, **My Groups**, and **Moderated Groups**, showing Group, Name, Short Name, and Member Count.
-
-**Avatars Tab**
-* Added a list view to **My Avatars** and **Favorites**, showing Avatar, Name, Creator, Status, and PC, Android, and iOS performance ranks.
-* Added "Fetch" button that fetches all friends information with a cooldown of 1 hour. This fetches all data from friends and also updates the mutual network structure.
-
-**Improvements**
-* Avatar, World, People, Groups, Inventory, Media Library, and several other tabs now have a fixed navigation card that no longer scrolls with the content, making navigation easier at the cost of a small amount of screen space.
-* When clicking an avatar it wont immedically use that avatar anymore. instead an modal opens that ask you if you really want to use this avatar or if you want to open the avatar informations modal.
-* Recently visited world limit set to 100. for more check timeline.
-* Recently used avatars limit set to 100. for more check timeline.
-* Recently seen users limit set to 100. for more check timeline.
-
-**Removed**
-* Removed Favorite title on World Tab
-* Removed Edit Group name since we have the edit mode now.
+**Friends Sidebar**
+* Favorite friends are in their sub groups now when the sidebar is expanded.
 
 **i18n**
-* Added missing loc. keys for various ui elements.
-* Added missing translation for the new sidebar.
-* Added missing translation for some other ui elements.
+
+* Added **zh-TW** localization and a **zh-TW** language button.
+  By @SoraneYuki
+
+**Linux Improvements**
+
+* Added an NVIDIA driver check and automatically applies `WEBKIT_DISABLE_DMABUF_RENDERER=1` when required.
+  By @SharkieWasHere
+
+**VR Overlay**
+
+* Redesigned notifications. Plain sentences instead of badges, for example "Went Online" or "Joined The Black Cat".
+* Notification list now scrolls and holds up to 32 entries instead of 4.
+* Status dots on portraits in notifications, toasts and the instance list.
+* Location tab groups by world now. Shows instance count, the first names and up to three portraits with a counter.
+* Tapping a world opens its instance list. Each instance shows its ID and its friends with Join and Invite.
+* The world tab icon turns into a back arrow while an instance list is open.
+* Added a crossfade between world grid and instance list.
+* Removed the status badges in the friends tab. The dots already show it.
+* Fixed the world location text being too dark in the friends tab.
+* Fixed the world tab dropping frames. Grouping ran up to five times per frame, it is cached now.
+* All Join, Invite and Accept buttons share one size.
+* notifications follow the head smoothly instead of fixed.
+
+**Kikitan XD**
+
+* Added a **Kikitan** tab to the VR overlay. It appears while Kikitan XD is running.
+* Shows live transcription, and the translation below it when translation is on.
+* Marks whether a line is partial or final. Gemini streams partial, Groq only sends final.
+* Text scales with the mode. Larger when only transcribing, smaller when translating as well.
+
+**Avatar Search**
+* improved avatar lookups and endpoint changes
+
+**Networking**
+
+* Switched networking to **HTTP/2**.
 
 **Fixed Bugs**
-* Fixed an issue that caused VRCX database imports to fail when the database was larger than 200 MB.
-* Fixed an issue that could cause VRCN to crash when using more than 256 MB of memory.
-* Fixed a garbage collection issue that prevented unloaded pages from being properly cleaned up.
-* Fixed an issue that could cause VRCN to crash when using the Avatar Search tab.
-* Fixed an issue where VRCNDb filters did not work correctly when using VRCNDb in Avatar Search.
-* Fixed missing rank data from avtrdb and icu database searches.
-* Fixed other avatar related issues that showed missing data.
-* Fixed missing metadata issues in avatar modals.
-* Fixed rose avatar base not showing rank data when cached in sqlite.
+* Fixed out-of-memory crashes caused by interface messages being duplicated in memory for logging. This unnecessary logging has been disabled.
+* Removed an aggressive garbage collection setting that could cause out-of-memory errors during large database searches and imports. The scheduled 10-minute memory cleanup remains unchanged.
+* Fixed the VRChat process state being checked twice every 5 seconds.
+* Fixed VRCNext refusing to start on systems with a newer .NET version than the version it was built against.
+* Significantly reduced disk usage during Media Library scans by improving how photo metadata is read.
+* In a test with 758 photos, disk reads dropped from **3.36 GB to 350 MB** and disk operations from **828,316 to 51,307**.
+* For a library of around 40,000 photos, estimated scan reads are reduced from roughly **168 GB to 1.3 GB**.
+* World IDs, author names and player lists remain unchanged. The new reader was verified against an existing photo library with no differences.
+* Some internal improvements and fixes.
+* Removed breadcrumbs when declining notifications only show errors.
+
+---
+
+**CVRC fork additions on top of the above**
+* VRChat Accounts tool — launch up to 10 independent, concurrently logged-in VRChat instances via `--profile=N`
+* Avatar Database tool — browse/sort downloadable avatars from the community Gofile database
+* OSC avatar emotes and live avatar height/scale controls
+* Background music with a custom track picker
+* Chatbox "Now Playing" media-source pinning and native typing indicator

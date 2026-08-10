@@ -116,7 +116,7 @@ public partial class AppShell
             node[parts[^1]] = JToken.FromObject(value);
             _cache.Save(CacheHandler.KeyInventory, root);
         }
-        catch { }
+        catch (Exception ex) { CrashHandler.WriteEntry("InvCacheSaveSection", ex); }
     }
 
     // Permini loader
@@ -365,7 +365,7 @@ public partial class AppShell
         {
             if (!_settings.VrcndbSubmitAvatars) return;
             try { VRCNext.Services.Helpers.VrcCacheScanner.Scan(_vrcCacheScanned, id => QueueVrcndbSubmit(id)); }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("VrcCacheScanner.Scan", ex); }
         }, null, 15_000, 120_000);
 
         StartAmplitudePolling();
@@ -433,6 +433,7 @@ public partial class AppShell
 
         var windowBuilder = new PhotinoWindow()
             .SetTitle("CVRC")
+            .SetLogVerbosity(0)
             .SetUseOsDefaultSize(false)
             .SetSize(startW, startH)
             .SetMinSize(900, 540)
@@ -601,7 +602,7 @@ public partial class AppShell
                 _settings.LastDbAutoBackup = DateTime.Now;
                 _settings.Save();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("RunAutoBackupsAsync.Db", ex); }
         }
 
         if (_settings.RegBackupEnabled &&
@@ -613,7 +614,7 @@ public partial class AppShell
                 _settings.LastRegBackup = DateTime.Now;
                 _settings.Save();
             }
-            catch { }
+            catch (Exception ex) { CrashHandler.WriteEntry("RunAutoBackupsAsync.Registry", ex); }
         }
     }
 
@@ -854,7 +855,7 @@ public partial class AppShell
     {
         await foreach (var msg in _jsQueue.Reader.ReadAllAsync())
         {
-            try { _window.Invoke(() => _window.SendWebMessage(msg)); } catch { }
+            try { _window.Invoke(() => _window.SendWebMessage(msg)); } catch (Exception ex) { CrashHandler.WriteEntry("RunJsDispatcherAsync", ex); }
         }
     }
 
@@ -926,7 +927,7 @@ public partial class AppShell
                 try
                 {
                     bool isFav = !string.IsNullOrEmpty(friendId) && _friends.IsFavorited(friendId);
-                    _core.VrOverlay.EnqueueToast(evType, name, evText, time, friendImage, isFav);
+                    _core.VrOverlay.EnqueueToast(evType, name, evText, time, friendImage, isFav, friendId);
                     _vroCtrl.SpeakToast(evType, name, evText);
                 }
                 catch { }

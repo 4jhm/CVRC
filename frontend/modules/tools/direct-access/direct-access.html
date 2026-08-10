@@ -1,0 +1,16 @@
+                <div class="sf-layout">
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">link</span> <span data-i18n="da.title">Direct Access</span></div>
+                        <div class="set-desc" style="margin-top:12px;" data-i18n="da.desc">Paste a VRChat profile, avatar, world, or group link — or just the bare ID (usr_..., avtr_..., wrld_..., grp_...) — and jump straight to it. Works from anywhere in the app too: copy a link and press <b>Ctrl+D</b>, or right-click.</div>
+                        <div class="da-input-row">
+                            <span class="msi da-input-icon" id="daInputIcon">link</span>
+                            <input type="text" class="vrcn-edit-field da-input" id="daInput"
+                                data-i18n-placeholder="da.input_placeholder" placeholder="Paste a VRChat link or ID..."
+                                oninput="daHandleInput(this.value)" onkeydown="if(event.key==='Enter')daOpen()">
+                            <button class="vrcn-button" id="daPasteBtn" onclick="daPasteFromClipboard()">
+                                <span class="msi" style="font-size:16px;">content_paste</span> <span data-i18n="da.paste">Paste</span>
+                            </button>
+                        </div>
+                        <div class="da-result" id="daResult" style="display:none;"></div>
+                    </div>
+                </div>

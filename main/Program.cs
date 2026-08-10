@@ -13,6 +13,26 @@ static class Program
     [STAThread]
     static void Main(string[] args)
     {
+        //Webkit arg.. my fix at least lol
+        if (OperatingSystem.IsLinux() && System.IO.File.Exists("/proc/driver/nvidia/version") && Environment.GetEnvironmentVariable("WEBKIT_DISABLE_DMABUF_RENDERER") != "1")
+        {
+            Environment.SetEnvironmentVariable("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+
+            var info = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = Environment.ProcessPath!,
+                UseShellExecute = false
+            };
+            foreach (var arg in args)
+            {
+                info.ArgumentList.Add(arg);
+            }
+
+            using var process = System.Diagnostics.Process.Start(info);
+            process?.WaitForExit();
+            Environment.Exit(process?.ExitCode ?? 0);
+            return;
+        }
         EnsureConfigRootExists();
 
         if (args.Length >= 4 && args[0] == "--watchdog")

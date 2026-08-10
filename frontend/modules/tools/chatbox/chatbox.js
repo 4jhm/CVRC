@@ -3,6 +3,7 @@ let _cbLastUpdate = {};
 let _cbChatHistory = [];
 let _cbPauseTimer = null;
 let _cbPauseRemaining = 0;
+let _cbSavedMediaSource = '';
 const CB_MAX_HISTORY = 100;
 const CB_PAUSE_SECONDS = 10;
 
@@ -43,6 +44,32 @@ function rerenderChatboxTranslations() {
 
 document.documentElement.addEventListener('languagechange', rerenderChatboxTranslations);
 
+function cbRefreshMediaSources() {
+    sendToCS({ action: 'chatboxGetMediaSources' });
+}
+
+function handleChatboxMediaSources(data) {
+    const sel = document.getElementById('cbMediaSource');
+    if (!sel) return;
+    const current = sel.value || _cbSavedMediaSource;
+    _cbSavedMediaSource = '';
+    const sources = data.sources || [];
+    sel.innerHTML = `<option value="">${esc(t('chatbox.format.media_source.auto', 'Auto-detect'))}</option>` +
+        sources.map(s => {
+            const label = (s.title || s.artist) ? `${esc(s.id)} — ${esc(s.title)} ${esc(s.artist ? '(' + s.artist + ')' : '')}`.trim() : esc(s.id);
+            return `<option value="${esc(s.id)}">${label}</option>`;
+        }).join('');
+    // Keep the saved selection even if that app isn't currently open (it just won't be in the list).
+    if (current && [...sel.options].some(o => o.value === current)) sel.value = current;
+    else if (current) {
+        const opt = document.createElement('option');
+        opt.value = current;
+        opt.textContent = current + ' ' + t('chatbox.format.media_source.not_open', '(not currently open)');
+        sel.appendChild(opt);
+        sel.value = current;
+    }
+}
+
 function toggleChatbox() {
     chatboxEnabled = !chatboxEnabled;
     syncChatboxToggleUi();
@@ -71,6 +98,7 @@ function updateChatboxConfig() {
         intervalMs: parseInt(document.getElementById('cbInterval').value, 10) || 5000,
         customLines: chatboxCustomLines,
         hideBackground: hideBackground,
+        mediaSource: document.getElementById('cbMediaSource').value,
     });
 }
 

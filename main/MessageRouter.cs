@@ -193,7 +193,15 @@ public partial class AppShell
                 _avtrdbSubmitTimer?.Dispose();
                 _avtrdbSubmitTimer = new System.Threading.Timer(_ => _ = Task.Run(FlushAvtrdbSubmitQueue), null, 60_000, Timeout.Infinite);
             }
-            catch { }
+            catch (Exception ex)
+            {
+                lock (_avtrdbSubmitQueue)
+                {
+                    _avtrdbSubmittedIds.Remove(avatarId);
+                    _avtrdbSubmitQueue.Remove(avatarId);
+                }
+                CrashHandler.WriteEntry("QueueAvtrdbSubmit", ex);
+            }
         });
     }
 
@@ -214,6 +222,8 @@ public partial class AppShell
         try
         {
             using var client = new HttpClient();
+            client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+            client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
             client.Timeout = TimeSpan.FromSeconds(15);
             client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", AppInfo.UserAgent);
             var userId = _vrcApi.CurrentUserId;
@@ -302,6 +312,8 @@ public partial class AppShell
         try
         {
             using var client = new HttpClient();
+            client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+            client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
             client.Timeout = TimeSpan.FromSeconds(15);
             client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", AppInfo.UserAgent);
             var payload = avatarIds.Select(id => new { id }).ToArray();
@@ -393,6 +405,8 @@ public partial class AppShell
         try
         {
             using var client = new HttpClient();
+            client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
+            client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
             client.Timeout = TimeSpan.FromSeconds(15);
             client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", AppInfo.UserAgent);
             var userId = _vrcApi.CurrentUserId;
@@ -2426,7 +2440,7 @@ public partial class AppShell
                                 Invoke(() => SendToJS("worldInsights", new { worldId, from, to, stats }));
                             }
                         }
-                        catch { }
+                        catch (Exception ex) { CrashHandler.WriteEntry("refreshWorldInsights", ex); }
                     });
                     break;
 

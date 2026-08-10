@@ -415,6 +415,9 @@ public class AppSettings
     public int CbIntervalMs { get; set; } = 5000;
     public List<string> CbCustomLines { get; set; } = new();
     public bool CbHideBackground { get; set; } = false;
+    // Empty = auto-detect the first playing media session (default). Otherwise the exact
+    // SourceAppUserModelId of the app the user pinned as the only "Now Playing" source.
+    public string CbMediaSource { get; set; } = "";
 
     // Space Flight settings
     public float SfMultiplier { get; set; } = 1f;

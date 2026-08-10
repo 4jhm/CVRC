@@ -807,17 +807,17 @@ public class PhotosController
             var f = e.Fi;
             if (!f.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase)) continue;
 
+            string? worldId = null;
             try
             {
-                var (an, aid) = UnifiedTimeEngine.ExtractPhotoAuthorFromPng(f.FullName);
+                var (wid, an, aid) = UnifiedTimeEngine.ExtractPhotoMetaFromPng(f.FullName);
+                worldId = wid;
                 if (!string.IsNullOrEmpty(an) || !string.IsNullOrEmpty(aid))
                     authorBatch[f.FullName] = new { name = an ?? "", id = aid ?? "" };
             }
             catch { }
 
             var rec = _core.PhotoPlayersStore.GetPhotoRecord(f.Name);
-            string? worldId = null;
-            try { worldId = UnifiedTimeEngine.ExtractWorldIdFromPng(f.FullName); } catch { }
             if (!string.IsNullOrEmpty(worldId) && (rec == null || rec.WorldId != worldId))
             {
                 _core.PhotoPlayersStore.UpdateWorldId(f.Name, worldId);
@@ -856,7 +856,8 @@ public class PhotosController
         try
         {
             var ext = Path.GetExtension(path).ToLowerInvariant();
-            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 512);
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read,
+                                          bufferSize: 8192, FileOptions.SequentialScan);
             if (ext == ".png")
             {
                 Span<byte> buf = stackalloc byte[24];
