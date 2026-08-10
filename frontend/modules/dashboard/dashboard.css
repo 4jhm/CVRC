@@ -798,39 +798,22 @@ body:has(.rsidebar.collapsed) .dash-hero-content { padding-right: calc(var(--rsi
     transform: translateY(-2px);
 }
 
+/* Image sits in its own band above the text, never behind it — VRChat's own news
+   thumbnails (e.g. Developer Update posts) often already have a title baked into
+   the graphic, so overlaying our own title text on top of it doubled up visually. */
 .dash-news-img {
-    position: absolute;
-    inset: 0;
     width: 100%;
-    height: 100%;
+    height: 120px;
     object-fit: cover;
     display: block;
-    z-index: 0;
-    filter: brightness(0.75);
-}
-
-.dash-news-card.has-img::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    background: linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.55) 45%, rgba(0,0,0,.88) 100%);
+    flex-shrink: 0;
 }
 
 .dash-news-body {
-    position: relative;
-    z-index: 2;
     padding: 16px;
-    margin-top: auto;
     display: flex;
     flex-direction: column;
     gap: 8px;
-}
-
-.dash-news-card.has-img .dash-news-title,
-.dash-news-card.has-img .dash-news-excerpt,
-.dash-news-card.has-img .dash-news-meta {
-    color: #fff;
 }
 
 .dash-news-title {

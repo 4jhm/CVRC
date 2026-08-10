@@ -27,6 +27,7 @@ public class ChatboxController : IDisposable
         _core = core;
         _vroCtrl = vroCtrl;
         _core.OnChatboxPauseRequest = ms => _chatbox?.PauseDirectSend(ms);
+        _core.OnPlayerJoinLeft = (name, joined) => _chatbox?.NotifyPlayerJoinLeave(name, joined);
     }
 
     // Message Handler
@@ -71,10 +72,14 @@ public class ChatboxController : IDisposable
                     var customLines = msg["customLines"]?.ToObject<List<string>>() ?? new();
                     var hideBackground = msg["hideBackground"]?.Value<bool>() ?? false;
                     var mediaSource = msg["mediaSource"]?.ToString() ?? "";
+                    var hideNameEnabled = msg["hideNameEnabled"]?.Value<bool>() ?? false;
+                    var hideNameText = msg["hideNameText"]?.ToString() ?? "CVRC";
+                    var showJoinLeaveLog = msg["showJoinLeaveLog"]?.Value<bool>() ?? false;
 
                     _chatbox.ApplyConfig(enabled, showTime, showMedia, showPlaytime,
                         showCustomText, showSystemStats, showAfk, afkMessage,
-                        suppressSound, timeFormat, separator, intervalMs, customLines, hideBackground, mediaSource);
+                        suppressSound, timeFormat, separator, intervalMs, customLines, hideBackground, mediaSource,
+                        hideNameEnabled, hideNameText, showJoinLeaveLog);
                     _vroCtrl.UpdateToolStates();
 
                     // Persist chatbox settings
@@ -92,6 +97,9 @@ public class ChatboxController : IDisposable
                     _core.Settings.CbCustomLines = customLines;
                     _core.Settings.CbHideBackground = hideBackground;
                     _core.Settings.CbMediaSource = mediaSource;
+                    _core.Settings.CbHideNameEnabled = hideNameEnabled;
+                    _core.Settings.CbHideNameText = hideNameText;
+                    _core.Settings.CbShowJoinLeaveLog = showJoinLeaveLog;
                     _core.Settings.Save();
                     if (_core.Settings.LastSaveError != null)
                         _core.SendToJS("toast", new { ok = false, msg = "Failed to save this setting, please report this error" });
@@ -292,7 +300,8 @@ public class ChatboxController : IDisposable
             _chatbox.SetUpdateCallback(data => { try { Invoke(() => _core.SendToJS("chatboxUpdate", data)); } catch (Exception ex) { CrashHandler.WriteEntry("Chatbox.SetUpdateCallback", ex); } });
             _chatbox.ApplyConfig(true, _core.Settings.CbShowTime, _core.Settings.CbShowMedia, _core.Settings.CbShowPlaytime,
                 _core.Settings.CbShowCustomText, _core.Settings.CbShowSystemStats, _core.Settings.CbShowAfk, _core.Settings.CbAfkMessage,
-                _core.Settings.CbSuppressSound, _core.Settings.CbTimeFormat, _core.Settings.CbSeparator, _core.Settings.CbIntervalMs, _core.Settings.CbCustomLines, _core.Settings.CbHideBackground, _core.Settings.CbMediaSource);
+                _core.Settings.CbSuppressSound, _core.Settings.CbTimeFormat, _core.Settings.CbSeparator, _core.Settings.CbIntervalMs, _core.Settings.CbCustomLines, _core.Settings.CbHideBackground, _core.Settings.CbMediaSource,
+                _core.Settings.CbHideNameEnabled, _core.Settings.CbHideNameText, _core.Settings.CbShowJoinLeaveLog);
             _core.SendToJS("chatboxUpdate", new { enabled = true });
         }
     }

@@ -735,6 +735,7 @@ public class AuthController
         _core.LogWatcher.PlayerJoined += (uid, name) =>
         {
             try { _instance.HandlePlayerJoinedOnUiThread(uid, name); } catch (Exception ex) { CrashHandler.WriteEntry("LogWatcher.PlayerJoined", ex); }
+            try { _core.OnPlayerJoinLeft?.Invoke(name, true); } catch (Exception ex) { CrashHandler.WriteEntry("LogWatcher.PlayerJoined.Chatbox", ex); }
         };
         _core.LogWatcher.PlayerLeft += (uid, name) =>
         {
@@ -746,6 +747,7 @@ public class AuthController
                 _instance.PushCurrentInstanceFromCache();
             }
             catch (Exception ex) { CrashHandler.WriteEntry("LogWatcher.PlayerLeft", ex); }
+            try { _core.OnPlayerJoinLeft?.Invoke(name, false); } catch (Exception ex) { CrashHandler.WriteEntry("LogWatcher.PlayerLeft.Chatbox", ex); }
         };
         _core.LogWatcher.InstanceClosed += loc =>
         {

@@ -66,6 +66,7 @@ public class CoreLibrary
     public Func<string, Task>? DispatchMessage { get; set; }
 
     public Action<int>? OnChatboxPauseRequest { get; set; }
+    public Action<string, bool>? OnPlayerJoinLeft { get; set; } // (displayName, joined)
 
 #if WINDOWS
     public VRSubprocessHost? VrOverlay { get; set; }

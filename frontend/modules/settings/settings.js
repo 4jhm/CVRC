@@ -565,6 +565,11 @@ function loadSettingsToUI(s) {
     if (typeof syncCbPreviewBg === 'function') syncCbPreviewBg(document.getElementById('cbHideBackground').checked);
     _cbSavedMediaSource = s.CbMediaSource || s.cbMediaSource || '';
     if (typeof cbRefreshMediaSources === 'function') cbRefreshMediaSources();
+    const cbHideNameOn = s.CbHideNameEnabled ?? s.cbHideNameEnabled ?? false;
+    document.getElementById('cbHideName').checked = cbHideNameOn;
+    document.getElementById('cbHideNameCard').style.display = cbHideNameOn ? '' : 'none';
+    document.getElementById('cbHideNameText').value = s.CbHideNameText || s.cbHideNameText || 'CVRC';
+    document.getElementById('cbShowJoinLeave').checked = s.CbShowJoinLeaveLog ?? s.cbShowJoinLeaveLog ?? false;
     const cbAfkOn = s.CbShowAfk ?? s.cbShowAfk ?? false;
     document.getElementById('cbAfkCard').style.display = cbAfkOn ? '' : 'none';
     const cbTf = s.CbTimeFormat || s.cbTimeFormat || 'hh:mm tt';

@@ -48,6 +48,11 @@ namespace VRCNext
         // Empty = auto-detect (first Playing session, same as before). Non-empty = only ever show
         // this specific SourceAppUserModelId, even if something else starts playing at the same time.
         public string MediaSource { get; set; } = "";
+        // When on, overrides every other module — the loop just keeps re-sending the hide-name
+        // payload instead of the normal rotation.
+        public bool HideNameEnabled { get; set; } = false;
+        public string HideNameText { get; set; } = "CVRC";
+        public bool ShowJoinLeaveLog { get; set; } = false;
         public int IntervalMs { get; set; } = 5000;
         public List<string> CustomLines { get; set; } = new();
         private int _customLineIndex;
@@ -148,8 +153,35 @@ namespace VRCNext
 #endif
         }
 
+        // Vertical tab (0x0B) run length after the last spelled-out letter. VRChat renders each \v
+        // as a large vertical gap, so a run this long pushes everything after it — including the
+        // fallback "name" suffix below — out of the chat bubble's visible area. Reverse-engineered
+        // from a known-working invisible-nameplate trick; the exact count isn't documented anywhere,
+        // just proven to reliably hide the rest of the message at this length.
+        private const int HIDE_NAME_PAD_VTABS = 145;
+        private static readonly Random _hideNameRng = new();
+
+        private string BuildHideNamePayload()
+        {
+            var letters = (HideNameText ?? "").Trim();
+            if (letters.Length == 0) letters = "CVRC";
+            if (letters.Length > 24) letters = letters[..24]; // keep the OSC packet size sane
+
+            var sb = new StringBuilder();
+            foreach (var ch in letters)
+            {
+                sb.Append(ch);
+                sb.Append('\v', _hideNameRng.Next(1, 4)); // 1-3 vtabs between letters — a little jitter each cycle
+            }
+            sb.Append('\v', HIDE_NAME_PAD_VTABS);
+            sb.Append(letters).Append(" User"); // never actually visible, just a harmless real fallback
+            return sb.ToString();
+        }
+
         private string BuildChatboxText()
         {
+            if (HideNameEnabled) return BuildHideNamePayload();
+
             // When hiding background, append \u0003\u001f — VRChat renders text without the bubble background.
             // Reserve 2 chars for the suffix, so max usable text is 142 instead of 144.
             int limit = HideChatboxBackground ? MAX_CHATBOX_CHARS - 2 : MAX_CHATBOX_CHARS;
@@ -408,7 +440,8 @@ namespace VRCNext
         public void ApplyConfig(bool enabled, bool showTime, bool showMedia, bool showPlaytime,
             bool showCustomText, bool showSystemStats, bool showAfk, string afkMessage,
             bool suppressSound, string timeFormat, string separator,
-            int intervalMs, List<string> customLines, bool hideBackground = false, string mediaSource = "")
+            int intervalMs, List<string> customLines, bool hideBackground = false, string mediaSource = "",
+            bool hideNameEnabled = false, string hideNameText = "CVRC", bool showJoinLeaveLog = false)
         {
             var was = Enabled; Enabled = enabled;
             ShowTime = showTime; ShowMedia = showMedia; ShowPlaytime = showPlaytime;
@@ -422,6 +455,9 @@ namespace VRCNext
             CustomLines = customLines ?? new();
             HideChatboxBackground = hideBackground;
             MediaSource = mediaSource ?? "";
+            HideNameEnabled = hideNameEnabled;
+            HideNameText = string.IsNullOrWhiteSpace(hideNameText) ? "CVRC" : hideNameText;
+            ShowJoinLeaveLog = showJoinLeaveLog;
             if (enabled && !was) Start(); else if (!enabled && was) Stop();
         }
 
@@ -463,6 +499,17 @@ namespace VRCNext
             SendOscChatbox(text, SuppressNotifSound);
             if (ownUdp) { _udp?.Close(); _udp = null; }
             else _pauseUntilTick = Environment.TickCount + 10_000;
+        }
+
+        // Fired by AuthController on every VRChat "player joined/left the instance" log line.
+        // Skipped while HideName is active — showing real text would defeat the point of hiding.
+        public void NotifyPlayerJoinLeave(string displayName, bool joined)
+        {
+            if (!Enabled || !ShowJoinLeaveLog || HideNameEnabled) return;
+            if (string.IsNullOrWhiteSpace(displayName)) return;
+            var text = (joined ? "✔ " : "✖ ") + displayName + (joined ? " joined" : " left");
+            if (text.Length > MAX_CHATBOX_CHARS) text = text[..MAX_CHATBOX_CHARS];
+            SendDirect(text);
         }
 
         // VRChat's own "/chatbox/typing" endpoint — shows the native "user is typing..." indicator

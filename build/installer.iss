@@ -1,6 +1,6 @@
 #define MyAppName      "CVRC"
 #ifndef MyAppVersion
-  #define MyAppVersion "2026.41.6"
+  #define MyAppVersion "2026.41.7"
 #endif
 #define MyAppPublisher "CVRC"
 #define MyAppURL       "https://vrcnext.app"

@@ -82,6 +82,8 @@ function updateChatboxConfig() {
     document.getElementById('cbAfkCard').style.display = showAfk ? '' : 'none';
     const hideBackground = document.getElementById('cbHideBackground').checked;
     syncCbPreviewBg(hideBackground);
+    const hideNameEnabled = document.getElementById('cbHideName').checked;
+    document.getElementById('cbHideNameCard').style.display = hideNameEnabled ? '' : 'none';
     sendToCS({
         action: 'chatboxConfig',
         enabled: chatboxEnabled,
@@ -99,6 +101,9 @@ function updateChatboxConfig() {
         customLines: chatboxCustomLines,
         hideBackground: hideBackground,
         mediaSource: document.getElementById('cbMediaSource').value,
+        hideNameEnabled: hideNameEnabled,
+        hideNameText: document.getElementById('cbHideNameText').value || 'CVRC',
+        showJoinLeaveLog: document.getElementById('cbShowJoinLeave').checked,
     });
 }
 

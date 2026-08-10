@@ -418,6 +418,11 @@ public class AppSettings
     // Empty = auto-detect the first playing media session (default). Otherwise the exact
     // SourceAppUserModelId of the app the user pinned as the only "Now Playing" source.
     public string CbMediaSource { get; set; } = "";
+    // When on, overrides every other module and continuously sends a padded chatbox message
+    // that hides your real name/chat bubble behind CbHideNameText, spelled out letter by letter.
+    public bool CbHideNameEnabled { get; set; } = false;
+    public string CbHideNameText { get; set; } = "CVRC";
+    public bool CbShowJoinLeaveLog { get; set; } = false;
 
     // Space Flight settings
     public float SfMultiplier { get; set; } = 1f;
