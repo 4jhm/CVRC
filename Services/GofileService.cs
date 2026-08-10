@@ -64,7 +64,9 @@ public class GofileService
         }
     }
 
-    public async Task<List<GofileEntry>?> ListFolderAsync(string contentId)
+    public Task<List<GofileEntry>?> ListFolderAsync(string contentId) => ListFolderAsync(contentId, allowRetry: true);
+
+    private async Task<List<GofileEntry>?> ListFolderAsync(string contentId, bool allowRetry)
     {
         var accountToken = await GetAccountTokenAsync();
         if (accountToken == null) return null;
@@ -80,11 +82,30 @@ public class GofileService
             req.Headers.UserAgent.ParseAdd(UserAgent);
             using var resp = await _http.SendAsync(req);
             var body = await resp.Content.ReadAsStringAsync();
-            if (!resp.IsSuccessStatusCode) { _log($"[Gofile] Folder listing failed: {(int)resp.StatusCode} {body[..Math.Min(150, body.Length)]}"); return null; }
 
-            var root = JObject.Parse(body);
-            var children = root["data"]?["children"] as JObject;
-            if (children == null) { _log("[Gofile] Folder listing had no children (empty or invalid folder)."); return new List<GofileEntry>(); }
+            // Gofile can return HTTP 200 with a logical error embedded in the JSON body (e.g. a
+            // stale/rate-limited guest token) — checking only the HTTP status misses those and
+            // previously fell through to "empty folder", showing a misleading "No files found".
+            var root = string.IsNullOrEmpty(body) ? null : JObject.Parse(body);
+            var status = root?["status"]?.ToString() ?? "";
+            if (!resp.IsSuccessStatusCode || status != "ok")
+            {
+                _log($"[Gofile] Folder listing failed (HTTP {(int)resp.StatusCode}, status='{status}'): {body[..Math.Min(200, body.Length)]}");
+                if (allowRetry)
+                {
+                    _log("[Gofile] Retrying once with a fresh guest account token...");
+                    _accountToken = null; _accountTokenAt = DateTime.MinValue;
+                    return await ListFolderAsync(contentId, allowRetry: false);
+                }
+                return null;
+            }
+
+            var children = root!["data"]?["children"] as JObject;
+            if (children == null)
+            {
+                _log($"[Gofile] Folder listing had no 'children' object despite status=ok: {body[..Math.Min(200, body.Length)]}");
+                return null;
+            }
 
             var result = new List<GofileEntry>();
             foreach (var prop in children.Properties())

@@ -1,7 +1,40 @@
 // Avatar Database — browses/sorts a Gofile folder of downloadable avatar files.
+// Password gate note: this is a plain client-side check for friendly friction, not real
+// security — the frontend ships as readable JS, so anyone with the app files can read this
+// string. Don't rely on it to keep the folder actually private.
+const AVDB_PASSWORD = 'YEahYuhThanksForAvi31';
+const AVDB_UNLOCK_KEY = 'vrcnext_avdb_unlocked';
+
 let _avdbFiles = [];
 let _avdbSortField = 'name'; // 'name' | 'size' | 'date'
 let _avdbSortDir = 1;        // 1 = ascending, -1 = descending
+
+function avdbTryUnlock() {
+    const input = document.getElementById('avdbPasswordInput');
+    const val = input ? input.value : '';
+    if (val === AVDB_PASSWORD) {
+        avdbUnlock();
+        return;
+    }
+    const err = document.getElementById('avdbLockError');
+    if (err) err.style.display = '';
+    if (input) { input.value = ''; input.focus(); }
+}
+
+function avdbUnlock() {
+    try { localStorage.setItem(AVDB_UNLOCK_KEY, '1'); } catch { }
+    const lockCard = document.getElementById('avdbLockCard');
+    const content = document.getElementById('avdbUnlockedContent');
+    if (lockCard) lockCard.style.display = 'none';
+    if (content) content.style.display = '';
+    avdbLoad(false);
+}
+
+function avdbCheckUnlockState() {
+    let unlocked = false;
+    try { unlocked = localStorage.getItem(AVDB_UNLOCK_KEY) === '1'; } catch { }
+    if (unlocked) avdbUnlock();
+}
 
 function avdbLoad(force) {
     sendToCS({ action: 'avatarDbLoad', force: !!force });
@@ -93,4 +126,4 @@ function rerenderAvatarDbTranslations() {
 }
 document.documentElement.addEventListener('languagechange', rerenderAvatarDbTranslations);
 
-avdbLoad(false);
+avdbCheckUnlockState();

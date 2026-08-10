@@ -1,21 +1,32 @@
                 <div class="sf-layout">
-                    <div class="vrcn-panel-card">
-                        <div class="vrcn-panel-card-header"><span class="msi">view_in_ar</span> <span data-i18n="avdb.title">Avatar Database</span></div>
-                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="avdb.desc">Downloadable avatars, browsable and sortable right here.</div>
-                        <div class="avdb-toolbar">
-                            <div class="avdb-sort-group">
-                                <span class="avdb-sort-label" data-i18n="avdb.sort_by">Sort by</span>
-                                <button class="vrcn-button avdb-sort-btn active" id="avdbSortName" onclick="avdbSetSort('name')"><span data-i18n="avdb.sort.name">Name</span></button>
-                                <button class="vrcn-button avdb-sort-btn" id="avdbSortSize" onclick="avdbSetSort('size')"><span data-i18n="avdb.sort.size">Size</span></button>
-                                <button class="vrcn-button avdb-sort-btn" id="avdbSortDate" onclick="avdbSetSort('date')"><span data-i18n="avdb.sort.date">Date Uploaded</span></button>
-                                <button class="vrcn-button-round" id="avdbSortDirBtn" onclick="avdbToggleDirection()" title="Toggle sort direction" data-i18n-title="avdb.sort.toggle_direction"><span class="msi" id="avdbSortDirIcon">arrow_upward</span></button>
-                            </div>
-                            <button class="vrcn-button" id="avdbRefreshBtn" onclick="avdbLoad(true)"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="common.refresh">Refresh</span></button>
+                    <div class="vrcn-panel-card" id="avdbLockCard">
+                        <div class="vrcn-panel-card-header"><span class="msi">lock</span> <span data-i18n="avdb.title">Avatar Database</span></div>
+                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="avdb.locked.desc">This section is password-protected. Enter the password to browse.</div>
+                        <div class="avdb-lock-row">
+                            <input type="password" id="avdbPasswordInput" class="vrcn-edit-field" placeholder="Password" data-i18n-placeholder="avdb.locked.placeholder" onkeydown="if(event.key==='Enter')avdbTryUnlock()" style="flex:1;">
+                            <button class="vrcn-button" onclick="avdbTryUnlock()"><span class="msi" style="font-size:16px;">lock_open</span> <span data-i18n="avdb.locked.unlock">Unlock</span></button>
                         </div>
+                        <div class="avdb-lock-error" id="avdbLockError" style="display:none;" data-i18n="avdb.locked.wrong">Incorrect password.</div>
                     </div>
-                    <div class="vrcn-panel-card" id="avdbGridCard">
-                        <div class="avdb-grid" id="avdbGrid">
-                            <div class="osc-empty" id="avdbEmptyMsg" data-i18n="avdb.loading">Loading avatars...</div>
+                    <div class="avdb-unlocked-content" id="avdbUnlockedContent" style="display:none;">
+                        <div class="vrcn-panel-card">
+                            <div class="vrcn-panel-card-header"><span class="msi">view_in_ar</span> <span data-i18n="avdb.title">Avatar Database</span></div>
+                            <div class="set-desc" style="margin:12px 0 14px;" data-i18n="avdb.desc">Downloadable avatars, browsable and sortable right here.</div>
+                            <div class="avdb-toolbar">
+                                <div class="avdb-sort-group">
+                                    <span class="avdb-sort-label" data-i18n="avdb.sort_by">Sort by</span>
+                                    <button class="vrcn-button avdb-sort-btn active" id="avdbSortName" onclick="avdbSetSort('name')"><span data-i18n="avdb.sort.name">Name</span></button>
+                                    <button class="vrcn-button avdb-sort-btn" id="avdbSortSize" onclick="avdbSetSort('size')"><span data-i18n="avdb.sort.size">Size</span></button>
+                                    <button class="vrcn-button avdb-sort-btn" id="avdbSortDate" onclick="avdbSetSort('date')"><span data-i18n="avdb.sort.date">Date Uploaded</span></button>
+                                    <button class="vrcn-button-round" id="avdbSortDirBtn" onclick="avdbToggleDirection()" title="Toggle sort direction" data-i18n-title="avdb.sort.toggle_direction"><span class="msi" id="avdbSortDirIcon">arrow_upward</span></button>
+                                </div>
+                                <button class="vrcn-button" id="avdbRefreshBtn" onclick="avdbLoad(true)"><span class="msi" style="font-size:16px;">refresh</span> <span data-i18n="common.refresh">Refresh</span></button>
+                            </div>
+                        </div>
+                        <div class="vrcn-panel-card" id="avdbGridCard">
+                            <div class="avdb-grid" id="avdbGrid">
+                                <div class="osc-empty" id="avdbEmptyMsg" data-i18n="avdb.loading">Loading avatars...</div>
+                            </div>
                         </div>
                     </div>
                 </div>

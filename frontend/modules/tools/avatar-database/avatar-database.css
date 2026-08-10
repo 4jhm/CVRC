@@ -1,5 +1,23 @@
 /* === Avatar Database Module === */
 
+.avdb-unlocked-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.avdb-lock-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.avdb-lock-error {
+    color: var(--err);
+    font-size: calc(11px + var(--fs-off, 0px));
+    margin-top: 8px;
+}
+
 .avdb-toolbar {
     display: flex;
     align-items: center;
