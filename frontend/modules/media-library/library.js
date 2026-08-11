@@ -15,6 +15,9 @@ let _libFriendFilter = '__all__';
 let _libWorldFilter  = '__all__';
 let _libEditMode     = false;
 let _libEditSelected = new Set();
+let _libRatingFilter = '__all__';
+let _ratingsScanRequested = false;
+let _libRatingsRenderTimer = null;
 
 // Destroy / cleanup.
 function destroyLibrary() {
@@ -100,6 +103,7 @@ function renderLibrary(data) {
     _resolveWorldIds(files);
     filterLibrary();
     _renderLibIconSelects();
+    if (typeof navUpdateBadges === 'function') navUpdateBadges();
     _fetchNextMetaPage();
 }
 
@@ -195,6 +199,7 @@ function addNewLibraryFile(item) {
     libraryFiles.unshift(item); // prepend — newest first
     _resolveWorldIds([item]);
     filterLibrary(true); // re-filter current page so new file appears at top of page 0
+    if (typeof navUpdateBadges === 'function') navUpdateBadges();
 }
 
 function _resolveWorldIds(files) {
@@ -274,6 +279,7 @@ function filterLibrary(keepPage = false) {
     const typeFilter = document.getElementById('libTypeFilter').value;
     let f            = [...libraryFiles]; // always a copy — never share ref with libraryFiles
     if (showFavOnly)                   f = f.filter(x => favorites.has(x.path));
+    if (_libRatingFilter !== '__all__') f = f.filter(x => (photoRatings.get(x.path) || 0) === Number(_libRatingFilter));
     if (ff !== '__all__')              f = f.filter(x => x.folder === ff);
     if (typeFilter !== 'all')          f = f.filter(x => x.type === typeFilter);
     if (_libFriendFilter !== '__all__') f = f.filter(x => (x.players || []).some(p => p.userId === _libFriendFilter));
@@ -300,17 +306,19 @@ function filterLibrary(keepPage = false) {
 function resetLibFilters() {
     _libFriendFilter = '__all__';
     _libWorldFilter  = '__all__';
+    _libRatingFilter = '__all__';
     _renderLibIconSelects();
     filterLibrary();
 }
 
 function _updateLibResetBtn() {
     const btn = document.getElementById('libResetFiltersBtn');
-    if (btn) btn.style.display = (_libFriendFilter !== '__all__' || _libWorldFilter !== '__all__') ? '' : 'none';
+    if (btn) btn.style.display = (_libFriendFilter !== '__all__' || _libWorldFilter !== '__all__' || _libRatingFilter !== '__all__') ? '' : 'none';
 }
 
 function _renderLibIconSelects() {
     _updateLibResetBtn();
+    _renderLibRatingSelect();
     _renderLibIconSelect(
         'libFriendFilterWrap',
         _buildFriendItems(),
@@ -331,10 +339,26 @@ function _renderLibIconSelects() {
     );
 }
 
+function _libCrossFilterBase(excludeFriend, excludeWorld, excludeRating) {
+    let base = libraryFiles;
+    if (showFavOnly)                                     base = base.filter(x => favorites.has(x.path));
+    if (!excludeRating && _libRatingFilter !== '__all__') base = base.filter(x => (photoRatings.get(x.path) || 0) === Number(_libRatingFilter));
+    if (!excludeFriend && _libFriendFilter !== '__all__') base = base.filter(x => (x.players || []).some(p => p.userId === _libFriendFilter));
+    if (!excludeWorld && _libWorldFilter !== '__all__')   base = base.filter(x => x.worldId === _libWorldFilter);
+    return base;
+}
+
+function _buildRatingCounts() {
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    _libCrossFilterBase(false, false, true).forEach(x => {
+        const r = photoRatings.get(x.path) || 0;
+        if (r >= 1 && r <= 5) counts[r]++;
+    });
+    return counts;
+}
+
 function _buildFriendItems() {
-    const base = _libWorldFilter !== '__all__'
-        ? libraryFiles.filter(x => x.worldId === _libWorldFilter)
-        : libraryFiles;
+    const base = _libCrossFilterBase(true, false);
     const map = {};
     base.forEach(x => {
         (x.players || []).forEach(p => {
@@ -351,9 +375,7 @@ function _buildFriendItems() {
 }
 
 function _buildWorldItems() {
-    const base = _libFriendFilter !== '__all__'
-        ? libraryFiles.filter(x => (x.players || []).some(p => p.userId === _libFriendFilter))
-        : libraryFiles;
+    const base = _libCrossFilterBase(false, true);
     const map = {};
     base.forEach(x => {
         if (!x.worldId) return;
@@ -364,6 +386,76 @@ function _buildWorldItems() {
         map[x.worldId].count++;
     });
     return Object.values(map).sort((a, b) => b.count - a.count);
+}
+
+function _libHeartsHtml(n, size) {
+    let h = '';
+    for (let i = 1; i <= 5; i++) {
+        const filled = i <= n;
+        h += `<span class="msi${filled ? ' lib-heart-filled' : ''}" style="font-size:${size}px;">favorite</span>`;
+    }
+    return h;
+}
+
+function _renderLibRatingSelect() {
+    const container = document.getElementById('libRatingFilterWrap');
+    if (!container) return;
+    if (window._isLinuxUi) { container.innerHTML = ''; return; }
+
+    const wasOpen = !!container.querySelector('.vn-select.vn-open');
+    const iconBox = `<span class="lib-is-thumb lib-is-thumb-icon"><span class="msi">favorite</span></span>`;
+
+    const allActive = _libRatingFilter === '__all__' ? ' vn-active' : '';
+    const allOptHtml = `<div class="vn-select-option${allActive}" data-rval="__all__">
+        ${iconBox}<span class="vn-select-label">${esc(t('library.filters.rating', 'Rating'))}</span>
+    </div>`;
+
+    const counts = _buildRatingCounts();
+    const optHtml = [5, 4, 3, 2, 1].map(n => {
+        const active = _libRatingFilter === String(n) ? ' vn-active' : '';
+        return `<div class="vn-select-option${active}" data-rval="${n}">
+            <span class="vn-select-label lib-rating-hearts">${_libHeartsHtml(n, 13)}</span>
+            <span class="lib-rating-count">${counts[n]}</span>
+        </div>`;
+    }).join('');
+
+    const selLabel = _libRatingFilter !== '__all__'
+        ? tf('library.filters.rating_n', { n: _libRatingFilter }, '{n} Hearts')
+        : t('library.filters.rating', 'Rating');
+
+    container.innerHTML = `<div class="vn-select lib-is-select">
+        <div class="vn-select-trigger">${iconBox}<span class="vn-select-label">${esc(selLabel)}</span><span class="msi vn-select-arrow">expand_more</span></div>
+        <div class="vn-select-panel">${allOptHtml}${optHtml}</div>
+    </div>`;
+
+    const wrap    = container.querySelector('.vn-select');
+    const trigger = container.querySelector('.vn-select-trigger');
+    const panel   = container.querySelector('.vn-select-panel');
+
+    function close() { wrap.classList.remove('vn-open'); }
+    function open() {
+        if (!_ratingsScanRequested) { _ratingsScanRequested = true; sendToCS({ action: 'scanLibraryRatings' }); }
+        wrap.classList.add('vn-open');
+        const rect  = wrap.getBoundingClientRect();
+        const below = rect.bottom + 220 < window.innerHeight;
+        panel.style.top    = below ? 'calc(100% + 4px)' : 'auto';
+        panel.style.bottom = below ? 'auto' : 'calc(100% + 4px)';
+        setTimeout(() => document.addEventListener('click', onOut, { once: true }), 0);
+    }
+    function onOut(e) { wrap.contains(e.target) ? document.addEventListener('click', onOut, { once: true }) : close(); }
+
+    trigger.addEventListener('click', e => { e.stopPropagation(); wrap.classList.contains('vn-open') ? close() : open(); });
+    panel.querySelectorAll('[data-rval]').forEach(opt => {
+        opt.addEventListener('click', e => {
+            e.stopPropagation();
+            _libRatingFilter = opt.dataset.rval;
+            close();
+            _renderLibIconSelects();
+            filterLibrary();
+        });
+    });
+
+    if (wasOpen) open();
 }
 
 function _renderLibIconSelect(wrapperId, items, currentVal, allLabel, allIcon, round, onSelect) {
@@ -812,6 +904,7 @@ function updateFolderFilterOptions(fs) {
 function toggleFavFilter() {
     showFavOnly = !showFavOnly;
     document.getElementById('libFavBtn').classList.toggle('active', showFavOnly);
+    _renderLibIconSelects();
     filterLibrary();
 }
 
@@ -922,6 +1015,9 @@ function openPhotoDetail(target) {
     if (x.path && typeof navSetCurrent === 'function') {
         navSetCurrent('photo', x.path);
         if (typeof navUpdateLabel === 'function') navUpdateLabel(x.name || '');
+    }
+    if (x.path && !x.remote && !window._isLinuxUi && !photoRatings.has(x.path)) {
+        sendToCS({ action: 'getPhotoRating', path: x.path });
     }
 
     const existing = document.getElementById('photoDetailModal');
@@ -1225,7 +1321,60 @@ function _photoBuildInfoPaneContent(x) {
 
     return `<h2 class="photo-detail-name">${esc(x.name)}</h2>
         ${_tlInfoCard(esc(t('library.detail.info', 'Info')), infoRows)}
+        ${_photoBuildRatingCard(x)}
         ${playersHtml}`;
+}
+
+function _photoBuildRatingCard(x) {
+    if (!x.path || x.remote || window._isLinuxUi) return '';
+    const stars = photoRatings.get(x.path) || 0;
+    let hearts = '';
+    for (let i = 1; i <= 5; i++) {
+        const filled = i <= stars;
+        hearts += `<span class="msi pd-rating-heart${filled ? ' pd-rating-filled' : ''}" onclick="setPhotoRatingClick('${jsq(x.path)}', ${i})">favorite</span>`;
+    }
+    return `<div class="fd-info-card pd-rating-card">
+        <div class="fd-group-rep-label">${esc(t('library.detail.rating', 'Photo Rating'))}</div>
+        <div class="pd-rating-hearts">${hearts}</div>
+    </div>`;
+}
+
+function setPhotoRatingClick(path, n) {
+    const current = photoRatings.get(path) || 0;
+    setPhotoRatingValue(path, current === n ? 0 : n);
+}
+
+function setPhotoRatingValue(path, stars) {
+    photoRatings.set(path, stars);
+    sendToCS({ action: 'setPhotoRating', path, stars });
+    _photoRefreshInfoPaneIfShowing(path);
+    _renderLibRatingSelect();
+    if (_libRatingFilter !== '__all__') filterLibrary(true);
+}
+
+function _photoRefreshInfoPaneIfShowing(path) {
+    const photoModal = document.getElementById('photoDetailModal');
+    if (photoModal && _photoState.item?.path === path) {
+        const infoPane = photoModal.querySelector('.photo-detail-info-pane');
+        if (infoPane) infoPane.innerHTML = _photoBuildInfoPaneContent(_photoState.item);
+    }
+}
+
+function onPhotoRating(payload) {
+    if (!payload || !payload.path) return;
+    photoRatings.set(payload.path, payload.stars || 0);
+    _photoRefreshInfoPaneIfShowing(payload.path);
+}
+
+function onLibraryRatings(payload) {
+    if (!payload) return;
+    Object.entries(payload).forEach(([path, stars]) => photoRatings.set(path, stars));
+    if (_libRatingsRenderTimer) clearTimeout(_libRatingsRenderTimer);
+    _libRatingsRenderTimer = setTimeout(() => {
+        _libRatingsRenderTimer = null;
+        _renderLibRatingSelect();
+        if (_libRatingFilter !== '__all__') filterLibrary(true);
+    }, 150);
 }
 
 function closePhotoDetail(fromNav = false) {
@@ -1340,6 +1489,7 @@ function onLibraryFileDeleted(path) {
 
     libraryFiles = libraryFiles.filter(f => f.path !== path);
     filterLibrary(true); // stay on current page after delete
+    if (typeof navUpdateBadges === 'function') navUpdateBadges();
 
     if (typeof _wdOnFileDeleted === 'function') _wdOnFileDeleted(path);
 

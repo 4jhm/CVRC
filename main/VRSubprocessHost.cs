@@ -30,6 +30,9 @@ public sealed class VRSubprocessHost : IDisposable
 
     public bool AnyConnected => VroConnected || SfConnected || FsConnected;
 
+    public int InputMode { get; set; }
+    private int _runningInputMode = -1;
+
     // Events fired when the subprocess sends a message over stdout.
     public event Action<JObject>? OnVroState;
     public event Action<List<uint>, List<string>, int, int>? OnVroKeybindRecorded;
@@ -88,9 +91,11 @@ public sealed class VRSubprocessHost : IDisposable
             ["httpPort"]   = httpPort,
             ["authCookie"] = authCookie,
             ["tfaCookie"]  = tfaCookie,
+            ["inputMode"]  = InputMode,
         });
 
-        _log("[VRSub] Subprocess started");
+        _runningInputMode = InputMode;
+        _log($"[VRSub] Subprocess started (input mode {InputMode})");
     }
 
     private void OnProcessExited(object? sender, EventArgs e)
@@ -231,6 +236,38 @@ public sealed class VRSubprocessHost : IDisposable
                 break;
             }
         }
+    }
+
+    /// <summary>
+    /// Applies a changed VR input mode to the already running subprocess.
+    /// Switching to SteamVR Input works live. Switching back to legacy cannot,
+    /// because SetActionManifestPath disables GetControllerState for the whole
+    /// process, so the subprocess is restarted instead.
+    /// </summary>
+    public void ApplyInputMode(int mode)
+    {
+        InputMode = mode;
+        if (_process is not { HasExited: false }) return;
+        if (mode == _runningInputMode) return;
+
+        if (mode == 1)
+        {
+            _runningInputMode = 1;
+            Send("vr_input_mode", new { mode });
+            _log("[VRSub] Switched to SteamVR Input");
+            return;
+        }
+
+        _log("[VRSub] Switching back to legacy input, restarting subprocess");
+        bool wasVro = VroConnected, wasSf = SfConnected, wasFs = FsConnected;
+        Kill();
+        _runningInputMode = -1;
+        VroConnected = false;
+        SfConnected  = false;
+        FsConnected  = false;
+        if (wasVro) OnVroQuit?.Invoke();
+        if (wasSf)  OnSfQuit?.Invoke();
+        if (wasFs)  OnFsQuit?.Invoke();
     }
 
     public void VroConnect()
@@ -412,6 +449,9 @@ public sealed class VRSubprocessHost : IDisposable
     public bool SfConnected  { get; private set; }
     public bool FsConnected  { get; private set; }
     public bool AnyConnected => VroConnected || SfConnected || FsConnected;
+
+    public int InputMode { get; set; }
+    public void ApplyInputMode(int mode) { }
 
     public VRSubprocessHost(Action<string> log) { }
     public void EnsureRunning(string c, int p, string? a, string? t) { }

@@ -187,6 +187,11 @@ window.external.receiveMessage(rawMsg => {
             case 'libraryPageData': appendLibraryPage(payload); break;
             case 'libraryWorldIds': applyLibraryWorldIds(payload); break;
             case 'libraryAuthors': applyLibraryAuthors(payload); break;
+            case 'libraryRatings': if (typeof onLibraryRatings === 'function') onLibraryRatings(payload); break;
+            case 'photoRating':
+            case 'photoRatingSet':
+                if (typeof onPhotoRating === 'function') onPhotoRating(payload);
+                break;
             case 'libraryNewFile': addNewLibraryFile(payload); renderDashRecentPhotos(); break;
             case 'libraryFileDeleted':
                 onLibraryFileDeleted(payload.path);
@@ -236,6 +241,9 @@ window.external.receiveMessage(rawMsg => {
                     if (document.getElementById('modalMyProfile')?.style.display !== 'none'
                         && typeof renderMyProfileContent === 'function') renderMyProfileContent();
                 }
+                break;
+            case 'vrcRunningChanged':
+                if (typeof onVrcRunningChanged === 'function') onVrcRunningChanged(payload);
                 break;
             case 'vrcUser':
                 renderVrcProfile(payload);
@@ -1048,6 +1056,15 @@ case 'vrcNews':
                 break;
             case 'avatarDbResult':
                 if (typeof handleAvatarDbResult === 'function') handleAvatarDbResult(payload);
+                break;
+            case 'avatarLoggerStatus':
+                if (typeof handleAvatarLoggerStatus === 'function') handleAvatarLoggerStatus(payload);
+                break;
+            case 'avatarLoggerEvent':
+                if (typeof handleAvatarLoggerEvent === 'function') handleAvatarLoggerEvent(payload);
+                break;
+            case 'avatarLoggerHistory':
+                if (typeof handleAvatarLoggerHistory === 'function') handleAvatarLoggerHistory(payload);
                 break;
             case 'chatboxUpdate':
                 handleChatboxUpdate(payload);

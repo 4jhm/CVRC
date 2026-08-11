@@ -39,6 +39,7 @@
     <link rel="stylesheet" href="modules/tools/vrc-accounts/vrc-accounts.css">
     <link rel="stylesheet" href="modules/tools/avatar-database/avatar-database.css">
     <link rel="stylesheet" href="modules/tools/direct-access/direct-access.css">
+    <link rel="stylesheet" href="modules/tools/avatar-logger/avatar-logger.css">
     <link rel="stylesheet" href="modules/tools/activity-log/activity-log.css">
     <link rel="stylesheet" href="modules/tools/mutual-network/mutual-network.css">
     <link rel="stylesheet" href="modules/tools/time-spent/time-spent.css">
@@ -130,7 +131,7 @@
     <div class="sidebar" id="sidebarEl">
         <div class="sidebar-resizer" id="sidebarResizer" data-side="left"></div>
         <div class="sidebar-sep"></div>
-        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.5</div></div></div>
+        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.9</div></div></div>
         <div class="nav vrcn-scrollbar" id="navEl"></div>
         <div class="clock-area"><div class="clock-time" id="clock">00:00:00</div><div class="clock-date" id="clockDate"></div></div>
         <div class="play-area"><button class="btn-play" onclick="playVRChat()" data-i18n-title="sidebar.play_vrchat" title="Play VRChat"><span class="play-icon-wrap"><span class="msi play-icon">play_arrow</span></span><span class="play-copy pl"><strong class="play-title" data-i18n="sidebar.play_vrchat">Play VRChat</strong><span class="play-sub" id="playSubText"></span></span><span class="msi play-arrow pl">chevron_right</span></button></div>
@@ -455,6 +456,9 @@
             <!-- Tab 30: Direct Access -->
             <div class="tab" id="tab30"></div>
 
+            <!-- Tab 31: Avatar Logger (personal tool) -->
+            <div class="tab" id="tab31"></div>
+
         </div>
     </div>
 
@@ -546,7 +550,7 @@
     <!-- Permini Friend Picker Modal -->
     <div class="modal-overlay" id="modalCreateInstance" style="display:none;z-index:10010;" onclick="if(event.target===this)closeCreateInstanceModal()"></div>
 
-    <div class="modal-overlay" id="modalPerminiPicker" style="display:none;" onclick="if(event.target===this)closePerminiPicker()"></div>
+    <div class="modal-overlay" id="modalFriendPicker" style="display:none;" onclick="if(event.target===this)closeFriendPicker()"></div>
 
     <!-- VRChat Config Modal -->
     <div class="modal-overlay" id="modalVrcConfig" style="display:none;" onclick="if(event.target===this)this.style.display='none'"></div>
@@ -751,6 +755,7 @@
             tab28: 'modules/tools/vrc-accounts/vrc-accounts.html',
             tab29: 'modules/tools/avatar-database/avatar-database.html',
             tab30: 'modules/tools/direct-access/direct-access.html',
+            tab31: 'modules/tools/avatar-logger/avatar-logger.html',
         };
 
         const modalFragments = {
@@ -767,7 +772,7 @@
             modalInvite:         'core/modals/invite-modal/invite-modal.html',
             modalCreateInstance: 'core/modals/create-instance-modal/create-instance-modal.html',
             modalVfBlock:       'modules/tools/voice-fight/voice-fight-block.html',
-            modalPerminiPicker: 'modules/tools/permini/permini-picker.html',
+            modalFriendPicker:  'core/modals/friend-picker/friend-picker.html',
             modalVrcConfig:        'core/modals/vrc-tools-modal/vrc-config-modal.html',
             modalVrcLaunchOptions: 'core/modals/vrc-tools-modal/vrc-launch-options-modal.html',
             dashLayoutModal:    'modules/dashboard/dash-layout.html',
@@ -784,6 +789,8 @@
             'core/notifications/toast.js',
             'core/notifications/notification-toast.js',
             'core/items/profile-item.js',
+            'core/modals/friend-picker/friend-picker.js',
+            'core/context-menu/safe-triangle.js',
             'core/items/profile-item-small.js',
             'core/items/instance-item.js',
             'core/logic/core.js',
@@ -830,6 +837,7 @@
             'core/logic/update.js',
             'core/modals/invite-modal/invite-modal.js',
             'modules/tools/chatbox/chatbox.js',
+            'core/VRInput/vr-input.js',
             'modules/tools/space-flight/space-flight.js',
             'modules/tools/frame-shot/frame-shot.js',
             'modules/tools/osc-tool/osc-tool.js',
@@ -862,6 +870,7 @@
             'modules/tools/vrc-accounts/vrc-accounts.js',
             'modules/tools/avatar-database/avatar-database.js',
             'modules/tools/direct-access/direct-access.js',
+            'modules/tools/avatar-logger/avatar-logger.js',
             'core/logic/init.js',
             'core/debounce/debounce.js',
             'core/SmartSearch/smart-search.js',

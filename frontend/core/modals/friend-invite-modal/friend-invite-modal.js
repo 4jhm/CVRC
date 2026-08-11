@@ -1,11 +1,11 @@
 /* === Friend Invite Modal === */
 /* === Invite Modal === */
 let _invModalUserId      = null;
-let _invModalApiMsgs     = []; // { slot, message, canBeUpdated, remainingCooldownMinutes }
+let _invModalApiMsgs     = []; // 
 let _invModalSelected    = -1;
-let _invModalTab         = 'direct'; // 'direct' | 'message' | 'photo'
+let _invModalTab         = 'direct'; 
 let _invModalPhotoFileId = null;
-let _invModalPhotoUrl    = null;  // CDN url from library selection
+let _invModalPhotoUrl    = null;  
 let _invModalDisplayName = '';
 
 function openFriendInviteModal(userId, displayName, initialTab) {
@@ -266,8 +266,3 @@ function closeFriendInviteModal() {
     setTimeout(() => el.remove(), 150);
     window._inviteModalEl = null;
 }
-
-// ================================================================
-// Image Picker - shared modal for profile/group icon and banner
-// ================================================================
-

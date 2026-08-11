@@ -478,7 +478,7 @@ html.no-animations .tb-title-anim { animation: none !important; }
 }
 @keyframes tbDropdownIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
 .tb-modal-action-wrap.open > .tb-modal-dropdown,
-.tb-modal-dd-sub-wrap:hover > .tb-modal-dd-sub { display: block; animation: tbDropdownIn 0.13s ease; }
+.tb-modal-dd-sub-wrap.open > .tb-modal-dd-sub { display: block; animation: tbDropdownIn 0.13s ease; }
 html.no-animations .tb-modal-dropdown { animation: none !important; }
 .tb-modal-dd-item {
     display: flex;

@@ -157,31 +157,8 @@ namespace VRCNext.Services
 
         public void SetOutputDevice(int idx) => _outputDeviceIndex = idx;
 
-        [DllImport("winmm.dll")] private static extern int waveOutGetNumDevs();
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-        private struct WAVEOUTCAPS
-        {
-            public ushort wMid, wPid;
-            public uint vDriverVersion;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string szPname;
-            public uint dwFormats;
-            public ushort wChannels, wReserved1;
-            public uint dwSupport;
-        }
-        [DllImport("winmm.dll", CharSet = CharSet.Ansi)]
-        private static extern int waveOutGetDevCaps(IntPtr deviceID, out WAVEOUTCAPS caps, int size);
-
         public static string[] GetOutputDevices()
-        {
-            int count = waveOutGetNumDevs();
-            var names = new string[count];
-            for (int i = 0; i < count; i++)
-            {
-                waveOutGetDevCaps(new IntPtr(i), out var caps, Marshal.SizeOf<WAVEOUTCAPS>());
-                names[i] = caps.szPname ?? "";
-            }
-            return names;
-        }
+            => VRCNext.Services.Helpers.AudioDeviceHelper.GetOutputNames();
 
         private void PlaySoundAsync(string fileName)
         {
@@ -306,6 +283,8 @@ namespace VRCNext.Services
                 }
                 OpenVRSession.Acquire();
                 _ownedInit = true;
+
+                if (VrInputActions.Requested) VrInputActions.Initialize(_log);
 
                 if (OpenVR.Overlay == null)
                 {
@@ -866,22 +845,10 @@ namespace VRCNext.Services
             return dst;
         }
 
-        // ====================== VIDEO RECORDING (MP4) ======================
+        // Video recording
 
         public static (string id, string label)[] GetAudioDevices()
-        {
-            var list = new List<(string, string)>();
-            try
-            {
-                var en = new NAudio.CoreAudioApi.MMDeviceEnumerator();
-                foreach (var d in en.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Capture, NAudio.CoreAudioApi.DeviceState.Active))
-                    list.Add((d.ID, $"{d.FriendlyName}"));
-                foreach (var d in en.EnumerateAudioEndPoints(NAudio.CoreAudioApi.DataFlow.Render, NAudio.CoreAudioApi.DeviceState.Active))
-                    list.Add(($"loopback:{d.ID}", $"{d.FriendlyName} (System Audio)"));
-            }
-            catch { }
-            return list.ToArray();
-        }
+            => VRCNext.Services.Helpers.AudioDeviceHelper.GetWasapiEndpoints();
 
         private NAudio.Wave.IWaveIn? StartAudioCapture(string deviceId, string wavPath, out NAudio.Wave.WaveFileWriter? writer)
         {
@@ -889,19 +856,11 @@ namespace VRCNext.Services
             if (string.IsNullOrEmpty(deviceId)) return null;
             try
             {
-                var en = new NAudio.CoreAudioApi.MMDeviceEnumerator();
-                NAudio.Wave.IWaveIn cap;
-                if (deviceId.StartsWith("loopback:", StringComparison.Ordinal))
-                {
-                    var id = deviceId.Substring("loopback:".Length);
-                    var dev = en.GetDevice(id);
-                    cap = new NAudio.Wave.WasapiLoopbackCapture(dev);
-                }
-                else
-                {
-                    var dev = en.GetDevice(deviceId);
-                    cap = new NAudio.CoreAudioApi.WasapiCapture(dev);
-                }
+                var dev = VRCNext.Services.Helpers.AudioDeviceHelper.GetWasapiDevice(deviceId, out var isLoopback);
+                if (dev == null) return null;
+                NAudio.Wave.IWaveIn cap = isLoopback
+                    ? new NAudio.Wave.WasapiLoopbackCapture(dev)
+                    : new NAudio.CoreAudioApi.WasapiCapture(dev);
                 var w = new NAudio.Wave.WaveFileWriter(wavPath, cap.WaveFormat);
                 writer = w;
                 cap.DataAvailable += (s, e) =>
@@ -1357,7 +1316,15 @@ namespace VRCNext.Services
 
         private bool IsButtonHeld(uint deviceIdx, uint buttonId)
         {
-            if (_vrSystem == null || deviceIdx == OpenVR.k_unTrackedDeviceIndexInvalid) return false;
+            if (deviceIdx == OpenVR.k_unTrackedDeviceIndexInvalid) return false;
+
+            if (VrInputActions.Active)
+            {
+                int side = deviceIdx == _leftIdx ? 1 : deviceIdx == _rightIdx ? 2 : 0;
+                return (VrInputActions.GetButtons(side) & (1UL << (int)buttonId)) != 0;
+            }
+
+            if (_vrSystem == null) return false;
             var s = new VRControllerState_t();
             if (!_vrSystem.GetControllerState(deviceIdx, ref s, (uint)Marshal.SizeOf<VRControllerState_t>()))
                 return false;

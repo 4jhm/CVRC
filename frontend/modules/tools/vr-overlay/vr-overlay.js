@@ -27,10 +27,42 @@ let _vroScaleAutoTimer     = null;
 let _asAutoStartedByVro    = false;
 let _vroScaleWasEnabled    = true;
 
-// Button name lookup (mirrors C# ButtonNames dictionary)
-const VRO_BTN_NAMES = { 1: 'B/Y', 2: 'Grip', 7: 'A/X', 32: 'Stick', 33: 'Trigger' };
 function vroGetNames(ids) {
-    return ids.map(id => VRO_BTN_NAMES[id] ?? `Button${id}`);
+    return vriNames(ids);
+}
+
+let _vroKbOther     = { combo: [], comboHand: 0, dt: [], dtHand: 0 };
+let _vroScaleOther  = { ids: [], hand: 0 };
+
+function vroApplyInputMode() {
+    _vroManualEditing = false;
+    _vroManualIds     = [];
+    _vroScaleManualEditing = false;
+    _vroScaleManualIds     = [];
+    document.getElementById('vroControllerVisual')?.classList.remove('editing');
+    document.getElementById('vroScaleControllerVisual')?.classList.remove('editing');
+    updateModePill();
+    updateKeybindDisplay();
+    updateRecordingUI();
+    updateScaleKeybindDisplay();
+    updateScaleRecordingUI();
+}
+
+function vroSwapKeybindSets() {
+    const cur = { combo: vroComboIds, comboHand: vroComboHand, dt: vroDtIds, dtHand: vroDtHand };
+    vroComboIds  = _vroKbOther.combo;
+    vroComboHand = _vroKbOther.comboHand;
+    vroDtIds     = _vroKbOther.dt;
+    vroDtHand    = _vroKbOther.dtHand;
+    _vroKbOther  = cur;
+
+    const sc = { ids: _vroScaleKeybindIds, hand: _vroScaleKeybindHand };
+    _vroScaleKeybindIds  = _vroScaleOther.ids;
+    _vroScaleKeybindHand = _vroScaleOther.hand;
+    _vroScaleOther       = sc;
+
+    vroSendConfig();
+    vroScaleSendConfig();
 }
 
 function _vroSideActive(hand, side) {
@@ -208,6 +240,7 @@ function vroSendConfig() {
         keybindHand:    vroComboHand,
         keybindDt:      vroDtIds,
         keybindDtHand:  vroDtHand,
+        inputMode:      vriLoaded ? vrInputMode : -1,
         keybindMode:    vroKeybindMode,
         controlRadius:  parseFloat(document.getElementById('vroControlRadius')?.value) || 28,
         dynVis:         !!document.getElementById('vroDynVis')?.checked,
@@ -298,7 +331,7 @@ function vroStartManualEdit() {
     const visual = document.getElementById('vroControllerVisual');
     visual?.classList.add('editing');
     visual?.querySelectorAll('.vro-btn').forEach(el => {
-        el.onclick = () => vroToggleManualBtn(parseInt(el.dataset.btnId, 10));
+        el.onclick = () => vriZoneClick(el, 'data-btn-id', _vroManualIds, vroToggleManualBtn);
     });
     _vroRenderManualToggle();
     updateRecordingUI();
@@ -317,8 +350,7 @@ function vroStopManualEdit() {
 
 function _vroRenderManualToggle() {
     document.getElementById('vroControllerVisual')?.querySelectorAll('.vro-btn').forEach(el => {
-        const btnId = parseInt(el.dataset.btnId, 10);
-        el.classList.toggle('active', _vroManualIds.includes(btnId) && _vroSideActive(_vroManualHand, el.dataset.side));
+        vriMarkBtn(el, _vroManualIds, 'data-btn-id', _vroSideActive(_vroManualHand, el.dataset.side));
     });
 }
 
@@ -328,7 +360,11 @@ function vroToggleManualBtn(id) {
     // Double-tap mode: only 1 button allowed
     const max = vroKeybindMode === 1 ? 1 : 4;
     if (i >= 0) _vroManualIds.splice(i, 1);
-    else { if (_vroManualIds.length >= max) _vroManualIds = [id]; else _vroManualIds.push(id); }
+    else {
+        _vroManualIds = vriDropZoneSiblings(_vroManualIds, id);
+        if (_vroManualIds.length >= max) _vroManualIds = [id];
+        else _vroManualIds.push(id);
+    }
     _vroRenderManualToggle();
 }
 
@@ -414,7 +450,7 @@ function vroTtsPreviewVoice(voice) {
         text: t('tts.preview_line', 'This is how this voice sounds.'),
         engine: document.getElementById('vroTtsEngine')?.value || 'sapi',
         voice,
-        device: parseInt(document.getElementById('vroTtsDevice')?.value ?? '-1', 10),
+        device: audioDeviceIndex('vroTtsDevice'),
         rate: 0,
     });
 }
@@ -425,7 +461,7 @@ function vroTtsTest() {
         text: t('vro.notifications.tts_test_line', 'VRCNext text to speech is working.'),
         engine: document.getElementById('vroTtsEngine')?.value || 'sapi',
         voice: document.getElementById('vroTtsVoice')?.value || '',
-        device: parseInt(document.getElementById('vroTtsDevice')?.value ?? '-1', 10),
+        device: audioDeviceIndex('vroTtsDevice'),
         rate: 0,
         volume: 100,
     });
@@ -518,7 +554,7 @@ function vroToastSendConfig() {
         ttsFriendReq: !!document.getElementById('vroToastFriendReqTts')?.checked,
         ttsInvite: !!document.getElementById('vroToastInviteTts')?.checked,
         ttsGroupInv: !!document.getElementById('vroToastGroupInvTts')?.checked,
-        ttsDevice:   parseInt(document.getElementById('vroTtsDevice')?.value ?? '-1', 10),
+        ttsDevice:   audioDeviceIndex('vroTtsDevice'),
         ttsVoice:    document.getElementById('vroTtsVoice')?.value || '',
         ttsEngine:   document.getElementById('vroTtsEngine')?.value || 'sapi',
     });
@@ -555,6 +591,7 @@ function vroScaleSendConfig() {
         rightThumb:          !!document.getElementById('vroScaleRightThumb')?.checked,
         keybind:             _vroScaleKeybindIds,
         keybindHand:         _vroScaleKeybindHand,
+        inputMode:           vriLoaded ? vrInputMode : -1,
         scrollSensitivity:   parseInt(document.getElementById('vroScaleSensitivity')?.value) || 25,
     });
 }
@@ -595,7 +632,7 @@ function vroScaleStartManual() {
     const visual = document.getElementById('vroScaleControllerVisual');
     visual?.classList.add('editing');
     visual?.querySelectorAll('.vro-btn').forEach(el => {
-        el.onclick = () => vroScaleToggleManualBtn(parseInt(el.dataset.scaleBtnId, 10));
+        el.onclick = () => vriZoneClick(el, 'data-scale-btn-id', _vroScaleManualIds, vroScaleToggleManualBtn);
     });
     _vroScaleRenderManual();
     updateScaleRecordingUI();
@@ -616,8 +653,7 @@ function vroScaleStopManual() {
 
 function _vroScaleRenderManual() {
     document.getElementById('vroScaleControllerVisual')?.querySelectorAll('.vro-btn').forEach(el => {
-        const btnId = parseInt(el.dataset.scaleBtnId, 10);
-        el.classList.toggle('active', _vroScaleManualIds.includes(btnId) && _vroSideActive(_vroScaleKeybindHand, el.dataset.side));
+        vriMarkBtn(el, _vroScaleManualIds, 'data-scale-btn-id', _vroSideActive(_vroScaleKeybindHand, el.dataset.side));
     });
 }
 
@@ -625,7 +661,11 @@ function vroScaleToggleManualBtn(id) {
     if (!_vroScaleManualEditing) return;
     const i = _vroScaleManualIds.indexOf(id);
     if (i >= 0) _vroScaleManualIds.splice(i, 1);
-    else { if (_vroScaleManualIds.length >= 4) _vroScaleManualIds = [id]; else _vroScaleManualIds.push(id); }
+    else {
+        _vroScaleManualIds = vriDropZoneSiblings(_vroScaleManualIds, id);
+        if (_vroScaleManualIds.length >= 4) _vroScaleManualIds = [id];
+        else _vroScaleManualIds.push(id);
+    }
     _vroScaleRenderManual();
 }
 
@@ -682,8 +722,7 @@ function updateScaleKeybindDisplay() {
 
     if (!visual) return;
     visual.querySelectorAll('.vro-btn').forEach(el => {
-        const btnId = parseInt(el.dataset.scaleBtnId ?? '999', 10);
-        el.classList.toggle('active', _vroScaleKeybindIds.includes(btnId) && _vroSideActive(_vroScaleKeybindHand, el.dataset.side));
+        vriMarkBtn(el, _vroScaleKeybindIds, 'data-scale-btn-id', _vroSideActive(_vroScaleKeybindHand, el.dataset.side));
     });
 }
 
@@ -799,8 +838,7 @@ function updateKeybindDisplay() {
 
     if (!visual) return;
     visual.querySelectorAll('.vro-btn').forEach(el => {
-        const btnId = parseInt(el.dataset.btnId ?? '999', 10);
-        el.classList.toggle('active', ids.includes(btnId) && _vroSideActive(hand, el.dataset.side));
+        vriMarkBtn(el, ids, 'data-btn-id', _vroSideActive(hand, el.dataset.side));
     });
 }
 
@@ -862,10 +900,17 @@ function vroLoadSettings(s) {
     const autoVrEl = document.getElementById('setVroAutoStartVR');
     if (autoVrEl) autoVrEl.checked = !!(s.vroAutoStartVR ?? s.autoStartVR ?? false);
 
-    vroComboIds = s.vroKeybind || [];
-    vroComboHand = s.vroKeybindHand ?? 0;
-    vroDtIds = s.vroKeybindDt || [];
-    vroDtHand = s.vroKeybindDtHand ?? 0;
+    const _vroIdx = (s.vrInputMode ?? 0) === 1;
+    vroComboIds  = (_vroIdx ? s.vroIdxKeybind       : s.vroKeybind)       || [];
+    vroComboHand = (_vroIdx ? s.vroIdxKeybindHand   : s.vroKeybindHand)   ?? 0;
+    vroDtIds     = (_vroIdx ? s.vroIdxKeybindDt     : s.vroKeybindDt)     || [];
+    vroDtHand    = (_vroIdx ? s.vroIdxKeybindDtHand : s.vroKeybindDtHand) ?? 0;
+    _vroKbOther  = {
+        combo:     (_vroIdx ? s.vroKeybind       : s.vroIdxKeybind)       || [],
+        comboHand: (_vroIdx ? s.vroKeybindHand   : s.vroIdxKeybindHand)   ?? 0,
+        dt:        (_vroIdx ? s.vroKeybindDt     : s.vroIdxKeybindDt)     || [],
+        dtHand:    (_vroIdx ? s.vroKeybindDtHand : s.vroIdxKeybindDtHand) ?? 0,
+    };
     vroKeybindMode = s.vroKeybindMode ?? 0;
 
     const radiusInput = document.getElementById('vroControlRadius');
@@ -970,8 +1015,12 @@ function vroLoadSettings(s) {
     if (waterMinutesEl) waterMinutesEl.value = s.vroWaterMinutes ?? 0;
 
     // Scale keybind settings
-    _vroScaleKeybindIds  = s.vroScaleKeybind     || [];
-    _vroScaleKeybindHand = s.vroScaleKeybindHand ?? 0;
+    _vroScaleKeybindIds  = ((s.vrInputMode ?? 0) === 1 ? s.vroIdxScaleKeybind     : s.vroScaleKeybind)     || [];
+    _vroScaleKeybindHand = ((s.vrInputMode ?? 0) === 1 ? s.vroIdxScaleKeybindHand : s.vroScaleKeybindHand) ?? 0;
+    _vroScaleOther = {
+        ids:  ((s.vrInputMode ?? 0) === 1 ? s.vroScaleKeybind     : s.vroIdxScaleKeybind)     || [],
+        hand: ((s.vrInputMode ?? 0) === 1 ? s.vroScaleKeybindHand : s.vroIdxScaleKeybindHand) ?? 0,
+    };
 
     const scaleEnabledEl    = document.getElementById('vroScaleEnabled');
     if (scaleEnabledEl)    scaleEnabledEl.checked    = !!(s.vroScaleEnabled    ?? true);

@@ -583,7 +583,7 @@ const SmartSearch = (() => {
         modalMyProfile: () => typeof closeMyProfile === 'function' && closeMyProfile(),
         modalInvite: () => typeof closeInviteModal === 'function' && closeInviteModal(),
         modalCreateInstance: () => typeof closeCreateInstanceModal === 'function' && closeCreateInstanceModal(),
-        modalPerminiPicker: () => typeof closePerminiPicker === 'function' && closePerminiPicker(),
+        modalFriendPicker: () => typeof closeFriendPicker === 'function' && closeFriendPicker(),
         dashLayoutModal: () => typeof closeDashLayoutEditor === 'function' && closeDashLayoutEditor(),
         navEditorOverlay: () => typeof closeNavEditor === 'function' && closeNavEditor(),
         invUploadModal: () => typeof closeInvUploadModal === 'function' && closeInvUploadModal(),

@@ -14,6 +14,10 @@
     let callbacks = [];
     let confirmState = null; // { idx, timer }
     let submenuTimer = null;
+    let submenuOwner = null;
+
+    function st() { return window.safeTriangle; }
+    function guarded() { return !!(st() && st().isProtected()); }
 
     function cm(key, fallback = '') {
         return typeof t === 'function' ? t(`context_menu.${key}`, fallback) : fallback;
@@ -152,7 +156,9 @@
 
         menu.querySelectorAll('.vn-ctx-item[data-idx]:not(.has-sub)').forEach(btn => {
             btn.addEventListener('mouseenter', () => {
-                submenuTimer = setTimeout(hideSubmenu, 100);
+                if (guarded()) return;
+                clearTimeout(submenuTimer);
+                submenuTimer = setTimeout(hideSubmenu, st() ? st().cfg.closeDelay : 200);
             });
             btn.addEventListener('click', e => {
                 e.stopPropagation();
@@ -169,16 +175,22 @@
         menu.querySelectorAll('.vn-ctx-item.has-sub').forEach(btn => {
             const open = () => {
                 clearTimeout(submenuTimer);
+                if (submenuOwner === btn && submenu.style.display !== 'none') return;
                 hideSubmenu();
+                submenuOwner = btn;
                 callbacks[+btn.dataset.idx]?.submenuFn?.(btn);
+                if (st()) st().register(submenu, menu);
             };
-            btn.addEventListener('mouseenter', open);
+            btn.addEventListener('mouseenter', () => {
+                if (guarded()) return;
+                const d = st() ? st().cfg.openDelay : 0;
+                clearTimeout(submenuTimer);
+                if (d > 0) submenuTimer = setTimeout(open, d);
+                else open();
+            });
             btn.addEventListener('click', e => {
                 e.stopPropagation();
                 open();
-            });
-            btn.addEventListener('mouseleave', () => {
-                submenuTimer = setTimeout(hideSubmenu, 150);
             });
         });
     }
@@ -196,6 +208,8 @@
 
     function hideSubmenu() {
         clearTimeout(submenuTimer);
+        submenuOwner = null;
+        if (window.safeTriangle) window.safeTriangle.reset();
         submenu.style.display = 'none';
         submenu.innerHTML = '';
     }
@@ -846,6 +860,53 @@
         return items;
     }
 
+    function showMediaUploadSubmenu(url, name, parentBtn) {
+        const opts = buildMediaUploadItems(url, name);
+        submenu.innerHTML = opts.map((o, i) => `
+            <button class="vn-ctx-item" data-uidx="${i}">
+                <span class="msi">${o.icon}</span>
+                <span class="vn-ctx-label">${esc(o.label)}</span>
+                <span class="vrcn-supporter-badge" style="margin-left:auto;flex-shrink:0;">VRC+</span>
+            </button>`).join('');
+        submenu.querySelectorAll('[data-uidx]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                opts[+btn.dataset.uidx]?.action?.();
+                hideMenu();
+            });
+            btn.addEventListener('mouseenter', () => clearTimeout(submenuTimer));
+        });
+        positionSubmenu(parentBtn);
+    }
+
+    function showLibraryRatingSubmenu(path, parentBtn) {
+        const current = (typeof photoRatings !== 'undefined' && photoRatings.get(path)) || 0;
+        const rows = [];
+        for (let n = 5; n >= 1; n--) {
+            const hearts = typeof _libHeartsHtml === 'function' ? _libHeartsHtml(n, 13) : String(n);
+            rows.push(`<button class="vn-ctx-item${current === n ? ' vn-ctx-rating-active' : ''}" data-rval="${n}">
+                <span class="vn-ctx-label lib-rating-hearts">${hearts}</span>
+            </button>`);
+        }
+        rows.push('<div class="vn-ctx-sep"></div>');
+        rows.push(`<button class="vn-ctx-item" data-rval="0">
+            <span class="msi">delete</span>
+            <span class="vn-ctx-label">${esc(cm('library.rating_clear', 'Clear Rating'))}</span>
+        </button>`);
+
+        submenu.innerHTML = rows.join('');
+        submenu.querySelectorAll('[data-rval]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const n = parseInt(btn.dataset.rval, 10);
+                if (typeof setPhotoRatingValue === 'function') setPhotoRatingValue(path, n);
+                hideMenu();
+            });
+            btn.addEventListener('mouseenter', () => clearTimeout(submenuTimer));
+        });
+        positionSubmenu(parentBtn);
+    }
+
     function showGroupVisibilitySubmenu(groupId, currentVis, parentBtn) {
         const opts = [
             { val: 'visible', icon: 'public',         key: 'groups.visibility.visible', fb: 'Visible for Everyone' },
@@ -1388,7 +1449,7 @@
         }
         if (type === 'image' || type === 'gif') {
             items.push({ icon: 'desktop_windows', label: cm('library.set_wallpaper', 'Set as Desktop Background'), action: () => sendToCS({ action: 'setDesktopBackground', path }) });
-            items.push('sep', ...buildMediaUploadItems(url, name));
+            items.push({ icon: 'upload', label: cm('library.upload', 'Upload'), submenuFn: btn => showMediaUploadSubmenu(url, name, btn) });
         }
         items.push({ icon: 'folder_open', label: cm('library.reveal_in_explorer', 'Reveal in Explorer'), action: () => sendToCS({ action: 'revealInExplorer', path }) });
         if (typeof relayOn !== 'undefined' && relayOn) {
@@ -1399,6 +1460,9 @@
             ? { icon: 'favorite_border', label: cm('library.remove_favorite', 'Remove Favorite'), action: () => toggleFavorite(path) }
             : { icon: 'favorite', label: cm('library.favorite', 'Favorite'), action: () => toggleFavorite(path) }
         );
+        if (!window._isLinuxUi && (type === 'image' || type === 'gif')) {
+            items.push({ icon: 'favorite', label: cm('library.rating', 'Rating'), submenuFn: btn => showLibraryRatingSubmenu(path, btn) });
+        }
         items.push(isHidden
             ? { icon: 'visibility', label: cm('library.unhide', 'Unhide'), action: () => toggleHidden(path) }
             : { icon: 'visibility_off', label: cm('library.hide', 'Hide'), action: () => toggleHidden(path) }
@@ -1418,7 +1482,7 @@
         }
         if (type === 'image' || type === 'gif') {
             items.push({ icon: 'desktop_windows', label: cm('library.set_wallpaper', 'Set as Desktop Background'), action: () => sendToCS({ action: 'setDesktopBackground', path }) });
-            items.push('sep', ...buildMediaUploadItems(url, name));
+            items.push({ icon: 'upload', label: cm('library.upload', 'Upload'), submenuFn: btn => showMediaUploadSubmenu(url, name, btn) });
         }
         items.push({ icon: 'folder_open', label: cm('library.reveal_in_explorer', 'Reveal in Explorer'), action: () => sendToCS({ action: 'revealInExplorer', path }) });
         items.push('sep');
@@ -1426,6 +1490,9 @@
             ? { icon: 'favorite_border', label: cm('library.remove_favorite', 'Remove Favorite'), action: () => toggleFavorite(path) }
             : { icon: 'favorite',        label: cm('library.favorite',        'Favorite'),        action: () => toggleFavorite(path) }
         );
+        if (!window._isLinuxUi && (type === 'image' || type === 'gif')) {
+            items.push({ icon: 'favorite', label: cm('library.rating', 'Rating'), submenuFn: btn => showLibraryRatingSubmenu(path, btn) });
+        }
         items.push('sep');
         items.push({ icon: 'delete', label: cm('library.delete', 'Delete'), danger: true, action: () => showDeleteModal(path, name) });
         return items;

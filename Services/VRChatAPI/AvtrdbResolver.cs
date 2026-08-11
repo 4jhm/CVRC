@@ -108,7 +108,7 @@ public sealed class AvtrdbResolver
 
         using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(25) };
         client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
-        client.DefaultVersionPolicy  = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
+        client.DefaultVersionPolicy  = System.Net.Http.HttpVersionPolicy.RequestVersionExact;
         client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", AppInfo.UserAgent);
         client.DefaultRequestHeaders.TryAddWithoutValidation("Referer", $"https://{AppInfo.Website}");
         client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
@@ -130,6 +130,8 @@ public sealed class AvtrdbResolver
     {
         using var req = new HttpRequestMessage(QueryMethod, Endpoint)
         {
+            Version = System.Net.HttpVersion.Version20,
+            VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact,
             Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json")
         };
         var resp = await client.SendAsync(req);

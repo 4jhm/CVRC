@@ -50,6 +50,22 @@ internal static class Database
         return conn;
     }
 
+    private static readonly string MediaDbPath = Path.Combine(BaseDir, "MediaLibrary.db");
+
+    internal static SqliteConnection OpenMediaConnection()
+    {
+        if (!Directory.Exists(BaseDir)) Directory.CreateDirectory(BaseDir);
+
+        var conn = new SqliteConnection($"Data Source={MediaDbPath}");
+        conn.Open();
+
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "PRAGMA journal_mode=WAL; PRAGMA synchronous=NORMAL; PRAGMA cache_size=-1024;";
+        cmd.ExecuteNonQuery();
+
+        return conn;
+    }
+
     private static readonly string VRCNPlusDbPath = Path.Combine(BaseDir, "VRCNPlus.sqlite");
 
     internal static SqliteConnection OpenVRCNPlusConnection()

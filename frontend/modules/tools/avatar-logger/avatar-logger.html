@@ -1,0 +1,60 @@
+                <div class="sf-layout">
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">terminal</span> <span data-i18n="avlog.title">Avatar Logger</span></div>
+                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="avlog.desc">Watches for freshly-downloaded avatars while you're in VRChat and posts them to Discord and/or GoFile.</div>
+                        <div class="sf-status-row">
+                            <div class="sf-status"><span class="sf-dot offline" id="avlogDot"></span><span id="avlogStatusText" data-i18n="avlog.status.stopped">Stopped</span></div>
+                            <button class="vrcn-button" id="avlogToggleBtn" onclick="avlogToggle()"><span class="msi" style="font-size:16px;">play_arrow</span> <span data-i18n="common.start">Start</span></button>
+                        </div>
+                    </div>
+
+                    <div class="avlog-grid">
+                        <div class="vrcn-panel-card">
+                            <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">settings</span> <span data-i18n="avlog.settings.title">Settings</span></div>
+                            <div class="cb-form-row"><label data-i18n="avlog.settings.webhook">Discord Webhook URL</label><input type="text" id="avlogWebhookUrl" class="vrcn-edit-field" placeholder="https://discord.com/api/webhooks/..." style="flex:1;" onchange="avlogSaveConfig()"></div>
+                            <div class="cb-form-row"><label data-i18n="avlog.settings.min_size">Minimum Size</label><input type="number" id="avlogMinSizeMb" class="vrcn-edit-field" min="0" step="1" style="width:90px;" onchange="avlogSaveConfig()"> <span class="avlog-unit">MB</span></div>
+                            <div class="sf-toggle-row"><span data-i18n="avlog.settings.auto_upload">Auto-Upload</span><label class="toggle"><input type="checkbox" id="avlogAutoUpload" onchange="avlogSaveConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                            <div class="cb-form-row"><label data-i18n="avlog.settings.auto_upload_min">Auto-Upload Above</label><input type="number" id="avlogAutoUploadMinMb" class="vrcn-edit-field" min="0" step="1" style="width:90px;" onchange="avlogSaveConfig()"> <span class="avlog-unit">MB</span></div>
+                            <div class="cb-form-row"><label data-i18n="avlog.settings.delivery_mode">Delivery Mode</label>
+                                <select id="avlogDeliveryMode" class="cb-select" onchange="avlogSaveConfig()">
+                                    <option value="discord" data-i18n="avlog.settings.delivery.discord">Discord (fallback to GoFile if too large)</option>
+                                    <option value="gofile" data-i18n="avlog.settings.delivery.gofile">GoFile only</option>
+                                    <option value="auto" data-i18n="avlog.settings.delivery.auto">Auto (Discord first, GoFile on failure)</option>
+                                </select>
+                            </div>
+                            <div class="cb-form-row"><label data-i18n="avlog.settings.max_attachment">Discord Attachment Limit</label><input type="number" id="avlogMaxAttachmentMb" class="vrcn-edit-field" min="1" step="1" style="width:90px;" onchange="avlogSaveConfig()"> <span class="avlog-unit">MB</span></div>
+                            <div class="cb-form-row"><label data-i18n="avlog.settings.gofile_token">GoFile Account Token</label><input type="password" id="avlogGofileToken" class="vrcn-edit-field" placeholder="Optional — anonymous upload if blank" style="flex:1;" onchange="avlogSaveConfig()"></div>
+                            <div class="cb-form-row"><label data-i18n="avlog.settings.gofile_folder">GoFile Folder ID</label><input type="text" id="avlogGofileFolder" class="vrcn-edit-field" placeholder="Optional — uploads to account root if blank" style="flex:1;" onchange="avlogSaveConfig()"></div>
+                            <div class="cb-form-row"><label data-i18n="avlog.settings.local_archive">Local Archive Folder</label><input type="text" id="avlogLocalArchivePath" class="vrcn-edit-field" placeholder="Optional — e.g. Q:\vrca" style="flex:1;" onchange="avlogSaveConfig()"></div>
+                            <div class="sf-toggle-row"><span data-i18n="avlog.settings.log_my_switches">Log My Own Avatar Switches</span><label class="toggle"><input type="checkbox" id="avlogLogMySwitches" onchange="avlogSaveConfig()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                            <div class="cb-form-row" style="align-items:flex-start;"><label data-i18n="avlog.settings.ignore_people">Ignore List</label><textarea id="avlogIgnorePeople" class="vrcn-edit-field avlog-ignore-textarea" placeholder="One name per line" onchange="avlogSaveConfig()"></textarea></div>
+                            <div class="avlog-settings-actions">
+                                <button class="vrcn-button" onclick="avlogTestWebhook()"><span class="msi" style="font-size:16px;">send</span> <span data-i18n="avlog.settings.test_webhook">Test Webhook</span></button>
+                                <button class="vrcn-button" onclick="avlogClearSeen()"><span class="msi" style="font-size:16px;">restart_alt</span> <span data-i18n="avlog.settings.clear_seen">Forget Logged Avatars</span></button>
+                            </div>
+                        </div>
+
+                        <div class="vrcn-panel-card">
+                            <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">history</span> <span data-i18n="avlog.feed.title">Live Feed</span></div>
+                            <div class="avdb-toolbar" style="margin-bottom:10px;">
+                                <div class="avdb-sort-group">
+                                    <span class="avdb-sort-label" data-i18n="avdb.sort_by">Sort by</span>
+                                    <button class="vrcn-button avdb-sort-btn active" id="avlogFeedSortTime" onclick="avlogFeedSetSort('time')"><span data-i18n="avlog.feed.sort.time">Time</span></button>
+                                    <button class="vrcn-button avdb-sort-btn" id="avlogFeedSortSize" onclick="avlogFeedSetSort('size')"><span data-i18n="avdb.sort.size">Size</span></button>
+                                    <button class="vrcn-button avdb-sort-btn" id="avlogFeedSortName" onclick="avlogFeedSetSort('name')"><span data-i18n="avdb.sort.name">Name</span></button>
+                                    <button class="vrcn-button-round" id="avlogFeedSortDirBtn" onclick="avlogFeedToggleDirection()" title="Toggle sort direction" data-i18n-title="avdb.sort.toggle_direction"><span class="msi" id="avlogFeedSortDirIcon">arrow_downward</span></button>
+                                </div>
+                            </div>
+                            <div class="avlog-feed" id="avlogFeed">
+                                <div class="osc-empty" data-i18n="avlog.feed.empty">No avatars detected yet this session.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">inventory_2</span> <span data-i18n="avlog.history.title">Database</span></div>
+                        <div class="avlog-history-grid" id="avlogHistoryGrid">
+                            <div class="osc-empty" data-i18n="avlog.history.empty">No avatars logged yet.</div>
+                        </div>
+                    </div>
+                </div>

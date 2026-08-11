@@ -1,4 +1,4 @@
-                <div class="sf-layout">
+﻿                <div class="sf-layout">
                     <div class="vrcn-panel-card status">
                         <div class="sf-status-row">
                             <div class="sf-status"><span class="sf-dot offline" id="sfDot"></span><span id="sfStatusText" data-i18n="steamvr.status.not_connected">Not connected</span></div>
@@ -39,6 +39,7 @@
                     <!-- Controls -->
                     <div class="vrcn-panel-card">
                         <div class="vrcn-panel-card-header"><span class="msi">gamepad</span> <span data-i18n="steamvr.controls.title">Controls</span>
+                            <select class="vrcn-select vro-input-mode" onchange="vriSetMode(this.value)"><option value="0" data-i18n="vri.mode.legacy">Legacy (Default)</option><option value="1" data-i18n="vri.mode.steamvr">SteamVR (Index)</option></select>
                             <button class="vrcn-button vro-view-toggle" onclick="sfToggleView(this)" title="Toggle legacy view" data-i18n-title="vro.keybind.toggle_view">
                                 <span class="msi" style="font-size:15px;">format_list_bulleted</span>
                             </button>
@@ -87,7 +88,7 @@
 
                             <div class="sf-ctrl-grid">
                                 <label data-i18n="common.left_hand">Left Hand</label>
-                                <select id="sfLeftReset" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
+                                <select id="sfLeftReset" data-vri-buttons="optional" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
                                     <option value="0"  data-i18n="frameshot.keybind.none">None</option>
                                     <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
                                     <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
@@ -95,7 +96,7 @@
                                     <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
                                     <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
                                 </select>
-                                <select id="sfLeftDrag" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
+                                <select id="sfLeftDrag" data-vri-buttons="optional" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
                                     <option value="0"  data-i18n="frameshot.keybind.none">None</option>
                                     <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
                                     <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
@@ -103,7 +104,7 @@
                                     <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
                                     <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
                                 </select>
-                                <select id="sfLeftGravity" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
+                                <select id="sfLeftGravity" data-vri-buttons="optional" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
                                     <option value="0"  data-i18n="frameshot.keybind.none">None</option>
                                     <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
                                     <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
@@ -115,7 +116,7 @@
 
                             <div class="sf-ctrl-grid">
                                 <label data-i18n="common.right_hand">Right Hand</label>
-                                <select id="sfRightReset" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
+                                <select id="sfRightReset" data-vri-buttons="optional" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
                                     <option value="0"  data-i18n="frameshot.keybind.none">None</option>
                                     <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
                                     <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
@@ -123,7 +124,7 @@
                                     <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
                                     <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
                                 </select>
-                                <select id="sfRightDrag" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
+                                <select id="sfRightDrag" data-vri-buttons="optional" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
                                     <option value="0"  data-i18n="frameshot.keybind.none">None</option>
                                     <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
                                     <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>
@@ -131,7 +132,7 @@
                                     <option value="7"  data-i18n="vro.keybind.button.ax">A / X</option>
                                     <option value="1"  data-i18n="vro.keybind.button.by">B / Y</option>
                                 </select>
-                                <select id="sfRightGravity" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
+                                <select id="sfRightGravity" data-vri-buttons="optional" class="vrcn-select" onchange="sfAutoSave();sfRenderKeybind()">
                                     <option value="0"  data-i18n="frameshot.keybind.none">None</option>
                                     <option value="2"  data-i18n="vro.keybind.button.grip">Grip</option>
                                     <option value="33" data-i18n="vro.keybind.button.trigger">Trigger</option>

@@ -40,7 +40,7 @@ function _ipValue(u, field) {
         case 'joined':   return u.joinedAt || 0;
         case 'rank':     return _PL_RANK_ORDER.indexOf(getTrustRank((f?.tags?.length ? f.tags : u.tags) || [])?.cls || '');
         case 'status':   return (f?.status || u.status || '').toLowerCase();
-        case 'age':      return (f?.ageVerified || u.ageVerified) ? 1 : 0;
+        case 'age':      return (f?.ageVerificationStatus || u.ageVerificationStatus) === '18+' ? 2 : ((f?.ageVerified || u.ageVerified) ? 1 : 0);
         case 'platform': return (f?.platform || u.platform || '').toLowerCase();
         case 'language': return ((f?.tags || u.tags || []).find(x => x.startsWith('language_')) || '');
         case 'biolinks': return (Array.isArray(u.bioLinks) ? u.bioLinks.filter(Boolean).length : 0);
@@ -68,6 +68,7 @@ function buildInstancePlayersHtml(users, iStart, iTotal, now) {
         const tags = (f?.tags?.length ? f.tags : null) || u.tags || [];
         const platform = f?.platform || u.platform || '';
         const ageVerified = !!(f?.ageVerified || u.ageVerified);
+        const is18 = (f?.ageVerificationStatus || u.ageVerificationStatus) === '18+';
         const st = _peopleStatsMap[u.id];
 
         const av = image
@@ -98,7 +99,7 @@ function buildInstancePlayersHtml(users, iStart, iTotal, now) {
             name:     `<td class="pl-name">${esc(displayName)}</td>`,
             rank:     `<td>${rank ? `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>` : ''}</td>`,
             status:   `<td class="pl-status">${status ? `<span class="vrc-status-dot ${statusDotClass(status)}"></span><span class="pl-status-txt">${esc(statusDesc || statusLabel(status))}</span>` : ''}</td>`,
-            age:      `<td>${ageVerified ? `<span class="vrcn-badge ip-age">18+</span>` : ''}</td>`,
+            age:      `<td>${is18 ? `<span class="vrcn-badge ip-age">18+</span>` : (ageVerified ? `<span class="vrcn-badge ip-age">Verified</span>` : '')}</td>`,
             platform: `<td>${platIcon}</td>`,
             language: `<td class="pl-langs">${langs}</td>`,
             biolinks: `<td class="pl-bios">${_plBioLinksCell(u)}</td>`,

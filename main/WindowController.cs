@@ -414,9 +414,9 @@ public class WindowController
                     msg["text"]?.ToString() ?? "VRCNext text to speech is working.",
                     msg["engine"]?.ToString() ?? VRCNext.Services.Helpers.TtsService.EngineSapi,
                     msg["voice"]?.ToString() ?? "",
-                    msg["device"]?.Value<int>() ?? -1,
-                    msg["volume"]?.Value<int>() ?? 100,
-                    msg["rate"]?.Value<int>() ?? 0);
+                    msg["device"]?.Value<int?>() ?? -1,
+                    msg["volume"]?.Value<int?>() ?? 100,
+                    msg["rate"]?.Value<int?>() ?? 0);
                 break;
             }
             case "ttsPreview":
@@ -425,8 +425,8 @@ public class WindowController
                     msg["text"]?.ToString() ?? "Hello",
                     msg["engine"]?.ToString() ?? VRCNext.Services.Helpers.TtsService.EngineSapi,
                     msg["voice"]?.ToString() ?? "",
-                    msg["device"]?.Value<int>() ?? -1,
-                    msg["rate"]?.Value<int>() ?? 0);
+                    msg["device"]?.Value<int?>() ?? -1,
+                    msg["rate"]?.Value<int?>() ?? 0);
                 break;
             }
             case "getSystemFonts":

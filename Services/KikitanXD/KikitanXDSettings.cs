@@ -12,6 +12,7 @@ public class KikitanXDSettings
     public string GoogleApiKey { get; set; } = "";
     public string Model { get; set; } = "groq";
     public int InputDeviceIndex { get; set; } = 0;
+    public string InputDeviceName { get; set; } = "";
     public string SourceLang { get; set; } = "auto";
     public string TargetLang { get; set; } = "en";
     public bool TranslateEnabled { get; set; } = true;
@@ -25,6 +26,7 @@ public class KikitanXDSettings
     public List<string> BlockedSentences { get; set; } = new();
     public bool TtsEnabled { get; set; } = false;
     public int TtsDevice { get; set; } = -1;
+    public string TtsDeviceName { get; set; } = "";
     public string TtsVoice { get; set; } = "";
     public string TtsEngine { get; set; } = "sapi";
     public int TtsRate { get; set; } = 0;

@@ -24,16 +24,18 @@
                         </div>
 
                         <!-- Rule editor -->
-                        <div class="vrcn-panel-card ss-editor-card">
-                            <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="status_schedule.rule_editor">Rule</span></div>
+                        <div class="ss-editor-card">
 
-                            <div id="ssEditorEmpty" class="ss-empty-hint">
+                            <div id="ssEditorEmpty" class="vrcn-panel-card ss-empty-hint">
                                 <span class="msi" style="font-size:34px;color:var(--tx3);">event_available</span>
                                 <div class="ss-empty-title" data-i18n="status_schedule.empty.title">No rule selected</div>
                                 <div class="ss-empty-sub" data-i18n="status_schedule.empty.hint">Create a rule with the button above.</div>
                             </div>
 
                             <div id="ssEditor" class="ss-editor" style="display:none;">
+
+                              <div class="vrcn-panel-card">
+                                <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="status_schedule.card.settings">Rule Settings</span></div>
 
                                 <div class="ss-field-row">
                                     <div class="ss-field">
@@ -66,8 +68,12 @@
                                     <span class="ss-hint" data-i18n="status_schedule.days_hint">No selection means every day.</span>
                                 </div>
 
+                              </div>
+
+                              <div class="vrcn-panel-card">
+                                <div class="vrcn-panel-card-header"><span class="msi">mood</span> <span data-i18n="status_schedule.card.status">Status</span></div>
+
                                 <div class="ss-field">
-                                    <label class="ss-label" data-i18n="status_schedule.field.status">Status</label>
                                     <div id="ssFieldStatus" class="ss-status-options"></div>
                                 </div>
 
@@ -76,6 +82,11 @@
                                     <label class="toggle"><input type="checkbox" id="ssFieldSetMessage" onchange="ssUpdateField('setStatusMessage', this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
                                 </div>
                                 <input type="text" id="ssFieldMessage" class="vrcn-edit-field" maxlength="32" data-i18n-placeholder="status_schedule.status_message_placeholder" placeholder="Status message..." oninput="ssUpdateField('statusMessage', this.value)" style="display:none;">
+
+                              </div>
+
+                              <div class="vrcn-panel-card">
+                                <div class="vrcn-panel-card-header"><span class="msi">rule</span> <span data-i18n="status_schedule.card.logic">Logic Condition</span></div>
 
                                 <div class="ss-switch-row">
                                     <span class="ss-switch-label" data-i18n="status_schedule.field.only_in_game">Only While in Game</span>
@@ -90,6 +101,36 @@
                                 <div class="ss-switch-row">
                                     <span class="ss-switch-label" data-i18n="status_schedule.field.restore">Restore Previous Status</span>
                                     <label class="toggle"><input type="checkbox" id="ssFieldRestore" onchange="ssUpdateField('restorePreviousStatus', this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                                </div>
+
+                              </div>
+
+                              <div class="vrcn-panel-card ss-cond-card">
+                                    <div class="vrcn-panel-card-header"><span class="msi">travel_explore</span> <span data-i18n="status_schedule.cond.title">Instance Conditions</span></div>
+                                        <div class="set-desc" data-i18n="status_schedule.cond.desc">Extra requirements checked while you are in VRChat. All of them must match for the rule to apply.</div>
+
+                                        <div class="ss-field">
+                                            <label class="ss-label" data-i18n="status_schedule.cond.instance_type">Instance Type</label>
+                                            <div id="ssFieldInstanceTypes" class="ss-days"></div>
+                                            <span class="ss-hint" data-i18n="status_schedule.cond.instance_type_hint">No selection means any instance type.</span>
+                                        </div>
+
+                                        <div class="ss-field">
+                                            <label class="ss-label" data-i18n="status_schedule.cond.min_players">Minimum Players</label>
+                                            <div id="ssFieldMinPlayersWrap"></div>
+                                            <span class="ss-hint" data-i18n="status_schedule.cond.min_players_hint">0 disables this condition.</span>
+                                        </div>
+
+                                        <div class="ss-field">
+                                            <label class="ss-label" data-i18n="status_schedule.cond.friends">Friends Present</label>
+                                            <div class="ss-switch-row">
+                                                <span class="ss-switch-label" data-i18n="status_schedule.cond.friends_require_all">All selected friends must be present</span>
+                                                <label class="toggle"><input type="checkbox" id="ssFieldFriendsAll" onchange="ssUpdateField('friendsRequireAll', this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                                            </div>
+                                            <div id="ssFieldFriends" class="ss-friend-chips"></div>
+                                            <button class="vrcn-button" onclick="ssOpenFriendPicker()"><span class="msi" style="font-size:16px;">person_add</span><span data-i18n="status_schedule.cond.add_friend">Add Friend</span></button>
+                                            <span class="ss-hint" data-i18n="status_schedule.cond.friends_hint">No selection disables this condition.</span>
+                                        </div>
                                 </div>
 
                                 <div class="ss-editor-actions">

@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
@@ -17,11 +18,15 @@ public class GofileService
     private const string UserAgent = "Mozilla/5.0";
     private const string WebsiteTokenSalt = "9844d94d963d30";
 
-    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(20) };
+    // 30 min ceiling so large avatar uploads have room; per-call CancellationTokenSources
+    // still apply their own (shorter) timeouts for the quick listing/account calls.
+    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromMinutes(30) };
     private readonly Action<string> _log;
 
     private string? _accountToken;
     private DateTime _accountTokenAt = DateTime.MinValue;
+    private string? _uploadServer;
+    private DateTime _uploadServerAt = DateTime.MinValue;
 
     public GofileService(Action<string> log) { _log = log; }
 
@@ -62,6 +67,93 @@ public class GofileService
             _log($"[Gofile] Account creation error: {ex.Message}");
             return null;
         }
+    }
+
+    // Reason the most recent upload failed, for surfacing in the UI.
+    public string LastUploadError { get; private set; } = "";
+
+    private async Task<string?> GetUploadServerAsync()
+    {
+        // Avoids an extra round-trip before every single upload — the assigned server doesn't
+        // change on a whim, so reuse it for a while instead of asking again each time.
+        if (_uploadServer != null && (DateTime.UtcNow - _uploadServerAt).TotalMinutes < 10)
+            return _uploadServer;
+
+        foreach (var (url, pick) in new (string, Func<JObject, string?>)[]
+        {
+            ("https://api.gofile.io/servers",   d => d["data"]?["servers"]?.FirstOrDefault()?["name"]?.ToString()),
+            ("https://api.gofile.io/getServer", d => d["data"]?["server"]?.ToString()),
+        })
+        {
+            try
+            {
+                using var resp = await _http.GetAsync(url);
+                if (!resp.IsSuccessStatusCode) continue;
+                var body = await resp.Content.ReadAsStringAsync();
+                var name = pick(JObject.Parse(body));
+                if (!string.IsNullOrEmpty(name))
+                {
+                    _uploadServer = name;
+                    _uploadServerAt = DateTime.UtcNow;
+                    return name;
+                }
+            }
+            catch { }
+        }
+        return null;
+    }
+
+    // Uploads a file (anonymously, or into the given account/folder when a token is supplied)
+    // and returns its shareable Gofile download page link, or null on failure (see LastUploadError).
+    // onProgress(bytesSent, totalBytes) fires as the request body is actually streamed out —
+    // HttpClient has no built-in upload-progress API, so this rides a custom HttpContent
+    // (see ProgressStreamContent below), the standard workaround for this.
+    public async Task<string?> UploadFileAsync(string filePath, string fileName, string? token = null,
+        string? folderId = null, Action<long, long>? onProgress = null)
+    {
+        LastUploadError = "";
+        var server = await GetUploadServerAsync();
+        if (server == null) { LastUploadError = "couldn't reach a GoFile upload server"; return null; }
+        var totalBytes = new FileInfo(filePath).Length;
+
+        foreach (var path in new[] { "contents/uploadfile", "uploadFile" })
+        {
+            try
+            {
+                using var content = new MultipartFormDataContent();
+                // FileOptions.Asynchronous is required for ReadAsync to actually use OS-level async
+                // I/O — File.OpenRead() omits it, which silently downgrades every "async" read to a
+                // synchronous read wrapped in a Task. SequentialScan hints the OS to read ahead
+                // aggressively, which matters here since the whole file is read start-to-finish once.
+                await using var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                    bufferSize: 4096, FileOptions.Asynchronous | FileOptions.SequentialScan);
+                using var fileContent = new ProgressStreamContent(fs, totalBytes, onProgress);
+                fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+                content.Add(fileContent, "file", fileName);
+                if (!string.IsNullOrEmpty(folderId) && !string.IsNullOrEmpty(token))
+                    content.Add(new StringContent(folderId), "folderId");
+
+                using var req = new HttpRequestMessage(HttpMethod.Post, $"https://{server}.gofile.io/{path}") { Content = content };
+                req.Headers.UserAgent.ParseAdd(UserAgent);
+                if (!string.IsNullOrEmpty(token)) req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(30));
+                using var resp = await _http.SendAsync(req, cts.Token);
+                var body = await resp.Content.ReadAsStringAsync();
+                if (!resp.IsSuccessStatusCode)
+                {
+                    LastUploadError = $"HTTP {(int)resp.StatusCode}: {body[..Math.Min(150, body.Length)]}";
+                    continue;
+                }
+                var link = JObject.Parse(body)["data"]?["downloadPage"]?.ToString();
+                if (!string.IsNullOrEmpty(link)) return link;
+                LastUploadError = $"no link in response: {body[..Math.Min(150, body.Length)]}";
+            }
+            catch (Exception ex) { LastUploadError = $"{ex.GetType().Name}: {ex.Message}"; }
+        }
+        // Whatever went wrong, don't keep handing out a possibly-bad cached server next time.
+        _uploadServer = null; _uploadServerAt = DateTime.MinValue;
+        return null;
     }
 
     public Task<List<GofileEntry>?> ListFolderAsync(string contentId) => ListFolderAsync(contentId, allowRetry: true);
@@ -126,6 +218,46 @@ public class GofileService
         {
             _log($"[Gofile] Folder listing error: {ex.Message}");
             return null;
+        }
+    }
+
+    // Wraps a readable stream as HttpContent, reporting (bytesSent, totalBytes) as it's
+    // actually written out to the request — HttpClient/StreamContent has no progress hook,
+    // so overriding SerializeToStreamAsync is the standard way to observe upload progress.
+    private sealed class ProgressStreamContent : HttpContent
+    {
+        // 1 MB chunks instead of the previous 80 KB — for a ~120 MB avatar file that's ~120
+        // read/write/await round-trips instead of ~1500, which is where most of the "the
+        // network's fine but this feels slow" overhead was actually coming from.
+        private const int BufferSize = 1024 * 1024;
+        private readonly Stream _source;
+        private readonly long _totalBytes;
+        private readonly Action<long, long>? _onProgress;
+
+        public ProgressStreamContent(Stream source, long totalBytes, Action<long, long>? onProgress)
+        {
+            _source = source;
+            _totalBytes = totalBytes;
+            _onProgress = onProgress;
+        }
+
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext? context)
+        {
+            var buffer = new byte[BufferSize];
+            long sent = 0;
+            int read;
+            while ((read = await _source.ReadAsync(buffer, 0, buffer.Length)) > 0)
+            {
+                await stream.WriteAsync(buffer.AsMemory(0, read));
+                sent += read;
+                _onProgress?.Invoke(sent, _totalBytes);
+            }
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _totalBytes;
+            return true;
         }
     }
 }

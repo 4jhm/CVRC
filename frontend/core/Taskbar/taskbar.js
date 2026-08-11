@@ -113,11 +113,17 @@ function tbToggleTools() {
 
     function scheduleSubClose() {
         cancelSubClose();
-        _subCloseTimer = setTimeout(closeSubDrop, 240);
+        var st = window.safeTriangle;
+        if (st && _openSubDrop && st.isProtected()) {
+            _subCloseTimer = setTimeout(scheduleSubClose, 40);
+            return;
+        }
+        _subCloseTimer = setTimeout(closeSubDrop, st ? st.cfg.closeDelay : 200);
     }
 
     function closeSubDrop() {
         cancelSubClose();
+        if (window.safeTriangle) window.safeTriangle.reset();
         if (_openSubDrop) { _openSubDrop.style.display = 'none'; _openSubDrop = null; }
     }
 
@@ -155,6 +161,8 @@ function tbToggleTools() {
         var drop = sub.querySelector('.tb-dd-sub-drop');
         if (!drop) return;
         sub.addEventListener('mouseenter', function() {
+            if (_openSubDrop && _openSubDrop !== drop && window.safeTriangle
+                && window.safeTriangle.isProtected()) return;
             cancelSubClose();
             if (_openSubDrop && _openSubDrop !== drop) closeSubDrop();
             var r = sub.getBoundingClientRect();
@@ -172,6 +180,7 @@ function tbToggleTools() {
             drop.style.left = Math.max(4, left) + 'px';
             drop.style.top = top + 'px';
             _openSubDrop = drop;
+            if (window.safeTriangle) window.safeTriangle.register(drop, sub);
         });
         sub.addEventListener('mouseleave', scheduleSubClose);
         drop.addEventListener('mouseenter', cancelSubClose);

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
@@ -131,6 +131,10 @@ namespace VRCNext.Services
                 }
                 OpenVRSession.Acquire();
                 _ownedInit = true;
+
+#if WINDOWS
+                if (VrInputActions.Requested) VrInputActions.Initialize(_log);
+#endif
 
                 if (OpenVR.Overlay != null)
                 {
@@ -446,7 +450,13 @@ namespace VRCNext.Services
 
         private ulong ReadButtons(uint deviceIdx)
         {
-            if (_vrSystem == null || deviceIdx == OpenVR.k_unTrackedDeviceIndexInvalid) return 0;
+            if (deviceIdx == OpenVR.k_unTrackedDeviceIndexInvalid) return 0;
+#if WINDOWS
+            if (VrInputActions.Active)
+                return VrInputActions.GetButtons(deviceIdx == _leftIdx ? 1 : deviceIdx == _rightIdx ? 2 : 0);
+#endif
+
+            if (_vrSystem == null) return 0;
             var s = new VRControllerState_t();
             return _vrSystem.GetControllerState(deviceIdx, ref s, (uint)Marshal.SizeOf<VRControllerState_t>())
                 ? s.ulButtonPressed

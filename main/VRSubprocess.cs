@@ -27,6 +27,8 @@ static class VRSubprocess
         var authCookie = init["authCookie"]?.Value<string>();
         var tfaCookie  = init["tfaCookie"]?.Value<string>();
 
+        VrInputActions.SetRequested((init["inputMode"]?.Value<int>() ?? 0) == 1);
+
         var cookieJar = new CookieContainer();
         var vrchatUri = new Uri("https://api.vrchat.cloud");
         if (!string.IsNullOrEmpty(authCookie))
@@ -276,6 +278,15 @@ static class VRSubprocess
                     D(cmd, "position"), D(cmd, "duration"), B(cmd, "playing"));
                 break;
 
+            case "vr_input_mode":
+            {
+                bool wantIdx = I(cmd, "mode") == 1;
+                VrInputActions.SetRequested(wantIdx);
+                if (wantIdx && Valve.VR.OpenVR.System != null)
+                    VrInputActions.Initialize(s => SendLine(new JObject { ["t"] = "log", ["text"] = s }));
+                break;
+            }
+
             case "vro_record_keybind":   vro.StartKeybindRecording(); break;
             case "vro_cancel_recording": vro.StopKeybindRecording();  break;
 
@@ -453,18 +464,7 @@ static class VRSubprocess
     private static string? SN(JToken t, string k) => t[k]?.Type == JTokenType.Null ? null : t[k]?.Value<string>();
 
     private static int FsFindDeviceIndex(string name)
-    {
-        if (string.IsNullOrEmpty(name)) return -1;
-        var devs = FrameShotService.GetOutputDevices();
-        for (int i = 0; i < devs.Length; i++)
-        {
-            // WinMM truncates device names to 31 chars — match by startswith so a
-            // saved long name still resolves after enumeration.
-            if (devs[i] == name || name.StartsWith(devs[i], StringComparison.Ordinal))
-                return i;
-        }
-        return -1;
-    }
+        => VRCNext.Services.Helpers.AudioDeviceHelper.ResolveOutput(-1, name);
 
     private static List<uint> UList(JToken t, string k)
     {

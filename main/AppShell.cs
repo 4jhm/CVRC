@@ -61,6 +61,7 @@ public partial class AppShell
     private AvatarScalingController _asCtrl = null!;
     private RelayController _relayCtrl = null!;
     private AvatarDatabaseController _avatarDbCtrl = null!;
+    private AvatarLoggerController _avatarLoggerCtrl = null!;
     private SnipeController _snipeCtrl = null!;
     private ActionFlowController _afCtrl = null!;
     private StatusScheduleController _ssCtrl = null!;
@@ -132,10 +133,17 @@ public partial class AppShell
                 {
                     var uid = item["userId"]?.ToString();
                     if (!string.IsNullOrEmpty(uid))
-                        _core.PerminiList[uid] = (
-                            item["allowActive"]?.Value<bool>() ?? false,
-                            item["allowAskMe"]?.Value<bool>()  ?? false,
-                            item["allowDnD"]?.Value<bool>()    ?? false);
+                        _core.PerminiList[uid] = new CoreLibrary.PerminiEntry
+                        {
+                            AllowActive     = item["allowActive"]?.Value<bool>() ?? false,
+                            AllowAskMe      = item["allowAskMe"]?.Value<bool>()  ?? false,
+                            AllowDnD        = item["allowDnD"]?.Value<bool>()    ?? false,
+                            ScheduleEnabled = item["scheduleEnabled"]?.Value<bool>() ?? false,
+                            Start           = item["start"]?.ToString() ?? "09:00",
+                            End             = item["end"]?.ToString()   ?? "17:00",
+                            Days            = (item["days"] as Newtonsoft.Json.Linq.JArray)?
+                                                  .Select(d => d.Value<int>()).ToList() ?? new(),
+                        };
                 }
             }
         }
@@ -154,6 +162,9 @@ public partial class AppShell
         if (_settings.MemoryTrimEnabled) _memTrim.SetEnabled(true);
         WindowsFixes.Log = s => SendToJS("log", new { msg = s, color = "sec" });
         WindowsFixes.SetEnabled(_settings.MediaFixEnabled);
+        VRCNext.Services.Helpers.TtsService.Log         = s => SendToJS("log", new { msg = s, color = "sec" });
+        VRCNext.Services.Helpers.EdgeTtsService.Log     = s => SendToJS("log", new { msg = s, color = "sec" });
+        VRCNext.Services.Helpers.AudioDeviceHelper.Log  = s => SendToJS("log", new { msg = s, color = "sec" });
 
         // Ensure at least one primary account exists for fresh installs or corrupted settings.
         if (_settings.Accounts.Count == 0) _settings.EnsurePrimaryAccount();
@@ -227,6 +238,7 @@ public partial class AppShell
 #endif
         _relayCtrl = new RelayController(_core, _friends, _instance, _notifications, _vroCtrl);
         _avatarDbCtrl = new AvatarDatabaseController(_core);
+        _avatarLoggerCtrl = new AvatarLoggerController(_core, Invoke);
         _ssCtrl.Start();
         _windowCtrl = new WindowController(_core);
 #if WINDOWS
@@ -673,6 +685,7 @@ public partial class AppShell
         _ssCtrl?.Dispose();
         _discordCtrl?.Dispose();
         _chatboxCtrl?.Dispose();
+        _avatarLoggerCtrl?.Shutdown();
         _vroCtrl?.Dispose();
         _core.DisposeDatabaseServices();
         _photos.VrcPhotoWatcher?.Dispose();

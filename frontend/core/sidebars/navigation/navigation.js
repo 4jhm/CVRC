@@ -1,6 +1,6 @@
 let _navIsLinux = false;
 
-const _navBadgeCache = { worlds: '', groups: '', people: '', avatars: '', calendar: '' };
+const _navBadgeCache = { worlds: '', groups: '', people: '', avatars: '', calendar: '', library: '' };
 let _navMyWorldsRequested = false;
 let _navMyWorldsCount = null;
 
@@ -25,9 +25,17 @@ function _navCalendarMonthCount() {
     return n;
 }
 
+function _navFmtCount(n) {
+    if (typeof n !== 'number' || !Number.isFinite(n)) return String(n);
+    if (n < 1000) return String(n);
+    const short = (v, suffix) =>
+        (v < 10 ? v.toFixed(1).replace(/\.0$/, '') : String(Math.floor(v))) + suffix;
+    return n < 1000000 ? short(n / 1000, 'k') : short(n / 1000000, 'm');
+}
+
 function _navApplyBadge(kind, value) {
     if (value === null || value === undefined) return;
-    const text = String(value);
+    const text = _navFmtCount(value);
     _navBadgeCache[kind] = text;
     document.querySelectorAll(`[data-nav-badge="${kind}"]`).forEach(el => {
         el.textContent = text;
@@ -56,6 +64,7 @@ function navUpdateBadges() {
         _navApplyBadge('avatars', (ownA ?? 0) + (favA ?? 0));
 
     _navApplyBadge('calendar', _navCalendarMonthCount());
+    _navApplyBadge('library', typeof libraryFiles !== 'undefined' ? _navLen(libraryFiles) : null);
 }
 
 function navUpdatePlaySubtitle() {

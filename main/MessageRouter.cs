@@ -223,7 +223,7 @@ public partial class AppShell
         {
             using var client = new HttpClient();
             client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
-            client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
+            client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact;
             client.Timeout = TimeSpan.FromSeconds(15);
             client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", AppInfo.UserAgent);
             var userId = _vrcApi.CurrentUserId;
@@ -579,6 +579,9 @@ public partial class AppShell
                 case "addFavorite":
                 case "removeFavorite":
                 case "setDesktopBackground":
+                case "getPhotoRating":
+                case "setPhotoRating":
+                case "scanLibraryRatings":
                     await _photos.HandleMessage(action, msg);
                     break;
 
@@ -2975,6 +2978,15 @@ public partial class AppShell
                     _avatarDbCtrl.HandleMessage(action, msg);
                     break;
 
+                case "avlogConfig":
+                case "avlogStatus":
+                case "avlogClearSeen":
+                case "avlogGetHistory":
+                case "avlogManualUpload":
+                case "avlogTestWebhook":
+                    _avatarLoggerCtrl.HandleMessage(action, msg);
+                    break;
+
                 // Current instance
                 case "vrcGetCurrentInstance":
                     await _instance.HandleMessage(action, msg);
@@ -3598,10 +3610,7 @@ public partial class AppShell
                     {
                         var uid = item["userId"]?.ToString();
                         if (!string.IsNullOrEmpty(uid))
-                            _core.PerminiList[uid] = (
-                                item["allowActive"]?.Value<bool>() ?? false,
-                                item["allowAskMe"]?.Value<bool>()  ?? false,
-                                item["allowDnD"]?.Value<bool>()    ?? false);
+                            _core.PerminiList[uid] = ParsePerminiEntry(item);
                     }
                     Invoke(() => SendToJS("perminiData", raw));
                     break;
@@ -3619,10 +3628,7 @@ public partial class AppShell
                         {
                             var uid = item["userId"]?.ToString();
                             if (!string.IsNullOrEmpty(uid))
-                                _core.PerminiList[uid] = (
-                                    item["allowActive"]?.Value<bool>() ?? false,
-                                    item["allowAskMe"]?.Value<bool>()  ?? false,
-                                    item["allowDnD"]?.Value<bool>()    ?? false);
+                                _core.PerminiList[uid] = ParsePerminiEntry(item);
                         }
                         _core.SendToJS("toast", new { ok = true, msg = "Saved" });
                     }
@@ -3865,6 +3871,17 @@ public partial class AppShell
             ios   = p?["ios"]?.ToString() ?? "",
         };
     }
+
+    private static CoreLibrary.PerminiEntry ParsePerminiEntry(JObject item) => new()
+    {
+        AllowActive     = item["allowActive"]?.Value<bool>() ?? false,
+        AllowAskMe      = item["allowAskMe"]?.Value<bool>()  ?? false,
+        AllowDnD        = item["allowDnD"]?.Value<bool>()    ?? false,
+        ScheduleEnabled = item["scheduleEnabled"]?.Value<bool>() ?? false,
+        Start           = item["start"]?.ToString() ?? "09:00",
+        End             = item["end"]?.ToString()   ?? "17:00",
+        Days            = (item["days"] as JArray)?.Select(d => d.Value<int>()).ToList() ?? new(),
+    };
 
     private static readonly string[] PerfOrder = { "excellent", "good", "medium", "poor", "verypoor" };
 

@@ -22,6 +22,10 @@ public class PhotosController
     private List<LibFileEntry> _libFileCache = new();
     private int _libFileCacheTotal = 0;
     private bool _libCacheReady = false;
+    private readonly MediaLibraryStore _media;
+    private readonly Dictionary<string, (int W, int H)> _dimCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, int> _ratingCache;
+    private bool _ratingsScanned = false;
     private readonly List<WebhookService.PostRecord> _postHistory = new();
     private int _fileCount;
     private double _totalSizeMB;
@@ -43,6 +47,7 @@ public class PhotosController
 
     // Public Accessors (for other domains)
     public List<string> Favorites => _favorites;
+    public Dictionary<string, int> Ratings => _ratingCache.Where(kv => kv.Value > 0).ToDictionary(kv => kv.Key, kv => kv.Value);
     public string VrcPhotoDir => _vrcPhotoDir;
     public FileSystemWatcher? VrcPhotoWatcher => _vrcPhotoWatcher;
 
@@ -53,7 +58,21 @@ public class PhotosController
         _core = core;
         _friends = friends;
         _instance = instance;
-        _favorites = FavoritedImagesStore.Load();
+        _media       = MediaLibraryStore.Load();
+        _favorites   = _media.GetFavorites();
+        _ratingCache = new System.Collections.Concurrent.ConcurrentDictionary<string, int>(_media.GetRatings());
+
+        if (_media.NeedsLegacyMigration())
+        {
+            _ = Task.Run(() =>
+            {
+                if (!_media.MigrateLegacyJson()) return;
+                _favorites = _media.GetFavorites();
+                foreach (var kv in _media.GetRatings()) _ratingCache[kv.Key] = kv.Value;
+                _core.SendToJS("favoritesLoaded", _favorites);
+                _core.SendToJS("libraryRatings", Ratings);
+            });
+        }
     }
 
     // Public Methods
@@ -318,6 +337,7 @@ public class PhotosController
 
             case "scanLibraryForce":
                 _libCacheReady = false;
+                _ratingsScanned = false;
                 ScanLibraryFolders(true);
                 break;
 
@@ -357,7 +377,8 @@ public class PhotosController
                         {
                             File.Delete(fullDelPath);
                             _favorites.Remove(delPath);
-                            FavoritedImagesStore.Save(_favorites);
+                            _ratingCache.TryRemove(delPath, out _);
+                            _media.Delete(delPath);
                             _core.SendToJS("log", new { msg = $"Deleted: {Path.GetFileName(fullDelPath)}", color = "ok" });
                             _core.SendToJS("libraryFileDeleted", new { path = delPath });
                         }
@@ -411,7 +432,7 @@ public class PhotosController
                 if (!string.IsNullOrEmpty(favPath) && !_favorites.Contains(favPath))
                 {
                     _favorites.Add(favPath);
-                    FavoritedImagesStore.Save(_favorites);
+                    _media.SetFavorite(favPath, true);
                 }
                 break;
 
@@ -420,9 +441,55 @@ public class PhotosController
                 if (!string.IsNullOrEmpty(unfavPath))
                 {
                     _favorites.Remove(unfavPath);
-                    FavoritedImagesStore.Save(_favorites);
+                    _media.SetFavorite(unfavPath, false);
                 }
                 break;
+
+#if WINDOWS
+            case "getPhotoRating":
+                {
+                    var ratPath = msg["path"]?.ToString();
+                    if (string.IsNullOrEmpty(ratPath)) break;
+                    if (_ratingCache.TryGetValue(ratPath, out var cachedStars))
+                    {
+                        _core.SendToJS("photoRating", new { path = ratPath, stars = cachedStars });
+                        break;
+                    }
+                    _ = Task.Run(async () =>
+                    {
+                        var stars = await PhotoRatingHelper.GetRatingAsync(ratPath);
+                        _ratingCache[ratPath] = stars;
+                        _core.SendToJS("photoRating", new { path = ratPath, stars });
+                    });
+                }
+                break;
+
+            case "setPhotoRating":
+                {
+                    var ratPath = msg["path"]?.ToString();
+                    var stars = msg["stars"]?.Value<int>() ?? 0;
+                    if (string.IsNullOrEmpty(ratPath)) break;
+                    _ = Task.Run(async () =>
+                    {
+                        var ok = await PhotoRatingHelper.SetRatingAsync(ratPath, stars);
+                        if (ok)
+                        {
+                            _ratingCache[ratPath] = stars;
+                            _media.SetRating(ratPath, stars);
+                        }
+                        _core.SendToJS("photoRatingSet", new { path = ratPath, stars, ok });
+                    });
+                }
+                break;
+
+            case "scanLibraryRatings":
+                if (!_ratingsScanned)
+                {
+                    _ratingsScanned = true;
+                    _ = Task.Run(() => EnrichLibraryRatings());
+                }
+                break;
+#endif
 
             case "manualPost":
                 var filePath = msg["filePath"]?.ToString();
@@ -700,6 +767,9 @@ public class PhotosController
             var all = BuildLibraryItemsFast();
             _core.SendToJS("libraryData", new { files = all, total = all.Count, hasMore = false });
             _ = Task.Run(() => EnrichLibraryWorldIds());
+#if WINDOWS
+            if (!_ratingsScanned) { _ratingsScanned = true; _ = Task.Run(EnrichLibraryRatings); }
+#endif
             return;
         }
 
@@ -731,17 +801,73 @@ public class PhotosController
                 _libFileCacheTotal = _libFileCache.Count;
                 _libCacheReady     = true;
 
+                SyncLibraryDb();
+
                 var all = BuildLibraryItemsFast();
                 _core.SendToJS("libraryData", new { files = all, total = all.Count, hasMore = false });
 
                 // Background pass: read PNG world IDs without blocking the UI
                 EnrichLibraryWorldIds();
+#if WINDOWS
+                if (!_ratingsScanned) { _ratingsScanned = true; _ = Task.Run(EnrichLibraryRatings); }
+#endif
             }
             catch (Exception ex)
             {
                 _core.SendToJS("log", new { msg = $"Library scan error: {ex.Message}", color = "err" });
             }
         });
+    }
+
+    // Mirrors the scanned filesystem state into user_photos. Image dimensions are
+    // only read from disk for files the DB has not seen before or whose size or
+    // creation time changed, so a rescan costs no per-file reads on a warm DB.
+    private void SyncLibraryDb()
+    {
+        try
+        {
+            var known = _media.GetFileState();
+            var rows  = new List<MediaLibraryStore.PhotoRow>(_libFileCache.Count);
+            var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var e in _libFileCache)
+            {
+                var f       = e.Fi;
+                var path    = f.FullName;
+                var isImg   = FileWatcherService.ImgExt.Contains(f.Extension);
+                var isGif   = f.Extension.Equals(".gif", StringComparison.OrdinalIgnoreCase);
+                var created = f.CreationTime.ToString("o");
+                paths.Add(path);
+
+                int w = 0, h = 0;
+                if (known.TryGetValue(path, out var st) && st.SizeBytes == f.Length && st.CreatedAt == created)
+                {
+                    w = st.ImgW; h = st.ImgH;
+                }
+                else if (isImg)
+                {
+                    (w, h) = ReadImageDimensions(path);
+                }
+
+                _dimCache[path] = (w, h);
+
+                rows.Add(new MediaLibraryStore.PhotoRow
+                {
+                    Path      = path,
+                    Name      = f.Name,
+                    Folder    = e.Folder,
+                    Type      = isGif ? "gif" : isImg ? "image" : "video",
+                    SizeBytes = f.Length,
+                    CreatedAt = created,
+                    ImgW      = w,
+                    ImgH      = h,
+                });
+            }
+
+            _media.UpsertFiles(rows);
+            _media.PruneMissing(paths);
+        }
+        catch (Exception ex) { CrashHandler.WriteEntry("SyncLibraryDb", ex); }
     }
 
     // Builds the full item list using only in-memory data -- zero file reads.
@@ -777,7 +903,9 @@ public class PhotosController
                 }
             }
 
-            var (imgW, imgH) = isImg ? ReadImageDimensions(f.FullName) : (0, 0);
+            var (imgW, imgH) = _dimCache.TryGetValue(f.FullName, out var dim)
+                ? dim
+                : (isImg ? ReadImageDimensions(f.FullName) : (0, 0));
 
             result.Add(new
             {
@@ -813,7 +941,10 @@ public class PhotosController
                 var (wid, an, aid) = UnifiedTimeEngine.ExtractPhotoMetaFromPng(f.FullName);
                 worldId = wid;
                 if (!string.IsNullOrEmpty(an) || !string.IsNullOrEmpty(aid))
+                {
                     authorBatch[f.FullName] = new { name = an ?? "", id = aid ?? "" };
+                    _media.SetAuthor(f.FullName, an ?? "", aid ?? "");
+                }
             }
             catch { }
 
@@ -821,6 +952,7 @@ public class PhotosController
             if (!string.IsNullOrEmpty(worldId) && (rec == null || rec.WorldId != worldId))
             {
                 _core.PhotoPlayersStore.UpdateWorldId(f.Name, worldId);
+                _media.SetWorldId(f.FullName, worldId);
                 batch[f.FullName] = worldId;
             }
 
@@ -844,6 +976,42 @@ public class PhotosController
         if (authorBatch.Count > 0)
             _core.SendToJS("libraryAuthors", authorBatch);
     }
+
+#if WINDOWS
+    // Background pass: re-reads the OS "Rating" property so ratings changed
+    // outside VRCNext (Explorer, other tools) get picked up. Only differences
+    // against the stored value are pushed to JS and written back to the DB.
+    private async Task EnrichLibraryRatings()
+    {
+        var batch   = new Dictionary<string, int>();
+        var pending = new List<KeyValuePair<string, int>>();
+        int scanned = 0;
+
+        foreach (var e in _libFileCache)
+        {
+            var path  = e.Fi.FullName;
+            var stars = await PhotoRatingHelper.GetRatingAsync(path);
+
+            if (!_ratingCache.TryGetValue(path, out var known) || known != stars)
+            {
+                _ratingCache[path] = stars;
+                batch[path] = stars;
+                pending.Add(new KeyValuePair<string, int>(path, stars));
+            }
+
+            if (batch.Count >= 50)
+            {
+                _core.SendToJS("libraryRatings", new Dictionary<string, int>(batch));
+                batch.Clear();
+            }
+            if (pending.Count >= 200) { _media.SetRatings(pending); pending.Clear(); }
+            if (++scanned % 50 == 0) await Task.Delay(20);
+        }
+
+        if (batch.Count > 0)   _core.SendToJS("libraryRatings", batch);
+        if (pending.Count > 0) _media.SetRatings(pending);
+    }
+#endif
 
     // Keep old paginated builder for loadLibraryPage compatibility
     private List<object> BuildLibraryItems(int offset, int count)

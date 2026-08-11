@@ -82,3 +82,12 @@
     padding: 8px 10px; font-size: calc(12px + var(--fs-off, 0px)); color: var(--tx3);
 }
 
+
+.vn-ctx-item .lib-rating-hearts .msi {
+    width: auto;
+    font-size: 13px;
+    color: var(--accent-lt);
+}
+.vn-ctx-item:hover:not([disabled]) .lib-rating-hearts .msi { color: var(--accent-lt); }
+.vn-ctx-item.vn-ctx-rating-active .lib-rating-hearts .msi,
+.vn-ctx-item.vn-ctx-rating-active:hover:not([disabled]) .lib-rating-hearts .msi { color: var(--accent); }

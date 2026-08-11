@@ -485,11 +485,15 @@ public class NotificationsController
                 var myStatus  = _core.MyVrcStatus; // "active","join me","ask me","busy"
                 var shouldAuto = myStatus switch
                 {
-                    "active"  or "join me" => pmEntry.allowActive,
-                    "ask me"               => pmEntry.allowAskMe,
-                    "busy"                 => pmEntry.allowDnD,
+                    "active"  or "join me" => pmEntry.AllowActive,
+                    "ask me"               => pmEntry.AllowAskMe,
+                    "busy"                 => pmEntry.AllowDnD,
                     _                      => false,
                 };
+                if (shouldAuto && pmEntry.ScheduleEnabled
+                    && !VRCNext.Services.Helpers.TimeWindowHelper.IsWithin(
+                            pmEntry.Start, pmEntry.End, pmEntry.Days, DateTime.Now))
+                    shouldAuto = false;
                 if (shouldAuto)
                 {
                     var pmNotifId = (string)n.id;

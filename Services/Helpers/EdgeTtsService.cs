@@ -64,6 +64,10 @@ public static class EdgeTtsService
     {
         if (string.IsNullOrWhiteSpace(voice)) voice = "en-US-AriaNeural";
 
+        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+        using var linkedCts  = CancellationTokenSource.CreateLinkedTokenSource(ct, timeoutCts.Token);
+        var lct = linkedCts.Token;
+
         using var ws = new ClientWebSocket();
         ws.Options.SetRequestHeader("User-Agent", UserAgent);
         ws.Options.SetRequestHeader("Origin", "chrome-extension://jdiccldimpdaibmpdkjnbmckianbfold");
@@ -73,7 +77,7 @@ public static class EdgeTtsService
 
         var uri = new Uri(Query("wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1")
                           + "&ConnectionId=" + Guid.NewGuid().ToString("N"));
-        await ws.ConnectAsync(uri, ct);
+        await ws.ConnectAsync(uri, lct);
 
         string stamp = DateTime.UtcNow.ToString("R");
         await SendTextAsync(ws,
@@ -82,7 +86,7 @@ public static class EdgeTtsService
             "Path:speech.config\r\n\r\n" +
             "{\"context\":{\"synthesis\":{\"audio\":{\"metadataoptions\":{" +
             "\"sentenceBoundaryEnabled\":\"false\",\"wordBoundaryEnabled\":\"false\"}," +
-            "\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}", ct);
+            "\"outputFormat\":\"audio-24khz-48kbitrate-mono-mp3\"}}}}", lct);
 
         int pct = Math.Clamp(rate, -10, 10) * 10;
         string ssml =
@@ -94,17 +98,17 @@ public static class EdgeTtsService
             $"X-RequestId:{Guid.NewGuid():N}\r\n" +
             "Content-Type:application/ssml+xml\r\n" +
             $"X-Timestamp:{stamp}Z\r\n" +
-            "Path:ssml\r\n\r\n" + ssml, ct);
+            "Path:ssml\r\n\r\n" + ssml, lct);
 
         using var audio = new MemoryStream();
         var buf = new byte[16 * 1024];
-        while (ws.State == WebSocketState.Open && !ct.IsCancellationRequested)
+        while (ws.State == WebSocketState.Open && !lct.IsCancellationRequested)
         {
             using var frame = new MemoryStream();
             WebSocketReceiveResult res;
             do
             {
-                res = await ws.ReceiveAsync(new ArraySegment<byte>(buf), ct);
+                res = await ws.ReceiveAsync(new ArraySegment<byte>(buf), lct);
                 if (res.MessageType == WebSocketMessageType.Close) break;
                 frame.Write(buf, 0, res.Count);
             } while (!res.EndOfMessage);

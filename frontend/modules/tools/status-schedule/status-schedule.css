@@ -104,10 +104,16 @@
 .ss-editor-card {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     min-height: 320px;
+    min-width: 0;
 }
 .ss-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.ss-editor > .vrcn-panel-card {
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -267,3 +273,32 @@
 @media (max-width: 900px) {
     .ss-split { grid-template-columns: 1fr; }
 }
+
+.ss-itype { min-width: 0; padding: 6px 10px; }
+
+.ss-friend-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.ss-friend-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-input);
+    border-radius: 7px;
+    padding: 4px 6px 4px 10px;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx1);
+}
+.ss-friend-chip button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--tx3);
+    display: flex;
+    padding: 0;
+}
+.ss-friend-chip button:hover { color: var(--err); }
+.ss-friend-chip .msi { font-size: 14px; }

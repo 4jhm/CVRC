@@ -1,4 +1,4 @@
-/* Space Flight */
+﻿/* Space Flight */
 
 let _sfLastState = null;
 
@@ -8,6 +8,48 @@ const SF_MODE_SELECTS = {
     drag:    { left: 'sfLeftDrag',     right: 'sfRightDrag'     },
     gravity: { left: 'sfLeftGravity',  right: 'sfRightGravity'  },
 };
+
+const SF_BTN_IDS = ['sfLeftReset', 'sfRightReset', 'sfLeftDrag', 'sfRightDrag', 'sfLeftGravity', 'sfRightGravity'];
+const SF_BTN_DEFAULTS = { sfLeftReset: 32, sfRightReset: 0, sfLeftDrag: 0, sfRightDrag: 32, sfLeftGravity: 0, sfRightGravity: 0 };
+
+let _sfOtherBtns   = {};
+let _sfPendingBtns = null;
+
+function sfReadBtns() {
+    const o = {};
+    SF_BTN_IDS.forEach(id => {
+        o[id] = parseInt(document.getElementById(id)?.value ?? String(SF_BTN_DEFAULTS[id]), 10) || 0;
+    });
+    return o;
+}
+
+function sfWriteBtns(vals) {
+    SF_BTN_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const v = String(vals?.[id] ?? 0);
+        el.value = el.querySelector(`option[value="${v}"]`) ? v : '0';
+        if (el._vnRefresh) el._vnRefresh();
+    });
+}
+
+function sfSwapButtonSets() {
+    const cur = sfReadBtns();
+    _sfPendingBtns = _sfOtherBtns;
+    _sfOtherBtns   = cur;
+}
+
+function sfApplyInputMode() {
+    if (_sfPendingBtns) { sfWriteBtns(_sfPendingBtns); _sfPendingBtns = null; }
+    sfRenderKeybind();
+    sfSendConfig();
+}
+
+function sfBtnSets() {
+    const cur = sfReadBtns();
+    const idx = typeof vrInputMode !== 'undefined' && vrInputMode === 1;
+    return { legacy: idx ? _sfOtherBtns : cur, index: idx ? cur : _sfOtherBtns };
+}
 
 function sfSetMode(mode) {
     if (!SF_MODE_SELECTS[mode]) return;
@@ -26,25 +68,24 @@ function sfRenderKeybind() {
     const rightVal = parseInt(document.getElementById(map.right)?.value ?? '0', 10);
 
     document.querySelectorAll('#sfControllerVisual .vro-btn').forEach(el => {
-        const id   = parseInt(el.dataset.sfBtnId, 10);
         const want = el.dataset.side === 'left' ? leftVal : rightVal;
-        el.classList.toggle('active', want !== 0 && id === want);
+        vriMarkBtn(el, want !== 0 ? [want] : [], 'data-sf-btn-id', true);
     });
 }
 
 function sfKeybindClick(el) {
-    const id   = parseInt(el.dataset.sfBtnId, 10);
     const side = el.dataset.side;
     const map  = SF_MODE_SELECTS[_sfKeybindMode];
     const sel  = document.getElementById(side === 'left' ? map.left : map.right);
     if (!sel) return;
 
-    const cur = parseInt(sel.value, 10);
-    sel.value = cur === id ? '0' : String(id);
-    if (sel._vnRefresh) sel._vnRefresh();
-
-    sfRenderKeybind();
-    sfAutoSave();
+    vriZoneClick(el, 'data-sf-btn-id', [parseInt(sel.value, 10) || 0], id => {
+        const cur = parseInt(sel.value, 10);
+        sel.value = cur === id ? '0' : String(id);
+        if (sel._vnRefresh) sel._vnRefresh();
+        sfRenderKeybind();
+        sfAutoSave();
+    });
 }
 
 let _sfLegacyView = false;

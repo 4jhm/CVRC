@@ -185,7 +185,7 @@ function ttsBuildCascade(prefix, voices, savedVoice, defaultLabel) {
 
 function kxdTtsHandleDevices(p) {
     if (p.target !== 'kxd') return;
-    if (p.devices) kxdTtsFillDevices(p.devices, parseInt(document.getElementById('kxdTtsDevice')?.value ?? '-1', 10));
+    if (p.devices) kxdTtsFillDevices(p.devices, audioDeviceIndex('kxdTtsDevice'));
     kxdTtsFillVoices(p.voices, _kxdSavedTtsVoice);
 }
 
@@ -207,7 +207,7 @@ function kxdTtsPreviewVoice(voice) {
         text: t('tts.preview_line', 'This is how this voice sounds.'),
         engine: document.getElementById('kxdTtsEngine')?.value || 'sapi',
         voice,
-        device: parseInt(document.getElementById('kxdTtsDevice')?.value ?? '-1', 10),
+        device: audioDeviceIndex('kxdTtsDevice'),
         rate: parseInt(document.getElementById('kxdTtsRate')?.value ?? '0', 10),
     });
 }
@@ -245,7 +245,7 @@ function kxdTtsTest() {
         text: t('kikitan.tts.test_line', 'VRCNext text to speech is working.'),
         engine: document.getElementById('kxdTtsEngine')?.value || 'sapi',
         voice: document.getElementById('kxdTtsVoice')?.value || '',
-        device: parseInt(document.getElementById('kxdTtsDevice')?.value ?? '-1', 10),
+        device: audioDeviceIndex('kxdTtsDevice'),
         rate: parseInt(document.getElementById('kxdTtsRate')?.value ?? '0', 10),
         volume: 100,
     });
@@ -443,7 +443,7 @@ function kxdSaveSettings() {
     const personality = document.getElementById('kxdPersonality')?.value || 'raw';
     const devSel = document.getElementById('kxdDeviceSelect');
     const ttsEnabled = !!(document.getElementById('kxdTtsToggle')?.checked);
-    const ttsDevice = parseInt(document.getElementById('kxdTtsDevice')?.value ?? '-1', 10);
+    const ttsDevice = audioDeviceIndex('kxdTtsDevice');
     const ttsVoice = document.getElementById('kxdTtsVoice')?.value || '';
     const ttsEngine = document.getElementById('kxdTtsEngine')?.value || 'sapi';
     const ttsRate = parseInt(document.getElementById('kxdTtsRate')?.value ?? '0', 10);

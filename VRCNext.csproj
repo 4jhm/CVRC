@@ -80,6 +80,9 @@
   <None Update="Services\OpenVR\openvr_api.dll" Condition="'$(_LinuxBuild)'!='true'" Link="openvr_api.dll">
     <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </None>
+  <None Include="Services\OpenVR\input\*.json" Condition="'$(_LinuxBuild)'!='true'" Link="vrinput\%(Filename)%(Extension)">
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </None>
 </ItemGroup>
 
   <!-- Inject webhook key from build environment into a generated file (gitignored, never in source) -->

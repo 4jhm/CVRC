@@ -162,7 +162,7 @@ public class AvatarsAPI(VRChatApiService ctx)
         var url = $"https://api.avtrdb.com/v2/avatar/search?query={Uri.EscapeDataString(query)}&limit={n}&page={page}";
         using var client = new HttpClient();
         client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
-        client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
+        client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact;
         client.Timeout = TimeSpan.FromSeconds(15);
         client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UA);
         client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
@@ -296,7 +296,7 @@ public class AvatarsAPI(VRChatApiService ctx)
         var seen = new HashSet<string>();
         using var client = new HttpClient();
         client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
-        client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
+        client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact;
         client.Timeout = TimeSpan.FromSeconds(15);
         client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UA);
         client.DefaultRequestHeaders.Accept.ParseAdd("application/json");

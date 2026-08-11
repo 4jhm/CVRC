@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 
 namespace VRCNext;
 
@@ -65,13 +65,17 @@ public class SpaceFlightController : IDisposable
             {
                 var host = EnsureHost();
                 var (auth, tfa) = _core.VrcApi.GetCookies();
+                host.InputMode = _core.Settings.VrInputMode;
                 host.EnsureRunning("", _core.HttpPort, auth, tfa);
                 host.SfConnect(
                     _core.Settings.SfMultiplier,
                     _core.Settings.SfLockX, _core.Settings.SfLockY, _core.Settings.SfLockZ,
-                    _core.Settings.SfLeftResetButton, _core.Settings.SfRightResetButton,
-                    _core.Settings.SfLeftDragButton,  _core.Settings.SfRightDragButton,
-                    _core.Settings.SfLeftGravityButton, _core.Settings.SfRightGravityButton,
+                    SfBtn(_core.Settings.SfLeftResetButton,    _core.Settings.SfIdxLeftResetButton),
+                    SfBtn(_core.Settings.SfRightResetButton,   _core.Settings.SfIdxRightResetButton),
+                    SfBtn(_core.Settings.SfLeftDragButton,     _core.Settings.SfIdxLeftDragButton),
+                    SfBtn(_core.Settings.SfRightDragButton,    _core.Settings.SfIdxRightDragButton),
+                    SfBtn(_core.Settings.SfLeftGravityButton,  _core.Settings.SfIdxLeftGravityButton),
+                    SfBtn(_core.Settings.SfRightGravityButton, _core.Settings.SfIdxRightGravityButton),
                     _core.Settings.SfGravity);
                 _vroCtrl.UpdateToolStates();
                 break;
@@ -116,6 +120,8 @@ public class SpaceFlightController : IDisposable
         }
     }
 
+    private uint SfBtn(uint legacy, uint index) => _core.Settings.VrInputMode == 1 ? index : legacy;
+
     public void Toggle()
     {
 #if WINDOWS
@@ -134,13 +140,17 @@ public class SpaceFlightController : IDisposable
         {
             var host = EnsureHost();
             var (auth, tfa) = _core.VrcApi.GetCookies();
+            host.InputMode = _core.Settings.VrInputMode;
             host.EnsureRunning("", _core.HttpPort, auth, tfa);
             host.SfConnect(
                 _core.Settings.SfMultiplier,
                 _core.Settings.SfLockX, _core.Settings.SfLockY, _core.Settings.SfLockZ,
-                _core.Settings.SfLeftResetButton, _core.Settings.SfRightResetButton,
-                _core.Settings.SfLeftDragButton,  _core.Settings.SfRightDragButton,
-                _core.Settings.SfLeftGravityButton, _core.Settings.SfRightGravityButton,
+                SfBtn(_core.Settings.SfLeftResetButton,    _core.Settings.SfIdxLeftResetButton),
+                SfBtn(_core.Settings.SfRightResetButton,   _core.Settings.SfIdxRightResetButton),
+                SfBtn(_core.Settings.SfLeftDragButton,     _core.Settings.SfIdxLeftDragButton),
+                SfBtn(_core.Settings.SfRightDragButton,    _core.Settings.SfIdxRightDragButton),
+                SfBtn(_core.Settings.SfLeftGravityButton,  _core.Settings.SfIdxLeftGravityButton),
+                SfBtn(_core.Settings.SfRightGravityButton, _core.Settings.SfIdxRightGravityButton),
                 _core.Settings.SfGravity);
         }
 #endif

@@ -2,8 +2,7 @@ using Newtonsoft.Json;
 
 namespace VRCNext.Services;
 
-// Status Schedule persistence - stored separately from main settings.
-// Holds time-window rules that switch the VRChat status automatically.
+// Status Schedule persistence
 public class StatusScheduleSettings
 {
     public bool Enabled { get; set; } = true;
@@ -14,22 +13,19 @@ public class StatusScheduleSettings
         public string Id       { get; set; } = "";
         public string Name     { get; set; } = "";
         public bool   Enabled  { get; set; } = true;
-        // 700 = high, 400 = medium, 100 = low. Highest match wins.
         public int    Priority { get; set; } = 400;
-
-        // "HH:mm" 24h. Start > End means the window crosses midnight.
         public string Start    { get; set; } = "09:00";
         public string End      { get; set; } = "17:00";
-        // ISO-8601 weekdays: 1 = Monday .. 7 = Sunday. Empty = every day.
         public List<int> Days  { get; set; } = new();
 
-        // Mutually exclusive: at most one may be true. Both false means the rule applies
-        // regardless of whether VRChat is running.
         public bool OnlyWhileInGame      { get; set; } = false;
         public bool OnlyWhileOutsideGame { get; set; } = false;
-        public bool RestorePreviousStatus { get; set; } = true;
 
-        // "join me" | "active" | "ask me" | "busy"
+        public List<string> InstanceTypes { get; set; } = new();
+        public int          MinPlayers    { get; set; } = 0;
+        public List<string> FriendIds     { get; set; } = new();
+        public bool         FriendsRequireAll { get; set; } = false;
+        public bool RestorePreviousStatus { get; set; } = true;
         public string Status            { get; set; } = "active";
         public bool   SetStatusMessage  { get; set; } = false;
         public string StatusMessage     { get; set; } = "";

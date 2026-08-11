@@ -159,9 +159,12 @@
         const rankBadge = rank
             ? `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>`
             : '';
-        const ageBadge = f.ageVerified
+        const ageBadge = (f.ageVerified
+            ? `<span class="vrcn-badge ok"><span class="msi" style="font-size:10px;">verified</span>${typeof t === 'function' ? t('profiles.meta.age_verified', 'Age Verified') : 'Age Verified'}</span>`
+            : '')
+            + (f.ageVerificationStatus === '18+'
             ? `<span class="vrcn-badge ok"><span class="msi" style="font-size:10px;">verified</span>18+</span>`
-            : '';
+            : '');
         const platBadge = typeof getPlatformBadgeHtml === 'function' ? getPlatformBadgeHtml(f.platform || '') : '';
         const vrcPlusBadge = isSupporter ? `<span class="vrcn-supporter-badge">VRC+</span>` : '';
         const friendBadge = `<span class="vrcn-badge bdg-friend"><span class="msi" style="font-size:10px;">check_circle</span>${typeof t === 'function' ? t('profiles.badges.friend', 'Friend') : 'Friend'}</span>`;

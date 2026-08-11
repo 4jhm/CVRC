@@ -1,4 +1,4 @@
-                <div class="sf-layout">
+﻿                <div class="sf-layout">
 
                     <!-- Status card -->
                     <div class="vrcn-panel-card status">
@@ -49,6 +49,7 @@
                     <!-- Keybind -->
                     <div class="vrcn-panel-card">
                         <div class="vrcn-panel-card-header"><span class="msi">gamepad</span> <span data-i18n="vro.keybind.title">Toggle Keybind</span>
+                            <select class="vrcn-select vro-input-mode" onchange="vriSetMode(this.value)"><option value="0" data-i18n="vri.mode.legacy">Legacy (Default)</option><option value="1" data-i18n="vri.mode.steamvr">SteamVR (Index)</option></select>
                             <button class="vrcn-button vro-view-toggle" onclick="vroToggleKeybindView(this)" title="Toggle legacy view" data-i18n-title="vro.keybind.toggle_view">
                                 <span class="msi" style="font-size:15px;">format_list_bulleted</span>
                             </button>
@@ -334,6 +335,7 @@
 
                         <div style="display:flex;align-items:center;margin-top:10px;">
                             <span class="sf-section-label" style="margin-top:0;" data-i18n="vro.scale.keybind.title">Hold Keybind to Scale</span>
+                            <select class="vrcn-select vro-input-mode" onchange="vriSetMode(this.value)"><option value="0" data-i18n="vri.mode.legacy">Legacy (Default)</option><option value="1" data-i18n="vri.mode.steamvr">SteamVR (Index)</option></select>
                             <button class="vrcn-button vro-view-toggle" onclick="vroToggleScaleView(this)" title="Toggle legacy view" data-i18n-title="vro.keybind.toggle_view">
                                 <span class="msi" style="font-size:15px;">format_list_bulleted</span>
                             </button>

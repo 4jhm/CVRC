@@ -647,6 +647,66 @@
     flex-shrink: 0;
 }
 
+.pd-rating-card {
+    flex-shrink: 0;
+}
+
+.pd-rating-hearts {
+    display: flex;
+    gap: 4px;
+}
+
+.pd-rating-heart {
+    font-size: 20px;
+    color: var(--tx3);
+    cursor: pointer;
+    transition: transform .1s ease, color .1s ease;
+}
+
+.pd-rating-heart:hover {
+    transform: scale(1.15);
+    color: var(--accent-lt);
+}
+
+.pd-rating-heart.pd-rating-filled {
+    color: var(--accent);
+    font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
+}
+
+.lib-heart-filled {
+    font-variation-settings: 'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24;
+}
+
+.lib-rating-hearts {
+    display: flex;
+    gap: 1px;
+    color: var(--accent-lt);
+}
+
+.vn-select-option.vn-active .lib-rating-hearts {
+    color: var(--accent);
+}
+
+.lib-rating-count {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    flex-shrink: 0;
+    margin-left: auto;
+    padding-left: 10px;
+}
+
+.lib-rating-option .lib-rating-hearts {
+    display: flex;
+    gap: 1px;
+    flex: 0 0 auto;
+    color: var(--accent-lt);
+    opacity: .7;
+}
+
+.lib-rating-option.vn-active .lib-rating-hearts {
+    opacity: 1;
+}
+
 .photo-detail-players-card {
     flex: 1;
     min-height: 0;

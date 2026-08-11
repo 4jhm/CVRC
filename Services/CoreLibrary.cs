@@ -46,7 +46,18 @@ public class CoreLibrary
     public string MyVrcStatus { get; set; } = "active";
 
     // Permini — userId → (allowActive, allowAskMe, allowDnD)
-    public Dictionary<string, (bool allowActive, bool allowAskMe, bool allowDnD)> PerminiList { get; } = new();
+    public class PerminiEntry
+    {
+        public bool AllowActive { get; set; }
+        public bool AllowAskMe  { get; set; }
+        public bool AllowDnD    { get; set; }
+        public bool ScheduleEnabled { get; set; }
+        public string Start { get; set; } = "09:00";
+        public string End   { get; set; } = "17:00";
+        public List<int> Days { get; set; } = new();
+    }
+
+    public Dictionary<string, PerminiEntry> PerminiList { get; } = new();
     public DateTime DiscordJoinedAt { get; set; } = DateTime.MinValue;
     public int HttpPort { get; set; }
     public string CustomThemesDir { get; set; } = "";

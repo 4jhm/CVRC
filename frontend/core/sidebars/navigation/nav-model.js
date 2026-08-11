@@ -7,7 +7,7 @@ const NAV_ITEMS_DEF = {
     'avatars':          { icon: 'checkroom',       tab: 4,  i18n: 'nav.avatars',            label: 'Avatars',          badge: 'avatars'  },
     'inventory':        { icon: 'inventory_2',     tab: 13, i18n: 'nav.inventory',          label: 'Inventory'        },
     'timeline':         { icon: 'timeline',        tab: 12, i18n: 'nav.timeline',           label: 'Timeline'         },
-    'media-library':    { icon: 'photo_library',   tab: 7,  i18n: 'nav.media_library',      label: 'Media Library'    },
+    'media-library':    { icon: 'photo_library',   tab: 7,  i18n: 'nav.media_library',      label: 'Media Library',    badge: 'library'  },
     'settings':         { icon: 'settings',        tab: 9,  i18n: 'nav.settings',           label: 'Settings'         },
     'chatbox':          { icon: 'chat',            tab: 5,  i18n: 'nav.custom_chatbox',     label: 'Custom Chatbox',   windowsOnly: true },
     'media-relay':      { icon: 'cell_tower',      tab: 6,  i18n: 'nav.media_relay',        label: 'Media Relay',      windowsOnly: true },
@@ -30,6 +30,7 @@ const NAV_ITEMS_DEF = {
     'vrc-accounts':     { icon: 'switch_account',  tab: 28, i18n: 'nav.vrc_accounts',       label: 'VRChat Accounts',  defaultFolder: 'folder-tools' },
     'avatar-database':  { icon: 'view_in_ar',      tab: 29, i18n: 'nav.avatar_database',    label: 'Avatar Database',  defaultFolder: 'folder-tools' },
     'direct-access':    { icon: 'link',            tab: 30, i18n: 'nav.direct_access',      label: 'Direct Access',    defaultFolder: 'folder-tools' },
+    'avatar-logger':    { icon: 'terminal',         tab: 31, i18n: 'nav.avatar_logger',      label: 'Avatar Logger',    defaultFolder: 'folder-tools' },
 };
 
 const NAV_ICON_OPTIONS = [
@@ -89,7 +90,7 @@ const NAV_DEFAULT_LAYOUT = [
             'chatbox','media-relay','space-flight','frame-shot','osc-tool','youtube-fix',
             'activity-log','mutual-network','time-spent','voice-fight',
             'discord-presence','vr-overlay','permini','kikitan-xd','event-snipe','avatar-scaling','action-flow',
-            'status-schedule','vrc-accounts','avatar-database','direct-access',
+            'status-schedule','vrc-accounts','avatar-database','direct-access','avatar-logger',
         ],
     },
     { type: 'item', key: 'settings' },

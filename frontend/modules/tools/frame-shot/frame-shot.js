@@ -1,4 +1,4 @@
-/* FrameShot */
+﻿/* FrameShot */
 
 let _fsLastState = null;
 
@@ -8,6 +8,48 @@ const FS_MODE_SELECTS = {
     gif:   { left: 'fsLeftRecord', right: 'fsRightRecord', allowNone: true  },
     video: { left: 'fsLeftVideo',  right: 'fsRightVideo',  allowNone: true  },
 };
+
+const FS_BTN_IDS = ['fsLeftButton', 'fsRightButton', 'fsLeftRecord', 'fsRightRecord', 'fsLeftVideo', 'fsRightVideo'];
+const FS_BTN_DEFAULTS = { fsLeftButton: 2, fsRightButton: 2, fsLeftRecord: 0, fsRightRecord: 0, fsLeftVideo: 0, fsRightVideo: 0 };
+
+let _fsOtherBtns   = {};
+let _fsPendingBtns = null;
+
+function fsReadBtns() {
+    const o = {};
+    FS_BTN_IDS.forEach(id => {
+        o[id] = parseInt(document.getElementById(id)?.value ?? String(FS_BTN_DEFAULTS[id]), 10) || 0;
+    });
+    return o;
+}
+
+function fsWriteBtns(vals) {
+    FS_BTN_IDS.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const v = String(vals?.[id] ?? 0);
+        el.value = el.querySelector(`option[value="${v}"]`) ? v : (el.options[0]?.value ?? '0');
+        if (el._vnRefresh) el._vnRefresh();
+    });
+}
+
+function fsSwapButtonSets() {
+    const cur = fsReadBtns();
+    _fsPendingBtns = _fsOtherBtns;
+    _fsOtherBtns   = cur;
+}
+
+function fsApplyInputMode() {
+    if (_fsPendingBtns) { fsWriteBtns(_fsPendingBtns); _fsPendingBtns = null; }
+    fsRenderKeybind();
+    fsSendConfig();
+}
+
+function fsBtnSets() {
+    const cur = fsReadBtns();
+    const idx = typeof vrInputMode !== 'undefined' && vrInputMode === 1;
+    return { legacy: idx ? _fsOtherBtns : cur, index: idx ? cur : _fsOtherBtns };
+}
 
 function fsSetMode(mode) {
     if (!FS_MODE_SELECTS[mode]) return;
@@ -26,25 +68,24 @@ function fsRenderKeybind() {
     const rightVal = parseInt(document.getElementById(map.right)?.value ?? '0', 10);
 
     document.querySelectorAll('#fsControllerVisual .vro-btn').forEach(el => {
-        const id   = parseInt(el.dataset.fsBtnId, 10);
         const want = el.dataset.side === 'left' ? leftVal : rightVal;
-        el.classList.toggle('active', want !== 0 && id === want);
+        vriMarkBtn(el, want !== 0 ? [want] : [], 'data-fs-btn-id', true);
     });
 }
 
 function fsKeybindClick(el) {
-    const id   = parseInt(el.dataset.fsBtnId, 10);
     const side = el.dataset.side;
     const map  = FS_MODE_SELECTS[_fsKeybindMode];
     const sel  = document.getElementById(side === 'left' ? map.left : map.right);
     if (!sel) return;
 
-    const cur = parseInt(sel.value, 10);
-    sel.value = (map.allowNone && cur === id) ? '0' : String(id);
-    if (sel._vnRefresh) sel._vnRefresh();
-
-    fsRenderKeybind();
-    fsAutoSave();
+    vriZoneClick(el, 'data-fs-btn-id', [parseInt(sel.value, 10) || 0], id => {
+        const cur = parseInt(sel.value, 10);
+        sel.value = (map.allowNone && cur === id) ? '0' : String(id);
+        if (sel._vnRefresh) sel._vnRefresh();
+        fsRenderKeybind();
+        fsAutoSave();
+    });
 }
 
 let _fsLegacyView = false;

@@ -1,4 +1,4 @@
-#if WINDOWS
+﻿#if WINDOWS
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 
@@ -150,6 +150,7 @@ public class VROverlayController : IDisposable
 
                 var host = EnsureHost();
                 var (auth, tfa) = _core.VrcApi.GetCookies();
+                host.InputMode = _core.Settings.VrInputMode;
                 host.EnsureRunning("", _core.HttpPort, auth, tfa);
 
                 // Send theme colors
@@ -163,8 +164,12 @@ public class VROverlayController : IDisposable
                     _core.Settings.VroAttachLeft, _core.Settings.VroAttachHand,
                     _core.Settings.VroPosX, _core.Settings.VroPosY, _core.Settings.VroPosZ,
                     _core.Settings.VroRotX, _core.Settings.VroRotY, _core.Settings.VroRotZ,
-                    _core.Settings.VroWidth, _core.Settings.VroKeybind, _core.Settings.VroKeybindHand,
-                    _core.Settings.VroKeybindMode, _core.Settings.VroKeybindDt, _core.Settings.VroKeybindDtHand,
+                    _core.Settings.VroWidth,
+                    _core.Settings.VrInputMode == 1 ? _core.Settings.VroIdxKeybind : _core.Settings.VroKeybind,
+                    _core.Settings.VrInputMode == 1 ? _core.Settings.VroIdxKeybindHand : _core.Settings.VroKeybindHand,
+                    _core.Settings.VroKeybindMode,
+                    _core.Settings.VrInputMode == 1 ? _core.Settings.VroIdxKeybindDt : _core.Settings.VroKeybindDt,
+                    _core.Settings.VrInputMode == 1 ? _core.Settings.VroIdxKeybindDtHand : _core.Settings.VroKeybindDtHand,
                     _core.Settings.VroControlRadius,
                     _core.Settings.VroDynVis, _core.Settings.VroFocusRadius);
 
@@ -190,7 +195,8 @@ public class VROverlayController : IDisposable
                 host.VroScaleConfig(
                     _core.Settings.VroScaleEnabled,
                     _core.Settings.VroScaleLeftThumb, _core.Settings.VroScaleRightThumb,
-                    _core.Settings.VroScaleKeybind, _core.Settings.VroScaleKeybindHand,
+                    _core.Settings.VrInputMode == 1 ? _core.Settings.VroIdxScaleKeybind : _core.Settings.VroScaleKeybind,
+                    _core.Settings.VrInputMode == 1 ? _core.Settings.VroIdxScaleKeybindHand : _core.Settings.VroScaleKeybindHand,
                     _core.Settings.AsScale, _core.Settings.VroScaleScrollSensitivity);
 
                 // Connect — subprocess sends back vro_state with result
@@ -248,20 +254,38 @@ public class VROverlayController : IDisposable
                 int ctrlR    = msg["controlRadius"]?.Value<int>() ?? 28;
                 bool dynVis  = msg["dynVis"]?.Value<bool>() ?? false;
                 int focusR   = msg["focusRadius"]?.Value<int>() ?? 35;
+                int inputMode   = msg["inputMode"]?.Value<int>() ?? -1;
+                bool persistKb  = inputMode >= 0;
+                if (!persistKb) inputMode = _core.Settings.VrInputMode;
 
                 _core.Settings.VroAttachLeft    = left;
                 _core.Settings.VroAttachHand    = hand;
                 _core.Settings.VroPosX = px; _core.Settings.VroPosY = py; _core.Settings.VroPosZ = pz;
                 _core.Settings.VroRotX = rx; _core.Settings.VroRotY = ry; _core.Settings.VroRotZ = rz;
                 _core.Settings.VroWidth         = width;
-                _core.Settings.VroKeybind       = kb;
-                _core.Settings.VroKeybindHand   = kbHand;
                 _core.Settings.VroKeybindMode   = kbMode;
-                _core.Settings.VroKeybindDt     = kbDt;
-                _core.Settings.VroKeybindDtHand = kbDtHand;
+                if (persistKb && inputMode == 1)
+                {
+                    _core.Settings.VroIdxKeybind       = kb;
+                    _core.Settings.VroIdxKeybindHand   = kbHand;
+                    _core.Settings.VroIdxKeybindDt     = kbDt;
+                    _core.Settings.VroIdxKeybindDtHand = kbDtHand;
+                }
+                else if (persistKb)
+                {
+                    _core.Settings.VroKeybind       = kb;
+                    _core.Settings.VroKeybindHand   = kbHand;
+                    _core.Settings.VroKeybindDt     = kbDt;
+                    _core.Settings.VroKeybindDtHand = kbDtHand;
+                }
                 _core.Settings.VroControlRadius = ctrlR;
                 _core.Settings.VroDynVis        = dynVis;
                 _core.Settings.VroFocusRadius   = focusR;
+                if (persistKb && inputMode != _core.Settings.VrInputMode)
+                {
+                    _core.Settings.VrInputMode = inputMode;
+                    _core.VrOverlay?.ApplyInputMode(inputMode);
+                }
                 _core.Settings.Save();
 
                 _core.VrOverlay?.VroConfig(left, hand, px, py, pz, rx, ry, rz, width,
@@ -328,7 +352,8 @@ public class VROverlayController : IDisposable
                 _core.Settings.VroToastTtsInvite = msg["ttsInvite"]?.Value<bool>() ?? false;
                 _core.Settings.VroToastTtsGroupInv = msg["ttsGroupInv"]?.Value<bool>() ?? false;
                 _core.Settings.VroToastTtsJoined = msg["ttsJoined"]?.Value<bool>() ?? false;
-                _core.Settings.VroTtsDevice = msg["ttsDevice"]?.Value<int>() ?? -1;
+                _core.Settings.VroTtsDevice = msg["ttsDevice"]?.Value<int?>() ?? -1;
+                _core.Settings.VroTtsDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(_core.Settings.VroTtsDevice);
                 _core.Settings.VroTtsVoice  = msg["ttsVoice"]?.ToString() ?? "";
                 _core.Settings.VroTtsEngine = msg["ttsEngine"]?.ToString() ?? "sapi";
                 _core.Settings.VroToastEnabled    = enabled;
@@ -364,13 +389,22 @@ public class VROverlayController : IDisposable
                 var  kb          = msg["keybind"]?.ToObject<List<uint>>() ?? new();
                 int  kbHand      = msg["keybindHand"]?.Value<int>()  ?? 0;
                 int  sensitivity = msg["scrollSensitivity"]?.Value<int>() ?? 25;
+                bool scPersist   = (msg["inputMode"]?.Value<int>() ?? -1) >= 0;
 
                 _core.Settings.VroScaleEnabled            = scEnabled;
                 _core.Settings.VroScaleLeftThumb          = leftThumb;
                 _core.Settings.VroScaleRightThumb         = rightThumb;
-                _core.Settings.VroScaleKeybind            = kb;
-                _core.Settings.VroScaleKeybindHand        = kbHand;
                 _core.Settings.VroScaleScrollSensitivity  = sensitivity;
+                if (scPersist && _core.Settings.VrInputMode == 1)
+                {
+                    _core.Settings.VroIdxScaleKeybind     = kb;
+                    _core.Settings.VroIdxScaleKeybindHand = kbHand;
+                }
+                else if (scPersist)
+                {
+                    _core.Settings.VroScaleKeybind     = kb;
+                    _core.Settings.VroScaleKeybindHand = kbHand;
+                }
                 _core.Settings.Save();
 
                 _core.VrOverlay?.VroScaleConfig(scEnabled, leftThumb, rightThumb, kb, kbHand,
@@ -408,7 +442,8 @@ public class VROverlayController : IDisposable
         if (!ShouldSpeakToast(evType)) return;
         var line = string.IsNullOrWhiteSpace(evText) ? friendName : $"{friendName} {evText}";
         VRCNext.Services.Helpers.TtsService.Speak(
-            line, _core.Settings.VroTtsEngine, _core.Settings.VroTtsVoice, _core.Settings.VroTtsDevice, 100, 0);
+            line, _core.Settings.VroTtsEngine, _core.Settings.VroTtsVoice,
+            VRCNext.Services.Helpers.AudioDeviceHelper.ResolveOutput(_core.Settings.VroTtsDevice, _core.Settings.VroTtsDeviceName), 100, 0);
     }
 
     public void UpdateToolStates()

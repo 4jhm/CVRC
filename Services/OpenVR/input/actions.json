@@ -1,0 +1,107 @@
+{
+  "default_bindings": [
+    {
+      "controller_type": "knuckles",
+      "binding_url": "bindings_knuckles.json"
+    }
+  ],
+  "action_sets": [
+    {
+      "name": "/actions/vrcnext",
+      "usage": "leftright"
+    }
+  ],
+  "actions": [
+    {
+      "name": "/actions/vrcnext/in/a_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/a_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/b_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/b_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/trigger_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/trigger_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/trigger_value",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/vrcnext/in/grip_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/grip_value",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/vrcnext/in/grip_force",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/vrcnext/in/pad_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/pad_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/pad_force",
+      "type": "vector1"
+    },
+    {
+      "name": "/actions/vrcnext/in/pad_pos",
+      "type": "vector2"
+    },
+    {
+      "name": "/actions/vrcnext/in/stick_click",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/stick_touch",
+      "type": "boolean"
+    },
+    {
+      "name": "/actions/vrcnext/in/stick_pos",
+      "type": "vector2"
+    }
+  ],
+  "localization": [
+    {
+      "language_tag": "en_US",
+      "/actions/vrcnext": "VRCNext",
+      "/actions/vrcnext/in/a_click": "A Click",
+      "/actions/vrcnext/in/a_touch": "A Touch",
+      "/actions/vrcnext/in/b_click": "B Click",
+      "/actions/vrcnext/in/b_touch": "B Touch",
+      "/actions/vrcnext/in/trigger_click": "Trigger Click",
+      "/actions/vrcnext/in/trigger_touch": "Trigger Touch",
+      "/actions/vrcnext/in/trigger_value": "Trigger Value",
+      "/actions/vrcnext/in/grip_click": "Grip Click",
+      "/actions/vrcnext/in/grip_value": "Grip Value",
+      "/actions/vrcnext/in/grip_force": "Grip Force",
+      "/actions/vrcnext/in/pad_click": "Trackpad Click",
+      "/actions/vrcnext/in/pad_touch": "Trackpad Touch",
+      "/actions/vrcnext/in/pad_force": "Trackpad Force",
+      "/actions/vrcnext/in/pad_pos": "Trackpad Position",
+      "/actions/vrcnext/in/stick_click": "Thumbstick Click",
+      "/actions/vrcnext/in/stick_touch": "Thumbstick Touch",
+      "/actions/vrcnext/in/stick_pos": "Thumbstick Position"
+    }
+  ]
+}

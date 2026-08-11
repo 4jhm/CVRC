@@ -538,6 +538,19 @@ namespace VRCNext.Services
             { (uint)EVRButtonId.k_EButton_Axis1,           "Trigger"   },
         };
 
+        private static ulong ActiveButtonMask
+            => VrInputActions.Active ? VrInputActions.AllowedMask : ALLOWED_BUTTON_MASK;
+
+        private static ulong RecordButtonMask
+            => VrInputActions.Active ? VrInputActions.RecordMask : ALLOWED_BUTTON_MASK;
+
+        private static string ButtonLabel(uint id)
+        {
+            if (VrInputActions.Active)
+                return VrInputActions.ButtonNames.TryGetValue(id, out var sn) ? sn : $"Button{id}";
+            return ButtonNames.TryGetValue(id, out var n) ? n : $"Button{id}";
+        }
+
         private record NotifEntry(string EvType, string FriendName, string EvText, string Time, string ImageUrl = "", string FriendId = "", string Location = "", string NotifId = "", string NotifData = "");
 
         // Location tab
@@ -716,6 +729,8 @@ namespace VRCNext.Services
                 }
                 OpenVRSession.Acquire();
                 _ownedInit = true;
+
+                if (VrInputActions.Requested) VrInputActions.Initialize(_log);
 
                 if (OpenVR.Overlay == null)
                 {
@@ -1651,18 +1666,8 @@ namespace VRCNext.Services
                         if (_activeTab == TabSize)
                         {
                             float tx = 0f, ty = 0f;
-                            var sys2 = _vrSystem;
-                            if (sys2 != null)
-                            {
-                                var cs  = new VRControllerState_t();
-                                var csz = (uint)Marshal.SizeOf<VRControllerState_t>();
-                                if (_scaleLeftThumb && _leftIdx != OpenVR.k_unTrackedDeviceIndexInvalid)
-                                    if (sys2.GetControllerState(_leftIdx, ref cs, csz))
-                                    { if (MathF.Abs(cs.rAxis0.y) > MathF.Abs(ty)) { ty = cs.rAxis0.y; tx = cs.rAxis0.x; } }
-                                if (_scaleRightThumb && _rightIdx != OpenVR.k_unTrackedDeviceIndexInvalid)
-                                    if (sys2.GetControllerState(_rightIdx, ref cs, csz))
-                                    { if (MathF.Abs(cs.rAxis0.y) > MathF.Abs(ty)) { ty = cs.rAxis0.y; tx = cs.rAxis0.x; } }
-                            }
+                            if (_scaleLeftThumb)  ReadThumb(1, ref tx, ref ty);
+                            if (_scaleRightThumb) ReadThumb(2, ref tx, ref ty);
                             if (MathF.Abs(tx - _thumbDisplayX) > 0.02f || MathF.Abs(ty - _thumbDisplayY) > 0.02f)
                             {
                                 _thumbDisplayX = tx;
@@ -1764,6 +1769,7 @@ namespace VRCNext.Services
             if (sys == null) return;
 
             // Reconcile event-driven button state with GetControllerState
+            if (!VrInputActions.Active)
             {
                 var s  = new VRControllerState_t();
                 var sz = (uint)Marshal.SizeOf<VRControllerState_t>();
@@ -2223,8 +2229,32 @@ namespace VRCNext.Services
         }
 
         // merges GetControllerState with _eventButtonsHeld to work whether Steam overlay is open or closed
+        private void ReadThumb(int side, ref float tx, ref float ty)
+        {
+            float x, y;
+            if (VrInputActions.Active)
+            {
+                if (!VrInputActions.GetThumb(side, out x, out y)) return;
+            }
+            else
+            {
+                var sys = _vrSystem;
+                uint idx = side == 1 ? _leftIdx : _rightIdx;
+                if (sys == null || idx == OpenVR.k_unTrackedDeviceIndexInvalid) return;
+
+                var cs  = new VRControllerState_t();
+                var csz = (uint)Marshal.SizeOf<VRControllerState_t>();
+                if (!sys.GetControllerState(idx, ref cs, csz)) return;
+                x = cs.rAxis0.x;
+                y = cs.rAxis0.y;
+            }
+            if (MathF.Abs(y) > MathF.Abs(ty)) { ty = y; tx = x; }
+        }
+
         private ulong GetMergedButtonState()
         {
+            if (VrInputActions.Active) return VrInputActions.GetButtons(0);
+
             ulong state = _eventButtonsHeld;
             if (_vrSystem == null) return state;
             var s  = new VRControllerState_t();
@@ -2240,6 +2270,7 @@ namespace VRCNext.Services
         private ulong GetSideButtonState(int side)
         {
             if (side == 0) return GetMergedButtonState();
+            if (VrInputActions.Active) return VrInputActions.GetButtons(side);
 
             uint idx   = side == 1 ? _leftIdx : _rightIdx;
             ulong held = side == 1 ? _eventLeftHeld : _eventRightHeld;
@@ -2255,7 +2286,7 @@ namespace VRCNext.Services
 
         private void PollKeybindRecording()
         {
-            ulong pressed  = GetMergedButtonState() & ALLOWED_BUTTON_MASK;
+            ulong pressed  = GetMergedButtonState() & RecordButtonMask;
             int   bitCount = CountBits(pressed);
 
             // Combo: 1–4 buttons held stably. DoubleTap: exactly 1 button held stably.
@@ -2283,7 +2314,8 @@ namespace VRCNext.Services
             if (KeybindMode == 1)
             {
                 // Double-tap mode
-                ulong cur      = GetSideButtonState(KeybindDtHand) & ALLOWED_BUTTON_MASK;
+                ulong dtMask   = 1UL << (int)KeybindDt[0];
+                ulong cur      = GetSideButtonState(KeybindDtHand) & dtMask;
                 ulong newPress = cur & ~_prevTriggerHeld; // edge: newly pressed this frame
                 _prevTriggerHeld = cur;
 
@@ -2361,7 +2393,7 @@ namespace VRCNext.Services
                 {
                     var id = (uint)b;
                     ids.Add(id);
-                    names.Add(ButtonNames.TryGetValue(id, out var n) ? n : $"Button{b}");
+                    names.Add(ButtonLabel(id));
                     added++;
                 }
             }
@@ -2385,7 +2417,7 @@ namespace VRCNext.Services
 
         private void PollScaleKeybindRecording()
         {
-            ulong pressed  = GetMergedButtonState() & ALLOWED_BUTTON_MASK;
+            ulong pressed  = GetMergedButtonState() & RecordButtonMask;
             int   bitCount = CountBits(pressed);
 
             if (bitCount >= 1 && bitCount <= MAX_KEYBIND_BUTTONS && pressed == _scaleLastPressed)
@@ -2415,7 +2447,7 @@ namespace VRCNext.Services
                 {
                     var id = (uint)b;
                     ids.Add(id);
-                    names.Add(ButtonNames.TryGetValue(id, out var n) ? n : $"Button{b}");
+                    names.Add(ButtonLabel(id));
                     added++;
                 }
             }
@@ -2543,7 +2575,7 @@ namespace VRCNext.Services
         {
             var names = new List<string>();
             foreach (var id in Keybind)
-                names.Add(ButtonNames.TryGetValue(id, out var n) ? n : $"Button{id}");
+                names.Add(ButtonLabel(id));
             return names;
         }
 
@@ -4115,7 +4147,7 @@ namespace VRCNext.Services
 
             // Hint: grip keybind
             string holdHint = _scaleKeybind.Count > 0
-                ? $"Hold {string.Join("+", _scaleKeybind.Select(b => ButtonNames.TryGetValue(b, out var n) ? n : $"Btn{b}"))} + Stick to scale"
+                ? $"Hold {string.Join("+", _scaleKeybind.Select(ButtonLabel))} + Stick to scale"
                 : "Set hold keybind in settings to scale with Stick";
             using (var hf2 = new Font("Segoe UI", 7f, FontStyle.Regular, GraphicsUnit.Point))
             using (var hb2 = new SolidBrush(th.Tx3))

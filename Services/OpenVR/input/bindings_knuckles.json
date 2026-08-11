@@ -1,0 +1,228 @@
+{
+  "action_manifest_version": 0,
+  "alias_info": {},
+  "bindings": {
+    "/actions/vrcnext": {
+      "sources": [
+        {
+          "path": "/user/hand/left/input/a",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/a_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/a_touch"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/a",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/a_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/a_touch"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/b",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/b_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/b_touch"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/b",
+          "mode": "button",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/b_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/b_touch"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/trigger",
+          "mode": "trigger",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/trigger_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/trigger_touch"
+            },
+            "pull": {
+              "output": "/actions/vrcnext/in/trigger_value"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/trigger",
+          "mode": "trigger",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/trigger_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/trigger_touch"
+            },
+            "pull": {
+              "output": "/actions/vrcnext/in/trigger_value"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/grip",
+          "mode": "trigger",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/grip_click"
+            },
+            "pull": {
+              "output": "/actions/vrcnext/in/grip_value"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/grip",
+          "mode": "trigger",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/grip_click"
+            },
+            "pull": {
+              "output": "/actions/vrcnext/in/grip_value"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/grip",
+          "mode": "force_sensor",
+          "parameters": {
+            "haptic_amplitude": "0"
+          },
+          "inputs": {
+            "force": {
+              "output": "/actions/vrcnext/in/grip_force"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/grip",
+          "mode": "force_sensor",
+          "parameters": {
+            "haptic_amplitude": "0"
+          },
+          "inputs": {
+            "force": {
+              "output": "/actions/vrcnext/in/grip_force"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/trackpad",
+          "mode": "trackpad",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/pad_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/pad_touch"
+            },
+            "position": {
+              "output": "/actions/vrcnext/in/pad_pos"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/trackpad",
+          "mode": "trackpad",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/pad_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/pad_touch"
+            },
+            "position": {
+              "output": "/actions/vrcnext/in/pad_pos"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/trackpad",
+          "mode": "force_sensor",
+          "parameters": {
+            "haptic_amplitude": "0"
+          },
+          "inputs": {
+            "force": {
+              "output": "/actions/vrcnext/in/pad_force"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/trackpad",
+          "mode": "force_sensor",
+          "parameters": {
+            "haptic_amplitude": "0"
+          },
+          "inputs": {
+            "force": {
+              "output": "/actions/vrcnext/in/pad_force"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/left/input/thumbstick",
+          "mode": "joystick",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/stick_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/stick_touch"
+            },
+            "position": {
+              "output": "/actions/vrcnext/in/stick_pos"
+            }
+          }
+        },
+        {
+          "path": "/user/hand/right/input/thumbstick",
+          "mode": "joystick",
+          "inputs": {
+            "click": {
+              "output": "/actions/vrcnext/in/stick_click"
+            },
+            "touch": {
+              "output": "/actions/vrcnext/in/stick_touch"
+            },
+            "position": {
+              "output": "/actions/vrcnext/in/stick_pos"
+            }
+          }
+        }
+      ],
+      "haptics": [],
+      "poses": [],
+      "skeleton": []
+    }
+  },
+  "controller_type": "knuckles",
+  "description": "VRCNext default bindings for Valve Index controllers",
+  "name": "VRCNext Index",
+  "options": {},
+  "simulated_controller_type": ""
+}

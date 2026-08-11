@@ -29,6 +29,28 @@ public class StatusScheduleController : IDisposable
     {
         if (_loopTask != null) return;
         _loopTask = Task.Run(() => LoopAsync(_cts.Token));
+        WireInstanceEvents();
+    }
+
+    private bool _instanceEventsWired;
+
+    private void WireInstanceEvents()
+    {
+        if (_instanceEventsWired) return;
+        _instanceEventsWired = true;
+        _core.LogWatcher.PlayerJoined  += (_, _) => RequestReevaluate();
+        _core.LogWatcher.PlayerLeft    += (_, _) => RequestReevaluate();
+        _core.LogWatcher.WorldChanged  += (_, _) => RequestReevaluate();
+    }
+
+    public void RequestReevaluate()
+    {
+        if (_cts.IsCancellationRequested) return;
+        _ = Task.Run(async () =>
+        {
+            try { await EvaluateAsync(); }
+            catch (Exception ex) { CrashHandler.WriteEntry("StatusSchedule.RequestReevaluate", ex); }
+        });
     }
 
     private async Task LoopAsync(CancellationToken ct)
@@ -61,31 +83,27 @@ public class StatusScheduleController : IDisposable
     // Returns true when `now` falls inside the rule's window. A window whose end is
     // not after its start is treated as crossing midnight (e.g. 22:00 -> 06:00).
     internal static bool IsWithinWindow(StatusScheduleSettings.StatusRule rule, DateTime now)
-    {
-        if (!TimeSpan.TryParse(rule.Start, out var start)) return false;
-        if (!TimeSpan.TryParse(rule.End, out var end)) return false;
-
-        var timeOfDay = now.TimeOfDay;
-        var crossesMidnight = end <= start;
-
-        // ISO-8601 weekday: Monday = 1 .. Sunday = 7.
-        int Iso(DayOfWeek d) => d == DayOfWeek.Sunday ? 7 : (int)d;
-
-        bool DayAllowed(int isoDay)
-            => rule.Days == null || rule.Days.Count == 0 || rule.Days.Contains(isoDay);
-
-        if (!crossesMidnight)
-            return timeOfDay >= start && timeOfDay < end && DayAllowed(Iso(now.DayOfWeek));
-
-        // Crossing midnight: the day is taken from the day the window *started* on,
-        // so a Friday 22:00-06:00 rule still applies at 02:00 on Saturday.
-        if (timeOfDay >= start) return DayAllowed(Iso(now.DayOfWeek));
-        if (timeOfDay < end)    return DayAllowed(Iso(now.AddDays(-1).DayOfWeek));
-        return false;
-    }
+            => VRCNext.Services.Helpers.TimeWindowHelper.IsWithin(rule.Start, rule.End, rule.Days, now);
 
     private StatusScheduleSettings.StatusRule? PickRule(DateTime now, bool vrcRunning)
     {
+        var needsInstance = _settings.Rules.Any(r => r.Enabled &&
+            (r.InstanceTypes.Count > 0 || r.MinPlayers > 0 || r.FriendIds.Count > 0));
+
+        var instanceType = "";
+        var playerCount  = 0;
+        HashSet<string> presentIds = new();
+
+        if (needsInstance && vrcRunning)
+        {
+            var (_, _, itype) = VRChatApiService.ParseLocation(_core.LogWatcher.CurrentLocation);
+            instanceType = itype;
+            var players  = _core.LogWatcher.GetCurrentPlayers();
+            playerCount  = players.Count;
+            presentIds   = new HashSet<string>(
+                players.Where(p => !string.IsNullOrEmpty(p.UserId)).Select(p => p.UserId));
+        }
+
         StatusScheduleSettings.StatusRule? best = null;
         foreach (var rule in _settings.Rules)
         {
@@ -93,6 +111,24 @@ public class StatusScheduleController : IDisposable
             if (rule.OnlyWhileInGame && !vrcRunning) continue;
             if (rule.OnlyWhileOutsideGame && vrcRunning) continue;
             if (!IsWithinWindow(rule, now)) continue;
+
+            var hasInstanceCondition = rule.InstanceTypes.Count > 0
+                                    || rule.MinPlayers > 0
+                                    || rule.FriendIds.Count > 0;
+            if (hasInstanceCondition)
+            {
+                if (!vrcRunning) continue;
+                if (rule.InstanceTypes.Count > 0 && !rule.InstanceTypes.Contains(instanceType)) continue;
+                if (rule.MinPlayers > 0 && playerCount < rule.MinPlayers) continue;
+                if (rule.FriendIds.Count > 0)
+                {
+                    var match = rule.FriendsRequireAll
+                        ? rule.FriendIds.All(presentIds.Contains)
+                        : rule.FriendIds.Any(presentIds.Contains);
+                    if (!match) continue;
+                }
+            }
+
             if (best == null || rule.Priority > best.Priority) best = rule;
         }
         return best;
@@ -263,6 +299,10 @@ public class StatusScheduleController : IDisposable
                 ["status"]                = r.Status,
                 ["setStatusMessage"]      = r.SetStatusMessage,
                 ["statusMessage"]         = r.StatusMessage,
+                ["instanceTypes"]         = new JArray(r.InstanceTypes ?? new List<string>()),
+                ["minPlayers"]            = r.MinPlayers,
+                ["friendIds"]             = new JArray(r.FriendIds ?? new List<string>()),
+                ["friendsRequireAll"]     = r.FriendsRequireAll,
             });
         }
 

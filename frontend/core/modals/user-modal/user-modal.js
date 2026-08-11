@@ -735,7 +735,8 @@ function renderFriendDetail(d) {
     const platBadge = getPlatformBadgeHtml(d.platform || d.lastPlatform || '');
     if (platBadge) badgesHtml += platBadge;
     if (d.isFriend) badgesHtml += `<span class="vrcn-badge bdg-friend"><span class="msi" style="font-size:11px;">check_circle</span>${t('profiles.badges.friend', 'Friend')}</span>`;
-    if (d.ageVerified) badgesHtml += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>18+</span>`;
+    if (d.ageVerified) badgesHtml += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>${t('profiles.meta.age_verified', 'Age Verified')}</span>`;
+    if (d.ageVerificationStatus === '18+') badgesHtml += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>18+</span>`;
     const rank = getTrustRank(d.tags || []);
     if (rank) badgesHtml += `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>`;
     if (d.id) badgesHtml += idBadge(d.id);
@@ -1237,10 +1238,12 @@ function patchFriendDetailLive(f) {
             const rank = getTrustRank(f.tags);
             const platBadge = getPlatformBadgeHtml(f.platform || f.lastPlatform || currentFriendDetail.lastPlatform || '');
             const ageVerified = f.ageVerified ?? currentFriendDetail.ageVerified;
+            const ageVerificationStatus = f.ageVerificationStatus ?? currentFriendDetail.ageVerificationStatus;
             let html = '';
             if (platBadge) html += platBadge;
             if (currentFriendDetail.isFriend) html += `<span class="vrcn-badge bdg-friend"><span class="msi" style="font-size:11px;">check_circle</span>${t('profiles.badges.friend', 'Friend')}</span>`;
-            if (ageVerified) html += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>18+</span>`;
+            if (ageVerified) html += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>${t('profiles.meta.age_verified', 'Age Verified')}</span>`;
+            if (ageVerificationStatus === '18+') html += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>18+</span>`;
             if (rank) html += `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>`;
             if (f.id) html += idBadge(f.id);
             badgesRow.innerHTML = html;

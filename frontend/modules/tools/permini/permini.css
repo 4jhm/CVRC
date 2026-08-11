@@ -27,13 +27,11 @@
     flex-direction: column;
     gap: 8px;
 }
+.pm-item { padding: 10px 12px; }
 .pm-entry {
     display: flex;
     align-items: center;
     gap: 12px;
-    background: var(--bg-card);
-    border-radius: 10px;
-    padding: 10px 12px;
 }
 .pm-avatar {
     width: 42px;
@@ -106,3 +104,85 @@
     background: color-mix(in srgb, var(--status-busy) 12%, transparent);
 }
 .pm-remove .msi { font-size: 16px; }
+
+.pm-expand {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--tx3);
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color .15s, background .15s;
+}
+.pm-expand:hover { color: var(--tx1); background: var(--bg-hover); }
+.pm-expand .msi { transition: transform .2s ease; }
+.pm-item.collapsed .pm-expand .msi { transform: rotate(-90deg); }
+
+.pm-advanced {
+    margin-top: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--brd);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.pm-adv-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx2);
+}
+
+.pm-adv-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: opacity .15s;
+}
+.pm-adv-body.pm-adv-off { opacity: .4; pointer-events: none; }
+
+.pm-adv-label {
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx3);
+}
+
+.pm-days {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.pm-day {
+    min-width: 38px;
+    padding: 6px 0;
+    border: 1px solid var(--brd);
+    background: transparent;
+    color: var(--tx3);
+    border-radius: 7px;
+    font-family: inherit;
+    font-size: calc(11px + var(--fs-off, 0px));
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+}
+.pm-day:hover { color: var(--tx1); }
+.pm-day.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+}
+
+.pm-time-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.pm-time-dash { color: var(--tx3); font-weight: 700; }

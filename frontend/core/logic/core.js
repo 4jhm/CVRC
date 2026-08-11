@@ -68,6 +68,7 @@ function fmtTimeSeconds(d) {
 
 let relayOn = false, settings = { webhooks: [{}, {}, {}, {}], folders: [], extraExe: [] }, postedFiles = [], selectedFolderIdx = -1;
 let favorites = new Set(), showFavOnly = false, libraryFiles = [];
+let photoRatings = new Map();
 let _prevTab = 0;
 let _lazyUnloadDelay = 0; // Lazy Unload Timer. not tested yet
 let _lazyUnloadTimer = null;
@@ -848,6 +849,7 @@ function getPageTitle(i) {
         t('page.vrc_accounts', 'VRChat Accounts'),
         t('page.avatar_database', 'Avatar Database'),
         t('page.direct_access', 'Direct Access'),
+        t('page.avatar_logger', 'Avatar Logger'),
     ][i] ?? '';
 }
 
@@ -1963,6 +1965,11 @@ function execConsoleCommand(cmd) {
     if (cmd.toLowerCase() === '/changelog') { addLog('> ' + cmd, 'cmd'); openChangelogModal(); return; }
     addLog('> ' + cmd, 'cmd');
     sendToCS({ action: 'consoleCommand', cmd });
+}
+
+function audioDeviceIndex(id) {
+    const n = parseInt(document.getElementById(id)?.value, 10);
+    return Number.isNaN(n) ? -1 : n;
 }
 
 const _escMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };

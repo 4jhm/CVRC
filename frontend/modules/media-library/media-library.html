@@ -1,6 +1,7 @@
                 <div class="tab-toolbar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                         <button class="vrcn-button" id="libFavBtn" onclick="toggleFavFilter()"><span class="msi" style="font-size:16px;">favorite</span> <span data-i18n="library.favorites">Favorites</span></button>
+                        <div id="libRatingFilterWrap"></div>
                         <div id="libFriendFilterWrap"></div>
                         <div id="libWorldFilterWrap"></div>
                         <select id="libFolderFilter" class="vrcn-dropdown" onchange="filterLibrary()"><option value="__all__" data-i18n="library.filters.all_folders">All Folders</option></select>

@@ -90,6 +90,7 @@ function openInstanceInfoModal() {
         const tags        = (f?.tags?.length ? f.tags : null) || u.tags || [];
         const platform    = f?.platform          || u.platform          || '';
         const ageVerified = !!(f?.ageVerified || u.ageVerified);
+        const is18 = (f?.ageVerificationStatus || u.ageVerificationStatus) === '18+';
         const avHtml = image
             ? `<div class="iim-av" style="background-image:url('${cssUrl(image)}')"></div>`
             : `<div class="iim-av iim-av-letter">${esc(displayName[0].toUpperCase())}</div>`;
@@ -113,7 +114,7 @@ function openInstanceInfoModal() {
         const bioLinks  = (Array.isArray(u.bioLinks) && u.bioLinks.length ? u.bioLinks : f?.bioLinks) || [];
         const bioCell   = `<div class="iim-cell">${typeof _plBioLinksCell === 'function' ? _plBioLinksCell({ bioLinks }) : ''}</div>`;
         const nameCell  = `<div class="iim-cell"><span class="iim-name">${esc(displayName)}</span></div>`;
-        const ageCell   = `<div class="iim-cell">${ageVerified ? `<span class="vrcn-badge" style="font-size:calc(10px + var(--fs-off, 0px));color:#3ba55d;border-color:#3ba55d30;background:#3ba55d18;">18+</span>` : ''}</div>`;
+        const ageCell   = `<div class="iim-cell">${is18 ? `<span class="vrcn-badge" style="font-size:calc(10px + var(--fs-off, 0px));color:#3ba55d;border-color:#3ba55d30;background:#3ba55d18;">18+</span>` : (ageVerified ? `<span class="vrcn-badge" style="font-size:calc(10px + var(--fs-off, 0px));color:#3ba55d;border-color:#3ba55d30;background:#3ba55d18;">Verified</span>` : '')}</div>`;
         const fromCell  = `<div class="iim-cell iim-muted-cell">${u.joinedAt ? esc(fmtTime(new Date(u.joinedAt))) : '&mdash;'}</div>`;
         let barHtml = '';
         if (iTotal > 0 && u.joinedAt) {
@@ -276,7 +277,7 @@ function _iimSortValue(u, id) {
             const idx = IIM_STATUS_ORDER.indexOf(s);
             return idx < 0 ? IIM_STATUS_ORDER.length : idx;
         }
-        case 'age':      return (live?.ageVerified || u.ageVerified) ? 1 : 0;
+        case 'age':      return (live?.ageVerificationStatus || u.ageVerificationStatus) === '18+' ? 2 : ((live?.ageVerified || u.ageVerified) ? 1 : 0);
         case 'biolinks': {
             const bl = (Array.isArray(u.bioLinks) && u.bioLinks.length ? u.bioLinks : live?.bioLinks) || [];
             return bl.filter(Boolean).length;

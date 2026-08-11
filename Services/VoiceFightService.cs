@@ -84,41 +84,11 @@ public sealed class VoiceFightService : IDisposable
     public bool IsRunning => _waveIn != null;
     public bool ModelOk => _modelLoaded;
 
-    [DllImport("winmm.dll")]
-    private static extern int waveOutGetNumDevs();
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
-    private struct WAVEOUTCAPS
-    {
-        public ushort wMid, wPid;
-        public uint vDriverVersion;
-        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string szPname;
-        public uint dwFormats;
-        public ushort wChannels, wReserved1;
-        public uint dwSupport;
-    }
-    [DllImport("winmm.dll", CharSet = CharSet.Ansi)]
-    private static extern int waveOutGetDevCaps(IntPtr deviceID, out WAVEOUTCAPS caps, int size);
-
     public static string[] GetInputDevices()
-    {
-        int count = WaveInEvent.DeviceCount;
-        var names = new string[count];
-        for (int i = 0; i < count; i++)
-            names[i] = WaveInEvent.GetCapabilities(i).ProductName;
-        return names;
-    }
+        => VRCNext.Services.Helpers.AudioDeviceHelper.GetInputNames();
 
     public static string[] GetOutputDevices()
-    {
-        int count = waveOutGetNumDevs();
-        var names = new string[count];
-        for (int i = 0; i < count; i++)
-        {
-            waveOutGetDevCaps(new IntPtr(i), out var caps, Marshal.SizeOf<WAVEOUTCAPS>());
-            names[i] = caps.szPname ?? "";
-        }
-        return names;
-    }
+        => VRCNext.Services.Helpers.AudioDeviceHelper.GetOutputNames();
 
     public static TimeSpan GetDuration(string path)
     {

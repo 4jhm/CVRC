@@ -647,6 +647,9 @@ public class AuthController
             is24Hour = VRCNext.Services.Helpers.DateTimeHelper.Is24Hour,
         });
         _core.SendToJS("favoritesLoaded", _photos.Favorites);
+#if WINDOWS
+        _core.SendToJS("libraryRatings", _photos.Ratings);
+#endif
         var customColors = _core.Cache.LoadRaw(CacheHandler.KeyCustomColors);
         if (customColors != null) _core.SendToJS("customColors", customColors);
 #if WINDOWS
@@ -1356,6 +1359,8 @@ public class AuthController
             lastPlatform      = user["last_platform"]?.ToString() ?? "",
             platform          = user["platform"]?.ToString() ?? "",
             ageVerified       = user["ageVerified"]?.Value<bool>() ?? false,
+            ageVerificationStatus = user["ageVerificationStatus"]?.ToString() ?? "",
+            vrcRunning        = _core.IsVrcRunning?.Invoke() ?? false,
             allowAvatarCopying = user["allowAvatarCopying"]?.Value<bool>() ?? false,
             isBoopingEnabled  = user["isBoopingEnabled"]?.Value<bool>() ?? false,
             rawJson = user,
@@ -1978,7 +1983,8 @@ public class AuthController
             _core.Settings.VroToastTtsGroupInv = data["vroToastTtsGroupInv"]?.Value<bool>() ?? false;
             _core.Settings.VroToastTtsJoined = data["vroToastTtsJoined"]?.Value<bool>() ?? false;
             _core.Settings.VroToastJoined = data["vroToastJoined"]?.Value<bool>() ?? true;
-            _core.Settings.VroTtsDevice = data["vroTtsDevice"]?.Value<int>() ?? -1;
+            _core.Settings.VroTtsDevice = data["vroTtsDevice"]?.Value<int?>() ?? -1;
+            _core.Settings.VroTtsDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(_core.Settings.VroTtsDevice);
             _core.Settings.VroTtsVoice  = data["vroTtsVoice"]?.ToString() ?? "";
             _core.Settings.VroTtsEngine = data["vroTtsEngine"]?.ToString() ?? "sapi";
             _core.Settings.VroTtsLang   = data["vroTtsLang"]?.ToString() ?? "";
@@ -2051,12 +2057,40 @@ public class AuthController
             _core.Settings.SfLeftHand = data["sfLeftHand"]?.Value<bool>() ?? false;
             _core.Settings.SfRightHand = data["sfRightHand"]?.Value<bool>() ?? true;
             _core.Settings.SfUseGrip = data["sfUseGrip"]?.Value<bool>() ?? true;
-            _core.Settings.SfLeftResetButton  = (uint)(data["sfLeftResetBtn"]?.Value<int>()  ?? 32);
-            _core.Settings.SfRightResetButton = (uint)(data["sfRightResetBtn"]?.Value<int>() ?? 0);
-            _core.Settings.SfLeftDragButton   = (uint)(data["sfLeftDragBtn"]?.Value<int>()   ?? 0);
-            _core.Settings.SfRightDragButton  = (uint)(data["sfRightDragBtn"]?.Value<int>()  ?? 32);
-            _core.Settings.SfLeftGravityButton  = (uint)(data["sfLeftGravityBtn"]?.Value<int>()  ?? 0);
-            _core.Settings.SfRightGravityButton = (uint)(data["sfRightGravityBtn"]?.Value<int>() ?? 0);
+            int vrModeIn = data["vrInputMode"]?.Value<int>() ?? _core.Settings.VrInputMode;
+            if (vrModeIn != _core.Settings.VrInputMode)
+            {
+                _core.Settings.VrInputMode = vrModeIn;
+#if WINDOWS
+                _core.VrOverlay?.ApplyInputMode(vrModeIn);
+#endif
+            }
+            bool vrIdx = _core.Settings.VrInputMode == 1;
+
+            uint SfIn(string key, uint current)
+            {
+                var v = data[key]?.Value<int>();
+                return v.HasValue ? (uint)v.Value : current;
+            }
+
+            if (vrIdx)
+            {
+                _core.Settings.SfIdxLeftResetButton    = SfIn("sfLeftResetBtn",     _core.Settings.SfIdxLeftResetButton);
+                _core.Settings.SfIdxRightResetButton   = SfIn("sfRightResetBtn",    _core.Settings.SfIdxRightResetButton);
+                _core.Settings.SfIdxLeftDragButton     = SfIn("sfLeftDragBtn",      _core.Settings.SfIdxLeftDragButton);
+                _core.Settings.SfIdxRightDragButton    = SfIn("sfRightDragBtn",     _core.Settings.SfIdxRightDragButton);
+                _core.Settings.SfIdxLeftGravityButton  = SfIn("sfLeftGravityBtn",   _core.Settings.SfIdxLeftGravityButton);
+                _core.Settings.SfIdxRightGravityButton = SfIn("sfRightGravityBtn",  _core.Settings.SfIdxRightGravityButton);
+            }
+            else
+            {
+                _core.Settings.SfLeftResetButton    = SfIn("sfLeftResetBtn",    _core.Settings.SfLeftResetButton);
+                _core.Settings.SfRightResetButton   = SfIn("sfRightResetBtn",   _core.Settings.SfRightResetButton);
+                _core.Settings.SfLeftDragButton     = SfIn("sfLeftDragBtn",     _core.Settings.SfLeftDragButton);
+                _core.Settings.SfRightDragButton    = SfIn("sfRightDragBtn",    _core.Settings.SfRightDragButton);
+                _core.Settings.SfLeftGravityButton  = SfIn("sfLeftGravityBtn",  _core.Settings.SfLeftGravityButton);
+                _core.Settings.SfRightGravityButton = SfIn("sfRightGravityBtn", _core.Settings.SfRightGravityButton);
+            }
             _core.Settings.SfGravity = data["sfGravity"]?.Value<float>() ?? 9.8f;
             _core.Settings.ChatboxAutoStart = data["chatboxAutoStart"]?.Value<bool>() ?? false;
             _core.Settings.SfAutoStart = data["sfAutoStart"]?.Value<bool>() ?? false;
@@ -2066,17 +2100,41 @@ public class AuthController
             _core.Settings.ChatboxAutoStartDesktop = data["chatboxAutoStartDesktop"]?.Value<bool>() ?? false;
             _core.Settings.SfAutoStartVR           = data["sfAutoStartVR"]?.Value<bool>()           ?? false;
             _core.Settings.FsAutoStartVR           = data["fsAutoStartVR"]?.Value<bool>()           ?? false;
-            _core.Settings.FsLeftButton            = (uint)(data["fsLeftButton"]?.Value<int>()      ?? 2);
-            _core.Settings.FsRightButton           = (uint)(data["fsRightButton"]?.Value<int>()     ?? 2);
+            if (vrIdx)
+            {
+                _core.Settings.FsIdxLeftButton  = SfIn("fsLeftButton",  _core.Settings.FsIdxLeftButton);
+                _core.Settings.FsIdxRightButton = SfIn("fsRightButton", _core.Settings.FsIdxRightButton);
+            }
+            else
+            {
+                _core.Settings.FsLeftButton  = SfIn("fsLeftButton",  _core.Settings.FsLeftButton);
+                _core.Settings.FsRightButton = SfIn("fsRightButton", _core.Settings.FsRightButton);
+            }
             _core.Settings.FsOutputDevice          = data["fsOutputDevice"]?.Value<string>()        ?? "";
             _core.Settings.FsActivationRadius      = data["fsActivationRadius"]?.Value<int>()       ?? 15;
-            _core.Settings.FsLeftRecordButton      = (uint)(data["fsLeftRecordButton"]?.Value<int>()  ?? 0);
-            _core.Settings.FsRightRecordButton     = (uint)(data["fsRightRecordButton"]?.Value<int>() ?? 0);
+            if (vrIdx)
+            {
+                _core.Settings.FsIdxLeftRecordButton  = SfIn("fsLeftRecordButton",  _core.Settings.FsIdxLeftRecordButton);
+                _core.Settings.FsIdxRightRecordButton = SfIn("fsRightRecordButton", _core.Settings.FsIdxRightRecordButton);
+            }
+            else
+            {
+                _core.Settings.FsLeftRecordButton  = SfIn("fsLeftRecordButton",  _core.Settings.FsLeftRecordButton);
+                _core.Settings.FsRightRecordButton = SfIn("fsRightRecordButton", _core.Settings.FsRightRecordButton);
+            }
             _core.Settings.FsGifMaxResolution      = data["fsGifMaxResolution"]?.Value<int>()         ?? 512;
             _core.Settings.FsGifMaxFps             = data["fsGifMaxFps"]?.Value<int>()                ?? 10;
             _core.Settings.FsUseHmdRotations       = data["fsUseHmdRotations"]?.Value<bool>()         ?? false;
-            _core.Settings.FsLeftVideoButton       = (uint)(data["fsLeftVideoButton"]?.Value<int>()   ?? 0);
-            _core.Settings.FsRightVideoButton      = (uint)(data["fsRightVideoButton"]?.Value<int>()  ?? 0);
+            if (vrIdx)
+            {
+                _core.Settings.FsIdxLeftVideoButton  = SfIn("fsLeftVideoButton",  _core.Settings.FsIdxLeftVideoButton);
+                _core.Settings.FsIdxRightVideoButton = SfIn("fsRightVideoButton", _core.Settings.FsIdxRightVideoButton);
+            }
+            else
+            {
+                _core.Settings.FsLeftVideoButton  = SfIn("fsLeftVideoButton",  _core.Settings.FsLeftVideoButton);
+                _core.Settings.FsRightVideoButton = SfIn("fsRightVideoButton", _core.Settings.FsRightVideoButton);
+            }
             _core.Settings.FsVideoDeviceA          = data["fsVideoDeviceA"]?.Value<string>()          ?? "";
             _core.Settings.FsVideoDeviceB          = data["fsVideoDeviceB"]?.Value<string>()          ?? "";
             _core.Settings.FsVideoFps              = data["fsVideoFps"]?.Value<int>()                 ?? 30;

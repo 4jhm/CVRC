@@ -20,20 +20,7 @@ public static class TtsService
     private static CancellationTokenSource? _previewCts;
     private static IDisposable? _previewOut;
 
-    public static string[] GetOutputDevices()
-    {
-#if WINDOWS
-        try
-        {
-            var names = new List<string>();
-            for (int i = 0; i < NAudio.Wave.WaveOut.DeviceCount; i++)
-                names.Add(NAudio.Wave.WaveOut.GetCapabilities(i).ProductName ?? "");
-            return names.ToArray();
-        }
-        catch { }
-#endif
-        return Array.Empty<string>();
-    }
+    public static string[] GetOutputDevices() => AudioDeviceHelper.GetOutputNames();
 
     public static string[] GetSapiVoices()
     {
@@ -103,7 +90,11 @@ public static class TtsService
 #if WINDOWS
         _ = Task.Run(async () =>
         {
-            await _gate.WaitAsync();
+            if (!await _gate.WaitAsync(TimeSpan.FromSeconds(30)))
+            {
+                Log?.Invoke("[TTS] Still busy with the previous line, skipping this one.");
+                return;
+            }
             try { await SpeakOnceAsync(text, engine, voice, deviceIndex, volume, rate, CancellationToken.None); }
             catch (Exception ex) { Log?.Invoke($"[TTS] {ex.Message}"); }
             finally { _gate.Release(); }
@@ -142,7 +133,14 @@ public static class TtsService
     {
         if (string.Equals(engine, EngineEdge, StringComparison.OrdinalIgnoreCase))
         {
-            var mp3 = await EdgeTtsService.SynthesizeAsync(text, voice, rate, ct);
+            byte[] mp3;
+            try { mp3 = await EdgeTtsService.SynthesizeAsync(text, voice, rate, ct); }
+            catch (Exception ex)
+            {
+                Log?.Invoke($"[TTS] Edge synthesis failed ({ex.Message}), falling back to SAPI.");
+                SpeakSapi(text, "", deviceIndex, volume, rate, ct, isPreview);
+                return;
+            }
             if (mp3.Length == 0)
             {
                 Log?.Invoke("[TTS] Edge returned no audio, falling back to SAPI.");
@@ -166,14 +164,19 @@ public static class TtsService
         {
             if (!string.IsNullOrWhiteSpace(voice))
             {
-                try { synth.SelectVoice(voice); } catch { }
+                try { synth.SelectVoice(voice); }
+                catch (Exception ex) { Log?.Invoke($"[TTS] Voice '{voice}' unavailable ({ex.Message}), using default."); }
             }
             synth.Volume = Math.Clamp(volume, 0, 100);
             synth.Rate = Math.Clamp(rate, -10, 10);
             synth.SetOutputToWaveStream(ms);
             synth.Speak(text);
         }
-        if (ms.Length == 0) return;
+        if (ms.Length == 0)
+        {
+            Log?.Invoke("[TTS] SAPI produced no audio — no speech voice is installed on this system.");
+            return;
+        }
         ms.Position = 0;
         using var reader = new NAudio.Wave.WaveFileReader(ms);
         Play(reader, deviceIndex, ct, isPreview);
@@ -181,7 +184,7 @@ public static class TtsService
 
     private static void Play(NAudio.Wave.WaveStream reader, int deviceIndex, CancellationToken ct, bool isPreview)
     {
-        var waveOut = new NAudio.Wave.WaveOutEvent { DeviceNumber = deviceIndex };
+        var waveOut = new NAudio.Wave.WaveOutEvent { DeviceNumber = AudioDeviceHelper.ResolveOutput(deviceIndex, null) };
         using var done = new ManualResetEventSlim(false);
         waveOut.PlaybackStopped += (_, __) => done.Set();
         waveOut.Init(reader);
@@ -192,11 +195,20 @@ public static class TtsService
             lock (_previewLock) _previewOut = waveOut;
         }
 
+        var limit = reader.TotalTime + TimeSpan.FromSeconds(10);
+        var sw    = System.Diagnostics.Stopwatch.StartNew();
+
         try
         {
             while (!done.IsSet)
             {
                 if (ct.IsCancellationRequested) { try { waveOut.Stop(); } catch { } break; }
+                if (sw.Elapsed > limit)
+                {
+                    Log?.Invoke("[TTS] Playback did not signal completion, forcing stop.");
+                    try { waveOut.Stop(); } catch { }
+                    break;
+                }
                 done.Wait(80);
             }
         }

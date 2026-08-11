@@ -46,10 +46,12 @@ public class VoiceFightController : IDisposable
 
             case "vfStart":
                 {
-                    int devIdx = msg["deviceIndex"]?.Value<int>() ?? 0;
-                    int outIdx = msg["outputDeviceIndex"]?.Value<int>() ?? _vfSettings.OutputDeviceIndex;
+                    int devIdx = msg["deviceIndex"]?.Value<int?>() ?? 0;
+                    int outIdx = msg["outputDeviceIndex"]?.Value<int?>() ?? _vfSettings.OutputDeviceIndex;
                     _vfSettings.InputDeviceIndex = devIdx;
+                    _vfSettings.InputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.InputNameAt(devIdx);
                     _vfSettings.OutputDeviceIndex = outIdx;
+                    _vfSettings.OutputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(outIdx);
                     _vfSettings.Save();
 
                     _voiceFight?.Dispose();
@@ -255,8 +257,9 @@ public class VoiceFightController : IDisposable
 
             case "vfSetInputDevice":
                 {
-                    int devIdx = msg["deviceIndex"]?.Value<int>() ?? 0;
+                    int devIdx = msg["deviceIndex"]?.Value<int?>() ?? 0;
                     _vfSettings.InputDeviceIndex = devIdx;
+                    _vfSettings.InputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.InputNameAt(devIdx);
                     _vfSettings.Save();
                     _core.SendToJS("toast", new { ok = true, msg = "Saved" });
                     if (_voiceFight?.IsRunning == true)
@@ -269,8 +272,9 @@ public class VoiceFightController : IDisposable
 
             case "vfSetOutputDevice":
                 {
-                    int outIdx = msg["deviceIndex"]?.Value<int>() ?? -1;
+                    int outIdx = msg["deviceIndex"]?.Value<int?>() ?? -1;
                     _vfSettings.OutputDeviceIndex = outIdx;
+                    _vfSettings.OutputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(outIdx);
                     _vfSettings.Save();
                     _core.SendToJS("toast", new { ok = true, msg = "Saved" });
                     if (_voiceFight?.IsRunning == true)
@@ -303,7 +307,8 @@ public class VoiceFightController : IDisposable
                 Invoke(() => _core.SendToJS("vfRecognized", new { text = displayHtml, isPartial }));
             _voiceFight.SetKeywords(_vfSettings.Items);
             _voiceFight.SetStopWord(_vfSettings.StopWord);
-            _voiceFight.Start(_vfSettings.InputDeviceIndex, _vfSettings.OutputDeviceIndex);
+            _voiceFight.Start(VRCNext.Services.Helpers.AudioDeviceHelper.ResolveInput(_vfSettings.InputDeviceIndex, _vfSettings.InputDeviceName),
+                              VRCNext.Services.Helpers.AudioDeviceHelper.ResolveOutput(_vfSettings.OutputDeviceIndex, _vfSettings.OutputDeviceName));
             _core.SendToJS("vfState", new { running = true });
         }
     }

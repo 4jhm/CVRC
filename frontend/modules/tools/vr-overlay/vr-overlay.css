@@ -1,4 +1,4 @@
-/* === VR Overlay Module === */
+﻿/* === VR Overlay Module === */
 
 .vro-setting-row {
     display: flex;
@@ -82,6 +82,12 @@
     gap: 6px;
     align-items: center;
 }
+.vro-ctrl-legacy .vro-ctrl-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+}
 .vro-ctrl-legacy .vro-btn {
     position: static;
     left: auto; top: auto;
@@ -143,6 +149,85 @@
 .vro-btn[data-hl="stick"]   { left:42.676%; top:33.447%; width:13.379%; height:9.668%;  background-image:url('../../../assets/VR/Quest/Thumbstick.png'); background-size:747.45% 1034.34%;  background-position:49.267% 37.027%; }
 .vro-btn[data-hl="a"]       { left:41.992%; top:43.896%; width:9.180%;  height:5.957%;  background-image:url('../../../assets/VR/Quest/A.png');         background-size:1089.36% 1678.69%; background-position:46.237% 46.677%; }
 .vro-btn[data-hl="b"]       { left:33.594%; top:43.213%; width:8.789%;  height:5.957%;  background-image:url('../../../assets/VR/Quest/B.png');         background-size:1137.78% 1678.69%; background-position:36.831% 45.950%; }
+
+.vro-controller-visual.index .vro-btn[data-hl="a"]       { left:25.537%; top:24.365%; width:6.250%;  height:5.322%;  background-image:url('../../../assets/VR/Index/B.png');        background-size:1600.00% 1878.90%; background-position:27.240% 25.735%; }
+.vro-controller-visual.index .vro-btn[data-hl="b"]       { left:30.811%; top:27.295%; width:6.055%;  height:5.371%;  background-image:url('../../../assets/VR/Index/A.png');        background-size:1651.61% 1861.82%; background-position:32.796% 28.844%; }
+.vro-controller-visual.index .vro-btn[data-hl="stick"]   { left:34.033%; top:17.383%; width:8.105%;  height:7.178%;  background-image:url('../../../assets/VR/Index/Stick.png');    background-size:1233.73% 1393.20%; background-position:37.035% 18.727%; }
+.vro-controller-visual.index .vro-btn[data-hl="pad"]     { left:27.637%; top:21.777%; width:14.258%; height:9.131%;  background-image:url('../../../assets/VR/Index/Touchpad.png'); background-size:701.37% 1095.19%;  background-position:32.232% 23.966%; }
+.vro-controller-visual.index .vro-btn[data-hl="trigger"] { left:21.924%; top:34.717%; width:5.859%;  height:8.447%;  background-image:url('../../../assets/VR/Index/Trigger.png');  background-size:1706.67% 1183.82%; background-position:23.288% 37.920%; }
+.vro-controller-visual.index .vro-btn[data-hl="grip"]    { left:31.348%; top:37.939%; width:26.221%; height:38.867%; background-image:url('../../../assets/VR/Index/Grip.png');     background-size:381.38% 257.29%;   background-position:42.488% 62.061%; }
+
+.vro-input-mode {
+    margin-left: auto;
+    min-width: 0;
+    width: auto;
+}
+.vro-input-mode + .vro-view-toggle,
+.vn-select.vro-input-mode + .vro-view-toggle { margin-left: 6px; }
+
+.vn-select.vro-input-mode .vn-select-trigger {
+    background: var(--bg-hover);
+    border: 1px solid var(--bdr);
+    color: var(--tx1);
+    height: 32px;
+    gap: 6px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+}
+.vn-select.vro-input-mode .vn-select-trigger:hover,
+.vn-select.vro-input-mode.vn-open .vn-select-trigger {
+    border-color: var(--accent);
+    color: var(--tx0);
+}
+.vn-select.vro-input-mode .vn-select-arrow { color: var(--accent); }
+.vn-select.vro-input-mode .vn-select-panel,
+.vn-select.vro-input-mode .vn-select-option,
+.vn-select.vro-input-mode .vn-select-panel .vn-select-label {
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 500;
+    font-size: calc(12px + var(--fs-off, 0px));
+}
+
+.vro-btn.active.alt { filter: hue-rotate(130deg); }
+
+.vro-zone-menu {
+    position: fixed;
+    z-index: 3000;
+    min-width: 170px;
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--bg-card);
+    border: 1px solid var(--bdr);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .45);
+    padding: 4px;
+    text-transform: none;
+    letter-spacing: 0;
+}
+.vro-zone-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 500;
+    color: var(--tx2);
+    white-space: nowrap;
+}
+.vro-zone-item:hover { background: var(--bg-hover); color: var(--tx1); }
+.vro-zone-item.sel   { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--tx1); }
+.vro-zone-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: #12FF00;
+}
+.vro-zone-item.misc .vro-zone-dot { background: #98ABFF; }
 
 .vro-btn.active {
     opacity: 1;

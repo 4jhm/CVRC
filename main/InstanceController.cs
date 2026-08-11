@@ -1653,6 +1653,7 @@ public class InstanceController
             ["statusDescription"] = prof?["statusDescription"]?.ToString() ?? "",
             ["platform"] = prof?["last_platform"]?.ToString() ?? prof?["platform"]?.ToString() ?? "",
             ["ageVerified"] = prof?["ageVerified"]?.Value<bool>() ?? ageVerifiedFallback,
+            ["ageVerificationStatus"] = prof?["ageVerificationStatus"]?.ToString() ?? "",
             ["tags"] = prof?["tags"] as JArray ?? new JArray(),
             ["bioLinks"] = prof?["bioLinks"] as JArray ?? new JArray(),
             ["bio"] = prof?["bio"]?.ToString() ?? "",

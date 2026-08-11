@@ -57,7 +57,7 @@ public class KikitanXDController : IDisposable
 
             case "kxdStart":
             {
-                if (msg["deviceIndex"] is JToken di0) _settings.InputDeviceIndex = di0.Value<int>();
+                if (msg["deviceIndex"]?.Value<int?>() is int di0) { _settings.InputDeviceIndex = di0; _settings.InputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.InputNameAt(di0); }
                 if (msg["apiKey"] is JToken ak0) _settings.ApiKey = ak0.ToString();
                 if (msg["googleApiKey"] is JToken gk0) _settings.GoogleApiKey = gk0.ToString();
                 if (msg["sourceLang"] is JToken sl0) _settings.SourceLang = sl0.ToString();
@@ -65,7 +65,7 @@ public class KikitanXDController : IDisposable
                 if (msg["translateEnabled"] is JToken te0) _settings.TranslateEnabled = te0.Value<bool>();
                 if (msg["oscEnabled"] is JToken oe0) _settings.OscEnabled = oe0.Value<bool>();
                 if (msg["partialOsc"] is JToken po0) _settings.PartialOsc = po0.Value<bool>();
-                if (msg["noiseGatePct"] is JToken ng0) _settings.NoiseGatePercent = ng0.Value<int>();
+                if (msg["noiseGatePct"]?.Value<int?>() is int ng0) _settings.NoiseGatePercent = ng0;
                 if (msg["personality"] is JToken pe0) _settings.Personality = pe0.ToString();
                 if (msg["model"] is JToken md0) _settings.Model = md0.ToString();
                 if (msg["blockWords"] is JToken bw0) _settings.BlockedWords = bw0.ToObject<List<string>>() ?? new();
@@ -95,7 +95,7 @@ public class KikitanXDController : IDisposable
 
             case "kxdSaveSettings":
             {
-                if (msg["deviceIndex"] is JToken di) _settings.InputDeviceIndex = di.Value<int>();
+                if (msg["deviceIndex"]?.Value<int?>() is int di) { _settings.InputDeviceIndex = di; _settings.InputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.InputNameAt(di); }
                 if (msg["apiKey"] is JToken ak) _settings.ApiKey = ak.ToString();
                 if (msg["googleApiKey"] is JToken gk) _settings.GoogleApiKey = gk.ToString();
                 if (msg["model"] is JToken md) _settings.Model = md.ToString();
@@ -104,17 +104,17 @@ public class KikitanXDController : IDisposable
                 if (msg["translateEnabled"] is JToken te) _settings.TranslateEnabled = te.Value<bool>();
                 if (msg["oscEnabled"] is JToken oe) _settings.OscEnabled = oe.Value<bool>();
                 if (msg["partialOsc"] is JToken po) _settings.PartialOsc = po.Value<bool>();
-                if (msg["noiseGatePct"] is JToken ng) _settings.NoiseGatePercent = ng.Value<int>();
+                if (msg["noiseGatePct"]?.Value<int?>() is int ng) _settings.NoiseGatePercent = ng;
                 if (msg["profileTranslationEnabled"] is JToken pte) _settings.ProfileTranslationEnabled = pte.Value<bool>();
                 if (msg["profileTargetLang"] is JToken ptl) _settings.ProfileTargetLang = ptl.ToString();
                 if (msg["personality"] is JToken pers) _settings.Personality = pers.ToString();
                 if (msg["blockWords"] is JToken bw) _settings.BlockedWords = bw.ToObject<List<string>>() ?? new();
                 if (msg["blockSentences"] is JToken bs) _settings.BlockedSentences = bs.ToObject<List<string>>() ?? new();
                 if (msg["ttsEnabled"] is JToken tts) _settings.TtsEnabled = tts.Value<bool>();
-                if (msg["ttsDevice"] is JToken ttd) _settings.TtsDevice = ttd.Value<int>();
+                if (msg["ttsDevice"]?.Value<int?>() is int ttd) { _settings.TtsDevice = ttd; _settings.TtsDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(ttd); }
                 if (msg["ttsVoice"] is JToken ttv) _settings.TtsVoice = ttv.ToString();
                 if (msg["ttsEngine"] is JToken tte) _settings.TtsEngine = tte.ToString();
-                if (msg["ttsRate"] is JToken ttr) _settings.TtsRate = Math.Clamp(ttr.Value<int>(), -10, 10);
+                if (msg["ttsRate"]?.Value<int?>() is int ttr) _settings.TtsRate = Math.Clamp(ttr, -10, 10);
                 _settings.Save();
                 _core.SendToJS("toast", new { ok = true, msg = "Saved" });
                 _service?.UpdateSettings(_settings);
@@ -192,7 +192,7 @@ public class KikitanXDController : IDisposable
         };
         _service.OnOutput += SpeakTts;
         _service.OnChatboxSent += () => _core.OnChatboxPauseRequest?.Invoke(15_000);
-        _service.Start(_settings.InputDeviceIndex, _settings);
+        _service.Start(VRCNext.Services.Helpers.AudioDeviceHelper.ResolveInput(_settings.InputDeviceIndex, _settings.InputDeviceName), _settings);
         _kxLastSource = "";
         _kxLastTranslation = "";
         _kxLastFinal = true;
@@ -249,7 +249,8 @@ public class KikitanXDController : IDisposable
     {
         if (!_settings.TtsEnabled || string.IsNullOrWhiteSpace(text)) return;
         VRCNext.Services.Helpers.TtsService.Speak(
-            text, _settings.TtsEngine, _settings.TtsVoice, _settings.TtsDevice, 100, _settings.TtsRate);
+            text, _settings.TtsEngine, _settings.TtsVoice,
+            VRCNext.Services.Helpers.AudioDeviceHelper.ResolveOutput(_settings.TtsDevice, _settings.TtsDeviceName), 100, _settings.TtsRate);
     }
 
     private static void Invoke(Action action) => action();

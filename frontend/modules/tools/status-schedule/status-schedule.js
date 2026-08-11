@@ -88,7 +88,15 @@ function ssJoinTime(h, m) {
 // Hour + minute dropdowns rather than a native time input, so the control matches
 // the rest of the app. Minutes step by 5.
 function ssRenderTimeField(hostId, field, value) {
-    const host = document.getElementById(hostId);
+    timeFieldRender(document.getElementById(hostId), value, hhmm => {
+        if (!ssSelectedRule()) return;
+        ssUpdateField(field, hhmm);
+    });
+}
+
+// Hour + minute dropdowns rather than a native time input, so the control matches
+// the rest of the app. Minutes step by 5.
+function timeFieldRender(host, value, onChange) {
     if (!host) return;
     host.innerHTML = '';
     const [h, m] = ssSplitTime(value);
@@ -111,15 +119,14 @@ function ssRenderTimeField(hostId, field, value) {
     if (m % 5 !== 0) minutes.push({ value: m, label: String(m).padStart(2, '0') });
     minutes.sort((a, b) => a.value - b.value);
 
+    let curH = h, curM = m;
     ssBuildSelect(hourHost, hours, h, v => {
-        const rule = ssSelectedRule();
-        if (!rule) return;
-        ssUpdateField(field, ssJoinTime(parseInt(v, 10), ssSplitTime(rule[field])[1]));
+        curH = parseInt(v, 10);
+        onChange(ssJoinTime(curH, curM));
     });
     ssBuildSelect(minHost, minutes, m, v => {
-        const rule = ssSelectedRule();
-        if (!rule) return;
-        ssUpdateField(field, ssJoinTime(ssSplitTime(rule[field])[0], parseInt(v, 10)));
+        curM = parseInt(v, 10);
+        onChange(ssJoinTime(curH, curM));
     });
 }
 
@@ -229,6 +236,7 @@ function ssRenderEditor() {
     set('ssFieldOnlyInGame',      'checked', !!rule.onlyWhileInGame);
     set('ssFieldOnlyOutsideGame', 'checked', !!rule.onlyWhileOutsideGame);
     set('ssFieldRestore',         'checked', rule.restorePreviousStatus !== false);
+    set('ssFieldFriendsAll',      'checked', !!rule.friendsRequireAll);
 
     const msgInput = document.getElementById('ssFieldMessage');
     if (msgInput) msgInput.style.display = rule.setStatusMessage ? '' : 'none';
@@ -266,6 +274,78 @@ function ssRenderEditor() {
             </button>`
         ).join('');
     }
+
+    ssRenderConditions(rule);
+}
+
+const SS_INSTANCE_TYPES = [
+    'public', 'friends+', 'friends', 'invite_plus', 'private',
+    'group-public', 'group-plus', 'group-members', 'group',
+];
+
+function ssRenderConditions(rule) {
+    const host = document.getElementById('ssFieldInstanceTypes');
+    if (host) {
+        const sel = Array.isArray(rule.instanceTypes) ? rule.instanceTypes : [];
+        host.innerHTML = SS_INSTANCE_TYPES.map(v =>
+            `<button type="button" class="ss-day ss-itype${sel.includes(v) ? ' active' : ''}" onclick="ssToggleInstanceType('${jsq(v)}')">${esc(getInstanceBadge(v).label)}</button>`
+        ).join('');
+    }
+
+    const counts = [{ value: 0, label: sst('status_schedule.cond.min_players_off', 'Off') }];
+    for (let i = 1; i <= 80; i++) counts.push({ value: i, label: String(i) });
+    ssBuildSelect(document.getElementById('ssFieldMinPlayersWrap'), counts, rule.minPlayers ?? 0,
+        v => ssUpdateField('minPlayers', parseInt(v, 10)));
+
+    ssRenderFriendChips(rule);
+}
+
+function ssRenderFriendChips(rule) {
+    const host = document.getElementById('ssFieldFriends');
+    if (!host) return;
+    const ids = Array.isArray(rule.friendIds) ? rule.friendIds : [];
+    if (!ids.length) { host.innerHTML = ''; return; }
+    host.innerHTML = ids.map(id => {
+        const f = (typeof vrcFriendsData !== 'undefined' ? vrcFriendsData : []).find(x => x.id === id);
+        const name = f?.displayName || id;
+        return `<span class="ss-friend-chip">${esc(name)}<button type="button" onclick="ssRemoveFriend('${jsq(id)}')" title="${esc(sst('common.remove', 'Remove'))}"><span class="msi">close</span></button></span>`;
+    }).join('');
+}
+
+function ssToggleInstanceType(value) {
+    const rule = ssSelectedRule();
+    if (!rule) return;
+    const list = Array.isArray(rule.instanceTypes) ? rule.instanceTypes.slice() : [];
+    const i = list.indexOf(value);
+    if (i >= 0) list.splice(i, 1); else list.push(value);
+    rule.instanceTypes = list;
+    ssRenderConditions(rule);
+    ssRenderList();
+}
+
+function ssRemoveFriend(id) {
+    const rule = ssSelectedRule();
+    if (!rule) return;
+    rule.friendIds = (rule.friendIds || []).filter(x => x !== id);
+    ssRenderFriendChips(rule);
+    ssRenderList();
+}
+
+function ssOpenFriendPicker() {
+    const rule = ssSelectedRule();
+    if (!rule) return;
+    openFriendPicker({
+        title: sst('status_schedule.cond.add_friend', 'Add Friend'),
+        exclude: rule.friendIds || [],
+        emptyText: sst('status_schedule.cond.no_friends', 'No friends available.'),
+        onPick: id => {
+            const ids = Array.isArray(rule.friendIds) ? rule.friendIds.slice() : [];
+            if (!ids.includes(id)) ids.push(id);
+            rule.friendIds = ids;
+            ssRenderFriendChips(rule);
+            ssRenderList();
+        },
+    });
 }
 
 function ssCrossesMidnight(rule) {
@@ -292,6 +372,10 @@ function ssAddRule() {
         start: '09:00',
         end: '17:00',
         days: [],
+        instanceTypes: [],
+        minPlayers: 0,
+        friendIds: [],
+        friendsRequireAll: false,
         onlyWhileInGame: false,
         onlyWhileOutsideGame: false,
         restorePreviousStatus: true,
@@ -398,3 +482,4 @@ window.ssSetStatus   = ssSetStatus;
 window.ssToggleRuleEnabled = ssToggleRuleEnabled;
 window.ssSetEnabled  = ssSetEnabled;
 window.ssSaveRules   = ssSaveRules;
+

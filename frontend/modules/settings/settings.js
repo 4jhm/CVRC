@@ -85,6 +85,10 @@ function saveSettings() {
             Enabled: onEl?.checked || false
         });
     }
+    const _vriReady = typeof vriLoaded !== 'undefined' && vriLoaded;
+    const _sfCur = _vriReady && typeof sfReadBtns === 'function' ? sfReadBtns() : {};
+    const _fsCur = _vriReady && typeof fsReadBtns === 'function' ? fsReadBtns() : {};
+
     const payload = {
         action: 'saveSettings',
         data: {
@@ -157,12 +161,13 @@ function saveSettings() {
             sfLeftHand: false,  // legacy
             sfRightHand: true,  // legacy
             sfUseGrip: true,    // legacy
-            sfLeftResetBtn:  parseInt(document.getElementById('sfLeftReset')?.value  ?? '32', 10),
-            sfRightResetBtn: parseInt(document.getElementById('sfRightReset')?.value ?? '0',  10),
-            sfLeftDragBtn:   parseInt(document.getElementById('sfLeftDrag')?.value   ?? '0',  10),
-            sfRightDragBtn:  parseInt(document.getElementById('sfRightDrag')?.value  ?? '32', 10),
-            sfLeftGravityBtn:  parseInt(document.getElementById('sfLeftGravity')?.value  ?? '0', 10),
-            sfRightGravityBtn: parseInt(document.getElementById('sfRightGravity')?.value ?? '0', 10),
+            sfLeftResetBtn:       _sfCur.sfLeftReset,
+            sfRightResetBtn:      _sfCur.sfRightReset,
+            sfLeftDragBtn:        _sfCur.sfLeftDrag,
+            sfRightDragBtn:       _sfCur.sfRightDrag,
+            sfLeftGravityBtn:     _sfCur.sfLeftGravity,
+            sfRightGravityBtn:    _sfCur.sfRightGravity,
+            ...(_vriReady ? { vrInputMode } : {}),
             sfGravity: parseFloat(document.getElementById('sfGravity')?.value) || 9.8,
             chatboxAutoStart: false, // legacy
             chatboxAutoStartVR:       document.getElementById('setCbAutoStartVR')?.checked        ?? false,
@@ -170,17 +175,17 @@ function saveSettings() {
             sfAutoStart: false, // legacy
             sfAutoStartVR:            document.getElementById('setSfAutoStartVR')?.checked        ?? false,
             fsAutoStartVR:            document.getElementById('setFsAutoStartVR')?.checked        ?? false,
-            fsLeftButton:             parseInt(document.getElementById('fsLeftButton')?.value     ?? '2', 10),
-            fsRightButton:            parseInt(document.getElementById('fsRightButton')?.value    ?? '2', 10),
+            fsLeftButton:             _fsCur.fsLeftButton,
+            fsRightButton:            _fsCur.fsRightButton,
             fsOutputDevice:           (typeof fsCurrentOutputDevice === 'function') ? fsCurrentOutputDevice() : (document.getElementById('fsOutputDevice')?.value ?? ''),
             fsActivationRadius:       parseInt(document.getElementById('fsActivationRadius')?.value ?? '15', 10),
-            fsLeftRecordButton:       parseInt(document.getElementById('fsLeftRecord')?.value      ?? '0',  10),
-            fsRightRecordButton:      parseInt(document.getElementById('fsRightRecord')?.value     ?? '0',  10),
+            fsLeftRecordButton:       _fsCur.fsLeftRecord,
+            fsRightRecordButton:      _fsCur.fsRightRecord,
             fsGifMaxResolution:       parseInt(document.getElementById('fsGifMaxResolution')?.value ?? '512', 10),
             fsGifMaxFps:              parseInt(document.getElementById('fsGifMaxFps')?.value        ?? '10', 10),
             fsUseHmdRotations:        !!document.getElementById('fsUseHmdRotations')?.checked,
-            fsLeftVideoButton:        parseInt(document.getElementById('fsLeftVideo')?.value          ?? '0',  10),
-            fsRightVideoButton:       parseInt(document.getElementById('fsRightVideo')?.value         ?? '0',  10),
+            fsLeftVideoButton:        _fsCur.fsLeftVideo,
+            fsRightVideoButton:       _fsCur.fsRightVideo,
             fsVideoDeviceA:           (typeof fsCurrentVideoDeviceA === 'function') ? fsCurrentVideoDeviceA() : (document.getElementById('fsVideoDeviceA')?.value ?? ''),
             fsVideoDeviceB:           (typeof fsCurrentVideoDeviceB === 'function') ? fsCurrentVideoDeviceB() : (document.getElementById('fsVideoDeviceB')?.value ?? ''),
             fsVideoFps:               parseInt(document.getElementById('fsVideoFps')?.value           ?? '30', 10),
@@ -584,6 +589,8 @@ function loadSettingsToUI(s) {
     chatboxCustomLines = s.CbCustomLines || s.cbCustomLines || [];
     renderChatboxLines();
 
+    if (typeof vriInit === 'function') vriInit(s.VrInputMode ?? s.vrInputMode ?? 0);
+
     // Restore Space Flight settings
     document.getElementById('sfMultiplier').value = s.SfMultiplier ?? s.sfMultiplier ?? 1;
     document.getElementById('sfMultVal').textContent = (s.SfMultiplier ?? s.sfMultiplier ?? 1) + 'x';
@@ -607,6 +614,27 @@ function loadSettingsToUI(s) {
         _sfGrav.value = s.SfGravity ?? s.sfGravity ?? 9.8;
         const _sfGravV = document.getElementById('sfGravityVal');
         if (_sfGravV) _sfGravV.textContent = String(_sfGrav.value);
+    }
+    if (typeof _sfOtherBtns !== 'undefined') {
+        const _sfIdx = (s.VrInputMode ?? s.vrInputMode ?? 0) === 1;
+        const _sfLegacySet = {
+            sfLeftReset:    s.SfLeftResetButton    ?? s.sfLeftResetButton    ?? 32,
+            sfRightReset:   s.SfRightResetButton   ?? s.sfRightResetButton   ?? 0,
+            sfLeftDrag:     s.SfLeftDragButton     ?? s.sfLeftDragButton     ?? 0,
+            sfRightDrag:    s.SfRightDragButton    ?? s.sfRightDragButton    ?? 32,
+            sfLeftGravity:  s.SfLeftGravityButton  ?? s.sfLeftGravityButton  ?? 0,
+            sfRightGravity: s.SfRightGravityButton ?? s.sfRightGravityButton ?? 0,
+        };
+        const _sfIndexSet = {
+            sfLeftReset:    s.SfIdxLeftResetButton    ?? s.sfIdxLeftResetButton    ?? 0,
+            sfRightReset:   s.SfIdxRightResetButton   ?? s.sfIdxRightResetButton   ?? 0,
+            sfLeftDrag:     s.SfIdxLeftDragButton     ?? s.sfIdxLeftDragButton     ?? 0,
+            sfRightDrag:    s.SfIdxRightDragButton    ?? s.sfIdxRightDragButton    ?? 0,
+            sfLeftGravity:  s.SfIdxLeftGravityButton  ?? s.sfIdxLeftGravityButton  ?? 0,
+            sfRightGravity: s.SfIdxRightGravityButton ?? s.sfIdxRightGravityButton ?? 0,
+        };
+        _sfOtherBtns = _sfIdx ? _sfLegacySet : _sfIndexSet;
+        if (_sfIdx && typeof sfWriteBtns === 'function') sfWriteBtns(_sfIndexSet);
     }
     if (typeof sfRenderKeybind === 'function') sfRenderKeybind();
 
@@ -634,6 +662,27 @@ function loadSettingsToUI(s) {
     const _fsRV  = document.getElementById('fsRightVideo');
     if (_fsLV) _fsLV.value = String(s.FsLeftVideoButton  ?? s.fsLeftVideoButton  ?? 0);
     if (_fsRV) _fsRV.value = String(s.FsRightVideoButton ?? s.fsRightVideoButton ?? 0);
+    if (typeof _fsOtherBtns !== 'undefined') {
+        const _fsIdx = (s.VrInputMode ?? s.vrInputMode ?? 0) === 1;
+        const _fsLegacySet = {
+            fsLeftButton:  s.FsLeftButton        ?? s.fsLeftButton        ?? 2,
+            fsRightButton: s.FsRightButton       ?? s.fsRightButton       ?? 2,
+            fsLeftRecord:  s.FsLeftRecordButton  ?? s.fsLeftRecordButton  ?? 0,
+            fsRightRecord: s.FsRightRecordButton ?? s.fsRightRecordButton ?? 0,
+            fsLeftVideo:   s.FsLeftVideoButton   ?? s.fsLeftVideoButton   ?? 0,
+            fsRightVideo:  s.FsRightVideoButton  ?? s.fsRightVideoButton  ?? 0,
+        };
+        const _fsIndexSet = {
+            fsLeftButton:  s.FsIdxLeftButton        ?? s.fsIdxLeftButton        ?? 0,
+            fsRightButton: s.FsIdxRightButton       ?? s.fsIdxRightButton       ?? 0,
+            fsLeftRecord:  s.FsIdxLeftRecordButton  ?? s.fsIdxLeftRecordButton  ?? 0,
+            fsRightRecord: s.FsIdxRightRecordButton ?? s.fsIdxRightRecordButton ?? 0,
+            fsLeftVideo:   s.FsIdxLeftVideoButton   ?? s.fsIdxLeftVideoButton   ?? 0,
+            fsRightVideo:  s.FsIdxRightVideoButton  ?? s.fsIdxRightVideoButton  ?? 0,
+        };
+        _fsOtherBtns = _fsIdx ? _fsLegacySet : _fsIndexSet;
+        if (_fsIdx && typeof fsWriteBtns === 'function') fsWriteBtns(_fsIndexSet);
+    }
     if (typeof fsRenderKeybind === 'function') fsRenderKeybind();
     if (typeof _fsSavedAudioA !== 'undefined') _fsSavedAudioA = s.FsVideoDeviceA ?? s.fsVideoDeviceA ?? '';
     if (typeof _fsSavedAudioB !== 'undefined') _fsSavedAudioB = s.FsVideoDeviceB ?? s.fsVideoDeviceB ?? '';
@@ -693,6 +742,11 @@ function loadSettingsToUI(s) {
         vroKeybindHand:   s.VroKeybindHand   ?? s.vroKeybindHand   ?? 0,
         vroKeybindDt:     s.VroKeybindDt     ?? s.vroKeybindDt     ?? [],
         vroKeybindDtHand: s.VroKeybindDtHand ?? s.vroKeybindDtHand ?? 0,
+        vrInputMode:         s.VrInputMode         ?? s.vrInputMode         ?? 0,
+        vroIdxKeybind:       s.VroIdxKeybind       ?? s.vroIdxKeybind       ?? [],
+        vroIdxKeybindHand:   s.VroIdxKeybindHand   ?? s.vroIdxKeybindHand   ?? 0,
+        vroIdxKeybindDt:     s.VroIdxKeybindDt     ?? s.vroIdxKeybindDt     ?? [],
+        vroIdxKeybindDtHand: s.VroIdxKeybindDtHand ?? s.vroIdxKeybindDtHand ?? 0,
         vroKeybindMode:    s.VroKeybindMode   ?? s.vroKeybindMode   ?? 0,
         vroControlRadius:  s.VroControlRadius ?? s.vroControlRadius ?? 16,
         vroDynVis:         s.VroDynVis       ?? s.vroDynVis       ?? false,
@@ -737,6 +791,8 @@ function loadSettingsToUI(s) {
         vroScaleRightThumb:  s.VroScaleRightThumb  ?? s.vroScaleRightThumb  ?? true,
         vroScaleKeybind:            s.VroScaleKeybind            ?? s.vroScaleKeybind            ?? [],
         vroScaleKeybindHand:        s.VroScaleKeybindHand        ?? s.vroScaleKeybindHand        ?? 0,
+        vroIdxScaleKeybind:         s.VroIdxScaleKeybind         ?? s.vroIdxScaleKeybind         ?? [],
+        vroIdxScaleKeybindHand:     s.VroIdxScaleKeybindHand     ?? s.vroIdxScaleKeybindHand     ?? 0,
         vroScaleScrollSensitivity:  s.VroScaleScrollSensitivity  ?? s.vroScaleScrollSensitivity  ?? 25,
     });
     // Auto-starts are now triggered by vrcLaunched (see messages.js)
@@ -844,6 +900,8 @@ function loadSettingsToUI(s) {
 
     // Sync custom dropdowns to reflect programmatically set values
     document.querySelectorAll('select').forEach(s => s._vnRefresh && s._vnRefresh());
+
+    if (typeof vriLoaded !== 'undefined') vriLoaded = true;
 
     // Setup autosave listeners after UI is populated
     setTimeout(initAutoSave, 100);
