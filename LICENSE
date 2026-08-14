@@ -1,4 +1,4 @@
-VRCNext Non-Commercial Source Available License (VNCOL) 1.2
+VRCNext Non-Commercial Source Available License (VNCOL) 1.3
 
 Copyright (c) 2026 VRCNext Contributors
 
@@ -7,7 +7,7 @@ of this software and associated documentation files (the "Software"), to use,
 copy, modify, merge, publish, and distribute the Software, subject to the terms
 and conditions of this License.
 
-1. NON-COMMERCIALIZATION
+## 1. NON-COMMERCIALIZATION
 
 The Software, in whole or in part, and any fork, derivative work, or modified
 version thereof, may not be sold, licensed for a fee, offered as part of a paid
@@ -35,7 +35,7 @@ of it.
 Donations must remain voluntary and may not be required in exchange for access
 to the Software, a fork, features, patches, builds, downloads, or functionality.
 
-2. ATTRIBUTION FOR FORKS AND DERIVATIVE WORKS
+## 2. ATTRIBUTION FOR FORKS AND DERIVATIVE WORKS
 
 Forks, derivative works, and modified versions must clearly identify VRCNext
 as the original project and must not misrepresent the origin or authorship of
@@ -60,14 +60,15 @@ Failure to maintain such a contributor list does not constitute a violation of
 this License, provided that the required attribution and existing notices
 described above are preserved.
 
-3. COPYRIGHT AND LICENSE NOTICE
+## 3. COPYRIGHT AND LICENSE NOTICE
 
 The above copyright notice and this License shall be included in all copies or
 substantial portions of the Software, including distributed forks, derivative
 works, and modified versions.
 
 The VRCNext-derived portions of any distributed fork, derivative work, or
-modified version must remain licensed under VRCNext Non-Commercial Source Available  (VNCOL) 1.2.
+modified version must remain licensed under the VRCNext Non-Commercial Source
+Available License (VNCOL) 1.2.
 
 This License may not be replaced with another license for VRCNext-derived
 portions of the Software in a way that removes or weakens the requirements of
@@ -78,7 +79,7 @@ Software may be licensed separately, provided that doing so does not remove,
 override, or circumvent the requirements of this License for VRCNext-derived
 code.
 
-4. PERMISSIONS
+## 4. PERMISSIONS
 
 Subject to the conditions of this License, you are free to:
 
@@ -93,7 +94,44 @@ Subject to the conditions of this License, you are free to:
 Any distributed copy, fork, or derivative work containing VRCNext-derived code
 must retain this License for those portions.
 
-5. NO WARRANTY
+## 5. USER-AGENT IDENTIFICATION FOR FORKS AND MODIFIED VERSIONS
+
+Any fork, derivative work, or modified version of VRCNext that performs network
+requests must identify itself using its own distinct User-Agent.
+
+Forks, derivative works, and modified versions must not use, copy, spoof,
+impersonate, or otherwise identify themselves using the User-Agent of an
+official, unmodified VRCNext release.
+
+A modified version must not send network requests in a manner that could
+reasonably cause a server, service operator, or other third party to believe
+that those requests originated from an official VRCNext release.
+
+The User-Agent used by a fork or modified version must clearly distinguish that
+software from official VRCNext releases and must contain:
+
+* A name identifying the fork or modified version
+* The version of that fork or modified version
+* A valid contact address for the maintainer or operator
+
+The recommended format is:
+
+`<ForkName>-VRCNext/<Version> (<ContactAddress>)`
+
+For example:
+
+`Nano-VRCNext/2026.1.0 (max@musterman.com)`
+
+Using "VRCNext" as part of the name of a fork is permitted for attribution and
+identification purposes, provided that the complete User-Agent clearly
+distinguishes the fork from the official VRCNext project.
+
+The User-Agent requirement applies regardless of whether the modification is
+small or substantial. Once the Software has been modified or is operated as a
+fork, it must not represent its network traffic as originating from an official
+VRCNext build.
+
+## 6. NO WARRANTY
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,

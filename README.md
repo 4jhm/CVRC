@@ -1,5 +1,9 @@
 ![Screenshot](https://i.imgur.com/plD8Mx3.png)
 
+This is CVRC, a fork of VRCNext. It identifies itself to the VRChat API with its own
+User-Agent (`CVRC/<version> (4jhmweb@gmail.com)`), not the original VRCNext developer's,
+per their request that forks not use their identity/contact info.
+
 # CVRC
 
 CVRC is a VRChat Launcher and Management system that aims for simplicity and performance.

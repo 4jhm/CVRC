@@ -348,7 +348,25 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 6px;
+    min-width: 0;
 }
+
+.lib-meta-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+}
+.lib-meta-dot { opacity: .5; }
+.lib-meta-rating {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+}
+.lib-meta-rating .msi { font-size: calc(11px + var(--fs-off, 0px)); }
 
 .lib-date-group-container {
     grid-column: 1/-1;

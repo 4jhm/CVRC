@@ -92,7 +92,7 @@ function openInstanceInfoModal() {
         const ageVerified = !!(f?.ageVerified || u.ageVerified);
         const is18 = (f?.ageVerificationStatus || u.ageVerificationStatus) === '18+';
         const avHtml = image
-            ? `<div class="iim-av" style="background-image:url('${cssUrl(image)}')"></div>`
+            ? `<div class="iim-av" style="background-image:url('${cssUrl(imgThumb(image, 64))}')"></div>`
             : `<div class="iim-av iim-av-letter">${esc(displayName[0].toUpperCase())}</div>`;
         const timerCell = hasTimers
             ? `<div class="iim-cell iim-muted-cell">${esc(fmtTimer(u.joinedAt))}</div>`

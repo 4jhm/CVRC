@@ -40,6 +40,8 @@ public sealed class VRSubprocessHost : IDisposable
     public event Action<string>? OnVroInviteFriend;
     public event Action<string, string, string, string>? OnVroNotifAccept;
     public event Action<int>? OnVroToolToggle;
+    public event Action<string, string, JToken>? OnVroExpressionSend;
+    public event Action<int>? OnVroExpressionEmote;
     public event Action? OnVroToastSound;
     public event Action? OnVroWaterAlarm;
     public event Action? OnVroWaterDismissed;
@@ -195,6 +197,15 @@ public sealed class VRSubprocessHost : IDisposable
                 break;
             case "vro_tool_toggle":
                 OnVroToolToggle?.Invoke(msg["index"]?.Value<int>() ?? 0);
+                break;
+            case "vro_expr_send":
+                OnVroExpressionSend?.Invoke(
+                    msg["name"]?.Value<string>()  ?? "",
+                    msg["ptype"]?.Value<string>() ?? "",
+                    msg["value"] ?? JValue.CreateNull());
+                break;
+            case "vro_expr_emote":
+                OnVroExpressionEmote?.Invoke(msg["emote"]?.Value<int>() ?? 0);
                 break;
             case "vro_toast_sound":
                 OnVroToastSound?.Invoke();
@@ -368,6 +379,13 @@ public sealed class VRSubprocessHost : IDisposable
     public void SetToolStates(bool discord, bool voice, bool kikitan, bool space, bool relay, bool chatbox, bool frameShot)
         => Send("vro_tool_states", new { discord, voice, kikitan, space, relay, chatbox, frameShot });
 
+    public void OscState(bool connected) => Send("vro_osc_state", new { connected });
+
+    public void OscAvatarParams(IReadOnlyList<(string Name, string Type)> defs)
+        => Send("vro_osc_avatar_params", new { defs = defs.Select(d => new { name = d.Name, type = d.Type }).ToList() });
+
+    public void OscParam(string name, object value) => Send("vro_osc_param", new { name, value });
+
     public void SetKikitanState(string sourceText, string translatedText, bool isFinal,
         string sourceLang, string targetLang, string engine, bool translateEnabled)
         => Send("vro_kikitan", new { sourceText, translatedText, isFinal, sourceLang, targetLang, engine, translateEnabled });
@@ -479,6 +497,11 @@ public sealed class VRSubprocessHost : IDisposable
     public void SetSelfUser(string userId, string imageUrl, string status) { }
     public void UpdateMediaInfo(string a, string b, double c, double d, bool e) { }
     public void SetToolStates(bool a, bool b, bool c, bool d, bool e, bool f, bool g) { }
+    public void OscState(bool connected) { }
+    public void OscAvatarParams(System.Collections.Generic.IReadOnlyList<(string Name, string Type)> defs) { }
+    public void OscParam(string name, object value) { }
+    public event System.Action<string, string, Newtonsoft.Json.Linq.JToken>? OnVroExpressionSend;
+    public event System.Action<int>? OnVroExpressionEmote;
     public void SetKikitanState(string a, string b, bool c, string d, string e, string f, bool g) { }
     public void SfConnect(float a, bool b, bool c, bool d, uint e, uint f, uint g, uint h, uint i, uint j, float k) { }
     public void SfDisconnect() { }

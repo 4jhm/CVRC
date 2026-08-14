@@ -46,23 +46,10 @@
                 </div>
                 <div id="peopleFavArea">
                     <div class="tab-toolbar-body">
-                    <div id="favFriendGroupHeader" style="display:flex;align-items:center;gap:6px;margin-bottom:10px;min-height:24px;">
-                        <span id="favFriendGroupLabel" style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);">All Favorites</span>
-                        <span id="favFriendGroupLocalBadge" class="vrcn-local-badge" style="display:none;" data-i18n="favorites.local_badge">Local</span>
-                        <button id="favFriendGroupEditBtn" class="myp-edit-btn" onclick="startEditFriendGroupName()" style="display:none;" data-i18n-title="friends.favorites.rename_category" title="Rename category">
-                            <span class="msi" style="font-size:14px;">edit</span>
-                        </button>
+                    <div id="favFriendGroupHeader" style="display:none;align-items:center;gap:6px;margin-bottom:10px;">
                         <button id="favFriendGroupDeleteBtn" class="myp-edit-btn" onclick="deleteCurrentLocalFriendGroup(this)" style="display:none;" data-i18n-title="favorites.delete_local_group" title="Delete local group">
                             <span class="msi" style="font-size:14px;">delete</span>
                         </button>
-                        <span id="favFriendGroupVisLabel" style="display:none;font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);font-weight:400;"></span>
-                        <div id="favFriendGroupVisDropWrap" style="display:none;">
-                            <select id="favFriendGroupVisDrop" class="vrcn-dropdown" onchange="saveFavFriendGroupVisibility(this.value)" style="min-width:160px;">
-                                <option value="public" data-i18n="friends.favorites.visibility.public">Visible for everyone</option>
-                                <option value="friends" data-i18n="friends.favorites.visibility.friends">Visible for friends</option>
-                                <option value="private" data-i18n="friends.favorites.visibility.private">Visible only to you</option>
-                            </select>
-                        </div>
                     </div>
                     <div id="favFriendGroupRenameRow" style="display:none;align-items:center;gap:6px;margin-bottom:10px;">
                         <input type="text" id="favFriendGroupNameInput" class="vrcn-edit-field" maxlength="64" style="flex:1;max-width:280px;">

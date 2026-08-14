@@ -525,7 +525,7 @@ function renderAvatarCard(a, context) {
     const isPublic = context === 'search' || a.releaseStatus === 'public';
     const statusBadge = avatarStatusBadge(isPublic);
     const aid = jsq(a.id || '');
-    const thumbStyle = thumb ? `background-image:url('${cssUrl(thumb)}')` : '';
+    const thumbStyle = thumb ? `background-image:url('${cssUrl(imgThumb(thumb, 256))}')` : '';
     return `<div class="vrcn-content-card av-card${isActive ? ' av-active' : ''}" onclick="selectAvatar('${aid}')">
         <div class="cc-bg" style="${thumbStyle}"></div>
         <div class="cc-scrim"></div>
@@ -733,27 +733,17 @@ function setFavAvatarGroup(val) {
 }
 
 function updateFavAvatarGroupHeader() {
-    const label   = document.getElementById('favAvatarGroupLabel');
-    const editBtn = document.getElementById('favAvatarGroupEditBtn');
+    const header  = document.getElementById('favAvatarGroupHeader');
     const delBtn  = document.getElementById('favAvatarGroupDeleteBtn');
-    const badge   = document.getElementById('favAvatarGroupVrcPlusBadge');
-    const localBadge = document.getElementById('favAvatarGroupLocalBadge');
-    if (!label) return;
+    if (!header) return;
     if (!favAvatarGroupFilter) {
-        label.textContent = t('avatars.favorites.group.all', 'All Favorites');
-        if (editBtn) editBtn.style.display = 'none';
         if (delBtn) delBtn.style.display = 'none';
-        if (badge) badge.style.display = 'none';
-        if (localBadge) localBadge.style.display = 'none';
     } else {
         const g = favAvatarGroups.find(x => x.name === favAvatarGroupFilter);
-        const isLocal = isLocalFavGroup(g);
-        label.textContent = g ? (g.displayName || g.name) : favAvatarGroupFilter;
-        if (editBtn) editBtn.style.display = '';
-        if (delBtn) delBtn.style.display = isLocal ? '' : 'none';
-        if (badge) badge.style.display = (g && !isLocal && g.name !== 'avatars1') ? '' : 'none';
-        if (localBadge) localBadge.style.display = isLocal ? '' : 'none';
+        if (delBtn) delBtn.style.display = isLocalFavGroup(g) ? '' : 'none';
     }
+    const anyVisible = [delBtn].some(el => el && el.style.display !== 'none');
+    header.style.display = anyVisible ? 'flex' : 'none';
 }
 
 function startEditAvatarGroupName() {
@@ -768,7 +758,7 @@ function startEditAvatarGroupName() {
 }
 
 function cancelEditAvatarGroupName() {
-    document.getElementById('favAvatarGroupHeader').style.display = 'flex';
+    updateFavAvatarGroupHeader();
     const row = document.getElementById('favAvatarGroupRenameRow');
     if (row) row.style.display = 'none';
     const saveBtn = document.querySelector('#favAvatarGroupRenameRow .vrcn-btn-primary');
@@ -784,6 +774,15 @@ function saveAvatarGroupName() {
     const saveBtn = document.querySelector('#favAvatarGroupRenameRow .vrcn-btn-primary');
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = t('common.saving', 'Saving...'); }
     sendToCS({ action: 'vrcUpdateFavoriteGroup', groupType: g.type, groupName: g.name, displayName: newName });
+}
+
+function _avGroupHeaderHtml(g, count, first) {
+    const cap = g.capacity || 25;
+    return `<div class="fav-group-header${first ? ' fav-group-header-first' : ''}">
+        ${_avGroupTitleHtml(g)}
+        ${favGroupBadge(g)}
+        <span class="fav-group-count">${count}/${cap}</span>
+    </div>`;
 }
 
 function _avGroupTitleHtml(g) {
@@ -824,7 +823,7 @@ function avCancelGroupName(btn) {
 
 function _renderFavAvCard(a) {
     const thumb = a.thumbnailImageUrl || a.imageUrl || '';
-    const thumbStyle = thumb ? `background-image:url('${cssUrl(thumb)}')` : '';
+    const thumbStyle = thumb ? `background-image:url('${cssUrl(imgThumb(thumb, 256))}')` : '';
     const isActive = a.id === currentAvatarId;
     const aid = jsq(a.id || '');
     const isPublic = a.releaseStatus === 'public';
@@ -889,18 +888,17 @@ function filterFavAvatars() {
         favAvatarGroups.forEach(g => {
             const groupAvatars = filtered.filter(a => a.favoriteGroup === g.name);
             if (!groupAvatars.length && !_avEditMode) return;
-            const cap = g.capacity || 25;
-            html += `<div class="fav-group-header${first ? ' fav-group-header-first' : ''}">
-                ${_avGroupTitleHtml(g)}
-                ${favGroupBadge(g)}
-                <span class="fav-group-count">${groupAvatars.length}/${cap}</span>
-            </div>`;
+            html += _avGroupHeaderHtml(g, groupAvatars.length, first);
             html += groupAvatars.map(a => _renderFavAvCard(a)).join('');
             first = false;
         });
         el.innerHTML = html;
     } else {
-        el.innerHTML = filtered.map(a => _renderFavAvCard(a)).join('');
+        const selected = favAvatarGroupFilter
+            ? favAvatarGroups.find(x => x.name === favAvatarGroupFilter)
+            : null;
+        const head = selected ? _avGroupHeaderHtml(selected, filtered.length, true) : '';
+        el.innerHTML = head + filtered.map(a => _renderFavAvCard(a)).join('');
     }
     if (_avEditMode) updateAvEditBar();
 }
@@ -1452,7 +1450,7 @@ function renderRoseAvatarCard(a) {
     const thumb  = a._cachedThumb || a.avatar_image_url || '';
     const aid    = jsq(a.avatar_id || '');
     const isFav  = favAvatarsData.some(f => f.id === a.avatar_id);
-    const thumbStyle = thumb ? `background-image:url('${cssUrl(thumb)}')` : '';
+    const thumbStyle = thumb ? `background-image:url('${cssUrl(imgThumb(thumb, 256))}')` : '';
 
     // Sort tags in defined order, unknown tags appended at end
     const rawTags  = (a.tags || []);

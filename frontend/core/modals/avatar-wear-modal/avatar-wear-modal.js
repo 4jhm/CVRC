@@ -31,7 +31,7 @@ function showAvatarWearModal(avatarId, name, thumb, author) {
                 </button>
             </div>
             <div class="launch-foot">
-                ${thumb ? `<span class="aw-thumb" style="background-image:url('${cssUrl(thumb)}')"></span>` : ''}
+                ${thumb ? `<span class="aw-thumb" style="background-image:url('${cssUrl(imgThumb(thumb, 96))}')"></span>` : ''}
                 <span class="aw-meta">${esc(sub)}</span>
                 <div class="launch-foot-spacer"></div>
                 <button class="launch-icon-btn" id="_awCopy" title="${esc(t('avatars.wear.copy_link', 'Copy Avatar Link'))}" aria-label="${esc(t('avatars.wear.copy_link', 'Copy Avatar Link'))}">

@@ -153,6 +153,17 @@ function renderDashboard() {
     }
 }
 
+function renderDashboardFriendSections() {
+    const _tab0 = document.getElementById('tab0');
+    if (_tab0 && !_tab0.classList.contains('active')) return;
+    renderDashWorlds();
+    renderDashFriendsFeed();
+    renderDashFriendsLocationSmall();
+    renderDashGroupActivity();
+    renderDashGroupActivityInstances();
+    renderDashGroupActivityInstancesSmall();
+}
+
 function requestWorldResolution() {
     if (!vrcFriendsData.length) return;
     const worldIds = new Set();
@@ -173,11 +184,11 @@ function requestWorldResolution() {
 function renderDashWorlds() {
     const el = document.getElementById('dashFavWorlds');
     if (!currentVrcUser || !vrcFriendsLoaded) {
-        el.innerHTML = sk('world', 3);
+        setHtmlIfChanged(el, sk('world', 3));
         return;
     }
     if (!vrcFriendsData.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.worlds.empty', 'No friends in worlds right now')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.worlds.empty', 'No friends in worlds right now')}</div>`);
         return;
     }
 
@@ -205,7 +216,7 @@ function renderDashWorlds() {
 
     const worldList = Object.values(worlds);
     if (!worldList.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.worlds.empty', 'No friends in worlds right now')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.worlds.empty', 'No friends in worlds right now')}</div>`);
         return;
     }
 
@@ -213,11 +224,11 @@ function renderDashWorlds() {
     const unresolved = worldList.filter(w => !w.name);
     if (unresolved.length > 0 && Object.keys(dashWorldCache).length === 0) {
         // Show placeholder while resolving
-        el.innerHTML = worldList.map(w => {
+        setHtmlIfChanged(el, worldList.map(w => {
             const friendAvatars = w.friends.slice(0, 5).map(f => {
                 const img = f.image || '';
                 return img
-                    ? `<img class="cc-friend-av" src="${img}" loading="lazy" decoding="async" title="${esc(f.displayName)}" onerror="this.style.display='none'">`
+                    ? `<img class="cc-friend-av" src="${imgThumb(img, 64)}" loading="lazy" decoding="async" title="${esc(f.displayName)}" onerror="this.style.display='none'">`
                     : `<div class="cc-friend-av" title="${esc(f.displayName)}" style="display:flex;align-items:center;justify-content:center;font-size:calc(9px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName||'?')[0])}</div>`;
             }).join('');
             const extra = w.friends.length > 5 ? `<span class="cc-extra">+${w.friends.length - 5}</span>` : '';
@@ -233,19 +244,19 @@ function renderDashWorlds() {
                     </div>
                 </div>
             </div>`;
-        }).join('');
+        }).join(''));
         return;
     }
 
-    el.innerHTML = worldList.map(w => {
+    setHtmlIfChanged(el, worldList.map(w => {
         const friendAvatars = w.friends.slice(0, 5).map(f => {
             const img = f.image || '';
             return img
-                ? `<img class="cc-friend-av" src="${img}" loading="lazy" decoding="async" title="${esc(f.displayName)}" onerror="this.style.display='none'">`
+                ? `<img class="cc-friend-av" src="${imgThumb(img, 64)}" loading="lazy" decoding="async" title="${esc(f.displayName)}" onerror="this.style.display='none'">`
                 : `<div class="cc-friend-av" title="${esc(f.displayName)}" style="display:flex;align-items:center;justify-content:center;font-size:calc(9px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName||'?')[0])}</div>`;
         }).join('');
         const extra = w.friends.length > 5 ? `<span class="cc-extra">+${w.friends.length - 5}</span>` : '';
-        const thumbStyle = w.thumb ? `background-image:url('${cssUrl(w.thumb)}')` : '';
+        const thumbStyle = w.thumb ? `background-image:url('${cssUrl(imgThumb(w.thumb, 256))}')` : '';
         const wid = (w.worldId || '').replace(/'/g, "\\'");
         const safeLoc = (w.location || '').replace(/'/g, "\\'");
         const displayName = w.name || w.worldId;
@@ -269,24 +280,24 @@ function renderDashWorlds() {
                 </div>
             </div>
         </div>`;
-    }).join('');
+    }).join(''));
 }
 
 function renderDashFriendsFeed() {
     const el = document.getElementById('dashFriendsFeed');
     if (!currentVrcUser || !vrcFriendsLoaded) {
-        el.innerHTML = sk('feed', 8);
+        setHtmlIfChanged(el, sk('feed', 8));
         return;
     }
     if (!vrcFriendsData.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.friends.empty', 'No friends online')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.friends.empty', 'No friends online')}</div>`);
         return;
     }
     const activeFriends = vrcFriendsData.filter(f => f.presence !== 'offline');
-    el.innerHTML = activeFriends.slice(0, 12).map(f => {
+    setHtmlIfChanged(el, activeFriends.slice(0, 12).map(f => {
         const img = f.image || '';
         const imgTag = img
-            ? `<img class="dash-feed-avatar" src="${img}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+            ? `<img class="dash-feed-avatar" src="${imgThumb(img, 96)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
             : `<div class="dash-feed-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(12px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName||'?')[0])}</div>`;
         const { worldId } = parseFriendLocation(f.location);
         const cached = worldId ? dashWorldCache[worldId] : null;
@@ -304,7 +315,7 @@ function renderDashFriendsFeed() {
                 <div class="dash-feed-loc">${esc(loc)}</div>
             </div>
         </div>`;
-    }).join('');
+    }).join(''));
 }
 
 function browseDashBg() {
@@ -333,7 +344,7 @@ function renderDashFriendsLocationSmall() {
     const el = document.getElementById('dashFriendLocSmallShelf');
     if (!el) return;
     if (!currentVrcUser || !vrcFriendsLoaded) {
-        el.innerHTML = _dashWorldShelfSkeleton();
+        setHtmlIfChanged(el, _dashWorldShelfSkeleton());
         return;
     }
     const inWorld = vrcFriendsData.filter(f => {
@@ -341,10 +352,10 @@ function renderDashFriendsLocationSmall() {
         return worldId && worldId.startsWith('wrld_');
     });
     if (!inWorld.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.section.friend_locations_small_empty', 'No friends in worlds right now')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.section.friend_locations_small_empty', 'No friends in worlds right now')}</div>`);
         return;
     }
-    el.innerHTML = inWorld.slice(0, 24).map(f => {
+    setHtmlIfChanged(el, inWorld.slice(0, 24).map(f => {
         const { worldId } = parseFriendLocation(f.location);
         const cached   = worldId ? dashWorldCache[worldId] : null;
         const thumb    = cached?.thumbnailImageUrl || cached?.imageUrl || '';
@@ -354,10 +365,10 @@ function renderDashFriendsLocationSmall() {
         const img      = f.image || '';
         const dotClass = f.presence === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
         const avatarEl = img
-            ? `<img class="dash-flocs-avatar" src="${img}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+            ? `<img class="dash-flocs-avatar" src="${imgThumb(img, 96)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
             : `<div class="dash-flocs-avatar dash-flocs-avatar-letter">${esc((f.displayName||'?')[0])}</div>`;
         const worldThumb = thumb
-            ? `<img class="dash-flocs-world-thumb" src="${cssUrl(thumb)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+            ? `<img class="dash-flocs-world-thumb" src="${cssUrl(imgThumb(thumb, 96))}" alt="" loading="lazy" onerror="this.style.display='none'">`
             : '';
         return `<div class="dash-flocs-card" onclick="openFriendLocationDetail('${wid}','${safeLoc}')">
             ${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(f.nameplateUrl) : ''}
@@ -373,7 +384,7 @@ function renderDashFriendsLocationSmall() {
             </div>
             ${worldThumb}
         </div>`;
-    }).join('');
+    }).join(''));
 }
 
 /* === My Instances === */
@@ -415,7 +426,7 @@ function renderMyInstances(instances) {
 
     grid.innerHTML = _myInstancesData.map(inst => {
         const { cls, label: typeLabel } = getInstanceBadge(inst.instanceType);
-        const thumbStyle = inst.worldThumb ? `background-image:url('${cssUrl(inst.worldThumb)}')` : '';
+        const thumbStyle = inst.worldThumb ? `background-image:url('${cssUrl(imgThumb(inst.worldThumb, 256))}')` : '';
         const wid = (inst.worldId || '').replace(/'/g, "\\'");
         const count = inst.userCount || 0;
         const cap   = inst.capacity  || 0;
@@ -748,7 +759,7 @@ function renderDiscoverySection() {
     grid.innerHTML = page.map(w => {
         const name  = esc(w.name || w.id || '');
         const thumb = w.thumbnailImageUrl || w.imageUrl || '';
-        const thumbStyle = thumb ? `background-image:url('${cssUrl(thumb)}')` : '';
+        const thumbStyle = thumb ? `background-image:url('${cssUrl(imgThumb(thumb, 256))}')` : '';
         const wid = (w.id || '').replace(/'/g, "\\'");
         const occupants = w.occupants ?? w.publicOccupants ?? 0;
         const playingStr = occupants > 0
@@ -905,7 +916,7 @@ function renderDashRecentPhotos() {
         const isHidden  = (typeof hiddenMedia !== 'undefined') && hiddenMedia.has(f.path);
         const pathJs    = jsq(f.path || '');
         return `<div class="dash-photo-item${extraCls ? ' ' + extraCls : ''}${isHidden ? ' dpi-hidden' : ''}" onclick="openPhotoDetail('${pathJs}')" title="${esc(f.name || '')}" data-path="${esc(f.path || '')}" data-url="${esc(f.url || '')}" data-type="image" data-name="${esc(f.name || '')}">
-            <div class="dpi-img"${thumbUrl ? ` style="background-image:url('${cssUrl(thumbUrl)}')"` : ''}></div>
+            <div class="dpi-img"${thumbUrl ? ` style="background-image:url('${cssUrl(imgThumb(thumbUrl, 256))}')"` : ''}></div>
             <div class="dpi-date">${esc(dateStr)}</div>
         </div>`;
     };
@@ -925,7 +936,7 @@ function _dashAvatarCard(a) {
     const isActive  = a.id === currentAvatarId;
     const activeBadge = (typeof avatarCurrentBadge === 'function') ? avatarCurrentBadge(isActive) : '';
     return `<div class="vrcn-content-card av-card${isActive ? ' av-active' : ''}" onclick="selectAvatar('${aid}')">
-        <div class="cc-bg"${thumb ? ` style="background-image:url('${cssUrl(thumb)}')"` : ''}></div>
+        <div class="cc-bg"${thumb ? ` style="background-image:url('${cssUrl(imgThumb(thumb, 256))}')"` : ''}></div>
         <div class="cc-scrim"></div>
         <div class="cc-badges-top">${activeBadge}</div>
         <div class="cc-content"><div class="cc-name">${esc(a.name || t('avatars.labels.unnamed', 'Unnamed'))}</div></div>
@@ -942,7 +953,7 @@ function _dashWorldCard(w, showCount = true) {
         ? `<div class="cc-bottom-row"><div class="cc-meta"><span class="msi">person</span>${occupants.toLocaleString()}</div></div>`
         : '';
     return `<div class="vrcn-content-card" onclick="openWorldSearchDetail('${wid}')">
-        <div class="cc-bg"${thumb ? ` style="background-image:url('${cssUrl(thumb)}')"` : ''}></div>
+        <div class="cc-bg"${thumb ? ` style="background-image:url('${cssUrl(imgThumb(thumb, 256))}')"` : ''}></div>
         <div class="cc-scrim"></div>
         <div class="cc-content"><div class="cc-name">${esc(w.name || w.id || '?')}</div>${meta}</div>
     </div>`;
@@ -1005,27 +1016,27 @@ function renderDashGroupActivity() {
     const el = document.getElementById('dashGroupActivityGrid');
     if (!el) return;
     if (!currentVrcUser) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.groups.login', 'Login to see your groups')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.groups.login', 'Login to see your groups')}</div>`);
         return;
     }
     const groups = (typeof myGroups !== 'undefined') ? myGroups : [];
     const loaded = (typeof myGroupsLoaded !== 'undefined') ? myGroupsLoaded : false;
     if (!groups.length && !loaded) {
         if (_dashLayout.hidden.includes('groups')) return;
-        el.innerHTML = _dashGroupSkeleton();
+        setHtmlIfChanged(el, _dashGroupSkeleton());
         sendToCS({ action: 'vrcGetMyGroups' });
         return;
     }
     if (!groups.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.groups.empty', 'No groups joined yet')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.groups.empty', 'No groups joined yet')}</div>`);
         return;
     }
-    el.innerHTML = groups.slice(0, 8).map(g => {
+    setHtmlIfChanged(el, groups.slice(0, 8).map(g => {
         const gid  = jsq(g.id || '');
         const icon = g.iconUrl || '';
         const cnt  = g.memberCount || 0;
         const iconHtml = icon
-            ? `<img src="${icon}" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML='<span class=msi>group</span>'">`
+            ? `<img src="${imgThumb(icon, 96)}" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML='<span class=msi>group</span>'">`
             : `<span class="msi">group</span>`;
         const metaHtml = cnt > 0
             ? `<span class="msi">person</span>${esc(cnt.toLocaleString())}`
@@ -1037,7 +1048,7 @@ function renderDashGroupActivity() {
                 <div class="dash-group-meta">${metaHtml}</div>
             </div>
         </div>`;
-    }).join('');
+    }).join(''));
 }
 
 /* === Dashboard — Group Activity Instances === */
@@ -1082,31 +1093,31 @@ function renderDashGroupActivityInstances() {
     const el = document.getElementById('dashGroupActivityCards');
     if (!el) return;
     if (!currentVrcUser) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.groups.login', 'Login to see your groups')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.groups.login', 'Login to see your groups')}</div>`);
         return;
     }
     if (_dashGroupInstances === null) {
-        el.innerHTML = sk('world', 3);
+        setHtmlIfChanged(el, sk('world', 3));
         loadDashGroupInstances();
         return;
     }
     if (!_dashGroupInstances.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.section.group_activity_empty', 'No active group instances right now')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.section.group_activity_empty', 'No active group instances right now')}</div>`);
         return;
     }
-    el.innerHTML = _dashGroupInstances.slice(0, 24).map(inst => {
+    setHtmlIfChanged(el, _dashGroupInstances.slice(0, 24).map(inst => {
         const thumb    = inst.worldThumb || '';
         const wname    = inst.worldName || t('dashboard.instances.unknown_world', 'Unknown World');
         const gname    = inst.groupName || '';
         const loc      = (inst.location || '').replace(/'/g, "\\'");
         const users    = inst.capacity > 0 ? `${inst.userCount}/${inst.capacity}` : String(inst.userCount || 0);
-        const thumbStyle = thumb ? `background-image:url('${cssUrl(thumb)}')` : '';
+        const thumbStyle = thumb ? `background-image:url('${cssUrl(imgThumb(thumb, 256))}')` : '';
         const { instanceType } = (typeof parseFriendLocation === 'function') ? parseFriendLocation(inst.location || '') : { instanceType: 'group' };
         const { cls: instCls, label: instLabel } = (typeof getInstanceBadge === 'function') ? getInstanceBadge(instanceType) : { cls: '', label: '' };
         const gaAgeGate = (inst.location || '').includes('~ageGate')
             ? `<span class="vrcn-badge" style="background:rgba(255,75,85,.15);color:var(--err);">${esc(t('worlds.instances.age_gated', 'Age Gated'))}</span>` : '';
         const groupAvatar = inst.groupIcon
-            ? `<img class="cc-friend-av" src="${inst.groupIcon}" title="${esc(gname)}" onerror="this.style.display='none'">`
+            ? `<img class="cc-friend-av" src="${imgThumb(inst.groupIcon, 64)}" title="${esc(gname)}" onerror="this.style.display='none'">`
             : `<div class="cc-friend-av" title="${esc(gname)}" style="display:flex;align-items:center;justify-content:center;"><span class="msi" style="font-size:10px;color:var(--tx3)">group</span></div>`;
         return `<div class="vrcn-content-card" onclick="openGroupInstanceDetail('${loc}')">
             <div class="cc-bg" style="${thumbStyle}"></div>
@@ -1120,26 +1131,26 @@ function renderDashGroupActivityInstances() {
                 </div>
             </div>
         </div>`;
-    }).join('');
+    }).join(''));
 }
 
 function renderDashGroupActivityInstancesSmall() {
     const el = document.getElementById('dashGroupActivityShelf');
     if (!el) return;
     if (!currentVrcUser) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.groups.login', 'Login to see your groups')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.groups.login', 'Login to see your groups')}</div>`);
         return;
     }
     if (_dashGroupInstances === null) {
-        el.innerHTML = _dashWorldShelfSkeleton();
+        setHtmlIfChanged(el, _dashWorldShelfSkeleton());
         loadDashGroupInstances();
         return;
     }
     if (!_dashGroupInstances.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.section.group_activity_empty', 'No active group instances right now')}</div>`;
+        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.section.group_activity_empty', 'No active group instances right now')}</div>`);
         return;
     }
-    el.innerHTML = _dashGroupInstances.slice(0, 24).map(inst => {
+    setHtmlIfChanged(el, _dashGroupInstances.slice(0, 24).map(inst => {
         const thumb  = inst.worldThumb || '';
         const wname  = esc(inst.worldName || t('dashboard.instances.unknown_world', 'Unknown World'));
         const gname  = esc(inst.groupName || '');
@@ -1147,10 +1158,10 @@ function renderDashGroupActivityInstancesSmall() {
         const users  = inst.capacity > 0 ? `${inst.userCount}/${inst.capacity}` : (inst.userCount ? String(inst.userCount) : '');
         const isAgeGated = (inst.location || '').includes('~ageGate');
         const iconHtml = inst.groupIcon
-            ? `<img class="dash-flocs-avatar" src="${inst.groupIcon}" onerror="this.style.display='none'">`
+            ? `<img class="dash-flocs-avatar" src="${imgThumb(inst.groupIcon, 96)}" onerror="this.style.display='none'">`
             : `<div class="dash-flocs-avatar dash-flocs-avatar-letter"><span class="msi" style="font-size:16px;">group</span></div>`;
         const worldThumb = thumb
-            ? `<img class="dash-flocs-world-thumb" src="${cssUrl(thumb)}" alt="" loading="lazy" onerror="this.style.display='none'">`
+            ? `<img class="dash-flocs-world-thumb" src="${cssUrl(imgThumb(thumb, 96))}" alt="" loading="lazy" onerror="this.style.display='none'">`
             : '';
         const ageGateBadge = isAgeGated
             ? `<span class="vrcn-badge" style="font-size:calc(9px + var(--fs-off, 0px));background:rgba(255,75,85,.12);color:var(--err);border:1px solid rgba(255,75,85,.25);padding:1px 5px;flex-shrink:0;">18+</span>`
@@ -1166,7 +1177,7 @@ function renderDashGroupActivityInstancesSmall() {
             </div>
             ${worldThumb}
         </div>`;
-    }).join('');
+    }).join(''));
 }
 
 function openGroupInstanceDetail(location) {
@@ -1815,7 +1826,7 @@ function renderDashUpcomingEvents() {
     const minis = events.slice(1).map(evt => {
         const f = evtFields(evt);
         const thumb = f.imgSrc
-            ? `<img class="dash-evt-mini-thumb" src="${f.imgSrc}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'dash-evt-mini-thumb dash-evt-mini-thumb-ph\\'><span class=\\'msi\\'>event</span></div>'">`
+            ? `<img class="dash-evt-mini-thumb" src="${imgThumb(f.imgSrc, 128)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'dash-evt-mini-thumb dash-evt-mini-thumb-ph\\'><span class=\\'msi\\'>event</span></div>'">`
             : `<div class="dash-evt-mini-thumb dash-evt-mini-thumb-ph"><span class="msi">event</span></div>`;
         return `<div class="dash-evt-mini" onclick="openEventDetail('${f.groupId}','${f.eventId}')">
             ${thumb}

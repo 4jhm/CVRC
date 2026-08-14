@@ -176,7 +176,7 @@ function renderMyProfileContent() {
         : (u.image
             ? `<img class="myp-avatar" src="${esc(u.image)}" onerror="this.outerHTML='<div class=\\'myp-avatar myp-avatar-fb\\'>${esc((u.displayName||'?')[0])}</div>'">`
             : `<div class="myp-avatar myp-avatar-fb">${esc((u.displayName||'?')[0])}</div>`);
-    const _mypFrame = (typeof iconFrameHtml === 'function') ? iconFrameHtml(u.iconFrameUrl) : '';
+    const _mypFrame = (typeof iconFrameHtml === 'function') ? iconFrameHtml(u.iconFrameUrl, true) : '';
     const _editBtnPos = useCompact ? 'top:-4px;left:-4px;' : 'bottom:-4px;right:-4px;';
     const imgTag = `<div style="position:relative;display:inline-block;flex-shrink:0;line-height:0;">${avatarImg}${_mypFrame}<button class="myp-edit-btn" style="position:absolute;${_editBtnPos}z-index:5;padding:2px;min-width:0;width:18px;height:18px;display:flex;align-items:center;justify-content:center;" onclick="openImagePicker('profile-icon')" title="${esc(changeIconTitle)}"><span class="msi" style="font-size:11px;">edit</span></button></div>`;
 
@@ -203,11 +203,11 @@ function renderMyProfileContent() {
     let repGroupCardHtml  = '';
     if (_repG) {
         const _rbi = _repG.iconUrl
-            ? `<img class="fd-rep-group-badge-icon" src="${esc(_repG.iconUrl)}" onerror="this.style.display='none'">`
+            ? `<img class="fd-rep-group-badge-icon" src="${esc(imgThumb(_repG.iconUrl, 64))}" onerror="this.style.display='none'">`
             : `<span class="msi" style="font-size:13px;flex-shrink:0;">group</span>`;
         repGroupBadgeHtml = `<div class="fd-rep-group-badge" onclick="closeMyProfile();openGroupDetail('${esc(_repG.id)}')">${_rbi}<span class="fd-rep-group-badge-name">${esc(_repG.name || '')}</span></div>`;
         const _ri = _repG.iconUrl
-            ? `<img class="fd-group-icon" src="${esc(_repG.iconUrl)}" onerror="this.style.display='none'">`
+            ? `<img class="fd-group-icon" src="${esc(imgThumb(_repG.iconUrl, 96))}" onerror="this.style.display='none'">`
             : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
         repGroupCardHtml = `<div class="fd-info-card">
             <div class="fd-group-rep-label">${t('profiles.badges.representing', 'Representing')}</div>
@@ -225,7 +225,7 @@ function renderMyProfileContent() {
             ? window.vrcnPlusBadgeHtml('myp-badge-item') : '';
         const iconsHtml = badges.map(b => {
             const hidden = !b.showcased;
-            return `<div class="myp-badge-item fd-vrc-badge-wrap${hidden ? ' myp-badge-hidden' : ''}${_myBadgesEditing ? ' myp-badge-editing' : ''}" data-badge-id="${esc(b.id)}" data-badge-img="${esc(b.imageUrl)}" data-badge-name="${encodeURIComponent(b.name)}" data-badge-desc="${encodeURIComponent(b.description || '')}" onclick="${_myBadgesEditing ? `toggleMyBadge('${esc(b.id)}')` : ''}"><img class="fd-vrc-badge-icon" src="${esc(b.imageUrl)}" alt="${esc(b.name)}" onerror="this.closest('.myp-badge-item').style.display='none'"></div>`;
+            return `<div class="myp-badge-item fd-vrc-badge-wrap${hidden ? ' myp-badge-hidden' : ''}${_myBadgesEditing ? ' myp-badge-editing' : ''}" data-badge-id="${esc(b.id)}" data-badge-img="${esc(b.imageUrl)}" data-badge-name="${encodeURIComponent(b.name)}" data-badge-desc="${encodeURIComponent(b.description || '')}" onclick="${_myBadgesEditing ? `toggleMyBadge('${esc(b.id)}')` : ''}"><img class="fd-vrc-badge-icon" src="${esc(imgThumb(b.imageUrl, 64))}" alt="${esc(b.name)}" onerror="this.closest('.myp-badge-item').style.display='none'"></div>`;
         }).join('');
         _badgesCard = `<div class="fd-info-card">
             <div class="fd-group-rep-label" style="display:flex;align-items:center;justify-content:space-between;">${t('profiles.my_profile.sections.badges', 'Badges')}<button class="myp-edit-btn" onclick="toggleBadgeEditMode()"><span class="msi" style="font-size:14px;">${_myBadgesEditing ? 'check' : 'edit'}</span></button></div>
@@ -555,7 +555,7 @@ function _renderMyBadgesSection(u) {
     const badgesTitle = t('profiles.my_profile.sections.badges', 'Badges');
     const iconsHtml = badges.map(b => {
         const hidden = !b.showcased;
-        return `<div class="myp-badge-item fd-vrc-badge-wrap${hidden ? ' myp-badge-hidden' : ''}${_myBadgesEditing ? ' myp-badge-editing' : ''}" data-badge-id="${esc(b.id)}" data-badge-img="${esc(b.imageUrl)}" data-badge-name="${encodeURIComponent(b.name)}" data-badge-desc="${encodeURIComponent(b.description || '')}" onclick="${_myBadgesEditing ? `toggleMyBadge('${esc(b.id)}')` : ''}"><img class="fd-vrc-badge-icon" src="${esc(b.imageUrl)}" alt="${esc(b.name)}" onerror="this.closest('.myp-badge-item').style.display='none'"></div>`;
+        return `<div class="myp-badge-item fd-vrc-badge-wrap${hidden ? ' myp-badge-hidden' : ''}${_myBadgesEditing ? ' myp-badge-editing' : ''}" data-badge-id="${esc(b.id)}" data-badge-img="${esc(b.imageUrl)}" data-badge-name="${encodeURIComponent(b.name)}" data-badge-desc="${encodeURIComponent(b.description || '')}" onclick="${_myBadgesEditing ? `toggleMyBadge('${esc(b.id)}')` : ''}"><img class="fd-vrc-badge-icon" src="${esc(imgThumb(b.imageUrl, 64))}" alt="${esc(b.name)}" onerror="this.closest('.myp-badge-item').style.display='none'"></div>`;
     }).join('');
     return `<div class="myp-section">
         <div class="myp-section-header">
@@ -737,7 +737,7 @@ function switchMypContentPill(pill, btn) {
 
 function _mypGroupCard(g) {
     const gIcon = g.iconUrl
-        ? `<img class="fd-group-icon" src="${esc(g.iconUrl)}" onerror="this.style.display='none'">`
+        ? `<img class="fd-group-icon" src="${esc(imgThumb(g.iconUrl, 96))}" onerror="this.style.display='none'">`
         : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
     return `<div class="fd-group-card" onclick="navOpenModal('group','${jsq(g.id)}','${jsq(g.name || '')}')">
         ${gIcon}<div class="fd-group-card-info"><div class="fd-group-card-name">${esc(g.name || '')}</div><div class="fd-group-card-meta">${g.memberCount ? esc(getGroupMemberText(g.memberCount, false)) : ''}</div></div>
@@ -824,7 +824,7 @@ function renderMypWorldsPage(page) {
         const isPublic = w.releaseStatus === 'public';
         const pubBadge = `<span class="vrcn-badge" style="${isPublic ? '' : 'background:rgba(255,100,100,.15);color:var(--err);'}">${isPublic ? t('avatars.labels.public','Public') : t('avatars.labels.private','Private')}</span>`;
         return `<div class="vrcn-mini-content" data-world-id="${esc(w.id || '')}" onclick="navOpenModal('worldSearch','${jsq(w.id || '')}','${jsq(w.name || '')}')">
-            <div class="vrcn-mini-content-thumb" style="background-image:url('${cssUrl(thumb)}')"></div>
+            <div class="vrcn-mini-content-thumb" style="background-image:url('${cssUrl(imgThumb(thumb, 128))}')"></div>
             <div class="vrcn-mini-content-info">
                 <div class="vrcn-mini-content-name">${esc(w.name || '')}</div>
                 <div class="vrcn-mini-content-meta">${esc(w.authorName || '')}<span class="msi">person</span>${w.occupants ?? ''}<span class="msi">favorite</span>${w.favorites ?? ''}</div>
@@ -861,7 +861,7 @@ function renderMypAvatarsPage(page) {
         const platBadges = (typeof _avPlatformBadges === 'function') ? _avPlatformBadges(a) : '';
         const pubBadge = `<span class="vrcn-badge" style="${isPublic ? '' : 'background:rgba(255,100,100,.15);color:var(--err);'}">${isPublic ? t('avatars.labels.public','Public') : t('avatars.labels.private','Private')}</span>`;
         return `<div class="vrcn-mini-content" data-avatar-id="${esc(a.id || '')}" onclick="navOpenModal('avatar','${jsq(a.id || '')}','${jsq(a.name || '')}')">
-            <div class="vrcn-mini-content-thumb" style="background-image:url('${cssUrl(thumb)}')"></div>
+            <div class="vrcn-mini-content-thumb" style="background-image:url('${cssUrl(imgThumb(thumb, 128))}')"></div>
             <div class="vrcn-mini-content-info">
                 <div class="vrcn-mini-content-name">${esc(a.name || t('avatars.labels.unnamed','Unnamed'))}</div>
                 <div class="vrcn-mini-content-meta">${esc(a.authorName || '')}</div>
@@ -925,7 +925,7 @@ function renderMypFavWorlds(payload) {
             for (const w of g.worlds) {
                 const thumb = w.thumbnailImageUrl || '';
                 panelsHtml += `<div class="vrcn-world-card-small" onclick="navOpenModal('worldSearch','${jsq(w.id)}','${jsq(w.name || '')}')">
-                    <div class="vwcs-bg"${thumb ? ` style="background-image:url('${cssUrl(thumb)}')"` : ''}></div>
+                    <div class="vwcs-bg"${thumb ? ` style="background-image:url('${cssUrl(imgThumb(thumb, 256))}')"` : ''}></div>
                     <div class="vwcs-scrim"></div>
                     <div class="vwcs-info">
                         <div class="vwcs-name">${esc(w.name)}</div>
@@ -1049,7 +1049,11 @@ function openStatusModal() {
 }
 
 function updateStatusDescCount(len) {
-    document.getElementById('statusDescCount').textContent = (len || 0) + '/32';
+    const el = document.getElementById('statusDescCount');
+    if (!el) return;
+    const remaining = 32 - (len || 0);
+    el.textContent = remaining;
+    el.className = 'status-desc-count' + (remaining <= 5 ? ' warn' : remaining <= 10 ? ' low' : '');
 }
 
 function setStatusDescMode(textMode) {
@@ -1059,6 +1063,8 @@ function setStatusDescMode(textMode) {
     const wrap = sel.parentElement && sel.parentElement.classList.contains('vn-select') ? sel.parentElement : sel;
     wrap.style.display = textMode ? 'none' : '';
     inp.style.display = textMode ? '' : 'none';
+    const cnt = document.getElementById('statusDescCount');
+    if (cnt) cnt.style.display = textMode ? '' : 'none';
     btn.classList.toggle('active', textMode);
     if (textMode) setTimeout(() => inp.focus(), 50);
 }

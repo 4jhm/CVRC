@@ -1,0 +1,36 @@
+/* === Emoji Maker Module === */
+.emoji-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+@media (max-width: 900px) { .emoji-grid { grid-template-columns: 1fr; } }
+
+.emoji-dropzone {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; padding: 28px 12px; margin: 10px 0 14px;
+    border: 2px dashed var(--border); border-radius: 10px;
+    cursor: pointer; text-align: center; opacity: 0.85; transition: opacity .15s, border-color .15s;
+}
+.emoji-dropzone:hover, .emoji-dropzone.emoji-drag-over { opacity: 1; border-color: var(--accent); }
+
+.emoji-source-preview { margin: 4px 0 14px; text-align: center; }
+.emoji-source-preview-media { max-width: 100%; max-height: 160px; border-radius: 8px; }
+
+.emoji-unit { font-size: 12px; opacity: 0.7; margin: -4px 0 10px; }
+
+.emoji-sheet-canvas {
+    width: 100%; aspect-ratio: 1 / 1;
+    background: repeating-conic-gradient(#00000022 0% 25%, #ffffff11 0% 50%) 50% / 16px 16px;
+    border-radius: 8px; margin-bottom: 12px; image-rendering: pixelated;
+}
+
+.emoji-anim-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.emoji-anim-canvas {
+    width: 64px; height: 64px; border-radius: 8px;
+    background: repeating-conic-gradient(#00000022 0% 25%, #ffffff11 0% 50%) 50% / 12px 12px;
+    image-rendering: pixelated;
+}
+.emoji-anim-label { font-size: 12px; opacity: 0.75; }
+
+.emoji-status { font-size: 12px; min-height: 16px; margin-bottom: 10px; opacity: 0.85; }
+.emoji-status.err { color: var(--err); }
+.emoji-status.ok { color: var(--ok); }
+
+.emoji-hint { margin-top: 10px; }

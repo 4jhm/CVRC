@@ -3,29 +3,30 @@
                 <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" data-i18n="vrc_launch.title">VRChat Launch Options</span></div>
                 <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="document.getElementById('modalVrcLaunchOptions').style.display='none'"><span class="msi" style="font-size:20px;">close</span></button></div>
             </div>
-            <div class="modal-msg" style="margin:20px 0 18px;" data-i18n="vrc_launch.desc">Extra arguments passed to VRChat on launch. Optional override path lets you launch a specific VRChat executable instead of going through Steam.</div>
+            <div class="modal-card">
+                <div class="modal-msg" style="margin:0 0 18px;" data-i18n="vrc_launch.desc">Extra arguments passed to VRChat on launch. Optional override path lets you launch a specific VRChat executable instead of going through Steam.</div>
 
-            <div style="background:var(--bg-input);border-radius:8px;padding:10px 12px;margin-bottom:18px;font-size:calc(11.5px + var(--fs-off, 0px));color:var(--tx3);line-height:1.6;">
-                <div>--fps=144</div>
-                <div>--enable-debug-gui</div>
-                <div>--enable-sdk-log-levels</div>
-                <div>--enable-udon-debug-logging</div>
-            </div>
-
-            <div class="sf-section-label" style="margin-bottom:6px;" data-i18n="vrc_launch.args">Launch Arguments</div>
-            <textarea id="vrcLaArgs" class="vrcn-edit-field" rows="3" placeholder="e.g. --fps=144 --enable-sdk-log-levels" style="width:100%;height:auto;padding:8px 10px;font-family:inherit;resize:vertical;margin-bottom:14px;"></textarea>
-
-            <div class="sf-section-label" style="margin-bottom:6px;" data-i18n="vrc_launch.path_override">VRChat Path Override</div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-                <input type="text" id="vrcLaPath" class="vrcn-edit-field" placeholder="C:\Program Files (x86)\Steam\steamapps\common\VRChat\launch.exe" spellcheck="false" style="flex:1;">
-                <button class="vrcn-button" onclick="browseExe('vrchat')"><span class="msi" style="font-size:16px;">folder_open</span> <span data-i18n="common.browse">Browse</span></button>
-            </div>
-            <div class="set-desc" style="margin-bottom:6px;font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);" data-i18n="vrc_launch.path_override_desc">Used as a fallback when steam.exe cannot be found.</div>
-
-            <div class="modal-btns" style="margin-top:22px;justify-content:space-between;">
-                <button class="vrcn-button-round" onclick="sendToCS({action:'openUrl',url:'https://docs.vrchat.com/docs/launch-options'})"><span class="msi">open_in_new</span> <span data-i18n="vrc_launch.docs">VRChat Docs</span></button>
-                <div style="display:flex;gap:8px;">
-                    <button class="vrcn-button-round vrcn-btn-join" onclick="vrcLaSave()" data-i18n="common.save">Save</button>
+                <div style="background:var(--bg-card);border-radius:8px;padding:10px 12px;margin-bottom:18px;font-size:calc(11.5px + var(--fs-off, 0px));color:var(--tx3);line-height:1.6;">
+                    <div>--fps=144</div>
+                    <div>--enable-debug-gui</div>
+                    <div>--enable-sdk-log-levels</div>
+                    <div>--enable-udon-debug-logging</div>
                 </div>
+
+                <div class="sf-section-label" style="margin-bottom:6px;" data-i18n="vrc_launch.args">Launch Arguments</div>
+                <textarea id="vrcLaArgs" class="vrcn-edit-field" rows="3" placeholder="e.g. --fps=144 --enable-sdk-log-levels" style="width:100%;height:auto;padding:8px 10px;font-family:inherit;resize:vertical;margin-bottom:14px;"></textarea>
+
+                <div class="sf-section-label" style="margin-bottom:6px;" data-i18n="vrc_launch.path_override">VRChat Path Override</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+                    <input type="text" id="vrcLaPath" class="vrcn-edit-field" placeholder="C:\Program Files (x86)\Steam\steamapps\common\VRChat\launch.exe" spellcheck="false" style="flex:1;">
+                    <button class="vrcn-button" onclick="browseExe('vrchat')"><span class="msi" style="font-size:16px;">folder_open</span> <span data-i18n="common.browse">Browse</span></button>
+                </div>
+                <div class="set-desc" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);" data-i18n="vrc_launch.path_override_desc">Used as a fallback when steam.exe cannot be found.</div>
+            </div>
+
+            <div class="modal-foot">
+                <button class="vrcn-button" onclick="sendToCS({action:'openUrl',url:'https://docs.vrchat.com/docs/launch-options'})"><span class="msi" style="font-size:16px;">open_in_new</span> <span data-i18n="vrc_launch.docs">VRChat Docs</span></button>
+                <div class="modal-foot-spacer"></div>
+                <button class="vrcn-button" onclick="vrcLaSave()" data-i18n="common.save">Save</button>
             </div>
         </div>

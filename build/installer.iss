@@ -1,8 +1,8 @@
-#define MyAppName      "CVRC"
+#define MyAppName      "VRCNext Custom by 4jhm"
 #ifndef MyAppVersion
   #define MyAppVersion "2026.41.8"
 #endif
-#define MyAppPublisher "CVRC"
+#define MyAppPublisher "4jhm"
 #define MyAppURL       "https://vrcnext.app"
 
 [Setup]
@@ -36,4 +36,4 @@ Name: "german"; MessagesFile: "compiler:Languages\German.isl"
 Source: "..\releases\VRCNext-win-Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Run]
-Filename: "{tmp}\VRCNext-win-Setup.exe"; Flags: waituntilterminated; StatusMsg: "Installing CVRC..."
+Filename: "{tmp}\VRCNext-win-Setup.exe"; Flags: waituntilterminated; StatusMsg: "Installing {#MyAppName}..."

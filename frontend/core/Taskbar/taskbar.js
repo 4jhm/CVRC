@@ -37,7 +37,7 @@ function renderTbAccountsMenu(state) {
         var name     = a.displayName || a.username || '(unnamed)';
         var img      = a.avatarImageUrl || '';
         var av       = img
-            ? '<span class="tb-dd-acc-av" style="background-image:url(\'' + cssUrl(img) + '\')"></span>'
+            ? '<span class="tb-dd-acc-av" style="background-image:url(\'' + cssUrl(imgThumb(img, 64)) + '\')"></span>'
             : '<span class="tb-dd-acc-av tb-dd-acc-av-letter">' + esc((name[0] || '?').toUpperCase()) + '</span>';
         var mark = isActive ? '<span class="msi tb-dd-acc-check">check_circle</span>' : '';
         var cls  = 'tb-dd-item tb-dd-acc' + (isActive ? ' tb-dd-acc-active' : '');

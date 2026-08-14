@@ -19,6 +19,7 @@ public partial class AppShell
     private System.Net.HttpListener? _httpListener;
     private System.Threading.Timer? _uptimeTimer2;
     private System.Threading.Timer? _worldStatsTimer;
+    private System.Threading.Timer? _memDiagTimer;
     private int _worldStatsOffsetMin; // random 0-10 min offset per session
     private bool _minimized;
     private System.Threading.Timer? _vrcCacheTimer;
@@ -62,6 +63,7 @@ public partial class AppShell
     private RelayController _relayCtrl = null!;
     private AvatarDatabaseController _avatarDbCtrl = null!;
     private AvatarLoggerController _avatarLoggerCtrl = null!;
+    private EmojiMakerController _emojiMakerCtrl = null!;
     private SnipeController _snipeCtrl = null!;
     private ActionFlowController _afCtrl = null!;
     private StatusScheduleController _ssCtrl = null!;
@@ -161,6 +163,9 @@ public partial class AppShell
         MigrationHelper.MigrateAutoStartShortcuts(_settings);
         if (_settings.MemoryTrimEnabled) _memTrim.SetEnabled(true);
         WindowsFixes.Log = s => SendToJS("log", new { msg = s, color = "sec" });
+        VRCNext.Services.AvtrdbResolver.Log = s => SendToJS("log", new { msg = s, color = "sec" });
+        VRCNext.Services.Helpers.AvtrdbSpamGuard.Log = s => SendToJS("log", new { msg = s, color = "warn" });
+        VRCNext.Services.Helpers.AvtrdbSpamGuard.WebhookUrl = DecryptWebhook;
         WindowsFixes.SetEnabled(_settings.MediaFixEnabled);
         VRCNext.Services.Helpers.TtsService.Log         = s => SendToJS("log", new { msg = s, color = "sec" });
         VRCNext.Services.Helpers.EdgeTtsService.Log     = s => SendToJS("log", new { msg = s, color = "sec" });
@@ -239,6 +244,7 @@ public partial class AppShell
         _relayCtrl = new RelayController(_core, _friends, _instance, _notifications, _vroCtrl);
         _avatarDbCtrl = new AvatarDatabaseController(_core);
         _avatarLoggerCtrl = new AvatarLoggerController(_core, Invoke);
+        _emojiMakerCtrl = new EmojiMakerController(_core);
         _ssCtrl.Start();
         _windowCtrl = new WindowController(_core);
 #if WINDOWS
@@ -381,6 +387,25 @@ public partial class AppShell
         }, null, 15_000, 120_000);
 
         StartAmplitudePolling();
+
+        _memDiagTimer = new System.Threading.Timer(_ =>
+        {
+            try
+            {
+                System.Runtime.GCSettings.LargeObjectHeapCompactionMode =
+                    System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
+                var w = _activityLogWriter;
+                if (w == null) return;
+                var jsDepth   = _jsQueue.Reader.CanCount ? _jsQueue.Reader.Count : -1;
+                var profiles  = _core.PlayerProfileCache.Count;
+                var worlds    = _core.World.CachedWorldCount;
+                var friendsKb = Interlocked.Read(ref _lastFriendsPayloadBytes) / 1024;
+                var heapMb    = GC.GetTotalMemory(false) / (1024 * 1024);
+                var wsMb      = Environment.WorkingSet / (1024 * 1024);
+                w.WriteLine($"{DateTime.Now:HH:mm:ss}  [MEMDIAG] jsQueue={jsDepth} profiles={profiles} worldCache={worlds} lastFriendsPayload={friendsKb}KB gcHeap={heapMb}MB workingSet={wsMb}MB");
+            }
+            catch { }
+        }, null, TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
 
         // Hourly world stats collection for World Insights
         // Fires at each UTC hour + random 0-10 min offset (to spread API load across users)
@@ -675,6 +700,7 @@ public partial class AppShell
         _fileWatcher.Dispose();
         _uptimeTimer2?.Dispose();
         _worldStatsTimer?.Dispose();
+        _memDiagTimer?.Dispose();
         _sfCtrl?.Dispose();
         _fsCtrl?.Dispose();
         _vfCtrl?.Dispose();
@@ -832,6 +858,11 @@ public partial class AppShell
     {
         var parsed = DeepLinkService.Parse(url);
         if (parsed == null) return;
+        if (parsed.Value.prefix == "instjoin")
+        {
+            SendToJS("vrcLaunchNeeded", new { location = parsed.Value.id, steamVr = RelayController.IsSteamVrRunning() });
+            return;
+        }
         SendToJS("openDeepLink", new { prefix = parsed.Value.prefix, id = parsed.Value.id });
     }
 
@@ -864,11 +895,28 @@ public partial class AppShell
 
     // SendToJS
 
+    private const string FriendsCoalesceMarker = "\0vrcFriends";
+    private readonly object _friendsCoalesceLock = new();
+    private string? _pendingFriendsJson;
+    private int _friendsMarkerQueued;
+    private long _lastFriendsPayloadBytes;
+
     private async Task RunJsDispatcherAsync()
     {
         await foreach (var msg in _jsQueue.Reader.ReadAllAsync())
         {
-            try { _window.Invoke(() => _window.SendWebMessage(msg)); } catch (Exception ex) { CrashHandler.WriteEntry("RunJsDispatcherAsync", ex); }
+            var toSend = msg;
+            if (ReferenceEquals(msg, FriendsCoalesceMarker) || msg == FriendsCoalesceMarker)
+            {
+                Interlocked.Exchange(ref _friendsMarkerQueued, 0);
+                lock (_friendsCoalesceLock)
+                {
+                    if (_pendingFriendsJson == null) continue;
+                    toSend = _pendingFriendsJson;
+                    _pendingFriendsJson = null;
+                }
+            }
+            try { _window.Invoke(() => _window.SendWebMessage(toSend)); } catch (Exception ex) { CrashHandler.WriteEntry("RunJsDispatcherAsync", ex); }
         }
     }
 
@@ -895,7 +943,15 @@ public partial class AppShell
             catch { }
         }
         var msg = JsonConvert.SerializeObject(new { type, payload });
-        _jsQueue.Writer.TryWrite(msg);
+        if (type == "vrcFriends")
+        {
+            Interlocked.Exchange(ref _lastFriendsPayloadBytes, msg.Length * 2L);
+            lock (_friendsCoalesceLock) _pendingFriendsJson = msg;
+            if (Interlocked.CompareExchange(ref _friendsMarkerQueued, 1, 0) == 0)
+                _jsQueue.Writer.TryWrite(FriendsCoalesceMarker);
+        }
+        else
+            _jsQueue.Writer.TryWrite(msg);
 
 #if WINDOWS
         // Forward friend timeline events to the VR wrist overlay
@@ -1123,10 +1179,20 @@ public partial class AppShell
             else if (path.StartsWith("/imgcache/"))
             {
                 var rel  = Uri.UnescapeDataString(path["/imgcache/".Length..]).Replace('/', Path.DirectorySeparatorChar);
-                var file = Path.Combine(
+                var imgBase = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "VRCNext", "Caches", "ImageCache", rel);
-                await ServeFileAsync(ctx, file);
+                    "VRCNext", "Caches", "ImageCache");
+                var file = Path.GetFullPath(Path.Combine(imgBase, rel));
+                if (!file.StartsWith(imgBase + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+                {
+                    ctx.Response.StatusCode = 403;
+                }
+                else
+                {
+                    var imgThumbSize = ParseImgThumbSize(ctx.Request.Url?.Query);
+                    if (imgThumbSize > 0) await ServeImgCacheThumbAsync(ctx, file, imgThumbSize);
+                    else await ServeFileAsync(ctx, file);
+                }
             }
             else if (path.StartsWith("/vrcphotos/"))
             {
@@ -1330,6 +1396,118 @@ public partial class AppShell
 
     private static readonly SemaphoreSlim _thumbSem = new(2, 2);
     private static int _thumbGenCount = 0;
+
+    private static int ParseImgThumbSize(string? query)
+    {
+        if (string.IsNullOrEmpty(query)) return 0;
+        var m = System.Text.RegularExpressions.Regex.Match(query, @"[?&]thumb=(\d+)");
+        if (!m.Success) return 0;
+        return int.TryParse(m.Groups[1].Value, out var s) && (s == 64 || s == 96 || s == 128 || s == 256) ? s : 64;
+    }
+
+    private static async Task ServeImgCacheThumbAsync(System.Net.HttpListenerContext ctx, string file, int maxSize)
+    {
+        if (!File.Exists(file)) { ctx.Response.StatusCode = 404; return; }
+        var ext = Path.GetExtension(file).ToLowerInvariant();
+        if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp" or ".gif"))
+        {
+            await ServeFileAsync(ctx, file);
+            return;
+        }
+        var keepAlpha = ext is ".png" or ".webp" or ".gif";
+        var thumbPath = Path.Combine(
+            Path.GetDirectoryName(file)!, "Thumbs",
+            Path.GetFileNameWithoutExtension(file) + "_" + maxSize + (keepAlpha ? ".png" : ".jpg"));
+
+        if (!File.Exists(thumbPath) || File.GetLastWriteTimeUtc(thumbPath) < File.GetLastWriteTimeUtc(file))
+        {
+            await _thumbSem.WaitAsync();
+            try
+            {
+                if (!File.Exists(thumbPath) || File.GetLastWriteTimeUtc(thumbPath) < File.GetLastWriteTimeUtc(file))
+                {
+                    var ok = await Task.Run(() => TryGenerateImgThumb(file, thumbPath, maxSize, keepAlpha));
+                    if (!ok) { await ServeFileAsync(ctx, file); return; }
+                }
+            }
+            finally { _thumbSem.Release(); }
+        }
+        await ServeFileAsync(ctx, thumbPath);
+    }
+
+    private static bool TryGenerateImgThumbSkia(string srcFile, string tmpPath, int maxSize, bool keepAlpha)
+    {
+        var rawBytes = File.ReadAllBytes(srcFile);
+        using var codec = SkiaSharp.SKCodec.Create(new MemoryStream(rawBytes));
+        if (codec == null) return false;
+        var info = codec.Info;
+        var scale = Math.Min(1.0, Math.Min(maxSize / (double)info.Width, maxSize / (double)info.Height));
+        var w = Math.Max(1, (int)Math.Round(info.Width  * scale));
+        var h = Math.Max(1, (int)Math.Round(info.Height * scale));
+        using var src = SkiaSharp.SKBitmap.Decode(codec);
+        if (src == null) return false;
+        using var dst = new SkiaSharp.SKBitmap(w, h, SkiaSharp.SKColorType.Rgba8888, SkiaSharp.SKAlphaType.Premul);
+        src.ScalePixels(dst, SkiaSharp.SKFilterQuality.High);
+        using var img  = SkiaSharp.SKImage.FromBitmap(dst);
+        using var data = img.Encode(keepAlpha ? SkiaSharp.SKEncodedImageFormat.Png : SkiaSharp.SKEncodedImageFormat.Jpeg, 88);
+        if (data == null) return false;
+        using (var fsOut = File.Create(tmpPath))
+            data.SaveTo(fsOut);
+        return true;
+    }
+
+    private static bool TryGenerateImgThumb(string srcFile, string thumbPath, int maxSize, bool keepAlpha)
+    {
+        var tmpPath = thumbPath + ".tmp";
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(thumbPath)!);
+            var srcExt = Path.GetExtension(srcFile).ToLowerInvariant();
+            if (srcExt is ".webp" or ".gif")
+            {
+                if (!TryGenerateImgThumbSkia(srcFile, tmpPath, maxSize, keepAlpha)) return false;
+                File.Move(tmpPath, thumbPath, overwrite: true);
+                return true;
+            }
+#if WINDOWS
+            var rawBytes = File.ReadAllBytes(srcFile);
+            using var ms  = new MemoryStream(rawBytes);
+            using var src = System.Drawing.Image.FromStream(ms, false, false);
+            var scale = Math.Min(1.0, Math.Min(maxSize / (double)src.Width, maxSize / (double)src.Height));
+            var w = Math.Max(1, (int)Math.Round(src.Width  * scale));
+            var h = Math.Max(1, (int)Math.Round(src.Height * scale));
+            using var bmp = new System.Drawing.Bitmap(w, h, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            using (var g = System.Drawing.Graphics.FromImage(bmp))
+            {
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.CompositingMode   = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+                g.DrawImage(src, 0, 0, w, h);
+            }
+            if (keepAlpha)
+            {
+                bmp.Save(tmpPath, System.Drawing.Imaging.ImageFormat.Png);
+            }
+            else
+            {
+                var jpegCodec = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders()
+                    .First(c => c.FormatID == System.Drawing.Imaging.ImageFormat.Jpeg.Guid);
+                var encParams = new System.Drawing.Imaging.EncoderParameters(1);
+                encParams.Param[0] = new System.Drawing.Imaging.EncoderParameter(
+                    System.Drawing.Imaging.Encoder.Quality, 88L);
+                bmp.Save(tmpPath, jpegCodec, encParams);
+            }
+#else
+            if (!TryGenerateImgThumbSkia(srcFile, tmpPath, maxSize, keepAlpha)) return false;
+#endif
+            File.Move(tmpPath, thumbPath, overwrite: true);
+            return true;
+        }
+        catch
+        {
+            try { if (File.Exists(tmpPath)) File.Delete(tmpPath); } catch { }
+            return false;
+        }
+    }
 
     private static string? _cachedFfmpegPath;
     private static string? FindFfmpegPath()

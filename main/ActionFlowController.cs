@@ -101,7 +101,32 @@ public class ActionFlowController : IDisposable
 #if WINDOWS
                 var tray = TrayServiceProvider?.Invoke();
                 tray?.ShowNotification(title, subtitle, "", accent);
+
+                var notifTime = DateTimeHelper.FormatTime(DateTime.Now);
+                _core.VrOverlay?.AddNotification("notif_actionflow", title, subtitle, notifTime);
+                _core.VrOverlay?.EnqueueToast("notif_actionflow", title, subtitle, notifTime, "", false);
 #endif
+                break;
+            }
+
+            case "afCloseVrchat":
+            {
+                _ = Task.Run(() =>
+                {
+                    var closed = false;
+                    try
+                    {
+                        foreach (var p in System.Diagnostics.Process.GetProcessesByName("VRChat"))
+                        {
+                            try { if (!p.HasExited) { p.CloseMainWindow(); if (!p.WaitForExit(5000)) p.Kill(); closed = true; } }
+                            catch (Exception ex) { CrashHandler.WriteEntry("afCloseVrchat.Process", ex); }
+                            finally { p.Dispose(); }
+                        }
+                    }
+                    catch (Exception ex) { CrashHandler.WriteEntry("afCloseVrchat", ex); }
+                    if (!closed)
+                        _core.SendToJS("log", new { msg = "[ActionFlow] close VRChat: no running instance found", color = "warn" });
+                });
                 break;
             }
 
@@ -125,6 +150,7 @@ public class ActionFlowController : IDisposable
                 var authorUserId  = msg["authorUserId"]?.ToString() ?? "";
                 var authorIconUrl = msg["authorIconUrl"]?.ToString() ?? "";
                 var capacity      = msg["capacity"]?.Value<int>() ?? 0;
+                var location      = msg["location"]?.ToString() ?? "";
 
                 _ = Task.Run(async () =>
                 {
@@ -136,21 +162,66 @@ public class ActionFlowController : IDisposable
                             return string.IsNullOrEmpty(e) ? ".png" : e;
                         }
 
-                        var lines = new List<string>();
+                        var (locWorldId, instanceId, _) = VRChatApiService.ParseLocation(location);
+                        if (string.IsNullOrEmpty(worldId)) worldId = locWorldId;
+                        var (instName, region, groupId) = ParseInstanceParts(instanceId);
+
+                        var launchUrl = !string.IsNullOrEmpty(locWorldId) && !string.IsNullOrEmpty(instanceId)
+                            ? $"https://vrchat.com/home/launch?worldId={locWorldId}&instanceId={Uri.EscapeDataString(instanceId)}"
+                            : "";
+
+                        var groupName = "";
+                        if (!string.IsNullOrEmpty(groupId))
+                        {
+                            try
+                            {
+                                var grp = await _core.Groups.GetGroupAsync(groupId);
+                                groupName = grp?["name"]?.ToString() ?? "";
+                            }
+                            catch (Exception ex) { CrashHandler.WriteEntry("afInstanceWebhook.GetGroup", ex); }
+                        }
+
+                        var lines       = new List<string>();
+                        var playerLines = new List<string>();
                         if (!string.IsNullOrEmpty(typeLabel)) lines.Add($"**Instance Type:** {typeLabel}");
+                        if (!string.IsNullOrEmpty(instName))  lines.Add($"**Instance:** {instName}");
+                        if (!string.IsNullOrEmpty(region))    lines.Add($"**Region:** {region.ToUpperInvariant()}");
+                        if (!string.IsNullOrEmpty(groupName)) lines.Add($"**Group:** {groupName}");
 
                         if (scope == "own")
                         {
+                            await WaitForInstancePopulationAsync(worldId);
                             var players = _core.LogWatcher.GetCurrentPlayers().OrderBy(p => p.JoinedAt).ToList();
                             int count = players.Count;
                             lines.Add($"**Players:** {(capacity > 0 ? $"{count}/{capacity}" : count.ToString())}");
                             if (advanced && count > 0)
                             {
-                                lines.Add("");
-                                lines.Add($"**Players in Instance ({count})**");
-                                lines.AddRange(players.Select(p => p.DisplayName));
+                                playerLines.Add("");
+                                playerLines.Add($"**Players in Instance ({count})**");
+                                playerLines.AddRange(players.Select(p => p.DisplayName));
                             }
                         }
+                        else if (!string.IsNullOrEmpty(location))
+                        {
+                            try
+                            {
+                                var inst = await _core.Instances.GetInstanceAsync(location);
+                                if (inst != null)
+                                {
+                                    var userCount = inst["userCount"]?.Value<int>() ?? 0;
+                                    var cap       = inst["capacity"]?.Value<int>() ?? capacity;
+                                    lines.Add($"**Players:** {(cap > 0 ? $"{userCount}/{cap}" : userCount.ToString())}");
+                                }
+                            }
+                            catch (Exception ex) { CrashHandler.WriteEntry("afInstanceWebhook.GetInstance", ex); }
+                        }
+
+                        if (!string.IsNullOrEmpty(launchUrl))
+                        {
+                            lines.Add("");
+                            lines.Add($"[Join Instance]({launchUrl})");
+                        }
+                        lines.AddRange(playerLines);
 
                         var description = string.Join("\n", lines);
                         if (description.Length > 4000) description = description[..4000];
@@ -161,6 +232,7 @@ public class ActionFlowController : IDisposable
                             ["timestamp"] = DateTime.UtcNow.ToString("o"),
                         };
                         if (!string.IsNullOrEmpty(worldName))   embed["title"]       = $"Joined \"{worldName}\"";
+                        if (!string.IsNullOrEmpty(launchUrl))   embed["url"]         = launchUrl;
                         if (!string.IsNullOrEmpty(description))  embed["description"] = description;
 
                         var attachments = new List<(string, string)>();
@@ -243,5 +315,54 @@ public class ActionFlowController : IDisposable
     public void Dispose()
     {
         GC.SuppressFinalize(this);
+    }
+
+    // The player list is built from log lines that arrive well after the world
+    // switch, so a flow firing shortly afterwards would report an empty instance.
+    // Waits until the count has stopped growing, bounded so a genuinely empty
+    // instance still reports.
+    private static (string name, string region, string groupId) ParseInstanceParts(string instanceId)
+    {
+        if (string.IsNullOrEmpty(instanceId)) return ("", "", "");
+        var tilde = instanceId.IndexOf('~');
+        var name   = tilde >= 0 ? instanceId[..tilde] : instanceId;
+        var region = System.Text.RegularExpressions.Regex.Match(instanceId, @"~region\(([^)]+)\)");
+        var group  = System.Text.RegularExpressions.Regex.Match(instanceId, @"~group\(([^)]+)\)");
+        return (name,
+                region.Success ? region.Groups[1].Value : "",
+                group.Success  ? group.Groups[1].Value  : "");
+    }
+
+    private async Task WaitForInstancePopulationAsync(string worldId)
+    {
+        const int PollMs      = 500;
+        const int StableTicks = 3;
+        const int MaxWaitMs   = 25_000;
+
+        var waited = 0;
+        var last   = -1;
+        var stable = 0;
+
+        while (waited < MaxWaitMs)
+        {
+            if (!string.IsNullOrEmpty(worldId)
+                && !string.IsNullOrEmpty(_core.LogWatcher.CurrentWorldId)
+                && _core.LogWatcher.CurrentWorldId != worldId)
+                return;
+
+            var count = _core.LogWatcher.PlayerCount;
+            if (count > 0 && count == last)
+            {
+                if (++stable >= StableTicks) return;
+            }
+            else
+            {
+                stable = 0;
+            }
+            last = count;
+
+            await Task.Delay(PollMs);
+            waited += PollMs;
+        }
     }
 }

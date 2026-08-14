@@ -249,6 +249,7 @@ public sealed class VoiceFightService : IDisposable
 
         UpdateMeter(e.Buffer, e.BytesRecorded);
 
+        if (_pcmQueue.Count > 500) return;
         var copy = new byte[e.BytesRecorded];
         Buffer.BlockCopy(e.Buffer, 0, copy, 0, e.BytesRecorded);
         _pcmQueue.Enqueue(copy);
@@ -328,6 +329,12 @@ public sealed class VoiceFightService : IDisposable
         finally
         {
             rec?.Dispose();
+            if (_workerRunning)
+            {
+                _workerRunning = false;
+                try { _waveIn?.StopRecording(); } catch { }
+                while (_pcmQueue.TryDequeue(out _)) { }
+            }
         }
     }
 

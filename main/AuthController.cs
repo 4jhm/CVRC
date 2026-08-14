@@ -237,7 +237,6 @@ public class AuthController
                     prefs = new
                     {
                         enableProfileIconFrames        = _core.Settings.EnableProfileIconFrames,
-                        friendsSidebarRankColor        = _core.Settings.FriendsSidebarRankColor,
                         friendsSidebarLocationOnly     = _core.Settings.FriendsSidebarLocationOnly,
                         friendsSidebarPreviewCollapsed = _core.Settings.FriendsSidebarPreviewCollapsed,
                         directModalNav                 = _core.Settings.DirectModalNav,
@@ -1901,7 +1900,6 @@ public class AuthController
         Flag("profileThemeContrast",           v => _core.Settings.ProfileThemeContrast = v);
         Flag("transparentProfileCards",        v => _core.Settings.TransparentProfileCards = v);
         Flag("showDecorationsOnDashboard",     v => _core.Settings.ShowDecorationsOnDashboard = v);
-        Flag("friendsSidebarRankColor",        v => _core.Settings.FriendsSidebarRankColor = v);
         Flag("friendsSidebarLocationOnly",     v => _core.Settings.FriendsSidebarLocationOnly = v);
         Flag("friendsSidebarPreviewCollapsed", v => _core.Settings.FriendsSidebarPreviewCollapsed = v);
         Flag("directModalNav",                 v => _core.Settings.DirectModalNav = v);
@@ -1933,13 +1931,12 @@ public class AuthController
             _core.Settings.FriendOnlineToastEnabled = data["friendOnlineToastEnabled"]?.Value<bool>() ?? false;
             _core.Settings.FriendOnlineToastFavOnly = data["friendOnlineToastFavOnly"]?.Value<bool>() ?? false;
             _core.Settings.FriendsSidebarLocationOnly = data["friendsSidebarLocationOnly"]?.Value<bool>() ?? true;
-            _core.Settings.FriendsSidebarRankColor = data["friendsSidebarRankColor"]?.Value<bool>() ?? false;
             _core.Settings.FriendsSidebarPreviewCollapsed = data["friendsSidebarPreviewCollapsed"]?.Value<bool>() ?? true;
             _core.Settings.FriendsSidebarPreviewOpen = data["friendsSidebarPreviewOpen"]?.Value<bool>() ?? false;
             _core.Settings.PeopleAlwaysStats = data["peopleAlwaysStats"]?.Value<bool>() ?? false;
             _core.Settings.ModernFolderLayout = data["modernFolderLayout"]?.Value<bool>() ?? true;
             _core.Settings.NavSidebarHoverText = data["navSidebarHoverText"]?.Value<bool>() ?? true;
-            _core.Settings.DirectModalNav = data["directModalNav"]?.Value<bool>() ?? false;
+            _core.Settings.DirectModalNav = data["directModalNav"]?.Value<bool>() ?? true;
             _core.Settings.EnableProfileIconFrames = data["enableProfileIconFrames"]?.Value<bool>() ?? false;
             _core.Settings.SquareIconFrames = data["squareIconFrames"]?.Value<bool>() ?? false;
             _core.Settings.EnableNameplateDecoration = data["enableNameplateDecoration"]?.Value<bool>() ?? false;
@@ -1970,7 +1967,6 @@ public class AuthController
             _core.Settings.PlayBtnTheme = data["playBtnTheme"]?.ToString() ?? "";
             _core.Settings.CursorTheme = data["cursorTheme"]?.ToString() ?? "";
             _core.Settings.AppFont = data["appFont"]?.ToString() ?? "google-sans";
-            _core.Settings.DesignStyle = data["designStyle"]?.ToString() ?? "line";
             _core.Settings.CustomFont = data["customFont"]?.ToString() ?? "";
             _core.Settings.VroToastTtsOnline = data["vroToastTtsOnline"]?.Value<bool>() ?? false;
             _core.Settings.VroToastTtsOffline = data["vroToastTtsOffline"]?.Value<bool>() ?? false;
@@ -1998,8 +1994,10 @@ public class AuthController
             if (dashBg != null) _core.Settings.DashBgPath = dashBg;
             _core.Settings.DashOpacity = data["dashOpacity"]?.Value<int>() ?? 40;
             _core.Settings.RandomDashBg = data["randomDashBg"]?.Value<bool>() ?? false;
-            _core.Settings.ClockEnabled  = data["clockEnabled"]?.Value<bool>()  ?? true;
-            _core.Settings.ClockAmPm     = data["clockAmPm"]?.Value<bool>()     ?? false;
+            _core.Settings.ClockEnabled  = data["clockEnabled"]?.Value<bool>()  ?? false;
+            _core.Settings.DateEnabled   = data["dateEnabled"]?.Value<bool>()   ?? false;
+            _core.Settings.ShowVrcPlus    = data["showVrcPlus"]?.Value<bool>()    ?? true;
+            _core.Settings.ShowVrcCredits = data["showVrcCredits"]?.Value<bool>() ?? true;
 
             // Webhooks: explicit parsing to handle any casing
             if (data["webhooks"] is JArray whArr && whArr.Count > 0)
@@ -2184,6 +2182,8 @@ public class AuthController
             // Image cache
             _core.Settings.ImgCacheLimitGb         = Math.Clamp(data["imgCacheLimitGb"]?.Value<int>() ?? 5, 5, 30);
             _core.Settings.ImgCacheOptimizeEnabled = data["imgCacheOptimizeEnabled"]?.Value<bool>() ?? true;
+            _core.Settings.ImgMemoryOptimizeEnabled = data["imgMemoryOptimizeEnabled"]?.Value<bool>() ?? true;
+            _core.Settings.VrcPlusOptimizeEnabled   = data["vrcPlusOptimizeEnabled"]?.Value<bool>() ?? true;
             ImageCacheHelper.LimitGb         = _core.Settings.ImgCacheLimitGb;
             ImageCacheHelper.OptimizeEnabled = _core.Settings.ImgCacheOptimizeEnabled;
 

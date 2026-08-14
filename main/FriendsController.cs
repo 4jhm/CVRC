@@ -23,6 +23,12 @@ public class FriendsController
     private readonly Dictionary<string, (string fvrtId, string groupName)> _favoriteFriends = new();
     private int _favFriendsInFlight = 0;
     private bool _friendStateSeeded;
+
+    private const int PendingOfflineDelayMs = 60_000;
+    private readonly object _pendingOfflineLock = new();
+    private readonly Dictionary<string, (DateTime StartUtc, bool WentOffline, string Platform)> _pendingOffline = new();
+    private readonly HashSet<string> _travelingFriends = new();
+    private System.Threading.Timer? _pendingOfflineTimer;
     private readonly SemaphoreSlim _friendsRefreshLock = new(1, 1);
     private readonly HashSet<string> _profileRefreshInFlight = new();
 
@@ -197,7 +203,79 @@ public class FriendsController
 
     // Constructor
 
-    public FriendsController(CoreLibrary core) => _core = core;
+    public FriendsController(CoreLibrary core)
+    {
+        _core = core;
+        _pendingOfflineTimer = new System.Threading.Timer(_ => FlushPendingOffline(), null, 1000, 1000);
+    }
+
+    private bool CancelPendingOffline(string userId)
+    {
+        lock (_pendingOfflineLock) return _pendingOffline.Remove(userId);
+    }
+
+    public bool IsPendingOffline(string userId)
+    {
+        lock (_pendingOfflineLock) return _pendingOffline.ContainsKey(userId);
+    }
+
+    public bool IsTravelingFriend(string userId)
+    {
+        lock (_pendingOfflineLock) return _travelingFriends.Contains(userId);
+    }
+
+    private bool ClearTraveling(string userId)
+    {
+        lock (_pendingOfflineLock) return _travelingFriends.Remove(userId);
+    }
+
+    private void FlushPendingOffline()
+    {
+        List<(string Id, DateTime StartUtc, bool WentOffline, string Platform)> expired;
+        lock (_pendingOfflineLock)
+        {
+            var now = DateTime.UtcNow;
+            expired = _pendingOffline
+                .Where(kv => (now - kv.Value.StartUtc).TotalMilliseconds >= PendingOfflineDelayMs)
+                .Select(kv => (kv.Key, kv.Value.StartUtc, kv.Value.WentOffline, kv.Value.Platform))
+                .ToList();
+            foreach (var ex in expired) _pendingOffline.Remove(ex.Id);
+        }
+
+        foreach (var (id, startUtc, wentOffline, platform) in expired)
+        {
+            try
+            {
+                ClearTraveling(id);
+                if (wentOffline)
+                {
+                    MergeFriendStore(id, null, wentOffline: true);
+                    _friendLastLoc[id] = "offline";
+                }
+                else
+                {
+                    MergeFriendStore(id, null, location: "", platform: string.IsNullOrEmpty(platform) ? null : platform);
+                    _friendLastLoc[id] = "";
+                }
+                PushFriendUpdate(id);
+
+                if (_friendCurrentGpsEventId.TryGetValue(id, out var gpsId))
+                {
+                    _core.Timeline.SetFriendEventLeftAt(gpsId, startUtc.ToString("o"));
+                    _friendCurrentGpsEventId.Remove(id);
+                }
+
+                var (fname, fimg) = _friendNameImg.GetValueOrDefault(id, ("", ""));
+                var fev = new TimelineService.FriendTimelineEvent
+                {
+                    Type = "friend_offline", FriendId = id, FriendName = fname, FriendImage = fimg,
+                };
+                _core.Timeline.AddFriendEvent(fev);
+                _core.SendToJS("friendTimelineEvent", BuildFriendTimelinePayload(fev));
+            }
+            catch (Exception ex) { CrashHandler.WriteEntry("FlushPendingOffline", ex); }
+        }
+    }
 
     // WebSocket Wiring
 
@@ -1272,6 +1350,8 @@ public class FriendsController
             var online  = await _core.Friends.GetOnlineFriendsAsync();
             var offline = await _core.Friends.GetOfflineFriendsAsync();
 
+            lock (_pendingOfflineLock) _travelingFriends.Clear();
+
             lock (_friendStore)
             {
                 var onlineIds = new HashSet<string>(
@@ -1294,6 +1374,8 @@ public class FriendsController
 
             await WarmDecorationsAsync(online.Concat(offline));
 
+            var refreshFactsMap = PrefetchFacts(online.Concat(offline).Select(f => f["id"]?.ToString() ?? ""));
+
             var seenIds = new HashSet<string>();
             var onlineList = online.Select(f =>
             {
@@ -1303,7 +1385,7 @@ public class FriendsController
                 var platform = f["platform"]?.ToString() ?? f["last_platform"]?.ToString() ?? "";
                 bool isWebPlatform = platform.Equals("web", StringComparison.OrdinalIgnoreCase);
                 bool isInGame = !string.IsNullOrEmpty(location) && location != "offline" && location != "" && !isWebPlatform;
-                var facts = CachedFacts(id);
+                var facts = FactsFrom(refreshFactsMap, id);
                 return new
                 {
                     id, displayName = f["displayName"]?.ToString() ?? "",
@@ -1334,7 +1416,7 @@ public class FriendsController
                 .Where(f => !seenIds.Contains(f["id"]?.ToString() ?? ""))
                 .Select(f =>
                 {
-                var offFacts = CachedFacts(f["id"]?.ToString() ?? "");
+                var offFacts = FactsFrom(refreshFactsMap, f["id"]?.ToString() ?? "");
                 return new
                 {
                     id = f["id"]?.ToString() ?? "",
@@ -1626,6 +1708,8 @@ public class FriendsController
             profileEffectUrl = IconFrameHelper.UrlFor(f["profileEffect"]?.ToString(), _core.Inventory),
             status, statusDescription = f["statusDescription"]?.ToString() ?? "",
             location, platform, presence,
+            pendingOffline = IsPendingOffline(userId),
+            traveling = IsTravelingFriend(userId),
             worldName = locWorld.name,
             worldThumb = locWorld.thumb,
             instanceType = locInstType,
@@ -1656,6 +1740,8 @@ public class FriendsController
 
         _core.SendToJS("log", new { msg = $"[WS] DoPushFriendsFromStore: {snapshot.Count} friends @ {DateTime.UtcNow:HH:mm:ss.fff}", color = "info" });
 
+        var factsMap = PrefetchFacts(snapshot.Select(f => f["id"]?.ToString() ?? ""));
+
         var list = snapshot.Select(f =>
         {
             var location = f["location"]?.ToString() ?? "";
@@ -1664,7 +1750,7 @@ public class FriendsController
             bool isInGame = !string.IsNullOrEmpty(location) && location != "offline" && location != "" && !isWebPlatform;
             var status = f["status"]?.ToString() ?? "offline";
             var presence = (location == "offline" && status == "offline") ? "offline" : isInGame ? "game" : "web";
-            var facts = CachedFacts(f["id"]?.ToString() ?? "");
+            var facts = FactsFrom(factsMap, f["id"]?.ToString() ?? "");
             return new
             {
                 id = f["id"]?.ToString() ?? "",
@@ -1678,6 +1764,8 @@ public class FriendsController
                 profileEffectUrl = IconFrameHelper.UrlFor(f["profileEffect"]?.ToString(), _core.Inventory),
                 status, statusDescription = f["statusDescription"]?.ToString() ?? "",
                 location, platform, presence,
+                pendingOffline = IsPendingOffline(f["id"]?.ToString() ?? ""),
+                traveling = IsTravelingFriend(f["id"]?.ToString() ?? ""),
                 tags = f["tags"]?.ToObject<List<string>>() ?? new List<string>(),
                 ageVerified = f["ageVerified"]?.Value<bool>() ?? false,
                 ageVerificationStatus = f["ageVerificationStatus"]?.ToString() ?? "",
@@ -2489,6 +2577,27 @@ public class FriendsController
         catch { return ("", "", 0, 0, lastSeen); }
     }
 
+    private Dictionary<string, (string dateJoined, string pronouns, int mutualFriends, int mutualGroups)>? PrefetchFacts(IEnumerable<string> userIds)
+    {
+        try
+        {
+            var ids = userIds.Where(id => !string.IsNullOrEmpty(id)).Distinct().ToList();
+            return _core.TimeEngine.GetUserFactsBatch(ids);
+        }
+        catch { return null; }
+    }
+
+    private (string dateJoined, string pronouns, int mutualFriends, int mutualGroups, string lastSeen) FactsFrom(
+        Dictionary<string, (string dateJoined, string pronouns, int mutualFriends, int mutualGroups)>? map, string userId)
+    {
+        if (string.IsNullOrEmpty(userId)) return ("", "", 0, 0, "");
+        if (map == null) return CachedFacts(userId);
+        var lastSeen = LastSeenTogether(userId);
+        return map.TryGetValue(userId, out var f)
+            ? (f.dateJoined, f.pronouns, f.mutualFriends, f.mutualGroups, lastSeen)
+            : ("", "", 0, 0, lastSeen);
+    }
+
     private readonly object _lastSeenLock = new();
     private Dictionary<string, string>? _lastSeenMap;
     private DateTime _lastSeenMapAt = DateTime.MinValue;
@@ -2618,9 +2727,15 @@ public class FriendsController
         // "traveling" means switching worlds — keep them as "in-game", don't log anything
         if (loc == "traveling")
         {
+            CancelPendingOffline(e.UserId);
+            lock (_pendingOfflineLock) _travelingFriends.Add(e.UserId);
             _friendLastLoc[e.UserId] = "traveling";
+            PushFriendUpdate(e.UserId);
             return;
         }
+
+        CancelPendingOffline(e.UserId);
+        ClearTraveling(e.UserId);
 
         MergeFriendStore(e.UserId, e.User, location: loc,
             platform: string.IsNullOrEmpty(e.Platform) ? null : e.Platform);
@@ -2705,11 +2820,6 @@ public class FriendsController
         var prevLoc = _friendLastLoc.GetValueOrDefault(e.UserId, "");
         bool wasInGame = !string.IsNullOrEmpty(prevLoc) && prevLoc != "offline" && prevLoc != "";
 
-        MergeFriendStore(e.UserId, e.User,
-            location: string.IsNullOrEmpty(e.Location) ? "" : e.Location,
-            platform: string.IsNullOrEmpty(e.Platform) ? null : e.Platform);
-        PushFriendUpdate(e.UserId);
-
         var (fname, fimg) = _friendNameImg.GetValueOrDefault(e.UserId, ("", ""));
         if (e.User != null)
         {
@@ -2719,26 +2829,22 @@ public class FriendsController
             _friendNameImg[e.UserId] = (fname, fimg);
         }
 
-        // Left the game → log offline (but NOT if traveling — that's a world change, not leaving)
-        if (wasInGame && prevLoc != "traveling")
+        if (wasInGame)
         {
-            _friendLastLoc[e.UserId] = "";
-            if (_friendCurrentGpsEventId.TryGetValue(e.UserId, out var gpsId))
+            lock (_pendingOfflineLock)
             {
-                _core.Timeline.SetFriendEventLeftAt(gpsId, DateTime.UtcNow.ToString("o"));
-                _friendCurrentGpsEventId.Remove(e.UserId);
+                if (_pendingOffline.ContainsKey(e.UserId)) return;
+                _pendingOffline[e.UserId] = (DateTime.UtcNow, false, e.Platform ?? "");
             }
-            var fev = new TimelineService.FriendTimelineEvent
-            {
-                Type = "friend_offline", FriendId = e.UserId, FriendName = fname, FriendImage = fimg,
-            };
-            _core.Timeline.AddFriendEvent(fev);
-            _core.SendToJS("friendTimelineEvent", BuildFriendTimelinePayload(fev));
+            PushFriendUpdate(e.UserId);
+            return;
         }
-        else
-        {
-            _friendLastLoc[e.UserId] = "";
-        }
+
+        MergeFriendStore(e.UserId, e.User,
+            location: string.IsNullOrEmpty(e.Location) ? "" : e.Location,
+            platform: string.IsNullOrEmpty(e.Platform) ? null : e.Platform);
+        _friendLastLoc[e.UserId] = "";
+        PushFriendUpdate(e.UserId);
 
         // friend-active only updates friendslist (dot→circle), no timeline event for web.
     }
@@ -2747,12 +2853,9 @@ public class FriendsController
     {
         if (string.IsNullOrEmpty(e.UserId) || !_friendStateSeeded) return;
 
-        MergeFriendStore(e.UserId, null, wentOffline: true);
-        PushFriendUpdate(e.UserId);
-
-        var (fname, fimg) = _friendNameImg.GetValueOrDefault(e.UserId, ("", ""));
         if (e.User != null)
         {
+            var (fname, fimg) = _friendNameImg.GetValueOrDefault(e.UserId, ("", ""));
             fname = e.User["displayName"]?.ToString() ?? fname;
             var img = VRChatApiService.GetUserImage(e.User);
             if (img.Length > 0) fimg = img;
@@ -2761,29 +2864,30 @@ public class FriendsController
 
         var prevLoc = _friendLastLoc.GetValueOrDefault(e.UserId, "");
         bool wasInGame = !string.IsNullOrEmpty(prevLoc) && prevLoc != "offline" && prevLoc != "";
-        _friendLastLoc[e.UserId] = "offline";
 
-        // Only log game offline, not web offline
-        // Don't log offline if they were "traveling" — that's a world change, not leaving
-        if (!wasInGame || prevLoc == "traveling") return;
-
-        if (_friendCurrentGpsEventId.TryGetValue(e.UserId, out var gpsId))
+        if (!wasInGame)
         {
-            _core.Timeline.SetFriendEventLeftAt(gpsId, DateTime.UtcNow.ToString("o"));
-            _friendCurrentGpsEventId.Remove(e.UserId);
+            ClearTraveling(e.UserId);
+            MergeFriendStore(e.UserId, null, wentOffline: true);
+            _friendLastLoc[e.UserId] = "offline";
+            PushFriendUpdate(e.UserId);
+            return;
         }
 
-        var fev = new TimelineService.FriendTimelineEvent
+        lock (_pendingOfflineLock)
         {
-            Type = "friend_offline", FriendId = e.UserId, FriendName = fname, FriendImage = fimg,
-        };
-        _core.Timeline.AddFriendEvent(fev);
-        _core.SendToJS("friendTimelineEvent", BuildFriendTimelinePayload(fev));
+            if (_pendingOffline.ContainsKey(e.UserId)) return;
+            _pendingOffline[e.UserId] = (DateTime.UtcNow, true, e.Platform ?? "");
+        }
+        PushFriendUpdate(e.UserId);
     }
 
     private void OnWsFriendOnline(object? sender, FriendEventArgs e)
     {
         if (string.IsNullOrEmpty(e.UserId) || !_friendStateSeeded) return;
+
+        CancelPendingOffline(e.UserId);
+        ClearTraveling(e.UserId);
 
         MergeFriendStore(e.UserId, e.User,
             location: string.IsNullOrEmpty(e.Location) ? "" : e.Location,
@@ -2980,6 +3084,8 @@ public class FriendsController
         if (string.IsNullOrEmpty(fname))
             fname = _core.Timeline.GetLastKnownFriendName(e.UserId);
 
+        CancelPendingOffline(e.UserId);
+        ClearTraveling(e.UserId);
         _friendStore.Remove(e.UserId);
         _friendLastLoc.Remove(e.UserId);
         _friendLastStatus.Remove(e.UserId);
@@ -3000,8 +3106,21 @@ public class FriendsController
     public object BuildFriendTimelinePayload(TimelineService.FriendTimelineEvent ev)
     {
         var isRecent = DateTime.TryParse(ev.Timestamp, out var evTs) && evTs >= DateTime.UtcNow - TimeSpan.FromDays(7);
+        var isAvatarRef = (ev.WorldId ?? "").StartsWith("avtr_");
         string wThumb;
-        if (isRecent)
+        if (isAvatarRef)
+        {
+            if (isRecent)
+            {
+                wThumb = ImageCacheHelper.GetAvatarUrl(ev.WorldId, ev.WorldThumb);
+            }
+            else
+            {
+                var disk = ImageCacheHelper.GetAvatarCached(ev.WorldId);
+                wThumb = disk != null ? ImageCacheHelper.ToLocalUrl(disk) : ImageCacheHelper.NormalizeTo512(ev.WorldThumb ?? "");
+            }
+        }
+        else if (isRecent)
         {
             wThumb = ImageCacheHelper.GetWorldUrl(ev.WorldId, ev.WorldThumb);
         }

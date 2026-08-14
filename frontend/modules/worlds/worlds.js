@@ -371,7 +371,7 @@ function renderWorldCard(w) {
             ? `<span class="msi" style="font-size:22px;color:var(--accent);">check_circle</span>`
             : `<span class="msi" style="font-size:22px;color:rgba(255,255,255,0.7);">radio_button_unchecked</span>`;
         return `<div class="vrcn-content-card" data-wid="${esc(w.id)}" onclick="toggleWorldEditSelect('${wid}',this)" style="user-select:none;">
-            <div class="cc-bg" style="background-image:url('${cssUrl(thumb)}')"></div>
+            <div class="cc-bg" style="background-image:url('${cssUrl(imgThumb(thumb, 256))}')"></div>
             <div class="cc-scrim"></div>
             ${timeBadge}
             <div class="wd-edit-check">${checkIcon}</div>
@@ -385,7 +385,7 @@ function renderWorldCard(w) {
             ${isSelected ? '<div class="wd-edit-sel-border"></div>' : ''}</div>`;
     }
     return `<div class="vrcn-content-card" onclick="openWorldSearchDetail('${wid}')">
-        <div class="cc-bg" style="background-image:url('${cssUrl(thumb)}')"></div>
+        <div class="cc-bg" style="background-image:url('${cssUrl(imgThumb(thumb, 256))}')"></div>
         <div class="cc-scrim"></div>
         ${timeBadge}
         <div class="cc-content">

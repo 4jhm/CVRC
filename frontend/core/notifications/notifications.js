@@ -153,7 +153,7 @@ function renderNotifications(list, noDecline = _notifNoDecline) {
         const hasImg = nImg && nImg.length > 5;
         const initial = (n.senderUsername || '?')[0].toUpperCase();
         const avatarHtml = hasImg
-            ? `<div class="notif-avatar" style="background-image:url('${cssUrl(nImg)}')"><span class="msi notif-avatar-badge">${icon}</span></div>`
+            ? `<div class="notif-avatar" style="background-image:url('${cssUrl(imgThumb(nImg, 64))}')"><span class="msi notif-avatar-badge">${icon}</span></div>`
             : `<span class="msi notif-icon" style="font-size:18px;">${icon}</span>`;
 
         const _notifGroupId = (() => {
@@ -469,7 +469,7 @@ function renderCurrentInstance(data) {
         const hasImg = u.image && u.image.length > 5;
         const initial = (u.displayName || '?')[0].toUpperCase();
         const avInner = hasImg
-            ? `<div class="inst-user-av" style="background-image:url('${cssUrl(u.image)}')"></div>`
+            ? `<div class="inst-user-av" style="background-image:url('${cssUrl(imgThumb(u.image, 64))}')"></div>`
             : `<div class="inst-user-av inst-user-av-letter">${esc(initial)}</div>`;
         const dotShape = u.presence === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
         const avDot = u.status ? `<span class="inst-user-av-dot ${dotShape} ${statusDotClass(u.status)}"></span>` : '';
@@ -508,7 +508,7 @@ function renderCurrentInstance(data) {
     const displayCount = users.length || data.nUsers || 0;
     const prevInstScroll = el.querySelector('.inst-users')?.scrollTop || 0;
     el.innerHTML = `<div class="inst-card" data-inst-type="${_instCls}">
-        <div class="inst-header" style="background-image:url('${cssUrl(data.worldThumb || '')}');cursor:pointer;" onclick="openInstanceInfoModal()">
+        <div class="inst-header" style="background-image:url('${cssUrl(imgThumb(data.worldThumb || '', 96))}');cursor:pointer;" onclick="openInstanceInfoModal()">
             <div class="inst-header-fade"></div>
             ${typeBadge}
             ${ageGateBadge}

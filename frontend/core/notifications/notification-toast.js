@@ -82,7 +82,7 @@ function _showNotifCard(n) {
     const nImg = (typeof _resolveNotifImage === 'function') ? _resolveNotifImage(n) : (n._image || '');
     const hasImg = nImg && nImg.length > 5;
     const avatarHtml = hasImg
-        ? `<div class="nc-avatar" style="background-image:url('${cssUrl(nImg)}')"><span class="msi nc-avatar-badge" style="color:${accentColor};">${icon}</span></div>`
+        ? `<div class="nc-avatar" style="background-image:url('${cssUrl(imgThumb(nImg, 96))}')"><span class="msi nc-avatar-badge" style="color:${accentColor};">${icon}</span></div>`
         : `<span class="msi nc-icon" style="color:${accentColor};">${icon}</span>`;
 
     const nid = esc(n.id);
@@ -222,7 +222,7 @@ function _showFriendOnlineCard(data) {
     const accentColor = 'var(--ok)';
 
     const avatarHtml = img
-        ? `<div class="nc-avatar" style="background-image:url('${cssUrl(img)}')"><span class="msi nc-avatar-badge" style="color:${accentColor};">wifi</span></div>`
+        ? `<div class="nc-avatar" style="background-image:url('${cssUrl(imgThumb(img, 96))}')"><span class="msi nc-avatar-badge" style="color:${accentColor};">wifi</span></div>`
         : `<span class="msi nc-icon" style="color:${accentColor};">wifi</span>`;
 
     const card = document.createElement('div');

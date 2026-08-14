@@ -214,6 +214,7 @@ public sealed class KikitanXDService : IKikitanSpeechService
     {
         if (e.BytesRecorded <= 0) return;
         UpdateMeter(e.Buffer, e.BytesRecorded);
+        if (_pcmQueue.Count > 500) return;
         var copy = new byte[e.BytesRecorded];
         Buffer.BlockCopy(e.Buffer, 0, copy, 0, e.BytesRecorded);
         _pcmQueue.Enqueue(copy);
@@ -299,6 +300,15 @@ public sealed class KikitanXDService : IKikitanSpeechService
         {
             Log($"Kikitan XD: worker error — {ex.Message}");
             CrashHandler.AddBreadcrumb($"KikitanXD.WorkerLoop: {ex.GetType().Name}: {ex.Message}");
+        }
+        finally
+        {
+            if (_workerRunning)
+            {
+                _workerRunning = false;
+                try { _waveIn?.StopRecording(); } catch { }
+                while (_pcmQueue.TryDequeue(out _)) { }
+            }
         }
     }
 

@@ -176,22 +176,21 @@
 
 .ft-status-chip {
     display: inline-block;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: calc(10px + var(--fs-off, 0px));
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    background: var(--bg2);
-    border: 1px solid var(--brd);
-    color: var(--tx2);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    vertical-align: middle;
+    font-size: 0;
+    line-height: 0;
+    background: var(--status-offline);
 }
-.ft-status-chip.active        { color: var(--status-online);  border-color: var(--status-online);  }
-.ft-status-chip.join-me       { color: var(--status-join);   border-color: var(--status-join);   }
-.ft-status-chip.ask-me        { color: var(--status-ask);    border-color: var(--status-ask);    }
-.ft-status-chip.busy          { color: var(--status-busy);   border-color: var(--status-busy);   }
-.ft-status-chip.do-not-disturb { color: var(--status-busy);  border-color: var(--status-busy);   }
-.ft-status-chip.offline       { color: var(--status-offline); border-color: var(--status-offline); }
+.ft-status-chip.active         { background: var(--status-online); }
+.ft-status-chip.join-me        { background: var(--status-join); }
+.ft-status-chip.ask-me         { background: var(--status-ask); }
+.ft-status-chip.busy           { background: var(--status-busy); }
+.ft-status-chip.do-not-disturb { background: var(--status-busy); }
+.ft-status-chip.offline        { background: var(--status-offline); }
 
 .tl-datebtn { padding: 0 10px; }
 #tlDateBtn.dp-active { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent-lt); }
@@ -517,6 +516,31 @@
 .tl-sub-label {
     font-size: calc(10px + var(--fs-off, 0px));
     color: var(--tx2);
+}
+
+.tl-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+.tl-badge-row .vrcn-badge {
+    font-size: calc(8.5px + var(--fs-off, 0px));
+    padding: 2px 6px;
+    gap: 2px;
+}
+
+.tl-list-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+.tl-list-badges .vrcn-badge {
+    font-size: calc(8.5px + var(--fs-off, 0px));
+    padding: 2px 6px;
+    gap: 2px;
 }
 
 .tl-player-row {

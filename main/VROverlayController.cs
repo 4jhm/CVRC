@@ -17,6 +17,8 @@ public class VROverlayController : IDisposable
     // Callbacks set by AppShell
     public Action<int>?    OnToolToggle    { get; set; }
     public Action<float>?  OnVrScaleChange { get; set; }
+    public Action<string, string, JToken>? OnExpressionSend { get; set; }
+    public Action<int>? OnExpressionEmote { get; set; }
     public Action<List<uint>, List<string>, int>? OnVrScaleKeybindRecorded { get; set; }
     public Func<(bool discord, bool voice, bool kikitan, bool space, bool relay, bool chatbox, bool frameShot)>? GetToolStates { get; set; }
 
@@ -45,6 +47,8 @@ public class VROverlayController : IDisposable
                 Invoke(() => _core.SendToJS("vroKeybindRecorded", new { ids, names, hand, mode }));
 
             h.OnVroToolToggle += idx => Invoke(() => OnToolToggle?.Invoke(idx));
+            h.OnVroExpressionSend  += (name, ptype, value) => Invoke(() => OnExpressionSend?.Invoke(name, ptype, value));
+            h.OnVroExpressionEmote += emote => Invoke(() => OnExpressionEmote?.Invoke(emote));
 
             h.OnVroJoinRequest += (fid, loc) => Invoke(async () =>
             {
@@ -471,6 +475,8 @@ namespace VRCNext;
 public class VROverlayController : IDisposable
 {
     public Action<int>? OnToolToggle { get; set; }
+    public Action<string, string, Newtonsoft.Json.Linq.JToken>? OnExpressionSend { get; set; }
+    public Action<int>? OnExpressionEmote { get; set; }
     public Func<(bool discord, bool voice, bool kikitan, bool space, bool relay, bool chatbox, bool frameShot)>? GetToolStates { get; set; }
 
     public VROverlayController(CoreLibrary core, FriendsController friends) { }

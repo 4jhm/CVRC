@@ -225,7 +225,7 @@ function openNavFolderPopout(groupId, anchorEl) {
 
     const grid = document.createElement('div');
     grid.className = 'nav-folder-popout-grid';
-    if (visItems.length > 9) grid.classList.add('has-scroll');
+    if (visItems.length > 15) grid.classList.add('has-scroll');
     for (const key of visItems) {
         const def = NAV_ITEMS_DEF[key];
         if (!def) continue;
@@ -233,7 +233,13 @@ function openNavFolderPopout(groupId, anchorEl) {
         cell.className = 'nav-folder-cell';
         cell.dataset.navKey = key;
         if (def.tab === activeTab) cell.classList.add('active');
-        cell.addEventListener('click', () => { showTab(def.tab); closeNavFolderPopout(); });
+        if (def.locked) {
+            cell.classList.add('locked');
+            cell.disabled = true;
+            cell.title = t('nav.locked_soon', 'Coming soon');
+        } else {
+            cell.addEventListener('click', () => { showTab(def.tab); closeNavFolderPopout(); });
+        }
 
         const ic = document.createElement('span');
         ic.className = 'nav-folder-cell-icon msi';
@@ -245,6 +251,19 @@ function openNavFolderPopout(groupId, anchorEl) {
         lbl.dataset.i18n = def.i18n;
         lbl.textContent = def.label || '';
         cell.appendChild(lbl);
+
+        if (def.locked) {
+            const lockIc = document.createElement('span');
+            lockIc.className = 'nav-folder-cell-lock msi';
+            lockIc.textContent = 'lock';
+            cell.appendChild(lockIc);
+
+            const soon = document.createElement('span');
+            soon.className = 'nav-folder-cell-soon';
+            soon.dataset.i18n = 'nav.soon';
+            soon.textContent = t('nav.soon', 'Soon');
+            cell.appendChild(soon);
+        }
 
         grid.appendChild(cell);
     }
@@ -294,7 +313,14 @@ function _navMakeItemBtn(key, icon, tab, i18nKey, labelFallback) {
     const btn = document.createElement('button');
     btn.className = 'nav-btn';
     btn.dataset.navKey = key;
-    btn.setAttribute('onclick', `showTab(${tab})`);
+    const locked = !!NAV_ITEMS_DEF[key]?.locked;
+    if (locked) {
+        btn.classList.add('locked');
+        btn.disabled = true;
+        btn.title = t('nav.locked_soon', 'Coming soon');
+    } else {
+        btn.setAttribute('onclick', `showTab(${tab})`);
+    }
 
     const ni = document.createElement('span');
     ni.className = 'ni msi';
@@ -306,6 +332,13 @@ function _navMakeItemBtn(key, icon, tab, i18nKey, labelFallback) {
     nl.dataset.i18n = i18nKey;
     nl.textContent = labelFallback || '';
     btn.appendChild(nl);
+
+    if (locked) {
+        const lockIc = document.createElement('span');
+        lockIc.className = 'nav-btn-lock msi';
+        lockIc.textContent = 'lock';
+        btn.appendChild(lockIc);
+    }
 
     const badgeKind = NAV_ITEMS_DEF[key]?.badge;
     if (badgeKind) {

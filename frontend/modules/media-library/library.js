@@ -166,7 +166,7 @@ function applyLibraryWorldIds(dict) {
         const wInfo = worldInfoCache[worldId];
         const wName  = wInfo ? esc(wInfo.name) : t('library.view_world', 'View World');
         const wThumb = wInfo?.thumbnailImageUrl || '';
-        const badgeHtml = `<button class="lib-world-badge" data-wid="${esc(worldId)}" onclick="event.stopPropagation();openWorldSearchDetail('${esc(worldId)}')" title="${wName}"><span class="lib-world-badge-thumb" style="${wThumb ? `background-image:url('${cssUrl(wThumb)}')` : ''}"></span><span class="lib-world-badge-text">${wName}</span></button>`;
+        const badgeHtml = `<button class="lib-world-badge" data-wid="${esc(worldId)}" onclick="event.stopPropagation();openWorldSearchDetail('${esc(worldId)}')" title="${wName}"><span class="lib-world-badge-thumb" style="${wThumb ? `background-image:url('${cssUrl(imgThumb(wThumb, 64))}')` : ''}"></span><span class="lib-world-badge-text">${wName}</span></button>`;
         const existingBadge = wrap.querySelector('.lib-world-badge');
         if (existingBadge) existingBadge.outerHTML = badgeHtml;
         else wrap.insertAdjacentHTML('beforeend', badgeHtml);
@@ -471,7 +471,7 @@ function _renderLibIconSelect(wrapperId, items, currentVal, allLabel, allIcon, r
     function thumbHtml(thumb, icon, isRound) {
         const rc = isRound ? ' lib-is-thumb-round' : '';
         return thumb
-            ? `<span class="lib-is-thumb${rc}" style="background-image:url('${cssUrl(thumb)}')"></span>`
+            ? `<span class="lib-is-thumb${rc}" style="background-image:url('${cssUrl(imgThumb(thumb, 64))}')"></span>`
             : `<span class="lib-is-thumb lib-is-thumb-icon${rc}"><span class="msi">${esc(icon)}</span></span>`;
     }
 
@@ -657,6 +657,18 @@ function _resTag(x) {
     return best;
 }
 
+function _libMetaHtml(x) {
+    const parts = [];
+    if (x.size) parts.push(esc(x.size));
+    const res = _resTag(x);
+    if (res) parts.push(esc(res));
+    const rating = photoRatings.get(x.path) || 0;
+    if (rating > 0) {
+        parts.push(`<span class="lib-meta-rating"><span class="msi lib-heart-filled">favorite</span>${rating}x</span>`);
+    }
+    return parts.join('<span class="lib-meta-dot">·</span>');
+}
+
 // Card building.
 function _buildLibCard(x) {
     const su     = x.url || '';
@@ -681,7 +693,7 @@ function _buildLibCard(x) {
         const media = isVid
             ? `<img class="lib-thumb" src="${thumbSrc}" loading="lazy" onerror="this.outerHTML='<div class=\\'lib-vid-thumb-fallback\\'>${jsq(t('library.video_badge', 'VIDEO'))}</div>'"><span class="lib-vid-badge">${t('library.video_badge', 'VIDEO')}</span>`
             : `<img class="lib-thumb" src="${thumbSrc}" loading="lazy" onerror="this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:calc(11px + var(--fs-off, 0px));font-weight:700\\'>${jsq(t('library.no_preview', 'No Preview'))}</div>'">`;
-        return `<div class="lib-card lib-card-edit${isSel ? ' lib-card-selected' : ''}" data-path="${esc(x.path||'')}" onclick="toggleLibEditSelect('${sp}',this)" style="user-select:none;cursor:pointer;"><div class="lib-thumb-wrap${blurClass}">${media}<div class="wd-edit-check">${checkIcon}</div></div><div class="lib-info"><div class="lib-name">${esc(x.name)}</div><div class="lib-meta"><span>${x.size}</span><span>${x.time}</span></div></div>${isSel ? '<div class="wd-edit-sel-border"></div>' : ''}</div>`;
+        return `<div class="lib-card lib-card-edit${isSel ? ' lib-card-selected' : ''}" data-path="${esc(x.path||'')}" onclick="toggleLibEditSelect('${sp}',this)" style="user-select:none;cursor:pointer;"><div class="lib-thumb-wrap${blurClass}">${media}<div class="wd-edit-check">${checkIcon}</div></div><div class="lib-info"><div class="lib-name">${esc(x.name)}</div><div class="lib-meta"><span class="lib-meta-left">${_libMetaHtml(x)}</span><span>${x.time}</span></div></div>${isSel ? '<div class="wd-edit-sel-border"></div>' : ''}</div>`;
     }
 
     let worldBadge = '';
@@ -689,7 +701,7 @@ function _buildLibCard(x) {
         const wInfo  = worldInfoCache[x.worldId];
         const wName  = wInfo ? esc(wInfo.name) : t('library.view_world', 'View World');
         const wThumb = wInfo?.thumbnailImageUrl || '';
-        worldBadge   = `<button class="lib-world-badge" data-wid="${esc(x.worldId)}" onclick="event.stopPropagation();openWorldSearchDetail('${esc(x.worldId)}')" title="${wName}"><span class="lib-world-badge-thumb" style="${wThumb ? `background-image:url('${cssUrl(wThumb)}')` : ''}"></span><span class="lib-world-badge-text">${wName}</span></button>`;
+        worldBadge   = `<button class="lib-world-badge" data-wid="${esc(x.worldId)}" onclick="event.stopPropagation();openWorldSearchDetail('${esc(x.worldId)}')" title="${wName}"><span class="lib-world-badge-thumb" style="${wThumb ? `background-image:url('${cssUrl(imgThumb(wThumb, 64))}')` : ''}"></span><span class="lib-world-badge-text">${wName}</span></button>`;
     }
     let playersOverlay = '';
     const players = x.players || [];
@@ -702,7 +714,7 @@ function _buildLibCard(x) {
                 const fr  = isOwn ? currentVrcUser : vrcFriendsData.find(f => f.id === p.userId);
                 const img = fr?.image || p.image || '';
                 return img
-                    ? `<div class="lib-player-av" style="background-image:url('${cssUrl(img)}')" title="${esc(p.displayName)}"></div>`
+                    ? `<div class="lib-player-av" style="background-image:url('${cssUrl(imgThumb(img, 64))}')" title="${esc(p.displayName)}"></div>`
                     : `<div class="lib-player-av lib-player-av-letter" title="${esc(p.displayName)}">${esc((p.displayName||'?')[0])}</div>`;
             }).join('') +
             (remaining > 0 ? `<div class="lib-player-av lib-player-av-more">+${remaining}</div>` : '') +
@@ -711,9 +723,8 @@ function _buildLibCard(x) {
     const thumbSrc = suAttr ? suAttr + '?thumb=1' : '';
 
     if (x.type === 'image' || x.type === 'gif') {
-        const resTag   = _resTag(x);
-        const resBadge = resTag ? `<span class="vrcn-badge accent" style="margin-left:4px;">${resTag}</span>` : '';
-        return `<div class="lib-card" data-path="${esc(x.path||'')}" data-url="${suAttr}" data-type="${x.type}" data-name="${esc(x.name||'')}">${acts}<div class="lib-thumb-wrap${blurClass}" onclick="openPhotoDetail(${idx})"><img class="lib-thumb" src="${thumbSrc}" loading="lazy" onerror="this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:calc(11px + var(--fs-off, 0px));font-weight:700\\'>${jsq(t('library.no_preview', 'No Preview'))}</div>'">${iH ? '<div class="lib-blur-hint"><span class="msi" style="font-size:18px;">visibility_off</span></div>' : ''}${worldBadge}${playersOverlay}</div><div class="lib-info" onclick="event.stopPropagation();openPhotoDetail(${idx})" style="cursor:pointer;"><div class="lib-name">${esc(x.name)}</div><div class="lib-meta"><span style="display:flex;align-items:center;">${x.size}${resBadge}</span><span>${x.time}</span></div></div></div>`;
+
+        return `<div class="lib-card" data-path="${esc(x.path||'')}" data-url="${suAttr}" data-type="${x.type}" data-name="${esc(x.name||'')}">${acts}<div class="lib-thumb-wrap${blurClass}" onclick="openPhotoDetail(${idx})"><img class="lib-thumb" src="${thumbSrc}" loading="lazy" onerror="this.outerHTML='<div style=\\'width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--tx3);font-size:calc(11px + var(--fs-off, 0px));font-weight:700\\'>${jsq(t('library.no_preview', 'No Preview'))}</div>'">${iH ? '<div class="lib-blur-hint"><span class="msi" style="font-size:18px;">visibility_off</span></div>' : ''}${worldBadge}${playersOverlay}</div><div class="lib-info" onclick="event.stopPropagation();openPhotoDetail(${idx})" style="cursor:pointer;"><div class="lib-name">${esc(x.name)}</div><div class="lib-meta"><span class="lib-meta-left">${_libMetaHtml(x)}</span><span>${x.time}</span></div></div></div>`;
     } else {
         const th = `<img class="lib-thumb" src="${thumbSrc}" loading="lazy" onerror="this.outerHTML='<div class=\\'lib-vid-thumb-fallback\\'>${jsq(t('library.video_badge', 'VIDEO'))}</div>'">`;
         return `<div class="lib-card" data-path="${esc(x.path||'')}" data-url="${suAttr}" data-type="video" data-name="${esc(x.name||'')}">${acts}<div class="lib-thumb-wrap${blurClass}" onclick="openPhotoDetail(${idx})">${th}<div class="lib-vid-overlay"><div class="lib-play-icon"><span class="msi" style="font-size:22px;">play_arrow</span></div></div><span class="lib-vid-badge">${t('library.video_badge', 'VIDEO')}</span>${iH ? '<div class="lib-blur-hint"><span class="msi" style="font-size:18px;">visibility_off</span></div>' : ''}${worldBadge}${playersOverlay}</div><div class="lib-info" onclick="event.stopPropagation();openPhotoDetail(${idx})" style="cursor:pointer;"><div class="lib-name">${esc(x.name)}</div><div class="lib-meta"><span>${x.size}</span><span>${x.time}</span></div></div></div>`;
@@ -1306,7 +1317,7 @@ function _photoBuildInfoPaneContent(x) {
             const live    = isOwn ? currentVrcUser : (p.userId ? vrcFriendsData.find(f => f.id === p.userId) : null);
             const image   = live?.image || p.image || '';
             const av      = image
-                ? `<div class="tl-player-card-av" style="background-image:url('${cssUrl(image)}')"></div>`
+                ? `<div class="tl-player-card-av" style="background-image:url('${cssUrl(imgThumb(image, 64))}')"></div>`
                 : `<div class="tl-player-card-av">${esc(name[0].toUpperCase())}</div>`;
             const badge   = live ? `<span class="vrcn-badge bdg-friend"><span class="msi" style="font-size:10px;">check_circle</span>${t('profiles.badges.friend', 'Friend')}</span>` : '';
             const onclick = p.userId ? `onclick="navOpenModal('friend','${jsq(p.userId)}','${jsq(name)}')"` : '';
@@ -1350,6 +1361,15 @@ function setPhotoRatingValue(path, stars) {
     _photoRefreshInfoPaneIfShowing(path);
     _renderLibRatingSelect();
     if (_libRatingFilter !== '__all__') filterLibrary(true);
+    else _libUpdateCardMeta(path);
+}
+
+function _libUpdateCardMeta(path) {
+    if (!path) return;
+    const item = libraryFiles.find(f => f.path === path);
+    if (!item) return;
+    document.querySelectorAll(`.lib-card[data-path="${CSS.escape(path)}"] .lib-meta-left`)
+        .forEach(el => { el.innerHTML = _libMetaHtml(item); });
 }
 
 function _photoRefreshInfoPaneIfShowing(path) {
@@ -1364,6 +1384,9 @@ function onPhotoRating(payload) {
     if (!payload || !payload.path) return;
     photoRatings.set(payload.path, payload.stars || 0);
     _photoRefreshInfoPaneIfShowing(payload.path);
+    _renderLibRatingSelect();
+    if (_libRatingFilter !== '__all__') filterLibrary(true);
+    else _libUpdateCardMeta(payload.path);
 }
 
 function onLibraryRatings(payload) {
@@ -1374,6 +1397,7 @@ function onLibraryRatings(payload) {
         _libRatingsRenderTimer = null;
         _renderLibRatingSelect();
         if (_libRatingFilter !== '__all__') filterLibrary(true);
+        else Object.keys(payload).forEach(_libUpdateCardMeta);
     }, 150);
 }
 

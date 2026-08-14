@@ -181,7 +181,7 @@ function _applyAvatarSection(payload) {
     if (!section || !payload?.avatarId) return;
     const avImg = currentFriendDetail?.currentAvatarImageUrl || '';
     const avIcon = avImg
-        ? `<img class="fd-group-icon" src="${esc(avImg)}" onerror="this.style.display='none'">`
+        ? `<img class="fd-group-icon" src="${esc(imgThumb(avImg, 96))}" onerror="this.style.display='none'">`
         : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">checkroom</span></div>`;
     const authorHtml = payload.avatarAuthor
         ? `<div class="fd-group-card-meta">${esc(payload.avatarAuthor)}</div>` : '';
@@ -215,7 +215,7 @@ function filterFdGroups() {
     const slice = otherGroups.slice(page * MINI_PG_SIZE, (page + 1) * MINI_PG_SIZE);
     if (slice.length > 0) {
         grid.innerHTML = slice.map(g => {
-            const gIcon = g.iconUrl ? `<img class="fd-group-icon" src="${g.iconUrl}" onerror="this.style.display='none'">` : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
+            const gIcon = g.iconUrl ? `<img class="fd-group-icon" src="${imgThumb(g.iconUrl, 96)}" onerror="this.style.display='none'">` : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
             return `<div class="fd-group-card" onclick="navOpenModal('group','${jsq(g.id)}','${jsq(g.name || '')}')">
                 ${gIcon}<div class="fd-group-card-info"><div class="fd-group-card-name">${esc(g.name)}</div><div class="fd-group-card-meta">${g.memberCount ? esc(getGroupMemberText(g.memberCount, false)) : ''}</div></div>
             </div>`;
@@ -247,7 +247,7 @@ function filterFdOwnGroups() {
     const slice = all.slice(page * MINI_PG_SIZE, (page + 1) * MINI_PG_SIZE);
     if (slice.length > 0) {
         grid.innerHTML = slice.map(g => {
-            const gIcon = g.iconUrl ? `<img class="fd-group-icon" src="${g.iconUrl}" onerror="this.style.display='none'">` : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
+            const gIcon = g.iconUrl ? `<img class="fd-group-icon" src="${imgThumb(g.iconUrl, 96)}" onerror="this.style.display='none'">` : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
             return `<div class="fd-group-card" onclick="navOpenModal('group','${jsq(g.id)}','${jsq(g.name || '')}')">
                 ${gIcon}<div class="fd-group-card-info"><div class="fd-group-card-name">${esc(g.name)}</div><div class="fd-group-card-meta">${g.memberCount ? esc(getGroupMemberText(g.memberCount, false)) : ''}</div></div>
             </div>`;
@@ -279,7 +279,7 @@ function filterFdMutualsGroups() {
     if (slice.length > 0) {
         grid.innerHTML = slice.map(g => {
             const icon = g.iconUrl
-                ? `<img class="fd-group-icon" src="${esc(g.iconUrl)}" onerror="this.style.display='none'">`
+                ? `<img class="fd-group-icon" src="${esc(imgThumb(g.iconUrl, 96))}" onerror="this.style.display='none'">`
                 : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
             return `<div class="fd-group-card" style="margin-bottom:0;" onclick="navOpenModal('group','${jsq(g.id)}','${jsq(g.name || '')}')">
                 ${icon}<div class="fd-group-card-info">
@@ -399,7 +399,7 @@ function renderUserFavWorlds(payload) {
             for (const w of g.worlds) {
                 const thumb = w.thumbnailImageUrl || '';
                 panelsHtml += `<div class="vrcn-world-card-small" onclick="navOpenModal('worldSearch','${jsq(w.id)}','${jsq(w.name || '')}')">
-                    <div class="vwcs-bg"${thumb ? ` style="background-image:url('${cssUrl(thumb)}')"` : ''}></div>
+                    <div class="vwcs-bg"${thumb ? ` style="background-image:url('${cssUrl(imgThumb(thumb, 256))}')"` : ''}></div>
                     <div class="vwcs-scrim"></div>
                     <div class="vwcs-info">
                         <div class="vwcs-name">${esc(w.name)}</div>
@@ -479,7 +479,7 @@ function renderFdAvatarsPage(page) {
         const platBadges = _avPlatformBadges(a);
         const pubBadge = `<span class="vrcn-badge" style="${isPublic ? '' : 'background:rgba(255,100,100,.15);color:var(--err);'}">${isPublic ? t('avatars.labels.public','Public') : t('avatars.labels.private','Private')}</span>`;
         return `<div class="vrcn-mini-content" data-avatar-id="${esc(a.id || '')}" onclick="navOpenModal('avatar','${aid}','${aname}')">
-            <div class="vrcn-mini-content-thumb" style="background-image:url('${cssUrl(thumb)}')"></div>
+            <div class="vrcn-mini-content-thumb" style="background-image:url('${cssUrl(imgThumb(thumb, 128))}')"></div>
             <div class="vrcn-mini-content-info">
                 <div class="vrcn-mini-content-name">${esc(a.name || t('avatars.labels.unnamed','Unnamed'))}</div>
                 <div class="vrcn-mini-content-meta">${esc(a.authorName || '')}</div>
@@ -520,7 +520,7 @@ function renderFdWorldsPage(page) {
         const tags = (w.tags || []).filter(tag => tag.startsWith('author_tag_')).map(tag => tag.replace('author_tag_', '')).slice(0, 2);
         const tagsHtml = tags.map(tag => `<span class="vrcn-badge">${esc(tag)}</span>`).join('');
         h += `<div class="vrcn-mini-content" data-world-id="${esc(w.id || '')}" onclick="navOpenModal('worldSearch','${wid}','${jsq(w.name || '')}')">
-            <div class="vrcn-mini-content-thumb" style="background-image:url('${cssUrl(thumb)}')"></div>
+            <div class="vrcn-mini-content-thumb" style="background-image:url('${cssUrl(imgThumb(thumb, 128))}')"></div>
             <div class="vrcn-mini-content-info">
                 <div class="vrcn-mini-content-name">${esc(w.name || '')}</div>
                 <div class="vrcn-mini-content-meta">${esc(w.authorName || '')}<span class="msi">person</span>${w.occupants ?? ''}<span class="msi">favorite</span>${w.favorites ?? ''}</div>
@@ -603,7 +603,7 @@ function renderFriendDetail(d) {
     const _fdAvatarInner = img
         ? `<img class="fd-avatar" src="${img}" onerror="this.style.display='none'">`
         : `<div class="fd-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(20px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((d.displayName || '?')[0])}</div>`;
-    const _fdFrame = (typeof iconFrameHtml === 'function') ? iconFrameHtml(d.iconFrameUrl) : '';
+    const _fdFrame = (typeof iconFrameHtml === 'function') ? iconFrameHtml(d.iconFrameUrl, true) : '';
     const imgTag = _fdFrame ? `<div class="icon-frame-wrap">${_fdAvatarInner}${_fdFrame}</div>` : _fdAvatarInner;
 
     let _worldPartHtml = '';
@@ -757,13 +757,13 @@ function renderFriendDetail(d) {
     let repGroupInfoHtml = '';
     let repGroupBadgeHtml = '';
     if (repG && repG.id) {
-        const repIcon = repG.iconUrl ? `<img class="fd-group-icon" src="${repG.iconUrl}" onerror="this.style.display='none'">` : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
+        const repIcon = repG.iconUrl ? `<img class="fd-group-icon" src="${imgThumb(repG.iconUrl, 96)}" onerror="this.style.display='none'">` : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
         repGroupInfoHtml = `<div class="fd-group-rep-label">${t('profiles.badges.representing', 'Representing')}</div><div class="fd-group-card fd-group-rep" onclick="navOpenModal('group','${jsq(repG.id)}','${jsq(repG.name || '')}')">
             ${repIcon}<div class="fd-group-card-info"><div class="fd-group-card-name">${esc(repG.name)}</div><div class="fd-group-card-meta">${esc(repG.shortCode || '')}${repG.discriminator ? '.' + esc(repG.discriminator) : ''} &middot; ${esc(getGroupMemberText(repG.memberCount))}</div></div>
         </div>`;
         // Inline badge shown in the classic-mode status row (next to the status text).
         const _repBadgeIcon = repG.iconUrl
-            ? `<img class="fd-rep-group-badge-icon" src="${esc(repG.iconUrl)}" onerror="this.style.display='none'">`
+            ? `<img class="fd-rep-group-badge-icon" src="${esc(imgThumb(repG.iconUrl, 64))}" onerror="this.style.display='none'">`
             : `<span class="msi" style="font-size:13px;flex-shrink:0;">group</span>`;
         repGroupBadgeHtml = `<div class="fd-rep-group-badge" onclick="navOpenModal('group','${jsq(repG.id)}','${jsq(repG.name || '')}')">${_repBadgeIcon}<span class="fd-rep-group-badge-name">${esc(repG.name || '')}</span></div>`;
     }
@@ -779,7 +779,7 @@ function renderFriendDetail(d) {
                 ` data-badge-img="${esc(b.imageUrl)}"` +
                 ` data-badge-name="${encodeURIComponent(b.name)}"` +
                 ` data-badge-desc="${encodeURIComponent(b.description || '')}">` +
-                `<img class="fd-vrc-badge-icon" src="${esc(b.imageUrl)}" alt="${esc(b.name)}" onerror="this.closest('.fd-vrc-badge-wrap').style.display='none'">` +
+                `<img class="fd-vrc-badge-icon" src="${esc(imgThumb(b.imageUrl, 64))}" alt="${esc(b.name)}" onerror="this.closest('.fd-vrc-badge-wrap').style.display='none'">` +
             `</div>`
         ).join('')}</div>`;
     }
@@ -1269,7 +1269,7 @@ function patchFriendDetailLive(f) {
                 const name   = b.name || b.badgeName || '';
                 const desc   = b.description || b.badgeDescription || '';
                 return `<div class="fd-vrc-badge-wrap" data-badge-img="${esc(imgUrl)}" data-badge-name="${encodeURIComponent(name)}" data-badge-desc="${encodeURIComponent(desc)}">
-                    <img class="fd-vrc-badge-icon" src="${esc(imgUrl)}" alt="${esc(name)}" onerror="this.closest('.fd-vrc-badge-wrap').style.display='none'">
+                    <img class="fd-vrc-badge-icon" src="${esc(imgThumb(imgUrl, 64))}" alt="${esc(name)}" onerror="this.closest('.fd-vrc-badge-wrap').style.display='none'">
                 </div>`;
             }).join('');
         }
@@ -1385,7 +1385,7 @@ function drawMiniTimeline(events, el) {
 
     el.innerHTML = events.map(ev => {
         const meta   = typeof tlTypeMeta === 'function' ? tlTypeMeta(ev.type) : { icon: 'event', label: ev.type };
-        const color  = { instance_join:'var(--accent)', photo:'var(--ok)', first_meet:'var(--cyan)', meet_again:'#AB47BC', notification:'var(--warn)', avatar_switch:'#FF7043', video_url:'#29B6F6' }[ev.type] || 'var(--tx3)';
+        const color  = { instance_join:'var(--accent)', photo:'var(--ok)', first_meet:'var(--cyan)', meet_again:'#6554FF', notification:'var(--warn)', avatar_switch:'#FF7043', video_url:'#29B6F6' }[ev.type] || 'var(--tx3)';
         const d      = new Date(ev.timestamp);
         const dt     = `${fmtShortDate(d)} | ${fmtTime(d)}`;
         const ei     = ev.id.replace(/'/g, "\\'");
@@ -1411,7 +1411,7 @@ function renderFdUserActivity(userId, events) {
 
     _fdUserActivityEvents = events;
 
-    const FT_COLOR = { friend_gps:'var(--accent)', friend_status:'var(--cyan)', friend_statusdesc:'var(--cyan)', friend_online:'var(--ok)', friend_offline:'var(--tx3)', friend_bio:'#AB47BC', friend_added:'var(--ok)', friend_removed:'var(--err)' };
+    const FT_COLOR = { friend_gps:'var(--accent)', friend_status:'var(--cyan)', friend_statusdesc:'var(--cyan)', friend_online:'var(--ok)', friend_offline:'var(--tx3)', friend_bio:'#6554FF', friend_added:'var(--ok)', friend_removed:'var(--err)' };
 
     el.innerHTML = events.map(ev => {
         const meta   = typeof ftTypeMeta === 'function' ? ftTypeMeta(ev.type) : { icon: 'circle', label: ev.type };
@@ -1464,7 +1464,7 @@ function renderFdInsightsWorlds(worlds, elId = 'fdInsightsWorlds') {
     el.innerHTML = '<div class="ts-items">' + worlds.map((w, i) => {
         const pct = Math.round((w.visits / maxVisits) * 100);
         const thumb = w.worldThumb
-            ? `<img class="ts-item-thumb" src="${esc(w.worldThumb)}" onerror="this.style.display='none'">`
+            ? `<img class="ts-item-thumb" src="${esc(imgThumb(w.worldThumb, 96))}" onerror="this.style.display='none'">`
             : `<div class="ts-item-thumb ts-thumb-placeholder"><span class="msi" style="font-size:18px;color:var(--tx3);">travel_explore</span></div>`;
         const click = w.worldId ? `onclick="navOpenModal('worldSearch','${jsq(w.worldId)}','${jsq(w.worldName || '')}')" style="cursor:pointer"` : '';
         const visits = tf(`timespent.visit.${w.visits === 1 ? 'one' : 'other'}`, { count: w.visits }, `${w.visits} visit${w.visits === 1 ? '' : 's'}`);
@@ -1493,7 +1493,7 @@ function renderFdInsightsPersons(persons, elId = 'fdInsightsPersons') {
         const pct = Math.round((p.meets / maxMeets) * 100);
         const isFriend = friendIds.has(p.userId);
         const avatar = p.image
-            ? `<img class="ts-item-avatar" src="${esc(p.image)}" onerror="this.style.display='none'">`
+            ? `<img class="ts-item-avatar" src="${esc(imgThumb(p.image, 96))}" onerror="this.style.display='none'">`
             : `<div class="ts-item-avatar ts-avatar-placeholder"><span class="msi" style="font-size:16px;color:var(--tx3);">person</span></div>`;
         const encounters = tf(`timespent.encounter.${p.meets === 1 ? 'one' : 'other'}`, { count: p.meets }, `${p.meets} encounter${p.meets === 1 ? '' : 's'}`);
         return `<div class="ts-item" onclick="navOpenModal('friend','${jsq(p.userId)}','${jsq(p.displayName || '')}')" style="cursor:pointer">

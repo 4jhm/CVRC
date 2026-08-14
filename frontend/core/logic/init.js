@@ -50,7 +50,6 @@ renderWebhookCards([{}, {}, {}, {}]);
 renderLanguageChips();
 renderThemeChips();
 renderFontGrid();
-applyDesignStyle(currentDesignStyle);
 applyFontSizeOffset(currentFontSizeOffset);
 renderDashboard();
 tryLoadLogo();

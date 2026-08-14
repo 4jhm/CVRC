@@ -1,0 +1,28 @@
+                <div class="sf-layout">
+                    <div class="vrcn-panel-card status">
+                        <div class="sf-status-row">
+                            <div class="sf-status"><span class="sf-dot offline" id="oscmDot"></span><span id="oscmStatusText" data-i18n="osc.status.not_connected">Not connected</span></div>
+                            <button class="vrcn-button" id="oscmConnBtn" onclick="oscmConnect()"><span class="msi" style="font-size:16px;">link</span> <span data-i18n="common.connect">Connect</span></button>
+                        </div>
+                    </div>
+
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">target</span> <span data-i18n="oscm.title">OSC Radial Menu</span></div>
+                        <div class="set-desc" style="margin:8px 0 14px;" data-i18n="oscm.desc">A quick-access radial control for your avatar's OSC parameters and emotes. VRChat doesn't expose your avatar's real in-game menu layout anywhere, so this builds its own page of up to 8 slots at a time from the live parameter list — click the center hub to switch between Emotes and Parameters pages.</div>
+
+                        <div class="oscm-wheel-wrap">
+                            <svg class="oscm-wheel" id="oscmWheel" viewBox="0 0 340 340"></svg>
+                            <div class="oscm-hub" id="oscmHub" onclick="oscmCyclePage()">
+                                <span class="msi oscm-hub-icon" id="oscmHubIcon">theater_comedy</span>
+                                <span class="oscm-hub-label" id="oscmHubLabel" data-i18n="osc.emotes.title">Emotes</span>
+                                <span class="oscm-hub-page" id="oscmHubPage"></span>
+                            </div>
+                        </div>
+                        <div class="oscm-hint" id="oscmHint" data-i18n="oscm.hint.connect">Connect to OSC above, then load into an avatar with parameters to fill this menu.</div>
+                        <div class="oscm-legend">
+                            <span class="oscm-legend-item" data-i18n="oscm.legend.bool">Toggle — click</span>
+                            <span class="oscm-legend-item" data-i18n="oscm.legend.int">Number — click to cycle</span>
+                            <span class="oscm-legend-item" data-i18n="oscm.legend.float">Slider — drag in/out</span>
+                        </div>
+                    </div>
+                </div>

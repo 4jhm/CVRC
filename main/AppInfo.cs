@@ -2,10 +2,10 @@
 
 public static class AppInfo
 {
-    public const string Version = "2026.41.9";
-    public const string ContactEmail = "vrcn@shinyflvres.com";
-    public const string Website = "vrcn.shinyflvres.com";
-    public const string UserAgent = $"VRCNext/{Version} ({ContactEmail})";
+    public const string Version = "2026.41.11";
+    public const string ContactEmail = "4jhmweb@gmail.com";
+    public const string Website = "github.com/4jhm/CVRC";
+    public const string UserAgent = $"CVRC/{Version} ({ContactEmail})";
 
     public static string SelfExecutable
     {

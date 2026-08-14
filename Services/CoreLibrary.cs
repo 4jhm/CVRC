@@ -40,6 +40,26 @@ public class CoreLibrary
     public ConcurrentDictionary<string, bool> PlayerAgeVerifiedCache { get; } = new();
     public ConcurrentDictionary<string, Newtonsoft.Json.Linq.JObject> PlayerProfileCache { get; } = new();
 
+    public void StorePlayerProfile(string userId, Newtonsoft.Json.Linq.JObject profile)
+    {
+        PlayerProfileCache[userId] = profile;
+        var count = PlayerProfileCache.Count;
+        if (count <= 300) return;
+        var protect = new HashSet<string>();
+        try
+        {
+            foreach (var p in LogWatcher.GetCurrentPlayers())
+                if (!string.IsNullOrEmpty(p.UserId)) protect.Add(p.UserId);
+        }
+        catch { }
+        protect.Add(userId);
+        foreach (var key in PlayerProfileCache.Keys.Where(k => !protect.Contains(k)).Take(count - 150).ToList())
+        {
+            PlayerProfileCache.TryRemove(key, out _);
+            PlayerAgeVerifiedCache.TryRemove(key, out _);
+        }
+    }
+
     public Dictionary<string, (string name, string thumb)> VrWorldCache { get; } = new();
 
     public string CurrentVrcUserId { get; set; } = "";

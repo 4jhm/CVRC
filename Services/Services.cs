@@ -262,13 +262,13 @@ public class AppSettings
     public bool FriendOnlineToastEnabled { get; set; }
     public bool FriendOnlineToastFavOnly { get; set; }
     public bool FriendsSidebarLocationOnly { get; set; } = true;
-    public bool FriendsSidebarRankColor { get; set; } = false;
     public bool FriendsSidebarPreviewCollapsed { get; set; } = true;
     public bool FriendsSidebarPreviewOpen { get; set; } = false;
     public bool PeopleAlwaysStats { get; set; } = false;
     public bool ModernFolderLayout { get; set; } = true;
     public bool NavSidebarHoverText { get; set; } = true;
-    public bool DirectModalNav { get; set; }
+    public bool DirectModalNav { get; set; } = true;
+    public bool VrcPlusOptimizeEnabled { get; set; } = true;
     public bool EnableProfileIconFrames { get; set; } = false;
     public bool SquareIconFrames { get; set; } = false;
     public bool EnableNameplateDecoration { get; set; } = false;
@@ -293,7 +293,6 @@ public class AppSettings
     public string PlayBtnTheme { get; set; } = "";
     public string CursorTheme { get; set; } = "";
     public string AppFont { get; set; } = "google-sans";
-    public string DesignStyle { get; set; } = "line";
     public string CustomFont { get; set; } = "";
     public int FontSizeOffset { get; set; } = 0;
     public string CustomMusicPath { get; set; } = "";
@@ -302,8 +301,10 @@ public class AppSettings
     public string DashBgPath { get; set; } = "";
     public int DashOpacity { get; set; } = 40;
     public bool RandomDashBg { get; set; } = false;
-    public bool ClockEnabled { get; set; } = true;
-    public bool ClockAmPm { get; set; } = false;
+    public bool ClockEnabled { get; set; } = false;
+    public bool DateEnabled { get; set; } = false;
+    public bool ShowVrcPlus { get; set; } = true;
+    public bool ShowVrcCredits { get; set; } = true;
     // List of configured VRChat accounts and the currently active local AccountId (not UserId).
     public List<VrcAccount> Accounts { get; set; } = new();
     public string ActiveAccountId { get; set; } = "";
@@ -378,8 +379,7 @@ public class AppSettings
                 System.Text.Encoding.UTF8.GetBytes(plain), null, DataProtectionScope.CurrentUser);
             return Convert.ToBase64String(enc);
 #else
-            // Linux: no DPAPI — store as Base64 (file is protected by OS file permissions)
-            return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(plain));
+            return VRCNext.Services.Helpers.SecretProtector.Protect(plain);
 #endif
         }
         catch { return ""; }
@@ -395,7 +395,7 @@ public class AppSettings
                 Convert.FromBase64String(cipher), null, DataProtectionScope.CurrentUser);
             return System.Text.Encoding.UTF8.GetString(dec);
 #else
-            return System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(cipher));
+            return VRCNext.Services.Helpers.SecretProtector.Unprotect(cipher);
 #endif
         }
         catch { return ""; }
@@ -615,6 +615,7 @@ public class AppSettings
     // Image cache settings
     public int  ImgCacheLimitGb         { get; set; } = 5;
     public bool ImgCacheOptimizeEnabled { get; set; } = true;
+    public bool ImgMemoryOptimizeEnabled { get; set; } = true;
 
     // Notification V2 endpoint support (set false if account gets 404, persists across sessions)
     public bool NotifV2Supported { get; set; } = true;
@@ -816,6 +817,7 @@ public class AppSettings
             var dir = Path.GetDirectoryName(FilePath)!;
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             File.WriteAllText(FilePath, JsonConvert.SerializeObject(this, Formatting.Indented));
+            VRCNext.Services.Helpers.SecretProtector.RestrictToOwner(FilePath);
             LastSaveError = null;
         }
         catch (Exception ex) { LastSaveError = ex.Message; }

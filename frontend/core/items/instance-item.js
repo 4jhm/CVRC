@@ -55,7 +55,7 @@ function renderInstanceItem(opts) {
     const { cls, label } = getInstanceBadge(instanceType);
     const joinLabel = t('common.join', 'Join');
     const joiningLabel = t('common.joining', 'Joining...');
-    const thumbStyle = thumb ? `background-image:url('${cssUrl(thumb)}')` : '';
+    const thumbStyle = thumb ? `background-image:url('${cssUrl(imgThumb(thumb, 128))}')` : '';
 
     const regionHtml = region
         ? `<span class="vrcn-badge"><span class="msi" style="font-size:10px;">language</span>${esc(region)}</span>`

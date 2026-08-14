@@ -72,7 +72,7 @@ function buildInstancePlayersHtml(users, iStart, iTotal, now) {
         const st = _peopleStatsMap[u.id];
 
         const av = image
-            ? `<span class="pl-av" style="background-image:url('${cssUrl(image)}')"></span>`
+            ? `<span class="pl-av" style="background-image:url('${cssUrl(imgThumb(image, 64))}')"></span>`
             : `<span class="pl-av pl-av-letter">${esc(displayName[0].toUpperCase())}</span>`;
 
         const rank = getTrustRank(tags);

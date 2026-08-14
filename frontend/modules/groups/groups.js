@@ -31,9 +31,9 @@ function _renderGroupListCard(g) {
     const metaParts = [];
     if (g.shortCode) metaParts.push(esc(g.shortCode));
     metaParts.push(`<span class="msi" style="font-size:12px;">group</span> ${esc(getGroupMembersText(g.memberCount || 0))}`);
-    const iconHtml = g.iconUrl ? `<div class="cc-group-icon" style="background-image:url('${cssUrl(g.iconUrl)}')"></div>` : '';
+    const iconHtml = g.iconUrl ? `<div class="cc-group-icon" style="background-image:url('${cssUrl(imgThumb(g.iconUrl, 64))}')"></div>` : '';
     return `<div class="vrcn-content-card" onclick="openGroupDetail('${esc(g.id)}')">
-        <div class="cc-bg"><img src="${g.bannerUrl||'fallback_cover.png'}" loading="lazy" decoding="async" onerror="this.src='fallback_cover.png'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></div>
+        <div class="cc-bg"><img src="${imgThumb(g.bannerUrl, 256)||'fallback_cover.png'}" loading="lazy" decoding="async" onerror="this.src='fallback_cover.png'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></div>
         <div class="cc-scrim"></div>
         <div class="cc-content">
             <div class="cc-name">${esc(g.name)}</div>

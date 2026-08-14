@@ -3,19 +3,57 @@
 const RVF_THROTTLE_MS = 300;
 let _rvfTimer = null;
 let _rvfLastRun = 0;
+let _rvfPendingCounts = null;
 function scheduleRenderVrcFriends() {
     if (_rvfTimer) return;
     const wait = Math.max(0, RVF_THROTTLE_MS - (Date.now() - _rvfLastRun));
     _rvfTimer = setTimeout(() => {
         _rvfTimer = null;
-        renderVrcFriends(vrcFriendsData);
+        const counts = _rvfPendingCounts;
+        _rvfPendingCounts = null;
+        renderVrcFriends(vrcFriendsData, counts);
     }, wait);
+}
+
+function buildFriendCardHtml(f, presenceType) {
+    const img = f.image || '';
+    const imgTag = img
+        ? `<img class="vrc-friend-avatar" src="${imgThumb(img, 96)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+        : `<div class="vrc-friend-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(12px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName || '?')[0])}</div>`;
+    const statusCls = (f.pendingOffline || presenceType === 'offline') ? 's-offline' : statusDotClass(f.status);
+    const rank = getTrustRank(f.tags || []);
+    const rankBadge = '';
+    const nameColorStyle = rank ? `color:${rank.color};` : '';
+    const fid = (f.id || '').replace(/'/g, "\\'");
+    const statusText = f.statusDescription || statusLabel(f.status);
+    const locationText = getFriendLocationLabel(presenceType, f.location);
+    const badgeDotCls = presenceType === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
+    const avatarWrap = `<div class="vrc-friend-avatar-wrap">${imgTag}${(typeof iconFrameHtml === 'function') ? iconFrameHtml(f.iconFrameUrl) : ''}<span class="vrc-friend-status-badge ${badgeDotCls} ${statusCls}"></span></div>`;
+    return `<div class="vrc-friend-card" data-uid="${fid}" data-status="${statusCls}" onclick="openFriendDetail('${fid}')">${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(f.nameplateUrl) : ''}${avatarWrap}<div class="vrc-friend-info"><div class="vrc-friend-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${nameColorStyle}">${esc(f.displayName)}</span>${rankBadge}</div><div class="vrc-friend-loc">${_friendLocLineInner(f, presenceType, statusText, locationText)}</div></div></div>`;
+}
+
+function tryPatchVrcFriendCard(prev, f) {
+    if (!prev || !f || !f.id) return false;
+    if ((document.getElementById('vrcFriendSearchInput')?.value || '').trim()) return false;
+    if (prev.presence !== f.presence) return false;
+    if ((prev.location || '') !== (f.location || '')) return false;
+    const list = document.getElementById('vrcFriendsList');
+    if (!list) return false;
+    const cards = list.querySelectorAll(`.vrc-friend-card[data-uid="${(f.id || '').replace(/"/g, '\\"')}"]`);
+    if (!cards.length) return true;
+    const presenceType = f.presence === 'game' ? 'game' : (f.presence || 'offline');
+    const html = buildFriendCardHtml(f, presenceType);
+    cards.forEach(c => { c.outerHTML = html; });
+    list.__lastHtml = null;
+    return true;
 }
 
 function getRegionCode(region) {
     return (region || 'us').toUpperCase();
 }
 function _friendLocLineInner(f, presenceType, statusText, locationText) {
+    if (f.pendingOffline) return esc(t('profiles.friends.pending_offline', 'Pending offline...'));
+    if (f.traveling) return esc(t('profiles.friends.traveling', 'Traveling...'));
     const locationOnly = (typeof settings !== 'undefined') && settings.friendsSidebarLocationOnly === true;
     if (locationOnly) {
         const inWorld = f.location && f.location.startsWith('wrld_');
@@ -56,8 +94,8 @@ function renderVrcProfile(u) {
         : `<div class="vrc-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(13px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((u.displayName || '?')[0])}</div>`;
     const ownStatusCls = statusDotClass(u.status);
     const ownDotShape = u.vrcRunning ? 'vrc-status-dot' : 'vrc-status-ring';
-    const ownAvatarWrap = `<div class="vrc-profile-avatar-wrap">${imgTag}${(typeof iconFrameHtml === 'function') ? iconFrameHtml(u.iconFrameUrl) : ''}<span class="vrc-friend-status-badge ${ownDotShape} ${ownStatusCls}"></span></div>`;
-    a.innerHTML = `<div class="vrc-profile" data-status="${ownStatusCls}" onclick="openMyProfileModal()">${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(u.nameplateUrl) : ''}${ownAvatarWrap}<div class="vrc-profile-info"><div class="vrc-profile-name">${esc(u.displayName)}</div><div class="vrc-profile-status">${getStatusText(u.status, u.statusDescription)}</div></div><span class="msi" style="font-size:16px;color:var(--tx3);flex-shrink:0;">manage_accounts</span></div>`;
+    const ownAvatarWrap = `<div class="vrc-profile-avatar-wrap">${imgTag}${(typeof iconFrameHtml === 'function') ? iconFrameHtml(u.iconFrameUrl, true) : ''}<span class="vrc-friend-status-badge ${ownDotShape} ${ownStatusCls}"></span></div>`;
+    a.innerHTML = `<div class="vrc-profile" data-status="${ownStatusCls}" onclick="openMyProfileModal()">${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(u.nameplateUrl, true) : ''}${ownAvatarWrap}<div class="vrc-profile-info"><div class="vrc-profile-name">${esc(u.displayName)}</div><div class="vrc-profile-status">${getStatusText(u.status, u.statusDescription)}</div></div><span class="msi" style="font-size:16px;color:var(--tx3);flex-shrink:0;">manage_accounts</span></div>`;
 }
 
 function onVrcRunningChanged(payload) {
@@ -116,7 +154,7 @@ function renderVrcFriends(friends, counts) {
     if (searchBar) searchBar.style.display = vrcFriendsData.length > 0 ? '' : 'none';
 
     if (!friends || !friends.length) {
-        el.innerHTML = `<div class="vrc-section-label">${getFriendSectionLabel('onlineZero', 0)}</div><div style="padding:16px;text-align:center;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);">${t('dashboard.friends.empty', 'No friends online')}</div>`;
+        setHtmlIfChanged(el, `<div class="vrc-section-label">${getFriendSectionLabel('onlineZero', 0)}</div><div style="padding:16px;text-align:center;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);">${t('dashboard.friends.empty', 'No friends online')}</div>`);
         return;
     }
 
@@ -128,23 +166,7 @@ function renderVrcFriends(friends, counts) {
     const wc = counts ? counts.web : webFriends.length;
     const oc = counts ? counts.offline : offlineFriends.length;
 
-    const renderCard = (f, presenceType) => {
-        const img = f.image || '';
-        const imgTag = img
-            ? `<img class="vrc-friend-avatar" src="${img}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
-            : `<div class="vrc-friend-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(12px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName || '?')[0])}</div>`;
-        const statusCls = presenceType === 'offline' ? 's-offline' : statusDotClass(f.status);
-        const rank = getTrustRank(f.tags || []);
-        const useRankColor = (typeof settings !== 'undefined') && settings.friendsSidebarRankColor === true;
-        const rankBadge = (rank && !useRankColor) ? `<span class="vrcn-badge ${rank.cls}">${rank.label}</span>` : '';
-        const nameColorStyle = (useRankColor && rank) ? `color:${rank.color};` : '';
-        const fid = (f.id || '').replace(/'/g, "\\'");
-        const statusText = f.statusDescription || statusLabel(f.status);
-        const locationText = getFriendLocationLabel(presenceType, f.location);
-        const badgeDotCls = presenceType === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
-        const avatarWrap = `<div class="vrc-friend-avatar-wrap">${imgTag}${(typeof iconFrameHtml === 'function') ? iconFrameHtml(f.iconFrameUrl) : ''}<span class="vrc-friend-status-badge ${badgeDotCls} ${statusCls}"></span></div>`;
-        return `<div class="vrc-friend-card" data-uid="${fid}" data-status="${statusCls}" onclick="openFriendDetail('${fid}')">${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(f.nameplateUrl) : ''}${avatarWrap}<div class="vrc-friend-info"><div class="vrc-friend-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${nameColorStyle}">${esc(f.displayName)}</span>${rankBadge}</div><div class="vrc-friend-loc">${_friendLocLineInner(f, presenceType, statusText, locationText)}</div></div></div>`;
-    };
+    const renderCard = (f, presenceType) => buildFriendCardHtml(f, presenceType);
 
     const favIds = new Set(favFriendsData.map(f => f.favoriteId));
     const favFriends = favIds.size > 0 ? friends.filter(f => favIds.has(f.id) && f.presence === 'game') : [];
@@ -193,7 +215,7 @@ function renderVrcFriends(friends, counts) {
                 const { cls: _iCls, label: _iLabel } = getInstanceBadge(_iType);
                 const _badgeHtml = `<span class="vrcn-badge ${_iCls}">${esc(_iLabel)}</span>`;
                 h += `<div class="sloc-inst-card">`;
-                if (_wthumb) h += `<div class="sloc-inst-bg" style="background-image:url('${cssUrl(_wthumb)}')"></div>`;
+                if (_wthumb) h += `<div class="sloc-inst-bg" style="background-image:url('${cssUrl(imgThumb(_wthumb, 256))}')"></div>`;
                 h += `<div class="sloc-inst-content">`;
                 h += `<div class="sloc-inst-label">${esc(_grpLabel)} <span class="sloc-inst-count">${list.length}</span>${_badgeHtml}</div>`;
                 list.forEach(f => { h += renderCard(f, 'game'); });
@@ -266,13 +288,13 @@ function renderVrcFriends(friends, counts) {
                 const _subChev = friendSectionCollapsed[_subKey] ? 'expand_more' : 'expand_less';
                 const _subActive = !friendSectionCollapsed[_subKey] ? ' active' : '';
                 const _iconHtml = grp.icon
-                    ? `<img class="vrc-gi-group-icon" src="${grp.icon}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+                    ? `<img class="vrc-gi-group-icon" src="${imgThumb(grp.icon, 64)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
                     : `<span class="msi" style="font-size:13px;flex-shrink:0;">group</span>`;
                 h += `<div class="vrc-section-label vrc-gi-group-header vrc-offline-toggle${_subActive}" onclick="toggleFriendSection('${_subKey}')" style="cursor:pointer;padding-left:16px;"><span class="ni msi">group</span><span class="nl" style="display:flex;align-items:center;gap:5px;overflow:hidden;">${_iconHtml}<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(grp.name)}</span><span style="flex-shrink:0;">· ${grp.instances.length}</span></span><span class="nav-group-arrow msi nl" id="${_subKey}Chevron">${_subChev}</span></div>`;
                 h += `<div id="${_subKey}FriendsSection" class="friend-section-items${friendSectionCollapsed[_subKey] ? ' collapsed' : ''}">`;
                 grp.instances.forEach(inst => {
                     const _loc = (inst.location || '').replace(/'/g, "\\'");
-                    const _thumbHtml = inst.worldThumb ? `<img class="vrc-gi-world-thumb" src="${inst.worldThumb}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
+                    const _thumbHtml = inst.worldThumb ? `<img class="vrc-gi-world-thumb" src="${imgThumb(inst.worldThumb, 64)}" loading="lazy" decoding="async" onerror="this.style.display='none'">` : '';
                     h += `<div class="vrc-gi-instance-card" onclick="openGroupInstanceDetail('${_loc}')" style="cursor:pointer;">`;
                     if (_thumbHtml) h += _thumbHtml;
                     h += `<div class="vrc-gi-instance-info"><div class="vrc-gi-instance-name">${esc(inst.worldName || inst.location || '')}</div><div class="vrc-gi-instance-count">${inst.userCount}/${inst.capacity}</div></div>`;
@@ -289,7 +311,7 @@ function renderVrcFriends(friends, counts) {
     appendSection('web', wc, webFriends.slice(0, 100), 'web');
     appendSection('offline', oc, offlineFriends.slice(0, 100), 'offline');
 
-    el.innerHTML = h;
+    setHtmlIfChanged(el, h);
     // Only apply search filter if there is an active query
     const _activeQ = (document.getElementById('vrcFriendSearchInput')?.value || '').toLowerCase().trim();
     if (_activeQ) filterFriendsList();
@@ -343,7 +365,7 @@ function filterFriendsList() {
     const capped = all.slice(0, 100);
 
     if (!capped.length) {
-        el.innerHTML = `<div style="padding:16px;text-align:center;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);">${t('profiles.people.no_results', 'No results')}</div>`;
+        setHtmlIfChanged(el, `<div style="padding:16px;text-align:center;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);">${t('profiles.people.no_results', 'No results')}</div>`);
         return;
     }
 
@@ -353,23 +375,8 @@ function filterFriendsList() {
 
     let h = countLabel + `<div class="friend-section-items">`;
     capped.forEach(f => {
-        const img = f.image || '';
-        const imgTag = img
-            ? `<img class="vrc-friend-avatar" src="${img}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
-            : `<div class="vrc-friend-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(12px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName || '?')[0])}</div>`;
-        const presenceType = f.presence || 'offline';
-        const statusCls = presenceType === 'offline' ? 's-offline' : statusDotClass(f.status);
-        const rank = getTrustRank(f.tags || []);
-        const useRankColor = (typeof settings !== 'undefined') && settings.friendsSidebarRankColor === true;
-        const rankBadge = (rank && !useRankColor) ? `<span class="vrcn-badge ${rank.cls}">${rank.label}</span>` : '';
-        const nameColorStyle = (useRankColor && rank) ? `color:${rank.color};` : '';
-        const fid = (f.id || '').replace(/'/g, "\\'");
-        const statusText = f.statusDescription || statusLabel(f.status);
-        const locationText = getFriendLocationLabel(presenceType, f.location);
-        const badgeDotCls = presenceType === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
-        const avatarWrap = `<div class="vrc-friend-avatar-wrap">${imgTag}${(typeof iconFrameHtml === 'function') ? iconFrameHtml(f.iconFrameUrl) : ''}<span class="vrc-friend-status-badge ${badgeDotCls} ${statusCls}"></span></div>`;
-        h += `<div class="vrc-friend-card" data-uid="${fid}" data-status="${statusCls}" onclick="openFriendDetail('${fid}')">${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(f.nameplateUrl) : ''}${avatarWrap}<div class="vrc-friend-info"><div class="vrc-friend-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${nameColorStyle}">${esc(f.displayName)}</span>${rankBadge}</div><div class="vrc-friend-loc">${_friendLocLineInner(f, presenceType, statusText, locationText)}</div></div></div>`;
+        h += buildFriendCardHtml(f, f.presence || 'offline');
     });
     h += `</div>`;
-    el.innerHTML = h;
+    setHtmlIfChanged(el, h);
 }

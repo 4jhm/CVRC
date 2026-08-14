@@ -40,6 +40,8 @@
     <link rel="stylesheet" href="modules/tools/avatar-database/avatar-database.css">
     <link rel="stylesheet" href="modules/tools/direct-access/direct-access.css">
     <link rel="stylesheet" href="modules/tools/avatar-logger/avatar-logger.css">
+    <link rel="stylesheet" href="modules/tools/emoji-maker/emoji-maker.css">
+    <link rel="stylesheet" href="modules/tools/osc-radial/osc-radial.css">
     <link rel="stylesheet" href="modules/tools/activity-log/activity-log.css">
     <link rel="stylesheet" href="modules/tools/mutual-network/mutual-network.css">
     <link rel="stylesheet" href="modules/tools/time-spent/time-spent.css">
@@ -131,9 +133,8 @@
     <div class="sidebar" id="sidebarEl">
         <div class="sidebar-resizer" id="sidebarResizer" data-side="left"></div>
         <div class="sidebar-sep"></div>
-        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.9</div></div></div>
+        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.11</div></div></div>
         <div class="nav vrcn-scrollbar" id="navEl"></div>
-        <div class="clock-area"><div class="clock-time" id="clock">00:00:00</div><div class="clock-date" id="clockDate"></div></div>
         <div class="play-area"><button class="btn-play" onclick="playVRChat()" data-i18n-title="sidebar.play_vrchat" title="Play VRChat"><span class="play-icon-wrap"><span class="msi play-icon">play_arrow</span></span><span class="play-copy pl"><strong class="play-title" data-i18n="sidebar.play_vrchat">Play VRChat</strong><span class="play-sub" id="playSubText"></span></span><span class="msi play-arrow pl">chevron_right</span></button></div>
     </div>
 
@@ -169,6 +170,9 @@
                             <div class="tb-dd-item" onclick="toggleRsidebar()"><span class="msi">dock_to_right</span><span data-i18n="tb.app.view.toggle_right">Toggle Right Sidebar</span></div>
                             <div class="tb-dd-item" id="tbLockSidebars" onclick="toggleSidebarLock()"><span class="msi">lock</span><span data-i18n="tb.app.view.lock_sidebars">Lock Sidebars</span><span class="msi tb-dd-check">check</span></div>
                             <div class="tb-dd-item" onclick="resetSidebarWidths()"><span class="msi">restart_alt</span><span data-i18n="tb.app.view.reset_sidebars">Reset Sidebars</span></div>
+                            <div class="tb-dd-sep"></div>
+                            <div class="tb-dd-item" data-keep-modal onclick="openDashLayoutEditor()"><span class="msi">dashboard_customize</span><span data-i18n="context_menu.dash_layout">Edit Dashboard</span></div>
+                            <div class="tb-dd-item" data-keep-modal onclick="openNavEditor()"><span class="msi">tune</span><span data-i18n="context_menu.nav_edit">Edit Navigation</span></div>
                             <div class="tb-dd-sep"></div>
                             <div class="tb-dd-scale-row">
                                 <span class="msi">aspect_ratio</span>
@@ -265,6 +269,8 @@
                             <div class="tb-dd-item" onclick="sendToCS({action:'openUrl',url:'https://github.com/shinyflvre/VRCNext/issues/new?template=feature_request.yml'})"><span class="msi">lightbulb</span><span data-i18n="tb.help.feature_request">Feature Request</span></div>
                         </div>
                     </div>
+                    <div class="tb-sep" id="tbClockSep" style="display:none;"></div>
+                    <div class="tb-clock" id="tbClock" style="display:none;"><span class="tb-clock-time" id="clock">00:00</span><span class="tb-clock-date" id="clockDate"></span></div>
                 </div>
                 </div>
                 <div id="tbModalCrumbs"></div>
@@ -342,7 +348,7 @@
         <div class="notif-panel upd-panel" id="updatePanel" style="display:none;">
             <div class="notif-panel-header">
                 <span style="font-weight:700;font-size:calc(13px + var(--fs-off, 0px));" data-i18n="update.available">Update Available</span>
-                <button class="vrcn-button" onclick="toggleUpdatePanel()" style="padding:2px 8px;font-size:calc(10px + var(--fs-off, 0px));" data-i18n-title="common.close"><span class="msi" style="font-size:14px;">close</span></button>
+                <button class="vrcn-icon-button" onclick="toggleUpdatePanel()" title="Close" data-i18n-title="common.close"><span class="msi" style="font-size:18px;">close</span></button>
             </div>
             <div style="padding:14px 16px;">
                 <div id="updMessage" style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);margin-bottom:12px;"><span data-i18n="update.version_label">Version</span> <strong id="updVersion" style="color:var(--tx0);"></strong> <span data-i18n="update.ready_suffix">is ready to install.</span></div>
@@ -364,14 +370,14 @@
 
         <!-- Notification panel -->
         <div class="notif-panel" id="notifPanel" style="display:none;">
-            <div class="notif-panel-header"><span style="font-weight:700;font-size:calc(13px + var(--fs-off, 0px));" data-i18n="common.notifications">Notifications</span><div style="display:flex;gap:6px;align-items:center;"><div class="vrcn-mini-pill-group" id="notifPillGroup"><div class="vrcn-mini-pill-indicator" id="notifPillIndicator"></div><button class="vrcn-mini-pill active" id="notifTabCurrent" onclick="setNotifTab('current')" data-i18n="notifications.tab.current">Current</button><button class="vrcn-mini-pill" id="notifTabHidden" onclick="setNotifTab('hidden')" data-i18n="notifications.tab.hidden">Hidden</button></div><button class="vrcn-button" onclick="refreshNotifications()" style="padding:2px 8px;font-size:calc(10px + var(--fs-off, 0px));" data-i18n-title="common.refresh"><span class="msi" style="font-size:14px;">refresh</span></button></div></div>
+            <div class="notif-panel-header"><span style="font-weight:700;font-size:calc(13px + var(--fs-off, 0px));" data-i18n="common.notifications">Notifications</span><div style="display:flex;gap:6px;align-items:center;"><div class="vrcn-mini-pill-group" id="notifPillGroup"><div class="vrcn-mini-pill-indicator" id="notifPillIndicator"></div><button class="vrcn-mini-pill active" id="notifTabCurrent" onclick="setNotifTab('current')" data-i18n="notifications.tab.current">Current</button><button class="vrcn-mini-pill" id="notifTabHidden" onclick="setNotifTab('hidden')" data-i18n="notifications.tab.hidden">Hidden</button></div><button class="vrcn-icon-button" onclick="refreshNotifications()" title="Refresh" data-i18n-title="common.refresh"><span class="msi" style="font-size:16px;">refresh</span></button></div></div>
             <div class="notif-panel-list" id="notifList"><div class="empty-msg" data-i18n="notifications.empty">No notifications</div></div>
         </div>
         <!-- Help panel -->
         <div class="notif-panel help-panel" id="helpPanel" style="display:none;">
             <div class="notif-panel-header">
                 <span id="helpPanelTitle" style="font-weight:700;font-size:calc(13px + var(--fs-off, 0px));"></span>
-                <button class="vrcn-button" onclick="toggleHelpPanel()" style="padding:2px 8px;font-size:calc(10px + var(--fs-off, 0px));"><span class="msi" style="font-size:14px;">close</span></button>
+                <button class="vrcn-icon-button" onclick="toggleHelpPanel()" title="Close" data-i18n-title="common.close"><span class="msi" style="font-size:18px;">close</span></button>
             </div>
             <div style="padding:14px 16px;overflow-y:auto;flex:1;">
                 <p id="helpPanelText" style="font-size:calc(13px + var(--fs-off, 0px));line-height:1.65;color:var(--tx2);margin:0;white-space:pre-wrap;"></p>
@@ -458,6 +464,12 @@
 
             <!-- Tab 31: Avatar Logger (personal tool) -->
             <div class="tab" id="tab31"></div>
+
+            <!-- Tab 32: Emoji Maker -->
+            <div class="tab" id="tab32"></div>
+
+            <!-- Tab 33: OSC Radial Menu -->
+            <div class="tab" id="tab33"></div>
 
         </div>
     </div>
@@ -609,13 +621,15 @@
                 <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" id="exportTitle">Export</span></div>
                 <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="document.getElementById('modalExport').style.display='none'"><span class="msi" style="font-size:20px;">close</span></button></div>
             </div>
+            <div class="modal-card">
             <div class="modal-msg" id="exportDesc" style="margin:20px 0 14px;"></div>
             <textarea id="exportText" readonly spellcheck="false" style="width:100%;height:320px;box-sizing:border-box;resize:vertical;background:var(--bg-input);color:var(--tx1);border:1px solid var(--brd-lt);border-radius:8px;padding:10px 12px;font-family:monospace;font-size:calc(12px + var(--fs-off, 0px));line-height:1.5;white-space:pre;overflow:auto;"></textarea>
-            <div class="modal-btns" style="margin-top:16px;">
-                <button class="vrcn-button-round" onclick="exportCopy()"><span class="msi" style="font-size:14px;">content_copy</span> <span data-i18n="export.copy">Copy</span></button>
-                <button class="vrcn-button-round vrcn-btn-join" onclick="exportSaveCsv()"><span class="msi" style="font-size:14px;">download</span> <span data-i18n="export.export_csv">Export CSV</span></button>
             </div>
-        </div>
+            <div class="modal-foot"><div class="modal-foot-spacer"></div>
+                <button class="vrcn-button" onclick="exportCopy()"><span class="msi" style="font-size:14px;">content_copy</span> <span data-i18n="export.copy">Copy</span></button>
+                <button class="vrcn-button vrcn-btn-join" onclick="exportSaveCsv()"><span class="msi" style="font-size:14px;">download</span> <span data-i18n="export.export_csv">Export CSV</span></button>
+            </div>
+</div>
     </div>
 
     <!-- Import Modal -->
@@ -625,14 +639,16 @@
                 <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" id="importTitle">Import</span></div>
                 <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="closeImportModal()"><span class="msi" style="font-size:20px;">close</span></button></div>
             </div>
+            <div class="modal-card">
             <div class="modal-msg" id="importDesc" style="margin:20px 0 14px;"></div>
             <div id="importRows"></div>
             <div class="modal-msg" id="importStatus" style="margin:14px 0 0;min-height:18px;"></div>
-            <div class="modal-btns" style="margin-top:16px;">
-                <button class="vrcn-button-round" onclick="closeImportModal()"><span data-i18n="common.cancel">Cancel</span></button>
-                <button class="vrcn-button-round vrcn-btn-join" id="importStartBtn" onclick="importStart()"><span class="msi" style="font-size:14px;">upload</span> <span data-i18n="import.start">Import</span></button>
             </div>
-        </div>
+            <div class="modal-foot"><div class="modal-foot-spacer"></div>
+                <button class="vrcn-button" onclick="closeImportModal()"><span data-i18n="common.cancel">Cancel</span></button>
+                <button class="vrcn-button vrcn-btn-join" id="importStartBtn" onclick="importStart()"><span class="msi" style="font-size:14px;">upload</span> <span data-i18n="import.start">Import</span></button>
+            </div>
+</div>
     </div>
 
     <!-- VRChat Launch Options Modal -->
@@ -682,15 +698,17 @@
                 <div class="fd-modal-bar-crumbs"><span class="fd-modal-bar-title" data-i18n="nav.editor.title">Edit Navigation</span></div>
                 <div class="fd-modal-bar-actions"><button class="btn-notif fd-action-btn" title="Close" data-i18n-title="common.close" onclick="closeNavEditor()"><span class="msi" style="font-size:20px;">close</span></button></div>
             </div>
-            <div id="navEditorList" class="ne-list vrcn-scrollbar" style="margin-top:20px;"></div>
-            <div style="display:flex;gap:8px;align-items:center;">
+            <div class="modal-card">
+            <div id="navEditorList" class="ne-list vrcn-scrollbar"></div>
+            </div>
+            <div class="modal-foot">
                 <button class="vrcn-button" onclick="_edAddFolder()"><span class="msi" style="font-size:16px;">create_new_folder</span><span data-i18n="nav.editor.add_folder">Add Folder</span></button>
                 <button class="vrcn-button" onclick="_edAddSeparator()"><span class="msi" style="font-size:16px;">horizontal_rule</span><span data-i18n="nav.editor.add_separator">Add Separator</span></button>
-                <span style="flex:1;"></span>
+                <div class="modal-foot-spacer"></div>
                 <button class="vrcn-button" onclick="_edRestoreDefault()"><span class="msi" style="font-size:16px;">restore</span><span data-i18n="nav.editor.reset">Reset</span></button>
-                <button class="vrcn-button vrcn-btn-primary" onclick="_edConfirm()"><span class="msi" style="font-size:16px;">check</span><span data-i18n="common.save">Save</span></button>
+                <button class="vrcn-button" onclick="_edConfirm()"><span class="msi" style="font-size:16px;">check</span><span data-i18n="common.save">Save</span></button>
             </div>
-        </div>
+</div>
     </div>
 
     <!-- Crash Report Modal -->
@@ -756,6 +774,8 @@
             tab29: 'modules/tools/avatar-database/avatar-database.html',
             tab30: 'modules/tools/direct-access/direct-access.html',
             tab31: 'modules/tools/avatar-logger/avatar-logger.html',
+            tab32: 'modules/tools/emoji-maker/emoji-maker.html',
+            tab33: 'modules/tools/osc-radial/osc-radial.html',
         };
 
         const modalFragments = {
@@ -871,6 +891,8 @@
             'modules/tools/avatar-database/avatar-database.js',
             'modules/tools/direct-access/direct-access.js',
             'modules/tools/avatar-logger/avatar-logger.js',
+            'modules/tools/emoji-maker/emoji-maker.js',
+            'modules/tools/osc-radial/osc-radial.js',
             'core/logic/init.js',
             'core/debounce/debounce.js',
             'core/SmartSearch/smart-search.js',

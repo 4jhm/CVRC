@@ -107,7 +107,7 @@ function _rwBuildPages(d) {
     if (d.newFriends && d.newFriends.count > 0) {
         const list = d.newFriends.list || [];
         const rows = list.map(f => `<div class="ts-item">
-            ${f.image ? `<img class="ts-item-avatar" src="${esc(f.image)}" onerror="this.style.visibility='hidden'">` : `<div class="ts-item-avatar ts-avatar-placeholder"></div>`}
+            ${f.image ? `<img class="ts-item-avatar" src="${esc(imgThumb(f.image, 96))}" onerror="this.style.visibility='hidden'">` : `<div class="ts-item-avatar ts-avatar-placeholder"></div>`}
             <div class="ts-item-body"><div class="ts-item-name">${esc(f.name)}</div>
             <div class="ts-item-meta">${f.hours ? _rwNum(f.hours) + 'h ' + esc(rwT('bestfriend.together', 'together')) : '&nbsp;'}</div></div>
             ${f.hours ? `<div class="ts-item-time">${_rwNum(f.hours)}h</div>` : ''}
@@ -120,7 +120,7 @@ function _rwBuildPages(d) {
     if (d.topFriends && d.topFriends.length) {
         const rows = d.topFriends.map((f, i) => `<div class="ts-item">
             <div class="ts-item-rank">#${i + 1}</div>
-            ${f.image ? `<img class="ts-item-avatar" src="${esc(f.image)}" onerror="this.style.visibility='hidden'">` : `<div class="ts-item-avatar ts-avatar-placeholder"></div>`}
+            ${f.image ? `<img class="ts-item-avatar" src="${esc(imgThumb(f.image, 96))}" onerror="this.style.visibility='hidden'">` : `<div class="ts-item-avatar ts-avatar-placeholder"></div>`}
             <div class="ts-item-body"><div class="ts-item-name">${esc(f.name)}</div>
             <div class="ts-item-meta">${_rwNum(f.meets)} ${esc(rwT('bestfriend.reunions', 'reunions'))}</div></div>
             <div class="ts-item-time">${_rwNum(f.hours)}h</div>
@@ -134,7 +134,7 @@ function _rwBuildPages(d) {
         const rows = d.topWorlds.map((w, i) => {
             const pct = Math.max(3, Math.round((w.hours || 0) / maxH * 100));
             const thumb = w.thumb
-                ? `<img class="ts-item-thumb" src="${esc(w.thumb)}" onerror="this.style.visibility='hidden'">`
+                ? `<img class="ts-item-thumb" src="${esc(imgThumb(w.thumb, 96))}" onerror="this.style.visibility='hidden'">`
                 : `<div class="ts-item-thumb ts-thumb-placeholder"></div>`;
             return `<div class="ts-item">
                 <div class="ts-item-rank">#${i + 1}</div>
@@ -212,7 +212,7 @@ function openRewindModal(d) {
         <div class="rw-head">
             <span class="rw-brand">VRCN</span>
             <div class="rw-dots" id="rwDots"></div>
-            <button class="vrcn-button-round" onclick="closeRewind()" title="${esc(t('common.close', 'Close'))}"><span class="msi">close</span></button>
+            <button class="vrcn-icon-button" onclick="closeRewind()" title="${esc(t('common.close', 'Close'))}"><span class="msi" style="font-size:18px;">close</span></button>
         </div>
         <div class="rw-body" id="rwBody"></div>
         <div class="rw-foot">

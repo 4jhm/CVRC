@@ -37,11 +37,61 @@ html.modal-refreshing .fd-refresh-spin { animation: modal-refresh-spin 0.8s line
     padding: 28px 32px 22px;
 }
 
+.modal-card {
+    background: var(--bg-input);
+    border: 1px solid var(--brd);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin: var(--modal-card-gap, 18px) calc(var(--modal-card-gap, 18px) - var(--modal-pad-x, 32px)) 0;
+    box-sizing: border-box;
+}
+.modal-card .vrcn-edit-field,
+.modal-card textarea.vrcn-edit-field,
+.modal-card .vrcn-input {
+    background: var(--ui-input-bg);
+}
+.modal-card .vrcn-edit-field:hover,
+.modal-card .vrcn-input:hover { background: var(--ui-input-hover-bg); }
+.modal-card .vrcn-edit-field:focus,
+.modal-card .vrcn-input:focus { background: var(--ui-input-hover-bg); }
+
+.modal-card > :first-child { margin-top: 0; }
+.modal-card > :last-child { margin-bottom: 0; }
+
+.modal-foot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px var(--modal-pad-x, 32px);
+    margin: var(--modal-card-gap, 18px) calc(-1 * var(--modal-pad-x, 32px)) calc(-1 * var(--modal-pad-b, 22px));
+    background: var(--bg-side);
+    border-top: 1px solid var(--brd);
+    border-radius: 0 0 13px 13px;
+}
+.modal-foot-spacer { flex: 1; }
+
+.modal-box:has(.modal-card) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    scrollbar-gutter: auto;
+}
+.modal-box:has(.modal-card) > .fd-modal-bar,
+.modal-box:has(.modal-card) > .modal-foot { flex-shrink: 0; }
+.modal-box:has(.modal-card) > .modal-card {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
 .modal-box {
+    --modal-pad-x: 32px;
+    --modal-pad-b: 22px;
+    --modal-card-gap: 18px;
     background: var(--bg-card);
     border: 1px solid var(--brd);
     border-radius: 14px;
-    padding: 28px 32px 22px;
+    padding: 28px var(--modal-pad-x) var(--modal-pad-b);
     width: 460px;
     max-width: 90%;
     max-height: calc(100vh - var(--tb-h) - 40px);
@@ -459,11 +509,17 @@ html.modal-refreshing .fd-refresh-spin { animation: modal-refresh-spin 0.8s line
 
 .vrc-cfg-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 12px 18px;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 10px 14px;
+}
+.vrc-cfg-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px 14px;
 }
 .vrc-cfg-field { min-width: 0; }
-.vrc-cfg-field > .sf-section-label { margin-bottom: 6px; }
+.vrc-cfg-field > .sf-section-label { margin-bottom: 4px; }
 .vrc-cfg-field .vrcn-edit-field,
 .vrc-cfg-field .vrcn-dropdown,
 .vrc-cfg-field .vn-select { width: 100%; }

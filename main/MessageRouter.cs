@@ -229,6 +229,7 @@ public partial class AppShell
             var userId = _vrcApi.CurrentUserId;
             var payload = new { avatar_ids = avatarIds, attribution = string.IsNullOrEmpty(userId) ? null : userId };
             var json = JsonConvert.SerializeObject(payload);
+            SendToJS("log", new { msg = $"[AVTRDB] SUB {reportType} x{avatarIds.Count}", color = "sec" });
             var resp = await client.PostAsync("https://api.avtrdb.com/v3/avatar/ingest",
                 new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
             var body = await resp.Content.ReadAsStringAsync();
@@ -1330,6 +1331,9 @@ public partial class AppShell
 
                 case "vrcCheckAvatars":
                 {
+                    // Without a VRChat session every lookup fails, which would mark
+                    // the whole batch as deleted and report that upstream.
+                    if (!_vrcApi.IsLoggedIn) break;
                     var ids = msg["ids"]?.ToObject<string[]>();
                     if (ids is { Length: > 0 })
                     {
@@ -1376,6 +1380,7 @@ public partial class AppShell
                                 }
                                 foreach (var id in toCheck)
                                 {
+                                    if (!_vrcApi.IsLoggedIn) break;
                                     try
                                     {
                                         var av = await _core.Avatars.GetAvatarAsync(id);
@@ -2987,6 +2992,10 @@ public partial class AppShell
                     _avatarLoggerCtrl.HandleMessage(action, msg);
                     break;
 
+                case "emojiSaveSheet":
+                    _emojiMakerCtrl.HandleMessage(action, msg);
+                    break;
+
                 // Current instance
                 case "vrcGetCurrentInstance":
                     await _instance.HandleMessage(action, msg);
@@ -3799,6 +3808,15 @@ public partial class AppShell
 
         if (pcPerf.Length > 0 || questPerf.Length > 0 || iosPerf.Length > 0)
             a["performance"] = new JObject { ["pc"] = pcPerf, ["quest"] = questPerf, ["ios"] = iosPerf };
+
+        if (a["compatibility"] == null && a["unityPackages"] == null && (c.HasPC || c.HasQuest || c.HasIos))
+        {
+            var compat = new JArray();
+            if (c.HasPC)    compat.Add("pc");
+            if (c.HasQuest) compat.Add("android");
+            if (c.HasIos)   compat.Add("ios");
+            a["compatibility"] = compat;
+        }
     }
 
     private void CacheAvatarDetailFrom(JObject avatar)

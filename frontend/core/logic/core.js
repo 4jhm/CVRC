@@ -93,13 +93,15 @@ function applyDecorationsSetting() {
     document.documentElement.classList.toggle('profile-cards-transparent', glassCards);
 }
 function applyIconFramesSetting() { applyDecorationsSetting(); }
-function iconFrameHtml(frameUrl) {
+function iconFrameHtml(frameUrl, animated) {
     if (!frameUrl) return '';
-    return `<img class="user-frame-deco" src="${frameUrl}" loading="lazy" decoding="async" alt="" aria-hidden="true">`;
+    const src = (animated || !vrcPlusOptimizeEnabled) ? frameUrl : _thumbUrl(frameUrl, 96);
+    return `<img class="user-frame-deco" src="${src}" loading="lazy" decoding="async" alt="" aria-hidden="true">`;
 }
-function nameplateDecoHtml(url) {
+function nameplateDecoHtml(url, animated) {
     if (!url) return '';
-    return `<img class="nameplate-deco" src="${url}" loading="lazy" decoding="async" alt="" aria-hidden="true">`;
+    const src = (animated || !vrcPlusOptimizeEnabled) ? url : _thumbUrl(url, 256);
+    return `<img class="nameplate-deco" src="${src}" loading="lazy" decoding="async" alt="" aria-hidden="true">`;
 }
 function profileEffectHtml(url) {
     if (!url) return '';
@@ -108,7 +110,6 @@ function profileEffectHtml(url) {
 let currentPlayBtnTheme = '';
 let currentCursorTheme = '';
 let currentAppFont = 'google-sans';
-let currentDesignStyle = 'line';
 let currentCustomFont = '';
 let currentFontSizeOffset = 0;
 let _systemFonts = [];
@@ -223,7 +224,7 @@ const STATUS_LIST = [
         key: 'join me',
         labelKey: 'status.join_me',
         label: 'Join Me',
-        color: '#42A5F5',
+        color: '#3783FF',
         descKey: 'profiles.status.option.join_me_desc',
         desc: 'Others can easily join you'
     },
@@ -231,7 +232,7 @@ const STATUS_LIST = [
         key: 'ask me',
         labelKey: 'status.ask_me',
         label: 'Ask Me',
-        color: '#FFA726',
+        color: '#FF8D26',
         descKey: 'profiles.status.option.ask_me_desc',
         desc: 'Others should ask before joining'
     },
@@ -239,7 +240,7 @@ const STATUS_LIST = [
         key: 'busy',
         labelKey: 'status.do_not_disturb',
         label: 'Do Not Disturb',
-        color: '#EF5350',
+        color: '#FF2D2D',
         descKey: 'profiles.status.option.busy_desc',
         desc: 'You appear busy'
     }
@@ -367,17 +368,17 @@ function sk(type, n = 1) {
 
 
 const THEMES = {
-    vrcn:      { label: 'VRCN',      dot: '#58586F', c: { 'bg-base': '#050505', 'bg-side': '#0A0A0A', 'bg-card': '#0D0D0E', 'bg-hover': '#1C1C1F', 'bg-input': '#101011', 'ui-input-bg': '#1C1C1F', 'ui-input-hover-bg': '#26262A', 'accent': '#58586F', 'accent-lt': '#9797B1', 'cyan': '#8CA5FF', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#EBEBFF', 'tx1': '#EBEBFF', 'tx2': '#B7B7C3', 'tx3': '#FFFFFF', 'brd': '#1C1C1F', 'brd-lt': '#1C1C1F', 'bdg-user-pc': '#9797B1', 'bdg-user-quest': '#9797B1', 'bdg-user-web': '#9797B1', 'bdg-user-friend': '#2DD48C', 'bdg-rank-visitor': '#CCCCCC', 'bdg-rank-new': '#1778FF', 'bdg-rank-user': '#2BCF5C', 'bdg-rank-known': '#FF7B42', 'bdg-rank-trusted': '#8143E6' } },
-    slates:    { label: 'Slates',    dot: '#6F6CFF', c: { 'bg-base': '#090814', 'bg-side': '#090814', 'bg-card': '#131125', 'bg-hover': '#4B4998', 'bg-input': '#0E0C1E', 'accent': '#6F6CFF', 'accent-lt': '#6F6CFF', 'cyan': '#8CA5FF', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#1A1833', 'brd-lt': '#1F2357' } },
-    blood:     { label: 'Blood',     dot: '#DF2A4E', c: { 'bg-base': '#0B0611', 'bg-side': '#10091A', 'bg-card': '#190F26', 'bg-hover': '#251936', 'bg-input': '#130B1E', 'accent': '#DF2A4E', 'accent-lt': '#E16B82', 'cyan': '#DC7A56', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#F2EFF5', 'tx1': '#D2CCDB', 'tx2': '#D2CCDB', 'tx3': '#D2CCDB', 'brd': '#291B3C', 'brd-lt': '#38284D' } },
-    halloween: { label: 'Halloween', dot: '#DF462A', c: { 'bg-base': '#0B091A', 'bg-side': '#0B091A', 'bg-card': '#110F26', 'bg-hover': '#1B1936', 'bg-input': '#0D0B1E', 'accent': '#DF462A', 'accent-lt': '#E17D6B', 'cyan': '#DCA956', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#F0EFF5', 'tx1': '#F0EFF5', 'tx2': '#F0EFF5', 'tx3': '#F0EFF5', 'brd': '#1E1B3C', 'brd-lt': '#2B284D' } },
-    miku:      { label: 'Miku',      dot: '#66B4D2', c: { 'bg-base': '#080D14', 'bg-side': '#080D14', 'bg-card': '#080D14', 'bg-hover': '#66B4D2', 'bg-input': '#0B111A', 'accent': '#66B4D2', 'accent-lt': '#66B4D2', 'cyan': '#66B4D2', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#13223F', 'brd-lt': '#13223F' } },
-    vrchat:    { label: 'VRChat',    dot: '#0B748E', c: { 'bg-base': '#0E1013', 'bg-side': '#0E1013', 'bg-card': '#181B1F', 'bg-hover': '#042E39', 'bg-input': '#1C2126', 'accent': '#0B748E', 'accent-lt': '#53C0D5', 'cyan': '#53C0D5', 'ok': '#18A86A', 'warn': '#D4860A', 'err': '#D93040', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#042E39', 'brd-lt': '#BEC8DA' } },
-    vrcx:        { label: 'VRCX',         dot: '#4C4C66', c: { 'bg-base': '#0A0A0A', 'bg-side': '#0A0A0A', 'bg-card': '#0F0F0F', 'bg-hover': '#1C1C1F', 'bg-input': '#141414', 'accent': '#4C4C66', 'accent-lt': '#9797B1', 'cyan': '#8CA5FF', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#EBEBFF', 'tx1': '#EBEBFF', 'tx2': '#B7B7C3', 'tx3': '#FFFFFF', 'brd': '#1C1C1F', 'brd-lt': '#1C1C1F' } },
-    flipperzero: { label: 'Flipper Zero', dot: '#FF896F', c: { 'bg-base': '#000000', 'bg-side': '#EEF1FF', 'bg-card': '#E7EAF8', 'bg-hover': '#FDB9AA', 'bg-input': '#DCE1F1', 'accent': '#FF896F', 'accent-lt': '#FF896F', 'cyan': '#FF896F', 'ok': '#2BFF00', 'warn': '#FF7455', 'err': '#FF2E00', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#D3D6E6', 'brd-lt': '#D3D6E6' }, light: true, cLight: { 'bg-base': '#EEF1FF', 'tx0': '#000000', 'tx1': '#494949', 'tx2': '#494949', 'tx3': '#494949', 'accent': '#FF896F' } },
-    rose:        { label: 'Rose',         dot: '#BB8BB2', c: { 'bg-base': '#000000', 'bg-side': '#DFCED4', 'bg-card': '#DFCED4', 'bg-hover': '#FFC3DA', 'bg-input': '#FFDAE7', 'accent': '#BB8BB2', 'accent-lt': '#BB8BB2', 'cyan': '#FFC3F4', 'ok': '#2BFF00', 'warn': '#FFC3F4', 'err': '#FF2E00', 'tx0': '#FFFFFF', 'tx1': '#FFF9F9', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#D5C4CA', 'brd-lt': '#D5C4CA' }, light: true, cLight: { 'bg-base': '#DFCED4', 'tx0': '#000000', 'tx1': '#494949', 'tx2': '#494949', 'tx3': '#494949', 'accent': '#BB8BB2' } },
-    unicorn:     { label: 'Unicorn',      dot: '#E1C5F3', c: { 'bg-base': '#000000', 'bg-side': '#E9DEFF', 'bg-card': '#E3D6FD', 'bg-hover': '#E2B9FF', 'bg-input': '#EDD2FF', 'accent': '#E1C5F3', 'accent-lt': '#AC88C2', 'cyan': '#EDD2FF', 'ok': '#2BFF00', 'warn': '#FF7455', 'err': '#FF2E00', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#E1C7F1', 'brd-lt': '#E1C7F1' }, light: true, cLight: { 'bg-base': '#E9DEFF', 'tx0': '#000000', 'tx1': '#494949', 'tx2': '#494949', 'tx3': '#494949', 'accent': '#AC88C2' } },
-    baby:        { label: 'Baby',         dot: '#ACBCFF', c: { 'bg-base': '#000000', 'bg-side': '#E8ECFF', 'bg-card': '#E1E5F8', 'bg-hover': '#B9C6FF', 'bg-input': '#D1D8F5', 'accent': '#ACBCFF', 'accent-lt': '#ACBCFF', 'cyan': '#ACBCFF', 'ok': '#2BFF00', 'warn': '#FF7455', 'err': '#FF2E00', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#C8CFEE', 'brd-lt': '#C8CFEE' }, light: true, cLight: { 'bg-base': '#E8ECFF', 'tx0': '#000000', 'tx1': '#494949', 'tx2': '#494949', 'tx3': '#494949', 'accent': '#ACBCFF' } },
+    vrcn:      { label: 'VRCN',      dot: '#58586F', c: { 'bg-base': '#050505', 'bg-side': '#0A0A0A', 'bg-card': '#0D0D0E', 'bg-hover': '#1C1C1F', 'bg-input': '#101011', 'tab-card-bg': '#0B0B0C', 'ui-input-bg': '#1C1C1F', 'ui-input-hover-bg': '#26262A', 'accent': '#58586F', 'accent-lt': '#9797B1', 'cyan': '#8CA5FF', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#EBEBFF', 'tx1': '#EBEBFF', 'tx2': '#B7B7C3', 'tx3': '#FFFFFF', 'brd': '#1C1C1F', 'brd-lt': '#1C1C1F', 'bdg-user-pc': '#9797B1', 'bdg-user-quest': '#9797B1', 'bdg-user-web': '#9797B1', 'bdg-user-friend': '#2DD48C', 'bdg-rank-visitor': '#CCCCCC', 'bdg-rank-new': '#1778FF', 'bdg-rank-user': '#2BCF5C', 'bdg-rank-known': '#FF7B42', 'bdg-rank-trusted': '#8143E6' } },
+    slates:    { label: 'Slates',    dot: '#6F6CFF', c: { 'bg-base': '#090814', 'bg-side': '#090814', 'bg-card': '#131125', 'bg-hover': '#4B4998', 'bg-input': '#161428', 'tab-card-bg': '#110F23', 'accent': '#6F6CFF', 'accent-lt': '#6F6CFF', 'cyan': '#8CA5FF', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#1A1833', 'brd-lt': '#1F2357' } },
+    blood:     { label: 'Blood',     dot: '#DF2A4E', c: { 'bg-base': '#0B0611', 'bg-side': '#10091A', 'bg-card': '#190F26', 'bg-hover': '#251936', 'bg-input': '#1C1229', 'tab-card-bg': '#170D24', 'accent': '#DF2A4E', 'accent-lt': '#E16B82', 'cyan': '#DC7A56', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#F2EFF5', 'tx1': '#D2CCDB', 'tx2': '#D2CCDB', 'tx3': '#D2CCDB', 'brd': '#291B3C', 'brd-lt': '#38284D' } },
+    halloween: { label: 'Halloween', dot: '#DF462A', c: { 'bg-base': '#0B091A', 'bg-side': '#0B091A', 'bg-card': '#110F26', 'bg-hover': '#1B1936', 'bg-input': '#141229', 'tab-card-bg': '#0F0D24', 'accent': '#DF462A', 'accent-lt': '#E17D6B', 'cyan': '#DCA956', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#F0EFF5', 'tx1': '#F0EFF5', 'tx2': '#F0EFF5', 'tx3': '#F0EFF5', 'brd': '#1E1B3C', 'brd-lt': '#2B284D' } },
+    miku:      { label: 'Miku',      dot: '#66B4D2', c: { 'bg-base': '#080D14', 'bg-side': '#080D14', 'bg-card': '#080D14', 'bg-hover': '#66B4D2', 'bg-input': '#0B1017', 'tab-card-bg': '#060B12', 'accent': '#66B4D2', 'accent-lt': '#66B4D2', 'cyan': '#66B4D2', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#13223F', 'brd-lt': '#13223F' } },
+    vrchat:    { label: 'VRChat',    dot: '#0B748E', c: { 'bg-base': '#0E1013', 'bg-side': '#0E1013', 'bg-card': '#181B1F', 'bg-hover': '#042E39', 'bg-input': '#1B1E22', 'tab-card-bg': '#16191D', 'accent': '#0B748E', 'accent-lt': '#53C0D5', 'cyan': '#53C0D5', 'ok': '#18A86A', 'warn': '#D4860A', 'err': '#D93040', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#042E39', 'brd-lt': '#BEC8DA' } },
+    vrcx:        { label: 'VRCX',         dot: '#4C4C66', c: { 'bg-base': '#0A0A0A', 'bg-side': '#0A0A0A', 'bg-card': '#0F0F0F', 'bg-hover': '#1C1C1F', 'bg-input': '#121212', 'tab-card-bg': '#0D0D0D', 'accent': '#4C4C66', 'accent-lt': '#9797B1', 'cyan': '#8CA5FF', 'ok': '#2DD48C', 'warn': '#FFBA37', 'err': '#FF4B55', 'tx0': '#EBEBFF', 'tx1': '#EBEBFF', 'tx2': '#B7B7C3', 'tx3': '#FFFFFF', 'brd': '#1C1C1F', 'brd-lt': '#1C1C1F' } },
+    flipperzero: { label: 'Flipper Zero', dot: '#FF896F', c: { 'bg-base': '#000000', 'bg-side': '#EEF1FF', 'bg-card': '#E7EAF8', 'bg-hover': '#FDB9AA', 'bg-input': '#EAEDFB', 'tab-card-bg': '#E5E8F6', 'accent': '#FF896F', 'accent-lt': '#FF896F', 'cyan': '#FF896F', 'ok': '#2BFF00', 'warn': '#FF7455', 'err': '#FF2E00', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#D3D6E6', 'brd-lt': '#D3D6E6' }, light: true, cLight: { 'bg-base': '#EEF1FF', 'tx0': '#000000', 'tx1': '#494949', 'tx2': '#494949', 'tx3': '#494949', 'accent': '#FF896F' } },
+    rose:        { label: 'Rose',         dot: '#BB8BB2', c: { 'bg-base': '#000000', 'bg-side': '#DFCED4', 'bg-card': '#DFCED4', 'bg-hover': '#FFC3DA', 'bg-input': '#E2D1D7', 'tab-card-bg': '#DDCCD2', 'accent': '#BB8BB2', 'accent-lt': '#BB8BB2', 'cyan': '#FFC3F4', 'ok': '#2BFF00', 'warn': '#FFC3F4', 'err': '#FF2E00', 'tx0': '#FFFFFF', 'tx1': '#FFF9F9', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#D5C4CA', 'brd-lt': '#D5C4CA' }, light: true, cLight: { 'bg-base': '#DFCED4', 'tx0': '#000000', 'tx1': '#494949', 'tx2': '#494949', 'tx3': '#494949', 'accent': '#BB8BB2' } },
+    unicorn:     { label: 'Unicorn',      dot: '#E1C5F3', c: { 'bg-base': '#000000', 'bg-side': '#E9DEFF', 'bg-card': '#E3D6FD', 'bg-hover': '#E2B9FF', 'bg-input': '#E6D9FF', 'tab-card-bg': '#E1D4FB', 'accent': '#E1C5F3', 'accent-lt': '#AC88C2', 'cyan': '#EDD2FF', 'ok': '#2BFF00', 'warn': '#FF7455', 'err': '#FF2E00', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#E1C7F1', 'brd-lt': '#E1C7F1' }, light: true, cLight: { 'bg-base': '#E9DEFF', 'tx0': '#000000', 'tx1': '#494949', 'tx2': '#494949', 'tx3': '#494949', 'accent': '#AC88C2' } },
+    baby:        { label: 'Baby',         dot: '#ACBCFF', c: { 'bg-base': '#000000', 'bg-side': '#E8ECFF', 'bg-card': '#E1E5F8', 'bg-hover': '#B9C6FF', 'bg-input': '#E4E8FB', 'tab-card-bg': '#DFE3F6', 'accent': '#ACBCFF', 'accent-lt': '#ACBCFF', 'cyan': '#ACBCFF', 'ok': '#2BFF00', 'warn': '#FF7455', 'err': '#FF2E00', 'tx0': '#FFFFFF', 'tx1': '#FFFFFF', 'tx2': '#FFFFFF', 'tx3': '#FFFFFF', 'brd': '#C8CFEE', 'brd-lt': '#C8CFEE' }, light: true, cLight: { 'bg-base': '#E8ECFF', 'tx0': '#000000', 'tx1': '#494949', 'tx2': '#494949', 'tx3': '#494949', 'accent': '#ACBCFF' } },
 };
 
 const _LIGHT_VARS = ['bg-base', 'tx0', 'tx1', 'tx2', 'tx3', 'accent'];
@@ -396,6 +397,7 @@ function applyColors(c, light) {
     for (const [k, v] of Object.entries(c)) document.documentElement.style.setProperty('--' + k, v);
     if (c['bg-card']) document.documentElement.style.setProperty('--bg-btn', c['bg-card']);
     if (c['bg-hover']) document.documentElement.style.setProperty('--bg-btn-h', c['bg-hover']);
+    if (!c['tab-card-bg'] && c['bg-input']) document.documentElement.style.setProperty('--tab-card-bg', c['bg-input']);
     _applyLightBase();
     const logoEl = document.getElementById('logoIcon');
     if (logoEl && logoEl._repaintLogo) logoEl._repaintLogo();
@@ -431,13 +433,26 @@ function _lightEls() {
     return out;
 }
 
+const _LIGHT_ONBG_PREFIX = '--dash-onbg-';
+
+function _lightVarName(el, key) {
+    return (el.id === 'tab0' && key !== 'bg-base') ? _LIGHT_ONBG_PREFIX + key : '--' + key;
+}
+
+function _lightClearVars(el) {
+    for (const k of _LIGHT_VARS) {
+        el.style.removeProperty('--' + k);
+        el.style.removeProperty(_LIGHT_ONBG_PREFIX + k);
+    }
+}
+
 function _applyLightBase() {
     const rs = document.documentElement.style;
     const drops = document.querySelectorAll('#taskbar .tb-dropdown');
     _lightSig = '';
     if (!_activeLightOn) {
-        for (const el of _lightEls()) for (const k of _LIGHT_VARS) el.style.removeProperty('--' + k);
-        for (const d of drops) for (const k of _LIGHT_VARS) d.style.removeProperty('--' + k);
+        for (const el of _lightEls()) _lightClearVars(el);
+        for (const d of drops) _lightClearVars(d);
         return;
     }
     for (const k of _LIGHT_VARS) {
@@ -457,7 +472,7 @@ function _applyLightInterp() {
     if (!onDash) {
         if (_lightSig === 'off') return;
         _lightSig = 'off';
-        for (const el of els) for (const k of _LIGHT_VARS) el.style.removeProperty('--' + k);
+        for (const el of els) _lightClearVars(el);
         return;
     }
     const lSide = document.getElementById('sidebarEl');
@@ -473,14 +488,14 @@ function _applyLightInterp() {
     const sig = tq + '|' + faded.map(e => e.id).join(',');
     if (sig === _lightSig) return;
     _lightSig = sig;
-    for (const el of els) for (const k of _LIGHT_VARS) el.style.removeProperty('--' + k);
+    for (const el of els) _lightClearVars(el);
     const t = tq / 40;
     for (const k of _LIGHT_VARS) {
         const prim = _activePrimaryColors[k];
         if (!prim) continue;
         const lite = _activeLightColors[k] || prim;
         const val = _lerpHex(prim, lite, t);
-        for (const el of faded) el.style.setProperty('--' + k, val);
+        for (const el of faded) el.style.setProperty(_lightVarName(el, k), val);
     }
     const logoEl = document.getElementById('logoIcon');
     if (logoEl && logoEl._repaintLogo) logoEl._repaintLogo();
@@ -501,7 +516,7 @@ document.documentElement.addEventListener('tabchange', function () {
 const _TE_GROUPS = [
     { title: 'Theme', vars: [
         ['bg-base',   'Base BG'],   ['bg-side',  'Sidebar BG'], ['bg-card',  'Card BG'],
-        ['bg-hover',  'Hover BG'],  ['bg-input', 'Input BG'],   ['ui-input-bg', 'UI Input BG'], ['ui-input-hover-bg', 'UI Input Hover BG'],
+        ['bg-hover',  'Hover BG'],  ['bg-input', 'Input BG'], ['tab-card-bg', 'Tab Card BG'],   ['ui-input-bg', 'UI Input BG'], ['ui-input-hover-bg', 'UI Input Hover BG'],
         ['accent',    'Accent'],    ['accent-lt','Accent Light'],['cyan',     'Highlight'],
         ['ok',        'Success'],   ['warn',     'Warning'],     ['err',      'Error'],
         ['tx0',       'Text 0'],    ['tx1',      'Text 1'],      ['tx2',      'Text 2'],    ['tx3','Text 3'],
@@ -850,6 +865,8 @@ function getPageTitle(i) {
         t('page.avatar_database', 'Avatar Database'),
         t('page.direct_access', 'Direct Access'),
         t('page.avatar_logger', 'Avatar Logger'),
+        t('page.emoji_maker', 'Emoji Maker'),
+        t('page.osc_radial', 'OSC Radial Menu'),
     ][i] ?? '';
 }
 
@@ -1064,19 +1081,6 @@ function renderFontGrid() {
     grid.querySelectorAll('.font-option').forEach(el => _fontPreviewObserver.observe(el));
 }
 
-function applyDesignStyle(style) {
-    currentDesignStyle = style === 'flat' ? 'flat' : 'line';
-    document.documentElement.classList.toggle('design-flat', currentDesignStyle === 'flat');
-    document.querySelectorAll('#designStylePicker .profile-style-option').forEach(el => {
-        el.classList.toggle('active', el.getAttribute('data-style') === currentDesignStyle);
-    });
-}
-
-function setDesignStyle(style) {
-    applyDesignStyle(style);
-    autoSave();
-}
-
 function selectAppFont(key) {
     currentCustomFont = '';
     applyAppFont(key);
@@ -1214,7 +1218,7 @@ function _buildAutoTheme(bgHue, accentHue, accentLit, imgSat) {
         'bg-side':   _hslToHex(bgHue, bs*0.88, 7.0  * lMult),
         'bg-card':   _hslToHex(bgHue, bs*0.78, 10.5 * lMult),
         'bg-hover':  _hslToHex(bgHue, bs*0.68, 15.5 * lMult),
-        'bg-input':  _hslToHex(bgHue, bs*0.82, 8.0  * lMult),
+        'bg-input':  _hslToHex(bgHue, bs*0.78, 10.5 * lMult), 'tab-card-bg': _hslToHex(bgHue, bs*0.78, 10.5 * lMult),
         'accent':    _hslToHex(accentHue, 74, al),
         'accent-lt': _hslToHex(accentHue, 66, al + 13),
         'cyan':      _hslToHex((accentHue + 28) % 360, 66, 60),
@@ -1494,33 +1498,49 @@ function playWaterAlarmSound() {
     }
 }
 
-let _clockEnabled = true;
-let _clockAmPm = false;
+let _clockEnabled = false;
+let _dateEnabled = false;
+let _showVrcPlus = true;
+let _showVrcCredits = true;
+let _hasVrcPlus = false;
+let _hasVrcCredits = false;
 
 function applyClockSettings() {
-    const enableEl = document.getElementById('setClockEnabled');
-    const ampmEl   = document.getElementById('setClockAmPm');
-    if (enableEl) _clockEnabled = enableEl.checked;
-    if (ampmEl)   _clockAmPm   = ampmEl.checked;
-    const area = document.querySelector('.clock-area');
-    if (area) area.style.display = _clockEnabled ? '' : 'none';
+    const enableEl  = document.getElementById('setClockEnabled');
+    const dateEl    = document.getElementById('setDateEnabled');
+    const vrcpEl    = document.getElementById('setShowVrcPlus');
+    const creditsEl = document.getElementById('setShowVrcCredits');
+    if (enableEl)  _clockEnabled   = enableEl.checked;
+    if (dateEl)    _dateEnabled    = dateEl.checked;
+    if (vrcpEl)    _showVrcPlus    = vrcpEl.checked;
+    if (creditsEl) _showVrcCredits = creditsEl.checked;
+    const anyClock = _clockEnabled || _dateEnabled;
+    const clockEl = document.getElementById('tbClock');
+    if (clockEl) clockEl.style.display = anyClock ? '' : 'none';
+    const sepEl = document.getElementById('tbClockSep');
+    if (sepEl) sepEl.style.display = anyClock ? '' : 'none';
+    const timeEl = document.getElementById('clock');
+    if (timeEl) timeEl.style.display = _clockEnabled ? '' : 'none';
+    const dEl = document.getElementById('clockDate');
+    if (dEl) dEl.style.display = _dateEnabled ? '' : 'none';
+    applyTbBadgeVisibility();
     updateClock();
 }
 
+function applyTbBadgeVisibility() {
+    const vp = document.getElementById('badgeVrcPlus');
+    if (vp) vp.style.display = (_showVrcPlus && _hasVrcPlus) ? '' : 'none';
+    const bc = document.getElementById('badgeVrcCredits');
+    if (bc) bc.style.display = (_showVrcCredits && _hasVrcCredits) ? '' : 'none';
+}
+
 function updateClock() {
-    if (!_clockEnabled) return;
+    if (!_clockEnabled && !_dateEnabled) return;
     const n = new Date();
-    // Clock time: respect the user's explicit AM/PM setting in preferences
-    let clockTime;
-    if (_clockAmPm) {
-        const h = n.getHours();
-        const min = String(n.getMinutes()).padStart(2, '0');
-        clockTime = String(h % 12 || 12).padStart(2, '0') + ':' + min + ' ' + (h >= 12 ? 'PM' : 'AM');
-    } else {
-        clockTime = String(n.getHours()).padStart(2, '0') + ':' + String(n.getMinutes()).padStart(2, '0');
-    }
-    document.getElementById('clock').textContent = clockTime;
-    document.getElementById('clockDate').textContent = fmtShortDate(n);
+    const timeEl = document.getElementById('clock');
+    const dateEl = document.getElementById('clockDate');
+    if (timeEl && _clockEnabled) timeEl.textContent = fmtTime(n);
+    if (dateEl && _dateEnabled) dateEl.textContent = fmtShortDate(n);
 }
 
 function toggleNavGroup(id) {
@@ -1541,6 +1561,7 @@ function _unloadTabImages(tabEl) {
     tabEl.querySelectorAll('img').forEach(img => {
         const s = img.src;
         if (!s || s === _LAZY_PH || img.dataset.lazySrc || img.classList.contains('lazy-keep')) return;
+        if (!s.startsWith('http://localhost:')) return;
         img.dataset.lazySrc = s;
         img.src = _LAZY_PH;
         count++;
@@ -1548,13 +1569,15 @@ function _unloadTabImages(tabEl) {
     tabEl.querySelectorAll('[style*="background-image"]').forEach(el => {
         const bg = el.style.backgroundImage;
         if (!bg || bg === 'none' || el.dataset.lazyBg || el.classList.contains('lazy-keep')) return;
+        if (bg.indexOf('http://localhost:') === -1) return;
         el.dataset.lazyBg = bg;
         el.style.backgroundImage = `url('${_LAZY_PH}')`;
         count++;
     });
     if (count > 0) {
         const tabIdx = Array.from(document.querySelectorAll('.tab')).indexOf(tabEl);
-        addLog(`[Unload] Unloaded ${count} image${count !== 1 ? 's' : ''} from Tab ${tabIdx} from memory.`, 'info');
+        const label = tabIdx >= 0 ? `Tab ${tabIdx}` : (tabEl.id || 'modal');
+        addLog(`[Unload] Unloaded ${count} image${count !== 1 ? 's' : ''} from ${label} from memory.`, 'info');
     }
 }
 
@@ -1568,6 +1591,7 @@ function _reloadTabImages(tabEl) {
         delete el.dataset.lazyBg;
     });
 }
+
 
 function showTab(i) {
     clearTimeout(_lazyUnloadTimer);
@@ -1623,6 +1647,7 @@ function showTab(i) {
         renderThemeChips();
         if (currentTheme === 'custom') renderColorInputs();
     }
+    if (i === 8) flushActivityLog();
     if (i === 12) refreshTimeline();
     if (i === 13) switchInvTab(activeInvTab);
     if (i === 14) sendToCS({ action: 'vcCheck' });
@@ -1683,22 +1708,33 @@ function setRelayState(r, s) {
 }
 
 const _httpCounts = { 200: 0, 429: 0, 404: 0, 403: 0, 400: 0 };
-const _httpBadgeIds = { 200: 'httpBadge200', 429: 'httpBadge429', 404: 'httpBadge404', 403: 'httpBadge403', 400: 'httpBadge400' };
+const _httpStatIds = { 200: 'statHttp200', 429: 'statHttp429', 404: 'statHttp404', 403: 'statHttp403', 400: 'statHttp400' };
+
+function _setLogStat(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = el.querySelector('.log-stat-v');
+    if (!v) return;
+    v.textContent = value;
+    v.classList.toggle('zero', !value);
+}
 
 function _updateHttpBadge(code) {
-    const el = document.getElementById(_httpBadgeIds[code]);
-    if (!el) return;
-    const lbl = el.querySelector('.mini-badge-label');
-    if (lbl) lbl.textContent = `${code}: ${_httpCounts[code]}`;
-    el.style.display = '';
+    _setLogStat(_httpStatIds[code], _httpCounts[code]);
 }
 
 let _cdnCount = 0;
 function _updateCdnBadge() {
-    const el = document.getElementById('cdnBadge');
-    if (!el) return;
-    el.querySelector('.mini-badge-label').textContent = `CDN: ${_cdnCount}`;
-    el.style.display = '';
+    _setLogStat('statCdn', _cdnCount);
+}
+
+let _avtrdbGetCount = 0;
+let _avtrdbQryCount = 0;
+let _avtrdbSubCount = 0;
+function _updateAvtrdbStats() {
+    _setLogStat('statAvtrdbGet', _avtrdbGetCount);
+    _setLogStat('statAvtrdbQry', _avtrdbQryCount);
+    _setLogStat('statAvtrdbSub', _avtrdbSubCount);
 }
 
 const _sessionStart = Date.now();
@@ -1706,26 +1742,42 @@ let _totalGetCount = 0;
 
 function _updateAvgBadges() {
     const hours = Math.max((Date.now() - _sessionStart) / 3_600_000, 1 / 3600);
-    const aget = Math.round(_totalGetCount / hours);
-    const acdn = Math.round(_cdnCount / hours);
-    const agetEl = document.getElementById('agetBadge');
-    const acdnEl = document.getElementById('acdnBadge');
-    if (agetEl) { agetEl.querySelector('.mini-badge-label').textContent = `AGET/H: ${aget}`; agetEl.style.display = ''; }
-    if (acdnEl) { acdnEl.querySelector('.mini-badge-label').textContent = `ACDN/H: ${acdn}`; acdnEl.style.display = ''; }
+    _setLogStat('statAget', Math.round(_totalGetCount / hours));
+    _setLogStat('statAcdn', Math.round(_cdnCount / hours));
 }
 
 let _logShowFull = false;
 let _logSearch   = '';
 
+let _logLines = [];
+let _logDomDirty = false;
+
 function _applyLogFilter() {
     const a = document.getElementById('logArea');
     if (!a) return;
     const q = _logSearch.toLowerCase();
+    if (!q) {
+        for (const el of a.children) el.style.display = '';
+        a.classList.toggle('log-tail', !_logShowFull);
+        return;
+    }
+    a.classList.remove('log-tail');
     const all = Array.from(a.querySelectorAll('.li-f'));
-    const matched = q ? all.filter(el => el.textContent.toLowerCase().includes(q)) : all;
+    const matched = all.filter(el => el.textContent.toLowerCase().includes(q));
     const showFrom = _logShowFull ? 0 : Math.max(0, matched.length - 100);
     for (const el of all) el.style.display = 'none';
     for (let i = showFrom; i < matched.length; i++) matched[i].style.display = '';
+}
+
+function flushActivityLog() {
+    const a = document.getElementById('logArea');
+    if (!a) return;
+    if (_logDomDirty) {
+        _logDomDirty = false;
+        a.innerHTML = _logLines.join('');
+        _applyLogFilter();
+        a.scrollTop = a.scrollHeight;
+    }
 }
 
 function toggleLogShowFull() {
@@ -1760,6 +1812,11 @@ function addLog(m, c) {
 
     // Suppress pending REST requests — only show the response line (with → NNN)
     if (/\[REST\] (GET|POST|PUT|DELETE|PATCH) /.test(m) && !/→/.test(m)) return;
+
+    // Track avtrdb requests
+    if (m.startsWith('[AVTRDB] GET')) { _avtrdbGetCount++; _updateAvtrdbStats(); }
+    else if (m.startsWith('[AVTRDB] QRY')) { _avtrdbQryCount++; _updateAvtrdbStats(); }
+    else if (m.startsWith('[AVTRDB] SUB')) { _avtrdbSubCount++; _updateAvtrdbStats(); }
 
     // Track CDN image downloads
     if (m.startsWith('CDN ') || m.startsWith('CDN -')) {
@@ -1805,13 +1862,18 @@ function addLog(m, c) {
     if (httpLevel) levelCls = httpLevel;
     if (statusCode) msgBody = msgBody.replace(/ → \d{3}.*$/, '');
 
-    const l = document.createElement('div');
-    l.className = 'li-f';
-    l.innerHTML = `<span class="li-ts">${ts}</span><span class="li-level ${levelCls}">${esc(level)}</span><span class="li-msg">${esc(msgBody)}</span>${statusCode ? `<span class="li-status ${levelCls}">${statusCode}</span>` : ''}`;
+    const rowHtml = `<div class="li-f"><span class="li-ts">${ts}</span><span class="li-level ${levelCls}">${esc(level)}</span><span class="li-msg">${esc(msgBody)}</span>${statusCode ? `<span class="li-status ${levelCls}">${statusCode}</span>` : ''}</div>`;
+    _logLines.push(rowHtml);
+    if (_logLines.length > 500) _logLines.shift();
+
+    const tab8 = document.getElementById('tab8');
+    if (!tab8 || !tab8.classList.contains('active')) { _logDomDirty = true; return; }
+
     const atBottom = a.scrollHeight - a.scrollTop - a.clientHeight < 40;
-    a.appendChild(l);
+    a.insertAdjacentHTML('beforeend', rowHtml);
     while (a.childElementCount > 500) a.removeChild(a.firstChild);
-    _applyLogFilter();
+    if (_logSearch) _applyLogFilter();
+    else a.classList.toggle('log-tail', !_logShowFull);
     if (atBottom) a.scrollTop = a.scrollHeight;
 }
 
@@ -1902,6 +1964,8 @@ function clearLog() {
     }
     const a = document.getElementById('logArea');
     if (a) a.innerHTML = '';
+    _logLines = [];
+    _logDomDirty = false;
 }
 
 function copyLog() {
@@ -1983,6 +2047,32 @@ function jsq(s) {
 
 function cssUrl(s) {
     return (s || '').replace(/'/g, '%27').replace(/\)/g, '%29');
+}
+
+let imgThumbsEnabled = true;
+let vrcPlusOptimizeEnabled = true;
+
+function _thumbUrl(url, size) {
+    if (!url || url.indexOf('/imgcache/') === -1 || url.indexOf('thumb=') !== -1) return url;
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'thumb=' + size;
+}
+
+function imgThumb(url, size = 64) {
+    if (!imgThumbsEnabled) return url;
+    return _thumbUrl(url, size);
+}
+
+function imgOriginal(url) {
+    if (!url || url.indexOf('thumb=') === -1) return url;
+    return url.replace(/([?&])thumb=\d+(&|$)/, (m, p1, p2) => p2 === '&' ? p1 : '').replace(/[?&]$/, '');
+}
+
+function setHtmlIfChanged(el, h) {
+    if (!el) return false;
+    if (el.__lastHtml === h) return false;
+    el.__lastHtml = h;
+    el.innerHTML = h;
+    return true;
 }
 
 function isLocalFavGroup(g) {
@@ -2072,6 +2162,30 @@ function getInstanceBadge(instanceType) {
     else if (type === 'invite_plus' || type === 'private') cls = 'private';
     else if (type.startsWith('group')) cls = 'group';
     return { cls, label };
+}
+
+function parseInstanceRegion(loc) {
+    const m = String(loc || '').match(/~region\(([^)]+)\)/);
+    return m ? m[1].toLowerCase() : '';
+}
+
+function getRegionShortLabel(code) {
+    const key = String(code || '').toLowerCase();
+    const labels = {
+        eu:  t('regions.short.eu',  'EU'),
+        us:  t('regions.short.us',  'USW'),
+        usw: t('regions.short.usw', 'USW'),
+        use: t('regions.short.use', 'USE'),
+        jp:  t('regions.short.jp',  'JP'),
+        au:  t('regions.short.au',  'AU'),
+    };
+    return labels[key] || key.toUpperCase();
+}
+
+function regionBadgeHtml(loc) {
+    const code = parseInstanceRegion(loc);
+    if (!code) return '';
+    return `<span class="vrcn-badge"><span class="msi" style="font-size:10px;">language</span>${esc(getRegionShortLabel(code))}</span>`;
 }
 
 // Custom Dropdown

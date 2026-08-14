@@ -52,12 +52,12 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--ok);
+    background: #78F1AE;
     box-shadow: 0 0 0 2px var(--bg-side);
 }
-.rsidebar.collapsed .inst-card[data-inst-type="friends"] .inst-header::after { background: #42A5F5; }
-.rsidebar.collapsed .inst-card[data-inst-type="private"] .inst-header::after { background: #EF5350; }
-.rsidebar.collapsed .inst-card[data-inst-type="group"]   .inst-header::after { background: #FFA726; }
+.rsidebar.collapsed .inst-card[data-inst-type="friends"] .inst-header::after { background: #8177F4; }
+.rsidebar.collapsed .inst-card[data-inst-type="private"] .inst-header::after { background: #F37878; }
+.rsidebar.collapsed .inst-card[data-inst-type="group"]   .inst-header::after { background: #FF926C; }
 .rsidebar.collapsed .inst-card[data-inst-type="hidden"]  .inst-header::after { background: var(--tx2); }
 
 .rsidebar.collapsed .vrc-profile,
@@ -217,6 +217,11 @@
     background: var(--bg-hover);
 }
 
+.vrc-friend-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 46px;
+}
+
 .vrc-friend-avatar { width: 32px; height: 32px; border-radius: 8px; }
 
 .vrc-friend-name {
@@ -269,13 +274,13 @@
     bottom: 0;
     background: none;
     border: none;
-    padding: 0 0 0 10px;
+    padding: 0 0 0 9px;
     display: flex;
     align-items: center;
     pointer-events: none;
 }
 .rsidebar:not(.collapsed) .vrc-fs-icon {
-    font-size: calc(14px + var(--fs-off, 0px));
+    font-size: calc(13px + var(--fs-off, 0px));
     color: var(--tx3);
     /* nudge the glyph up ~1px to optically center it in the input */
     position: relative;
@@ -283,7 +288,10 @@
 }
 /* extra left padding so the query text doesn't crowd the search icon */
 .rsidebar:not(.collapsed) #vrcFriendSearchInput {
-    padding-left: 36px;
+    padding: 6.5px 9px 6.5px 31px;
+    font-size: calc(12px + var(--fs-off, 0px));
+    border-radius: 7px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
     /* allow the flex input to shrink so the refresh button stays inside the
        sidebar instead of overflowing past the right edge */
     min-width: 0;
@@ -292,7 +300,8 @@
 /* Refresh button (friends list + group instances) right of the search input */
 .vrc-fs-refresh-btn {
     flex-shrink: 0;
-    width: 36px;
+    width: 31px;
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
     /* match the search input's height exactly (override .vrcn-button's fixed 32px) */
     height: auto;
     align-self: stretch;
@@ -301,7 +310,8 @@
     justify-content: center;
     color: var(--tx3);
 }
-.vrc-fs-refresh-btn .msi { font-size: 16px; }
+.vrc-fs-refresh-btn:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); }
+.vrc-fs-refresh-btn .msi { font-size: 14px; }
 .vrc-fs-refresh-btn.spinning .msi { animation: vrc-fs-spin .6s linear infinite; }
 @keyframes vrc-fs-spin { to { transform: rotate(360deg); } }
 .rsidebar.collapsed #vrcFriendRefreshBtn { display: none; }
@@ -439,11 +449,40 @@
     box-sizing: border-box;
 }
 .status-desc-row .status-desc-input { padding: 6px 14px; }
+.status-desc-field {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+}
+.status-desc-field .status-desc-input { display: block; vertical-align: middle; }
+.status-desc-field .vn-select,
+.status-desc-field .status-desc-select,
+.status-desc-field .status-desc-input { width: 100%; }
+.status-desc-field .status-desc-input { padding-right: 34px; }
+
+.status-desc-count {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+    font-variant-numeric: tabular-nums;
+    min-width: 20px;
+    text-align: right;
+    pointer-events: none;
+    line-height: 1;
+    transition: color .2s;
+}
+.status-desc-count.low  { color: var(--status-ask); }
+.status-desc-count.warn { color: var(--status-busy); }
 .status-desc-row #statusDescEditBtn:not(.active) {
-    background: var(--bg-btn);
+    background: var(--ui-input-bg);
     color: var(--tx1);
 }
-.status-desc-row #statusDescEditBtn:not(.active):hover { background: var(--bg-btn-h); color: var(--tx0); }
+.status-desc-row #statusDescEditBtn:not(.active):hover { background: var(--ui-input-hover-bg); color: var(--tx0); }
 
 body:has(#tab0.active) .rsidebar.collapsed::before {
     background: transparent;

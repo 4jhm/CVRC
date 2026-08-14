@@ -475,6 +475,7 @@ namespace VRCNext.Services
             "notif_invite"       => _toastInvite,
             "notif_groupinvite"  => _toastGroupInv,
             "friend_joined"      => _toastJoined,
+            "notif_actionflow"   => true,
             _                    => false,
         };
 
@@ -498,21 +499,24 @@ namespace VRCNext.Services
             if (evType == "friend_gps" && (evText == "→ a world" || string.IsNullOrWhiteSpace(evText))) return;
 
             // Per-friend cooldown: max one toast per friend within the cooldown window
-            lock (_toastFriendCooldown)
+            if (evType != "notif_actionflow")
             {
-                var now = DateTime.UtcNow;
-                if (_toastFriendCooldown.TryGetValue(friendName, out var last) &&
-                    (now - last).TotalMilliseconds < TOAST_FRIEND_COOLDOWN_MS)
-                    return;
-                _toastFriendCooldown[friendName] = now;
-
-                // Cleanup old entries
-                if (_toastFriendCooldown.Count > 50)
+                lock (_toastFriendCooldown)
                 {
-                    var expired = new List<string>();
-                    foreach (var kv in _toastFriendCooldown)
-                        if ((now - kv.Value).TotalMilliseconds > TOAST_FRIEND_COOLDOWN_MS) expired.Add(kv.Key);
-                    foreach (var k in expired) _toastFriendCooldown.Remove(k);
+                    var now = DateTime.UtcNow;
+                    if (_toastFriendCooldown.TryGetValue(friendName, out var last) &&
+                        (now - last).TotalMilliseconds < TOAST_FRIEND_COOLDOWN_MS)
+                        return;
+                    _toastFriendCooldown[friendName] = now;
+
+                    // Cleanup old entries
+                    if (_toastFriendCooldown.Count > 50)
+                    {
+                        var expired = new List<string>();
+                        foreach (var kv in _toastFriendCooldown)
+                            if ((now - kv.Value).TotalMilliseconds > TOAST_FRIEND_COOLDOWN_MS) expired.Add(kv.Key);
+                        foreach (var k in expired) _toastFriendCooldown.Remove(k);
+                    }
                 }
             }
 
@@ -581,7 +585,11 @@ namespace VRCNext.Services
         private float _mouseDownNY     = 0f;
         private bool  _scrollDragging  = false;
         private float _scrollLastNY    = 0f;
-        private float _scrollLastDeltaY = 0f; 
+        private float _scrollLastDeltaY = 0f;
+
+        // Drag tracking (Expressions float-wedge radial drag)
+        private string? _exprDragName    = null;
+        private int      _lastExprSendTick = 0;
 
         // Friends tab (online/in-game friends list)
         private record FriendTabEntry(string FriendId, string FriendName, string FriendImageUrl, string Status, string StatusDescription, string Location, string WorldName);
@@ -607,11 +615,11 @@ namespace VRCNext.Services
         private const int ScrollBarW          = 3;
 
         private const int TabAlerts = 1, TabLocation = 2, TabMusic = 3, TabTools = 4,
-                          TabFriends = 5, TabKikitan = 6, TabSize = 7;
+                          TabFriends = 5, TabKikitan = 6, TabSize = 7, TabExpressions = 8;
 
         private List<int> VisibleTabs()
         {
-            var t = new List<int> { TabAlerts, TabLocation, TabMusic, TabTools, TabFriends };
+            var t = new List<int> { TabAlerts, TabLocation, TabMusic, TabTools, TabFriends, TabExpressions };
             if (_toolKikitan) t.Add(TabKikitan);
             if (_scaleEnabled) t.Add(TabSize);
             return t;
@@ -620,6 +628,212 @@ namespace VRCNext.Services
         private void ClampActiveTab()
         {
             if (!VisibleTabs().Contains(_activeTab)) { _activeTab = TabAlerts; _dirty = true; }
+        }
+
+        // Expressions tab — radial OSC menu. VRChat exposes no API/OSC access to the real
+        // in-game menu's layout/icons/submenu tree, so this mirrors the desktop OSC Radial
+        // Menu tool: an Emotes page plus a paginated page built from the avatar's live OSC
+        // parameter list, both fed from the main process (which owns the real OscService).
+        private bool _oscConnected = false;
+        private readonly List<(string Name, string Type)> _oscParamDefs = new();
+        private readonly Dictionary<string, object> _oscParamValues = new();
+        private int _oscPage = -1; // -1 = Emotes, >=0 = param page index
+        private static readonly string[] ExprEmoteLabels = { "Wave", "Clap", "Point", "Cheer", "Dance", "Backflip", "Die", "Sad" };
+        private static readonly string[] ExprEmoteIcons = { "", "", "", "", "", "", "", "" };
+        private const string ExprBackIcon = "";
+
+        public event Action<string, string, object>? OnExpressionSend; // name, type, value
+        public event Action<int>? OnExpressionEmote; // emote 1-8
+
+        public void SetOscState(bool connected)
+        {
+            _oscConnected = connected;
+            if (!connected) { _oscParamDefs.Clear(); _oscParamValues.Clear(); _oscPage = -1; }
+            _dirty = true;
+        }
+
+        public void SetOscAvatarParams(List<(string Name, string Type)> defs)
+        {
+            _oscParamDefs.Clear();
+            _oscParamDefs.AddRange(defs);
+            _oscParamValues.Clear();
+            if (_oscPage >= 0) _oscPage = 0;
+            _dirty = true;
+        }
+
+        public void SetOscParam(string name, object value)
+        {
+            _oscParamValues[name] = value;
+            _dirty = true;
+        }
+
+        private const int ExprParamsPerPage = 7; // slot 0 on param pages is reserved for Back
+
+        private List<(string Kind, string? Name, string Label, int Emote, string Icon)> ExpressionWedges()
+        {
+            var list = new List<(string, string?, string, int, string)>();
+            if (_oscPage < 0)
+            {
+                for (int i = 0; i < ExprEmoteLabels.Length; i++)
+                    list.Add(("emote", null, ExprEmoteLabels[i], i + 1, ExprEmoteIcons[i]));
+                return list;
+            }
+            // Back wedge always occupies slot 0 (top), mirroring VRChat's own radial menu.
+            list.Add(("back", null, "Back", 0, ExprBackIcon));
+            int start = _oscPage * ExprParamsPerPage;
+            for (int i = start; i < Math.Min(start + ExprParamsPerPage, _oscParamDefs.Count); i++)
+            {
+                var p = _oscParamDefs[i];
+                list.Add((p.Type, p.Name, p.Name, 0, ""));
+            }
+            return list;
+        }
+
+        private int ExprPageCount() => Math.Max(1, (_oscParamDefs.Count + ExprParamsPerPage - 1) / ExprParamsPerPage);
+
+        private const float ExprCx = W / 2f;
+        private const float ExprCy = TabBarBottom + (H - TabBarBottom - 12) / 2f;
+        private const float ExprROuter = 130f, ExprRInner = 46f;
+
+        private static PointF ExprPolar(float cx, float cy, float r, float angleDeg)
+        {
+            double rad = (angleDeg - 90) * Math.PI / 180;
+            return new PointF(cx + r * (float)Math.Cos(rad), cy + r * (float)Math.Sin(rad));
+        }
+
+        private static System.Drawing.Drawing2D.GraphicsPath BuildDonutWedge(float cx, float cy, float rInner, float rOuter, float startDeg, float endDeg)
+        {
+            var path = new System.Drawing.Drawing2D.GraphicsPath();
+            var outerRect = new RectangleF(cx - rOuter, cy - rOuter, rOuter * 2, rOuter * 2);
+            var innerRect = new RectangleF(cx - rInner, cy - rInner, rInner * 2, rInner * 2);
+            float sweep = endDeg - startDeg;
+            path.AddArc(outerRect, startDeg - 90, sweep);
+            path.AddArc(innerRect, endDeg - 90, -sweep);
+            path.CloseFigure();
+            return path;
+        }
+
+        // (angle, distance-from-center) hit test against the Expressions wheel, shared by
+        // click handling and the mouse-down float-drag detection below.
+        private (bool onHub, int wedgeIdx) HitTestExpressionWheel(int gdix, int gdiy)
+        {
+            float dx = gdix - ExprCx, dy = gdiy - ExprCy;
+            float dist = MathF.Sqrt(dx * dx + dy * dy);
+            if (dist > ExprROuter) return (false, -1);
+            if (dist < ExprRInner) return (true, -1);
+            double angle = Math.Atan2(dy, dx) * 180.0 / Math.PI + 90.0;
+            angle = ((angle % 360) + 360) % 360;
+            int idx = (int)(angle / (360.0 / 8));
+            return (false, Math.Clamp(idx, 0, 7));
+        }
+
+        private static string ExprTruncate(string s, int n) => string.IsNullOrEmpty(s) ? "" : (s.Length > n ? s[..(n - 1)] + "…" : s);
+
+        private float ExpressionWedgeValueFromPoint(int gdix, int gdiy)
+        {
+            float dx = gdix - ExprCx, dy = gdiy - ExprCy;
+            float dist = MathF.Sqrt(dx * dx + dy * dy);
+            return Math.Clamp((dist - ExprRInner) / (ExprROuter - ExprRInner), 0f, 1f);
+        }
+
+        private void DrawExpressions(Graphics g)
+        {
+            var th = _theme;
+            var fmtC = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+
+            if (!_oscConnected)
+            {
+                using var hintBrush = new SolidBrush(Color.FromArgb(200, th.Tx2));
+                using var hintFont = new Font("Segoe UI", 10f, FontStyle.Regular, GraphicsUnit.Point);
+                g.DrawString("Connect OSC from the desktop app first (OSC Tool or OSC Radial Menu).",
+                    hintFont, hintBrush, new RectangleF(30, TabBarBottom, W - 60, H - TabBarBottom - 12), fmtC);
+                return;
+            }
+
+            var wedges = ExpressionWedges();
+            bool showingParams = _oscPage >= 0;
+            if (showingParams && wedges.Count == 0)
+            {
+                using var hintBrush = new SolidBrush(Color.FromArgb(200, th.Tx2));
+                using var hintFont = new Font("Segoe UI", 10f, FontStyle.Regular, GraphicsUnit.Point);
+                g.DrawString("No input-capable parameters found for the current avatar yet.",
+                    hintFont, hintBrush, new RectangleF(30, TabBarBottom, W - 60, ExprCy - ExprROuter - TabBarBottom), fmtC);
+            }
+
+            float step = 360f / 8f;
+            using var wedgeFont = new Font("Segoe UI", 9f, FontStyle.Regular, GraphicsUnit.Point);
+            using var valFont = new Font("Segoe UI", 8f, FontStyle.Regular, GraphicsUnit.Point);
+
+            for (int i = 0; i < wedges.Count; i++)
+            {
+                var w = wedges[i];
+                float start = i * step + 1f;
+                float end = (i + 1) * step - 1f;
+                bool on = w.Kind == "bool" && w.Name != null && _oscParamValues.TryGetValue(w.Name, out var bv) && bv is bool bb && bb;
+
+                using (var wedgePath = BuildDonutWedge(ExprCx, ExprCy, ExprRInner, ExprROuter, start, end))
+                {
+                    using var wedgeBrush = new SolidBrush(on ? Color.FromArgb(160, th.Accent) : Color.FromArgb(140, th.BgHover));
+                    g.FillPath(wedgeBrush, wedgePath);
+                    using var wedgePen = new Pen(Color.FromArgb(90, th.Brd), 1.2f);
+                    g.DrawPath(wedgePen, wedgePath);
+                }
+
+                if (w.Kind == "float" && w.Name != null)
+                {
+                    float val = 0f;
+                    if (_oscParamValues.TryGetValue(w.Name, out var fv)) { try { val = Convert.ToSingle(fv); } catch { } }
+                    val = Math.Clamp(val, 0f, 1f);
+                    float fillR = ExprRInner + val * (ExprROuter - ExprRInner);
+                    using var fillPath = BuildDonutWedge(ExprCx, ExprCy, ExprRInner, Math.Max(ExprRInner + 1, fillR), start, end);
+                    using var fillBrush = new SolidBrush(Color.FromArgb(150, th.Accent));
+                    g.FillPath(fillBrush, fillPath);
+                }
+
+                float mid = (start + end) / 2f;
+                bool hasIcon = w.Kind == "emote" || w.Kind == "back";
+                if (hasIcon && !string.IsNullOrEmpty(w.Icon))
+                {
+                    var iconPt = ExprPolar(ExprCx, ExprCy, (ExprRInner + ExprROuter) / 2f - 14f, mid);
+                    using var iconFont = _matSymFamily != null
+                        ? new Font(_matSymFamily, 14f, FontStyle.Regular, GraphicsUnit.Point)
+                        : new Font("Segoe MDL2 Assets", 14f, FontStyle.Regular, GraphicsUnit.Point);
+                    using var iconBrush = new SolidBrush(Color.FromArgb(230, th.Tx1));
+                    g.DrawString(w.Icon, iconFont, iconBrush, new RectangleF(iconPt.X - 16, iconPt.Y - 16, 32, 32), fmtC);
+                }
+
+                float labelROffset = hasIcon ? 14f : 0f;
+                var labelPt = ExprPolar(ExprCx, ExprCy, (ExprRInner + ExprROuter) / 2f + labelROffset, mid);
+                using var labelBrush = new SolidBrush(Color.FromArgb(230, th.Tx1));
+                g.DrawString(ExprTruncate(w.Label, 10), wedgeFont, labelBrush, new RectangleF(labelPt.X - 40, labelPt.Y - 12, 80, 24), fmtC);
+
+                if (w.Kind == "int" && w.Name != null)
+                {
+                    int iv = 0;
+                    if (_oscParamValues.TryGetValue(w.Name, out var ivv)) { try { iv = Convert.ToInt32(ivv); } catch { } }
+                    var valPt = ExprPolar(ExprCx, ExprCy, (ExprRInner + ExprROuter) / 2f + 16f, mid);
+                    using var valBrush = new SolidBrush(Color.FromArgb(180, th.Tx2));
+                    g.DrawString(iv.ToString(), valFont, valBrush, new RectangleF(valPt.X - 20, valPt.Y - 10, 40, 20), fmtC);
+                }
+            }
+
+            // Hub
+            using (var hubBrush = new SolidBrush(th.BgCard))
+                g.FillEllipse(hubBrush, ExprCx - ExprRInner, ExprCy - ExprRInner, ExprRInner * 2, ExprRInner * 2);
+            using (var hubPen = new Pen(Color.FromArgb(120, th.Brd), 1.3f))
+                g.DrawEllipse(hubPen, ExprCx - ExprRInner, ExprCy - ExprRInner, ExprRInner * 2, ExprRInner * 2);
+
+            string hubIcon = showingParams ? "" : "";
+            using (var hubIconFont = _matSymFamily != null
+                ? new Font(_matSymFamily, 16f, FontStyle.Regular, GraphicsUnit.Point)
+                : new Font("Segoe MDL2 Assets", 16f, FontStyle.Regular, GraphicsUnit.Point))
+            using (var hubIconBrush = new SolidBrush(th.Tx1))
+                g.DrawString(hubIcon, hubIconFont, hubIconBrush, new RectangleF(ExprCx - ExprRInner, ExprCy - ExprRInner - 6, ExprRInner * 2, ExprRInner), fmtC);
+
+            string hubLabel = showingParams ? $"Params {_oscPage + 1}/{ExprPageCount()}" : "Emotes";
+            using var hubLabelFont = new Font("Segoe UI", 8f, FontStyle.Bold, GraphicsUnit.Point);
+            using var hubLabelBrush = new SolidBrush(th.Tx2);
+            g.DrawString(hubLabel, hubLabelFont, hubLabelBrush, new RectangleF(ExprCx - ExprRInner, ExprCy + 2, ExprRInner * 2, ExprRInner * 0.7f), fmtC);
         }
 
         // Theme colors
@@ -906,6 +1120,8 @@ namespace VRCNext.Services
             {
                 foreach (var bmp in _notifImgCache.Values) bmp?.Dispose();
                 _notifImgCache.Clear();
+                foreach (var (bmp, _) in _notifImgGraveyard) { try { bmp.Dispose(); } catch { } }
+                _notifImgGraveyard.Clear();
             }
             lock (_locationImgCache)
             {
@@ -1064,6 +1280,7 @@ namespace VRCNext.Services
                 _notifications.Insert(0, entry);
                 while (_notifications.Count > MaxNotifications) _notifications.RemoveAt(_notifications.Count - 1);
             }
+            PruneNotifImageCache();
             if (!string.IsNullOrEmpty(imageUrl))
             {
                 var fid = friendId;
@@ -1097,8 +1314,49 @@ namespace VRCNext.Services
                 var fid = notifFriendId ?? "";
                 _ = Task.Run(() => EnsureNotifImageAsync(newImageUrl!, fid));
             }
+            PruneNotifImageCache();
             _dirty = true;
         }
+
+        private void PruneNotifImageCache()
+        {
+            var active = new HashSet<string>();
+            lock (_notifications)
+            {
+                foreach (var n in _notifications)
+                    if (!string.IsNullOrEmpty(n.ImageUrl)) active.Add(n.ImageUrl);
+            }
+            lock (_toastQueue)
+            {
+                foreach (var t in _toastQueue)
+                    if (!string.IsNullOrEmpty(t.ImageUrl)) active.Add(t.ImageUrl);
+            }
+            lock (_activeToasts)
+            {
+                foreach (var t in _activeToasts)
+                    if (!string.IsNullOrEmpty(t.Item.ImageUrl)) active.Add(t.Item.ImageUrl);
+            }
+            lock (_notifImgCache)
+            {
+                var now = DateTime.UtcNow;
+                for (int i = _notifImgGraveyard.Count - 1; i >= 0; i--)
+                {
+                    if ((now - _notifImgGraveyard[i].at).TotalSeconds < 5) continue;
+                    try { _notifImgGraveyard[i].bmp.Dispose(); } catch { }
+                    _notifImgGraveyard.RemoveAt(i);
+                }
+                if (_notifImgCache.Count == 0) return;
+                var stale = _notifImgCache.Keys.Where(k => !active.Contains(k)).ToList();
+                foreach (var k in stale)
+                {
+                    var bmp = _notifImgCache[k];
+                    if (bmp != null) _notifImgGraveyard.Add((bmp, now));
+                    _notifImgCache.Remove(k);
+                }
+            }
+        }
+
+        private readonly List<(Bitmap bmp, DateTime at)> _notifImgGraveyard = new();
 
         private async Task EnsureNotifImageAsync(string url, string friendId)
         {
@@ -1864,10 +2122,46 @@ namespace VRCNext.Services
                         if (_activeTab == 2) _locationScrollVY = 0f;
                         if (_activeTab == 5) _friendsScrollVY  = 0f;
                         if (_activeTab == 4) _toolsScrollVY    = 0f;
+
+                        // Expressions tab: pressing down on a float wedge starts a radial drag
+                        _exprDragName = null;
+                        if (_activeTab == TabExpressions && _oscConnected)
+                        {
+                            int gdixD = (int)(nx * W);
+                            int gdiyD = (int)((1f - ny) * H);
+                            var (onHubD, wedgeIdxD) = HitTestExpressionWheel(gdixD, gdiyD);
+                            if (!onHubD && wedgeIdxD >= 0)
+                            {
+                                var wedges = ExpressionWedges();
+                                if (wedgeIdxD < wedges.Count && wedges[wedgeIdxD].Kind == "float" && wedges[wedgeIdxD].Name != null)
+                                {
+                                    _exprDragName = wedges[wedgeIdxD].Name;
+                                    float val = ExpressionWedgeValueFromPoint(gdixD, gdiyD);
+                                    _oscParamValues[_exprDragName!] = val;
+                                    OnExpressionSend?.Invoke(_exprDragName!, "float", val);
+                                    _lastExprSendTick = Environment.TickCount;
+                                    _dirty = true;
+                                }
+                            }
+                        }
                     }
                     else if (oType == EVREventType.VREvent_MouseMove)
                     {
-                        if (_mouseDown && (_activeTab == 1 || _activeTab == 2 || _activeTab == 4 || _activeTab == 5) && _mouseDownNY < 1f - (float)(LocContentY - 6) / H)
+                        if (_mouseDown && _activeTab == TabExpressions && _exprDragName != null)
+                        {
+                            var muE = evt.data.mouse;
+                            int gdixM = (int)muE.x;
+                            int gdiyM = (int)(H - muE.y);
+                            float val = ExpressionWedgeValueFromPoint(gdixM, gdiyM);
+                            _oscParamValues[_exprDragName] = val;
+                            _dirty = true;
+                            if (Environment.TickCount - _lastExprSendTick >= 40)
+                            {
+                                _lastExprSendTick = Environment.TickCount;
+                                OnExpressionSend?.Invoke(_exprDragName, "float", val);
+                            }
+                        }
+                        else if (_mouseDown && (_activeTab == 1 || _activeTab == 2 || _activeTab == 4 || _activeTab == 5) && _mouseDownNY < 1f - (float)(LocContentY - 6) / H)
                         {
                             var mu = evt.data.mouse;
                             float ny = mu.y / H;
@@ -1895,7 +2189,13 @@ namespace VRCNext.Services
                     {
                         var muUp = evt.data.mouse;
                         float totalMove = MathF.Abs((muUp.y / H - _mouseDownNY) * H);
-                        if (_scrollDragging && totalMove >= 20f)
+                        if (_exprDragName != null)
+                        {
+                            // Always (re)send the final value on release, bypassing the move-throttle.
+                            if (_oscParamValues.TryGetValue(_exprDragName, out var finalVal))
+                                OnExpressionSend?.Invoke(_exprDragName, "float", finalVal);
+                        }
+                        else if (_scrollDragging && totalMove >= 20f)
                         {
                             // Real scroll flick — seed inertia
                             if (_activeTab == 1) _notifScrollVY   = _scrollLastDeltaY * 0.5f;
@@ -1910,6 +2210,7 @@ namespace VRCNext.Services
                         }
                         _mouseDown      = false;
                         _scrollDragging = false;
+                        _exprDragName   = null;
                     }
                 }
             }
@@ -1999,6 +2300,64 @@ namespace VRCNext.Services
                         if (localX < cardW && localY < cardH && idx < GetToolsCount())
                             OnToolToggle?.Invoke(idx);
                     }
+                }
+            }
+
+            // Expressions tab — radial OSC menu. Hub cycles Emotes/Params pages; wedges act
+            // per param type. Float wedges are normally handled by the drag path above, but a
+            // plain tap (no drag) still lands here and sets the value from the tap position.
+            if (_activeTab == TabExpressions && _oscConnected)
+            {
+                int gdixE = (int)(nx * W);
+                int gdiyE = (int)((1f - ny) * H);
+                var (onHubE, wedgeIdxE) = HitTestExpressionWheel(gdixE, gdiyE);
+                if (onHubE)
+                {
+                    int pages = ExprPageCount();
+                    if (_oscPage < 0) { if (_oscParamDefs.Count > 0) _oscPage = 0; }
+                    else _oscPage = (_oscPage + 1 < pages) ? _oscPage + 1 : -1;
+                    _dirty = true;
+                    return;
+                }
+                if (wedgeIdxE >= 0)
+                {
+                    var wedges = ExpressionWedges();
+                    if (wedgeIdxE < wedges.Count)
+                    {
+                        var w = wedges[wedgeIdxE];
+                        if (w.Kind == "emote")
+                        {
+                            OnExpressionEmote?.Invoke(w.Emote);
+                        }
+                        else if (w.Kind == "back")
+                        {
+                            _oscPage = -1;
+                            _dirty = true;
+                        }
+                        else if (w.Kind == "bool" && w.Name != null)
+                        {
+                            bool cur = _oscParamValues.TryGetValue(w.Name, out var bv) && bv is bool bb && bb;
+                            bool next = !cur;
+                            _oscParamValues[w.Name] = next;
+                            OnExpressionSend?.Invoke(w.Name, "bool", next);
+                        }
+                        else if (w.Kind == "int" && w.Name != null)
+                        {
+                            int cur = 0;
+                            if (_oscParamValues.TryGetValue(w.Name, out var iv)) { try { cur = Convert.ToInt32(iv); } catch { } }
+                            int next = (cur + 1) % 8;
+                            _oscParamValues[w.Name] = next;
+                            OnExpressionSend?.Invoke(w.Name, "int", next);
+                        }
+                        else if (w.Kind == "float" && w.Name != null)
+                        {
+                            float val = ExpressionWedgeValueFromPoint(gdixE, gdiyE);
+                            _oscParamValues[w.Name] = val;
+                            OnExpressionSend?.Invoke(w.Name, "float", val);
+                        }
+                        _dirty = true;
+                    }
+                    return;
                 }
             }
 
@@ -2816,11 +3175,14 @@ namespace VRCNext.Services
                 using var avBg = new SolidBrush(Color.FromArgb(A(255, fade), th.BgHover));
                 g.FillPath(avBg, avPath);
                 g.ResetClip();
-                string initials = toast.FriendName.Length > 0 ? toast.FriendName[0].ToString().ToUpper() : "?";
-                using var initFont  = new Font("Segoe UI", 14f, FontStyle.Bold, GraphicsUnit.Point);
-                using var initBrush = new SolidBrush(Color.FromArgb(A(255, fade), th.Tx2));
-                var initFmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                g.DrawString(initials, initFont, initBrush, new RectangleF(avX, avY, avSize, avSize), initFmt);
+                if (!DrawNotifTypeIcon(g, toast.EvType, avX, avY, avSize, Color.FromArgb(A(255, fade), th.Accent)))
+                {
+                    string initials = toast.FriendName.Length > 0 ? toast.FriendName[0].ToString().ToUpper() : "?";
+                    using var initFont  = new Font("Segoe UI", 14f, FontStyle.Bold, GraphicsUnit.Point);
+                    using var initBrush = new SolidBrush(Color.FromArgb(A(255, fade), th.Tx2));
+                    var initFmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                    g.DrawString(initials, initFont, initBrush, new RectangleF(avX, avY, avSize, avSize), initFmt);
+                }
             }
             g.SetClip(oldClip, CombineMode.Replace);
 
@@ -2956,6 +3318,7 @@ namespace VRCNext.Services
                 else if (_activeTab == 5) DrawFriends(g);
                 else if (_activeTab == TabKikitan) DrawKikitan(g);
                 else if (_activeTab == TabSize) DrawScaleTab(g);
+                else if (_activeTab == TabExpressions) DrawExpressions(g);
                 g.SetClip(tabClip, System.Drawing.Drawing2D.CombineMode.Replace);
                 tabClip.Dispose();
                 if (_waterAlarmActive) DrawDashboardAlarm(g);
@@ -3149,6 +3512,7 @@ namespace VRCNext.Services
                     TabTools    => "\uE869",
                     TabFriends  => "\uE7FB",
                     TabKikitan  => "\uE8E2",
+                    TabExpressions => "\uE719",
                     _           => "\uEA16",
                 };
                 DrawTab(g, icon, "", id, tabX + tabW * i, 8, tw, tabH);
@@ -4245,7 +4609,21 @@ namespace VRCNext.Services
             g.FillEllipse(dotBr, cx - r, cy - r, r * 2f, r * 2f);
         }
 
-        private void DrawNotifPortrait(Graphics g, string imageUrl, string name, string friendId,
+        private const string ActionFlowIcon = "";
+
+        private bool DrawNotifTypeIcon(Graphics g, string evType, int avX, int avY, int avSize, Color color)
+        {
+            if (evType != "notif_actionflow") return false;
+            using var iconFont = _matSymFamily != null
+                ? new Font(_matSymFamily, avSize * 0.5f, FontStyle.Regular, GraphicsUnit.Pixel)
+                : new Font("Segoe MDL2 Assets", avSize * 0.5f, FontStyle.Regular, GraphicsUnit.Pixel);
+            using var iconBrush = new SolidBrush(color);
+            var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+            g.DrawString(ActionFlowIcon, iconFont, iconBrush, new RectangleF(avX, avY, avSize, avSize), fmt);
+            return true;
+        }
+
+        private void DrawNotifPortrait(Graphics g, string imageUrl, string name, string friendId, string evType,
                                        bool showDot, int avX, int avY, int avSize, int avR, Color ringColor)
         {
             Bitmap? avatar = null;
@@ -4266,11 +4644,14 @@ namespace VRCNext.Services
                     using var avBg = new SolidBrush(_theme.BgHover);
                     g.FillPath(avBg, avPath);
                     g.SetClip(oldClip, System.Drawing.Drawing2D.CombineMode.Replace);
-                    string initials = name.Length > 0 ? name[0].ToString().ToUpper() : "?";
-                    using var initFont  = new Font("Segoe UI", avSize * 0.42f, FontStyle.Bold, GraphicsUnit.Pixel);
-                    using var initBrush = new SolidBrush(_theme.Tx2);
-                    var initFmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
-                    g.DrawString(initials, initFont, initBrush, new RectangleF(avX, avY, avSize, avSize), initFmt);
+                    if (!DrawNotifTypeIcon(g, evType, avX, avY, avSize, _theme.Accent))
+                    {
+                        string initials = name.Length > 0 ? name[0].ToString().ToUpper() : "?";
+                        using var initFont  = new Font("Segoe UI", avSize * 0.42f, FontStyle.Bold, GraphicsUnit.Pixel);
+                        using var initBrush = new SolidBrush(_theme.Tx2);
+                        var initFmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                        g.DrawString(initials, initFont, initBrush, new RectangleF(avX, avY, avSize, avSize), initFmt);
+                    }
                 }
             }
 
@@ -4332,7 +4713,7 @@ namespace VRCNext.Services
             const int avSize = 40, avR = 8;
             int avX = x + 10;
             int avY = y + (h - avSize) / 2;
-            DrawNotifPortrait(g, entry.ImageUrl, entry.FriendName, entry.FriendId,
+            DrawNotifPortrait(g, entry.ImageUrl, entry.FriendName, entry.FriendId, entry.EvType,
                               EventHasStatusDot(entry.EvType), avX, avY, avSize, avR, cardColor);
 
             int textX     = avX + avSize + 11;

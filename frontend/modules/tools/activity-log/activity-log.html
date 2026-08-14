@@ -1,17 +1,23 @@
-                <div class="log-header" style="margin-top:0;display:flex;align-items:center;gap:5px;flex-shrink:0;">
-                    <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:120px;max-width:200px;"><span class="msi search-ico">search</span><input id="logSearchInput" type="text" class="vrcn-input" placeholder="Search..." data-i18n-placeholder="logs.search.placeholder" oninput="onLogSearch(this.value)"></div>
-                    <div style="flex:1;"></div>
-                    <div class="mini-badge" id="agetBadge" style="display:none;background:var(--bg-hover);border-color:var(--brd);"><span class="mini-badge-label" style="color:var(--tx2);font-variant-numeric:tabular-nums;">AGET/H: 0</span></div>
-                    <div class="mini-badge" id="acdnBadge" style="display:none;background:var(--bg-hover);border-color:var(--brd);"><span class="mini-badge-label" style="color:var(--tx2);font-variant-numeric:tabular-nums;">ACDN/H: 0</span></div>
-                    <div class="mini-badge" id="cdnBadge" style="display:none;background:rgba(100,170,255,.12);border-color:rgba(100,170,255,.4);"><span class="mini-badge-label" style="color:#64aaff;font-variant-numeric:tabular-nums;">CDN: 0</span></div>
-                    <div class="mini-badge" id="httpBadge200" style="display:none;background:rgba(59,165,93,.12);border-color:rgba(59,165,93,.4);"><span class="mini-badge-label" style="color:#3ba55d;font-variant-numeric:tabular-nums;">200: 0</span></div>
-                    <div class="mini-badge" id="httpBadge429" style="display:none;background:rgba(240,165,0,.12);border-color:rgba(240,165,0,.4);"><span class="mini-badge-label" style="color:#f0a500;font-variant-numeric:tabular-nums;">429: 0</span></div>
-                    <div class="mini-badge" id="httpBadge404" style="display:none;background:rgba(237,66,69,.12);border-color:rgba(237,66,69,.4);"><span class="mini-badge-label" style="color:#ed4245;font-variant-numeric:tabular-nums;">404: 0</span></div>
-                    <div class="mini-badge" id="httpBadge403" style="display:none;background:rgba(237,66,69,.12);border-color:rgba(237,66,69,.4);"><span class="mini-badge-label" style="color:#ed4245;font-variant-numeric:tabular-nums;">403: 0</span></div>
-                    <div class="mini-badge" id="httpBadge400" style="display:none;background:rgba(237,66,69,.12);border-color:rgba(237,66,69,.4);"><span class="mini-badge-label" style="color:#ed4245;font-variant-numeric:tabular-nums;">400: 0</span></div>
-                    <div class="mini-badge offline" id="wsBadge">
-                        <span class="mini-badge-icon msi">wifi_off</span>
-                        <span class="mini-badge-label" data-i18n="activity.websocket">WebSocket</span>
+                <div class="tab-toolbar log-toolbar">
+                    <div class="search-bar-row log-search"><span class="msi search-ico">search</span><input id="logSearchInput" type="text" class="vrcn-input" placeholder="Search..." data-i18n-placeholder="logs.search.placeholder" oninput="onLogSearch(this.value)"></div>
+                    <div class="log-stats" id="logStats">
+                        <div class="log-stat" id="statAget"><span class="log-stat-k">AGET/H</span><span class="log-stat-v zero">0</span></div>
+                        <div class="log-stat" id="statAcdn"><span class="log-stat-k">ACDN/H</span><span class="log-stat-v zero">0</span></div>
+                        <div class="log-stat" id="statCdn"><span class="log-stat-k">CDN</span><span class="log-stat-v cdn zero">0</span></div>
+                        <div class="log-stat-sep"></div>
+                        <div class="log-stat" id="statAvtrdbGet"><span class="log-stat-k">AVTRDB/GET</span><span class="log-stat-v accent zero">0</span></div>
+                        <div class="log-stat" id="statAvtrdbQry"><span class="log-stat-k">AVTRDB/QRY</span><span class="log-stat-v accent zero">0</span></div>
+                        <div class="log-stat" id="statAvtrdbSub"><span class="log-stat-k">AVTRDB/SUB</span><span class="log-stat-v accent zero">0</span></div>
+                        <div class="log-stat-sep"></div>
+                        <div class="log-stat" id="statHttp200"><span class="log-stat-k">200</span><span class="log-stat-v ok zero">0</span></div>
+                        <div class="log-stat" id="statHttp429"><span class="log-stat-k">429</span><span class="log-stat-v warn zero">0</span></div>
+                        <div class="log-stat" id="statHttp404"><span class="log-stat-k">404</span><span class="log-stat-v err zero">0</span></div>
+                        <div class="log-stat" id="statHttp403"><span class="log-stat-k">403</span><span class="log-stat-v err zero">0</span></div>
+                        <div class="log-stat" id="statHttp400"><span class="log-stat-k">400</span><span class="log-stat-v err zero">0</span></div>
+                    </div>
+                    <div class="log-ws" id="wsBadge">
+                        <span class="msi log-ws-icon">wifi_off</span>
+                        <span data-i18n="activity.websocket">WebSocket</span>
                     </div>
                 </div>
                 <div class="log-area" style="flex:1;min-height:0;">

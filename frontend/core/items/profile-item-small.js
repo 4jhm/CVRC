@@ -17,7 +17,7 @@ function renderProfileItemSmall(user, onclick) {
     const image = live?.image || user.image || '';
 
     const av = image
-        ? `<div class="fd-pi-sm-av" style="background-image:url('${cssUrl(image)}')"></div>`
+        ? `<div class="fd-pi-sm-av" style="background-image:url('${cssUrl(imgThumb(image, 64))}')"></div>`
         : `<div class="fd-pi-sm-av fd-pi-sm-av-letter">${esc(name[0].toUpperCase())}</div>`;
 
     const badge = live ? `<span class="fd-pi-sm-badge">${t('profiles.badges.friend', 'Friend')}</span>` : '';

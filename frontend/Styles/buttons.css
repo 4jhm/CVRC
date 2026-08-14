@@ -37,6 +37,23 @@
 .vrcn-button:disabled { opacity: .4; cursor: not-allowed; }
 .vrcn-button.active { background: var(--accent); color: #fff; }
 
+.vrcn-icon-button {
+    background: none;
+    border: none;
+    color: var(--tx2);
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px;
+    border-radius: 8px;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.vrcn-icon-button:hover { background: var(--bg-hover); color: var(--tx0); }
+.vrcn-icon-button:disabled { opacity: .4; cursor: not-allowed; }
+.vrcn-icon-button.active { color: var(--accent-lt); }
+
 /* was 25 before */
 .vrcn-button-round {
     padding: 6px 14px;

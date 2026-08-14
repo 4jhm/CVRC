@@ -1,0 +1,79 @@
+/* === OSC Radial Menu Module === */
+.oscm-wheel-wrap {
+    position: relative;
+    width: 340px;
+    max-width: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 8px auto 14px;
+}
+.oscm-wheel { width: 100%; height: 100%; display: block; }
+
+.oscm-wedge {
+    fill: var(--bg-hover);
+    stroke: var(--border);
+    stroke-width: 1.5;
+    cursor: pointer;
+    transition: fill .12s;
+    touch-action: none;
+}
+.oscm-wedge:hover { fill: color-mix(in srgb, var(--accent) 20%, var(--bg-hover)); }
+.oscm-wedge.on { fill: color-mix(in srgb, var(--accent) 55%, var(--bg-hover)); }
+.oscm-wedge.disabled { opacity: .35; cursor: default; pointer-events: none; }
+
+.oscm-wedge-fill { fill: var(--accent); opacity: .5; pointer-events: none; }
+
+.oscm-wedge-icon {
+    fill: var(--tx1);
+    font-size: 18px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+}
+
+.oscm-wedge-label {
+    fill: var(--tx1);
+    font-size: 11px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+}
+.oscm-wedge-value {
+    fill: var(--tx2);
+    font-size: 10px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    pointer-events: none;
+    user-select: none;
+}
+
+.oscm-hub {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 34%;
+    height: 34%;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    cursor: pointer;
+    user-select: none;
+    text-align: center;
+    padding: 6px;
+}
+.oscm-hub:hover { border-color: var(--accent); }
+.oscm-hub-icon { font-size: 22px; }
+.oscm-hub-label { font-size: 11px; font-weight: 600; }
+.oscm-hub-page { font-size: 10px; opacity: .65; }
+
+.oscm-hint { font-size: 12px; opacity: .75; text-align: center; margin-top: 6px; }
+
+.oscm-legend { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 12px; }
+.oscm-legend-item { font-size: 11px; opacity: .75; }

@@ -31,6 +31,8 @@ const NAV_ITEMS_DEF = {
     'avatar-database':  { icon: 'view_in_ar',      tab: 29, i18n: 'nav.avatar_database',    label: 'Avatar Database',  defaultFolder: 'folder-tools' },
     'direct-access':    { icon: 'link',            tab: 30, i18n: 'nav.direct_access',      label: 'Direct Access',    defaultFolder: 'folder-tools' },
     'avatar-logger':    { icon: 'terminal',         tab: 31, i18n: 'nav.avatar_logger',      label: 'Avatar Logger',    defaultFolder: 'folder-tools' },
+    'emoji-maker':      { icon: 'emoji_emotions',   tab: 32, i18n: 'nav.emoji_maker',        label: 'Emoji Maker',      defaultFolder: 'folder-tools' },
+    'osc-radial':       { icon: 'target',           tab: 33, i18n: 'nav.osc_radial',         label: 'OSC Radial Menu',  defaultFolder: 'folder-tools', locked: true },
 };
 
 const NAV_ICON_OPTIONS = [
@@ -51,7 +53,7 @@ const NAV_ICON_OPTIONS = [
     'headset','headset_mic','precision_manufacturing','gamepad',
     // Media & Creative
     'palette','brush','photo_camera','movie','live_tv','radio','podcasts',
-    'collections','camera_roll','draw','color_lens','theaters',
+    'collections','camera_roll','draw','color_lens','theaters','emoji_emotions','target',
     // Communication
     'forum','message','mail','send','call','video_call','comment','chat_bubble',
     'mark_chat_unread','question_answer','sms',
@@ -90,7 +92,7 @@ const NAV_DEFAULT_LAYOUT = [
             'chatbox','media-relay','space-flight','frame-shot','osc-tool','youtube-fix',
             'activity-log','mutual-network','time-spent','voice-fight',
             'discord-presence','vr-overlay','permini','kikitan-xd','event-snipe','avatar-scaling','action-flow',
-            'status-schedule','vrc-accounts','avatar-database','direct-access','avatar-logger',
+            'status-schedule','vrc-accounts','avatar-database','direct-access','avatar-logger','emoji-maker','osc-radial',
         ],
     },
     { type: 'item', key: 'settings' },

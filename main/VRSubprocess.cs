@@ -90,6 +90,8 @@ static class VRSubprocess
         vro.OnWaterAlarm     += () => SendLine(new JObject { ["t"] = "vro_water_alarm" });
         vro.OnWaterDismissed += () => SendLine(new JObject { ["t"] = "vro_water_dismissed" });
         vro.OnScaleChange    += delta => SendLine(new JObject { ["t"] = "vro_scale_change", ["delta"] = delta });
+        vro.OnExpressionSend  += (name, ptype, value) => SendLine(new JObject { ["t"] = "vro_expr_send", ["name"] = name, ["ptype"] = ptype, ["value"] = JToken.FromObject(value) });
+        vro.OnExpressionEmote += emote => SendLine(new JObject { ["t"] = "vro_expr_emote", ["emote"] = emote });
         vro.OnScaleKeybindRecorded += (ids, names, hand) =>
             SendLine(new JObject
             {
@@ -223,6 +225,35 @@ static class VRSubprocess
                     B(cmd, "space"),   B(cmd, "relay"), B(cmd, "chatbox"),
                     B(cmd, "frameShot"));
                 break;
+
+            case "vro_osc_state":
+                vro.SetOscState(B(cmd, "connected"));
+                break;
+
+            case "vro_osc_avatar_params":
+            {
+                var defs = new List<(string Name, string Type)>();
+                if (cmd["defs"] is JArray defsArr)
+                    foreach (var d in defsArr)
+                        defs.Add((d["name"]?.Value<string>() ?? "", d["type"]?.Value<string>() ?? ""));
+                vro.SetOscAvatarParams(defs);
+                break;
+            }
+
+            case "vro_osc_param":
+            {
+                var pname = S(cmd, "name");
+                var vtok = cmd["value"];
+                object pvalue = vtok?.Type switch
+                {
+                    Newtonsoft.Json.Linq.JTokenType.Boolean => vtok.Value<bool>(),
+                    Newtonsoft.Json.Linq.JTokenType.Integer => vtok.Value<int>(),
+                    Newtonsoft.Json.Linq.JTokenType.Float   => vtok.Value<float>(),
+                    _ => (object)0f,
+                };
+                if (!string.IsNullOrEmpty(pname)) vro.SetOscParam(pname, pvalue);
+                break;
+            }
 
             case "vro_add_notif":
                 vro.AddNotification(

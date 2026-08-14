@@ -1998,7 +1998,7 @@ function renderGroupLogs(payload) {
         // tl-av, not tl-list-av: the latter is the stacked variant with a negative
         // margin and bleeds into the neighbouring column.
         const av = ev.actorImage
-            ? `<div class="tl-av" style="width:26px;height:26px;background-image:url('${cssUrl(ev.actorImage)}')" title="${esc(name)}"></div>`
+            ? `<div class="tl-av" style="width:26px;height:26px;background-image:url('${cssUrl(imgThumb(ev.actorImage, 64))}')" title="${esc(name)}"></div>`
             : `<div class="tl-av tl-av-letter" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:calc(10px + var(--fs-off, 0px));" title="${esc(name)}">${esc((name || '?')[0].toUpperCase())}</div>`;
 
         // Same click + context-menu contract as group member cards.

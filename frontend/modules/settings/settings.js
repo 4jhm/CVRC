@@ -117,13 +117,12 @@ function saveSettings() {
             friendOnlineToastEnabled: document.getElementById('setFriendOnlineToastEnabled')?.checked ?? false,
             friendOnlineToastFavOnly: document.getElementById('setFriendOnlineToastFavOnly')?.checked ?? false,
             friendsSidebarLocationOnly: document.getElementById('setFriendsSidebarLocationOnly')?.checked ?? true,
-            friendsSidebarRankColor: document.getElementById('setFriendsSidebarRankColor')?.checked ?? false,
             friendsSidebarPreviewCollapsed: document.getElementById('setFriendsSidebarPreviewCollapsed')?.checked ?? true,
             friendsSidebarPreviewOpen: document.getElementById('setFriendsSidebarPreviewOpen')?.checked ?? false,
             peopleAlwaysStats: document.getElementById('setPeopleAlwaysStats')?.checked ?? false,
             modernFolderLayout: document.getElementById('setModernFolderLayout')?.checked ?? true,
             navSidebarHoverText: document.getElementById('setNavSidebarHoverText')?.checked ?? true,
-            directModalNav: document.getElementById('setDirectModalNav')?.checked ?? false,
+            directModalNav: document.getElementById('setDirectModalNav')?.checked ?? true,
             enableProfileIconFrames: document.getElementById('setEnableIconFrames')?.checked ?? false,
             squareIconFrames: document.getElementById('setSquareIconFrames')?.checked ?? false,
             enableNameplateDecoration: document.getElementById('setEnableNameplateDeco')?.checked ?? false,
@@ -144,7 +143,6 @@ function saveSettings() {
             autoColorAccuracy: autoColorAccuracy,
             cursorTheme: currentCursorTheme,
             appFont: currentAppFont,
-            designStyle: currentDesignStyle,
             customFont: currentCustomFont,
             fontSizeOffset: currentFontSizeOffset,
             activeCustomThemes: [..._activeCustomThemes],
@@ -152,7 +150,9 @@ function saveSettings() {
             dashBgPath: dashBgPath,
             randomDashBg: document.getElementById('setRandomBg').checked,
             clockEnabled: document.getElementById('setClockEnabled').checked,
-            clockAmPm: document.getElementById('setClockAmPm').checked,
+            dateEnabled: document.getElementById('setDateEnabled').checked,
+            showVrcPlus: document.getElementById('setShowVrcPlus').checked,
+            showVrcCredits: document.getElementById('setShowVrcCredits').checked,
             // Credentials are no longer transported via saveSettings, they live in the Accounts tab.
             sfMultiplier: parseFloat(document.getElementById('sfMultiplier').value) || 1,
             sfLockX: document.getElementById('sfLockX').checked,
@@ -284,6 +284,8 @@ function saveSettings() {
             searchDebounceMs:        parseInt(document.getElementById('setSearchDebounceMs')?.value) || 500,
             imgCacheLimitGb:         parseInt(document.getElementById('setImgCacheLimit').value) || 5,
             imgCacheOptimizeEnabled: document.getElementById('setImgCacheOptimizeEnabled').checked,
+            imgMemoryOptimizeEnabled: document.getElementById('setImgMemoryOptimizeEnabled')?.checked ?? true,
+            vrcPlusOptimizeEnabled: document.getElementById('setVrcPlusOptimize')?.checked ?? true,
             ffcEnabled: document.getElementById('setFfcEnabled').checked,
             memoryTrimEnabled: document.getElementById('setMemoryTrimEnabled').checked,
             mediaFixEnabled: document.getElementById('setMediaFixEnabled')?.checked ?? true,
@@ -353,8 +355,8 @@ function autoSave() {
 function initAutoSave() {
     const ids = ['setBotName','setBotAvatar','setVrcPath','setStartWithWindows','setMinimizeToTray','setTrayNotifications',
         'setNotifySoundEnabled','setMessageSoundEnabled','setMediaRelaySoundEnabled','setSteamOverlaySoundEnabled',
-        'setFriendsSidebarLocationOnly','setFriendsSidebarRankColor','setFriendsSidebarPreviewCollapsed','setFriendsSidebarPreviewOpen','setPeopleAlwaysStats','setDirectModalNav',
-        'setRandomBg','setClockEnabled','setClockAmPm',
+        'setFriendsSidebarLocationOnly','setFriendsSidebarPreviewCollapsed','setFriendsSidebarPreviewOpen','setPeopleAlwaysStats','setDirectModalNav',
+        'setRandomBg','setClockEnabled','setDateEnabled','setShowVrcPlus','setShowVrcCredits',
         'setAutoStartVR','setAutoStartDesktop',
         'setCloseWithVrc','setStartAlwaysWithVrc',
         'setCbAutoStartVR','setCbAutoStartDesktop',
@@ -362,7 +364,7 @@ function initAutoSave() {
         'setYtAutoStartVR','setYtAutoStartDesktop',
         'setVfAutoStartVR','setVfAutoStartDesktop',
         'setDpAutoStartVR','setDpAutoStartDesktop',
-        'setImgCacheEnabled','setImgCacheLimit','setImgCacheOptimizeEnabled','setMemoryTrimEnabled','setSendCrashData','setRestartAfterCrash',
+        'setImgCacheEnabled','setImgCacheLimit','setImgCacheOptimizeEnabled','setImgMemoryOptimizeEnabled','setVrcPlusOptimize','setMemoryTrimEnabled','setSendCrashData','setRestartAfterCrash',
         'setPerfGpuAccel','setPerfShaderCache','setPerfV8Heap','setPerfRenderProc',
         'setPerfAnimations','setPerfBlur'];
     ids.forEach(id => {
@@ -418,9 +420,6 @@ function loadSettingsToUI(s) {
     settings.friendsSidebarLocationOnly = s.FriendsSidebarLocationOnly ?? s.friendsSidebarLocationOnly ?? true;
     const _fslEl = document.getElementById('setFriendsSidebarLocationOnly');
     if (_fslEl) _fslEl.checked = settings.friendsSidebarLocationOnly;
-    settings.friendsSidebarRankColor = s.FriendsSidebarRankColor ?? s.friendsSidebarRankColor ?? false;
-    const _fsrcEl = document.getElementById('setFriendsSidebarRankColor');
-    if (_fsrcEl) _fsrcEl.checked = settings.friendsSidebarRankColor;
     settings.friendsSidebarPreviewCollapsed = s.FriendsSidebarPreviewCollapsed ?? s.friendsSidebarPreviewCollapsed ?? true;
     const _fspcEl = document.getElementById('setFriendsSidebarPreviewCollapsed');
     if (_fspcEl) _fspcEl.checked = settings.friendsSidebarPreviewCollapsed;
@@ -438,7 +437,7 @@ function loadSettingsToUI(s) {
     const _nshtEl = document.getElementById('setNavSidebarHoverText');
     if (_nshtEl) _nshtEl.checked = settings.navSidebarHoverText;
     if (typeof applyNavFolderMode === 'function') applyNavFolderMode();
-    settings.directModalNav = s.DirectModalNav ?? s.directModalNav ?? false;
+    settings.directModalNav = s.DirectModalNav ?? s.directModalNav ?? true;
     const _dmnEl = document.getElementById('setDirectModalNav');
     if (_dmnEl) _dmnEl.checked = settings.directModalNav;
     settings.enableProfileIconFrames = s.EnableProfileIconFrames ?? s.enableProfileIconFrames ?? false;
@@ -513,8 +512,10 @@ function loadSettingsToUI(s) {
 
     const randomBg = s.RandomDashBg || s.randomDashBg || false;
     document.getElementById('setRandomBg').checked = randomBg;
-    document.getElementById('setClockEnabled').checked = s.ClockEnabled ?? s.clockEnabled ?? true;
-    document.getElementById('setClockAmPm').checked    = s.ClockAmPm    ?? s.clockAmPm    ?? false;
+    document.getElementById('setClockEnabled').checked = s.ClockEnabled ?? s.clockEnabled ?? false;
+    document.getElementById('setDateEnabled').checked = s.DateEnabled ?? s.dateEnabled ?? false;
+    document.getElementById('setShowVrcPlus').checked = s.ShowVrcPlus ?? s.showVrcPlus ?? true;
+    document.getElementById('setShowVrcCredits').checked = s.ShowVrcCredits ?? s.showVrcCredits ?? true;
     applyClockSettings();
     if (randomBg) {
         // Request random image from watch folders
@@ -546,7 +547,6 @@ function loadSettingsToUI(s) {
     _localHttpPort = s.LocalHttpPort || s.localHttpPort || 0;
     currentCursorTheme = s.CursorTheme || s.cursorTheme || '';
     applyAppFont(s.AppFont || s.appFont || APP_FONT_DEFAULT);
-    applyDesignStyle(s.DesignStyle || s.designStyle || 'line');
     applyCustomFont(s.CustomFont || s.customFont || '');
     applyFontSizeOffset(s.FontSizeOffset ?? s.fontSizeOffset ?? 0);
     if (typeof applyMusicSettingsUI === 'function') applyMusicSettingsUI(s.CustomMusicPath || s.customMusicPath || '');
@@ -816,6 +816,13 @@ function loadSettingsToUI(s) {
     // Image cache settings
     const imgCacheLimitGb         = Math.max(5, Math.min(30, s.ImgCacheLimitGb ?? s.imgCacheLimitGb ?? 5));
     const imgCacheOptimizeEnabled = s.ImgCacheOptimizeEnabled ?? s.imgCacheOptimizeEnabled ?? true;
+    const imgMemoryOptimizeEnabled = s.ImgMemoryOptimizeEnabled ?? s.imgMemoryOptimizeEnabled ?? true;
+    imgThumbsEnabled = imgMemoryOptimizeEnabled === true;
+    const memOptEl = document.getElementById('setImgMemoryOptimizeEnabled');
+    if (memOptEl) memOptEl.checked = imgThumbsEnabled;
+    vrcPlusOptimizeEnabled = (s.VrcPlusOptimizeEnabled ?? s.vrcPlusOptimizeEnabled ?? true) === true;
+    const vpOptEl = document.getElementById('setVrcPlusOptimize');
+    if (vpOptEl) vpOptEl.checked = vrcPlusOptimizeEnabled;
     document.getElementById('setImgCacheLimit').value = imgCacheLimitGb;
     document.getElementById('imgCacheLimitVal').textContent = imgCacheLimitGb + ' GB';
     document.getElementById('setImgCacheOptimizeEnabled').checked = imgCacheOptimizeEnabled;
@@ -929,6 +936,32 @@ function startForceOptimize() {
     const btn = document.getElementById('btnForceOptimize');
     if (btn) btn.disabled = true;
     sendToCS({ action: 'optimizeImgCache' });
+}
+
+function onVrcPlusOptimizeToggle() {
+    vrcPlusOptimizeEnabled = document.getElementById('setVrcPlusOptimize')?.checked === true;
+    autoSave();
+    const fl = document.getElementById('vrcFriendsList');
+    if (fl) fl.__lastHtml = null;
+    ['dashFavWorlds', 'dashFriendsFeed', 'dashFriendLocSmallShelf', 'dashGroupActivityGrid', 'dashGroupActivityCards', 'dashGroupActivityShelf'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.__lastHtml = null;
+    });
+    if (typeof renderVrcFriends === 'function' && typeof vrcFriendsData !== 'undefined' && vrcFriendsData.length) renderVrcFriends(vrcFriendsData);
+    if (typeof renderDashboard === 'function') renderDashboard();
+}
+
+function onImgMemoryOptimizeToggle() {
+    imgThumbsEnabled = document.getElementById('setImgMemoryOptimizeEnabled')?.checked === true;
+    autoSave();
+    const fl = document.getElementById('vrcFriendsList');
+    if (fl) fl.__lastHtml = null;
+    ['dashFavWorlds', 'dashFriendsFeed', 'dashFriendLocSmallShelf', 'dashGroupActivityGrid', 'dashGroupActivityCards', 'dashGroupActivityShelf'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.__lastHtml = null;
+    });
+    if (typeof renderVrcFriends === 'function' && typeof vrcFriendsData !== 'undefined' && vrcFriendsData.length) renderVrcFriends(vrcFriendsData);
+    if (typeof renderDashboard === 'function') renderDashboard();
 }
 
 function handleImgCacheOptimizeProgress(data) {

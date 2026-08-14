@@ -8,10 +8,12 @@
             </div>
             <div id="statusOptions" style="margin-top:20px;"></div>
             <div class="status-desc-row" style="display:flex;gap:8px;align-items:center;margin-top:12px;">
-                <select class="vrcn-dropdown status-desc-select" id="statusDescSelect" style="flex:1;min-width:0;"></select>
-                <textarea class="status-desc-input" id="statusDescInput" rows="1" maxlength="32" placeholder="Status message..." data-i18n-placeholder="profiles.status.message_placeholder" style="flex:1;min-width:0;margin-top:0;display:none;"></textarea>
-                <button class="vrcn-button-round" id="statusDescEditBtn" onclick="toggleStatusDescEdit()" title="Custom message" data-i18n-title="profiles.status.custom"><span class="msi" style="font-size:16px;">edit</span></button>
+                <div class="status-desc-field">
+                    <select class="vrcn-dropdown status-desc-select" id="statusDescSelect" style="flex:1;min-width:0;"></select>
+                    <textarea class="status-desc-input" id="statusDescInput" rows="1" maxlength="32" placeholder="Status message..." data-i18n-placeholder="profiles.status.message_placeholder" style="flex:1;min-width:0;margin-top:0;display:none;"></textarea>
+                    <span class="status-desc-count" id="statusDescCount">32</span>
+                </div>
+                <button class="vrcn-button" id="statusDescEditBtn" onclick="toggleStatusDescEdit()" title="Custom message" data-i18n-title="profiles.status.custom"><span class="msi" style="font-size:16px;">edit</span></button>
+                <button class="vrcn-button" onclick="submitStatusChange()" data-i18n="profiles.status.update">Update</button>
             </div>
-            <div style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);margin-top:4px;margin-bottom:14px;text-align:right;" id="statusDescCount">0/32</div>
-            <div class="modal-btns"><button class="vrcn-button-round vrcn-btn-join" onclick="submitStatusChange()" data-i18n="profiles.status.update">Update</button></div>
         </div>

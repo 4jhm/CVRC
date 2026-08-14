@@ -607,3 +607,20 @@ body.maximized .tb-icon-restore {
     color: var(--tx3);
     white-space: nowrap;
 }
+
+.tb-clock {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 11px;
+    font-size: calc(13px + var(--fs-off, 0px));
+    color: var(--tx2);
+    cursor: default;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.tb-clock-time,
+.tb-clock-date {
+    font-variant-numeric: tabular-nums;
+}

@@ -142,3 +142,64 @@
 #worldRecentGrid:has(.lv-scroll), #searchWorldsResults:has(.lv-scroll),
 #myGroupsGrid:has(.lv-scroll), #searchGroupsResults:has(.lv-scroll),
 .lv-tab-scroll:has(.lv-scroll) { margin-bottom: 8px; }
+
+/* === v2 content panel — matches the Calendar card === */
+#favWorldsGrid, #worldMineGrid, #worldRecentGrid, #searchWorldsResults,
+#myGroupsGrid, #searchGroupsResults,
+#allFriendsGrid, #favFriendsGrid, #recentSeenGrid,
+#blockedList, #mutedList, #searchPeopleResults, #instancePlayersGrid,
+.lv-tab-scroll,
+.tl-container,
+.lib-wrap {
+    background: var(--tab-card-bg, var(--bg-input));
+    border: 1px solid var(--brd);
+    border-radius: 12px;
+    padding: 12px;
+    box-sizing: border-box;
+    margin-bottom: 28px;
+}
+
+.tl-paginator-bar { margin-top: -28px; z-index: 3; }
+#tab13 .lv-tab-scroll { margin-bottom: 0; }
+
+#favWorldsGrid:has(.tl-list-wrap), #worldMineGrid:has(.tl-list-wrap),
+#worldRecentGrid:has(.tl-list-wrap), #searchWorldsResults:has(.tl-list-wrap),
+#myGroupsGrid:has(.tl-list-wrap), #searchGroupsResults:has(.tl-list-wrap),
+#allFriendsGrid:has(.tl-list-wrap), #favFriendsGrid:has(.tl-list-wrap),
+#recentSeenGrid:has(.tl-list-wrap), #blockedList:has(.tl-list-wrap),
+#mutedList:has(.tl-list-wrap), #searchPeopleResults:has(.tl-list-wrap),
+#instancePlayersGrid:has(.tl-list-wrap),
+.lv-tab-scroll:has(.tl-list-wrap),
+.tl-container:has(.tl-list-wrap) { overflow-x: hidden; padding-top: 0; }
+
+.tl-list-wrap {
+    overflow-x: auto;
+    transform: rotateX(180deg);
+}
+.tl-list-wrap > * { transform: rotateX(180deg); }
+
+.tl-list-wrap::-webkit-scrollbar:horizontal { height: 5px; }
+.tl-list-wrap::-webkit-scrollbar-thumb:horizontal {
+    border: 0;
+    background: var(--brd);
+    background-clip: border-box;
+    border-radius: 3px;
+    min-width: 40px;
+}
+.tl-list-wrap::-webkit-scrollbar-thumb:horizontal:hover { background: var(--accent); }
+
+.lv-scroll .tl-list-wrap,
+#favWorldsGrid .tl-list-wrap, #worldMineGrid .tl-list-wrap,
+#worldRecentGrid .tl-list-wrap, #searchWorldsResults .tl-list-wrap,
+#myGroupsGrid .tl-list-wrap, #searchGroupsResults .tl-list-wrap,
+#favFriendsGrid .tl-list-wrap, #allFriendsGrid .tl-list-wrap,
+#recentSeenGrid .tl-list-wrap, #searchPeopleResults .tl-list-wrap,
+#blockedList .tl-list-wrap, #mutedList .tl-list-wrap,
+#instancePlayersGrid .tl-list-wrap,
+.tl-container .tl-list-wrap { padding-top: 0; }
+
+.lv-tab-scroll > .avatar-grid,
+.lv-tab-scroll > .inv-grid { padding: 0; }
+
+.lib-wrap { padding: 0; }
+.lib-wrap > .lib-grid { padding: 12px 12px 28px; }

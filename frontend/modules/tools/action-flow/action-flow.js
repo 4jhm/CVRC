@@ -13,10 +13,11 @@ const COLOR_ACTION  = '#937dff';
 const COLOR_TRIGGER = '#c27dff';
 const COLOR_GAME    = '#2c4e8a';
 const COLOR_OTHER   = '#43c59e';
+const COLOR_INFO    = '#f0a14e';
 
 const WORLD_CHANGE_DELAY_MS = 15 * 1000;
 const EVENT_TICK_MS = 5 * 1000;
-const FLOW_ACTION_LIMIT = 10;
+const FLOW_ACTION_LIMIT = 20;
 const FLOW_LIMIT = 4;
 const TRIGGER_LIMIT = 16;
 const TASK_WINDOW_MS = 10 * 60 * 1000;
@@ -24,9 +25,12 @@ const TASK_SOFT_LIMIT = 20;
 const TASK_HARD_LIMIT = 25;
 const TASK_EXEMPT_TYPES = new Set([
     'af_send_notification',
+    'af_send_notification_value',
+    'af_send_advanced_notification',
     'af_send_own_instance_info',
     'af_send_own_advanced_instance_info',
     'af_send_friend_instance_info',
+    'af_close_vrchat',
 ]);
 const ACTION_TYPES = new Set([
     'af_set_status',
@@ -36,8 +40,13 @@ const ACTION_TYPES = new Set([
     'af_answer_invite',
     'af_answer_invite_request',
     'af_send_notification',
+    'af_send_notification_value',
+    'af_send_advanced_notification',
     'af_switch_own_avatar',
     'af_switch_favorite_avatar',
+    'af_switch_avatar_id',
+    'af_set_home_world',
+    'af_close_vrchat',
     'af_send_own_instance_info',
     'af_send_own_advanced_instance_info',
     'af_send_friend_instance_info',
@@ -646,6 +655,74 @@ function afDefineBlocks() {
         this.setColour(COLOR_OTHER);
         this.setTooltip(aft('action.send_friend_instance_info_tooltip', 'Sends a friend instance info to a Discord webhook. Keep friend on (any friend) to use the friend from a "when a friend joins an instance" trigger.'));
     } };
+
+    B.Blocks['af_switch_avatar_id'] = { init() {
+        this.appendDummyInput()
+            .appendField(aft('action.switch_to_avatar', 'switch to avatar'))
+            .appendField(new B.FieldTextInput('avtr_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'), 'AVATAR_ID');
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(COLOR_ACTION);
+        this.setTooltip(aft('action.switch_to_avatar_tooltip', 'Switches to the given avatar ID. The avatar has to be your own or public.'));
+    } };
+
+    B.Blocks['af_set_home_world'] = { init() {
+        this.appendDummyInput().appendField(aft('action.set_home_world', 'set current world as home world'));
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(COLOR_ACTION);
+        this.setTooltip(aft('action.set_home_world_tooltip', 'Sets the world you are currently in as your home world.'));
+    } };
+
+    B.Blocks['af_close_vrchat'] = { init() {
+        this.appendDummyInput().appendField(aft('game.close_vrchat', 'close VRChat'));
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(COLOR_GAME);
+        this.setTooltip(aft('game.close_vrchat_tooltip', 'Closes VRChat if it is running. Uses no VRChat API call.'));
+    } };
+
+    B.Blocks['af_send_notification_value'] = { init() {
+        this.appendValueInput('VALUE').appendField(aft('action.send_notification', 'send notification'));
+        this.setInputsInline(true);
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(COLOR_ACTION);
+        this.setTooltip(aft('action.send_notification_value_tooltip', 'Sends a notification containing the value of the attached Get Info block.'));
+    } };
+
+    B.Blocks['af_send_advanced_notification'] = { init() {
+        this.appendDummyInput()
+            .appendField(aft('action.send_advanced_notification', 'send notification'))
+            .appendField('"').appendField(new B.FieldTextInput(aft('action.send_advanced_notification_default', 'Info:')), 'TEXT').appendField('"');
+        this.appendValueInput('VALUE');
+        this.setInputsInline(true);
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(COLOR_ACTION);
+        this.setTooltip(aft('action.send_advanced_notification_tooltip', 'Sends a notification with your own text followed by the value of the attached Get Info block.'));
+    } };
+
+    const INFO_BLOCKS = [
+        ['af_get_world_name',     'info.world_name',     'current world name',     'info.world_name_tooltip',     'Name of the world you are currently in.'],
+        ['af_get_avatar_name',    'info.avatar_name',    'current avatar name',    'info.avatar_name_tooltip',    'Name of the avatar you are currently wearing.'],
+        ['af_get_instance_name',  'info.instance_name',  'current instance name',  'info.instance_name_tooltip',  'Name the instance owner gave this instance. Empty when the instance has no name.'],
+        ['af_get_instance_id',    'info.instance_id',    'current instance ID',    'info.instance_id_tooltip',    'ID of the instance you are currently in.'],
+        ['af_get_player_count',   'info.player_count',   'current player count',   'info.player_count_tooltip',   'Players in your instance as count/capacity.'],
+        ['af_get_player_list',    'info.player_list',    'current player list',    'info.player_list_tooltip',    'Names of everyone in your instance, separated by commas.'],
+        ['af_get_ingame_friends', 'info.ingame_friends', 'friends in game',        'info.ingame_friends_tooltip', 'Names of your friends that are currently in VRChat, separated by commas.'],
+        ['af_get_time',           'info.time',           'current time',           'info.time_tooltip',           'Your current local time.'],
+        ['af_get_joined_player_name', 'info.joined_player_name', 'joined player name', 'info.joined_player_name_tooltip', 'Name of the player from the trigger, for example the one who just joined your instance.'],
+        ['af_get_instance_type_label', 'info.instance_type', 'current instance type', 'info.instance_type_tooltip', 'Instance type you are currently in as readable text, for example Friends+ or Group Public.'],
+    ];
+    for (const [type, labelKey, labelFb, tipKey, tipFb] of INFO_BLOCKS) {
+        B.Blocks[type] = { init() {
+            this.appendDummyInput().appendField(aft(labelKey, labelFb) + ' (string)');
+            this.setOutput(true, 'String');
+            this.setColour(COLOR_INFO);
+            this.setTooltip(aft(tipKey, tipFb));
+        } };
+    }
 }
 
 function afToolbox() {
@@ -690,6 +767,19 @@ function afToolbox() {
             ]},
             { kind: 'category', name: aft('toolbox.game', 'Game'), colour: COLOR_GAME, contents: [
                 { kind: 'block', type: 'af_is_game_running' },
+                { kind: 'block', type: 'af_close_vrchat' },
+            ]},
+            { kind: 'category', name: aft('toolbox.get_info', 'Get Info'), colour: COLOR_INFO, contents: [
+                { kind: 'block', type: 'af_get_world_name' },
+                { kind: 'block', type: 'af_get_avatar_name' },
+                { kind: 'block', type: 'af_get_instance_name' },
+                { kind: 'block', type: 'af_get_instance_id' },
+                { kind: 'block', type: 'af_get_player_count' },
+                { kind: 'block', type: 'af_get_player_list' },
+                { kind: 'block', type: 'af_get_ingame_friends' },
+                { kind: 'block', type: 'af_get_time' },
+                { kind: 'block', type: 'af_get_joined_player_name' },
+                { kind: 'block', type: 'af_get_instance_type_label' },
             ]},
             { kind: 'category', name: aft('toolbox.friends', 'Friends'), colour: COLOR_PARAM, contents: [
                 { kind: 'block', type: 'af_friend_obj' },
@@ -727,11 +817,15 @@ function afToolbox() {
                 { kind: 'block', type: 'af_set_bio_text' },
                 { kind: 'block', type: 'af_switch_own_avatar' },
                 { kind: 'block', type: 'af_switch_favorite_avatar' },
+                { kind: 'block', type: 'af_switch_avatar_id' },
+                { kind: 'block', type: 'af_set_home_world' },
                 { kind: 'block', type: 'af_invite_friend' },
                 { kind: 'block', type: 'af_request_invite' },
                 { kind: 'block', type: 'af_answer_invite' },
                 { kind: 'block', type: 'af_answer_invite_request' },
                 { kind: 'block', type: 'af_send_notification' },
+                { kind: 'block', type: 'af_send_notification_value' },
+                { kind: 'block', type: 'af_send_advanced_notification' },
             ]},
             { kind: 'category', name: aft('toolbox.other', 'Other Actions'), colour: COLOR_OTHER, contents: [
                 { kind: 'block', type: 'af_send_own_instance_info' },
@@ -1599,7 +1693,7 @@ function afOwnInstanceInfo() {
     const worldId   = String(ci.location).split(':')[0];
     const raw       = String(ci.instanceType || '');
     const typeLabel = afInstanceTypeLabel(raw === 'hidden' ? 'friends+' : raw === 'group-members' ? 'group' : raw);
-    return { worldId, worldName: afWorldNameFor(worldId, ci.worldName), typeLabel, capacity: Number(ci.capacity) || 0 };
+    return { worldId, worldName: afWorldNameFor(worldId, ci.worldName), typeLabel, capacity: Number(ci.capacity) || 0, location: String(ci.location) };
 }
 
 function afFriendInstanceInfo(friend) {
@@ -1615,6 +1709,7 @@ function afFriendInstanceInfo(friend) {
         worldId,
         worldName: afWorldNameFor(worldId, friend._worldName),
         typeLabel: afInstanceTypeLabel(parsed.instanceType),
+        location: loc,
     };
 }
 
@@ -1686,9 +1781,45 @@ function afExecAction(flow, block) {
             /* Exempt from rate limit: no VRChat API call, just local UI + tray. */
             const text = f.TEXT || '';
             afShowFlowNotificationCard(flow.name, text);
-            const ntitle = aft('notification_title', 'Action Flow');
-            if (typeof sendToCS === 'function') sendToCS({ action: 'afTrayNotify', title: ntitle, subtitle: text, accent: 'info' });
+            if (typeof sendToCS === 'function') sendToCS({ action: 'afTrayNotify', title: flow.name, subtitle: text, accent: 'info' });
             afLog('ok', '[' + flow.name + '] ' + aftf('log.notify', { text }, 'notify "' + text + '"'));
+            break;
+        }
+        case 'af_send_notification_value':
+        case 'af_send_advanced_notification': {
+            const raw = afEvalValue(afInput(block, 'VALUE'));
+            const val = (raw === null || raw === undefined) ? ''
+                      : (typeof raw === 'object' ? String(raw.id || '') : String(raw));
+            const lead = block.type === 'af_send_advanced_notification' ? String(f.TEXT || '') : '';
+            const text = (lead ? lead + ' ' + val : val).trim();
+            if (!text) { afLog('err', '[' + flow.name + '] ' + aft('log.notify_skipped', 'notification skipped: nothing to send')); break; }
+            afShowFlowNotificationCard(flow.name, text);
+            if (typeof sendToCS === 'function') sendToCS({ action: 'afTrayNotify', title: flow.name, subtitle: text, accent: 'info' });
+            afLog('ok', '[' + flow.name + '] ' + aftf('log.notify', { text }, 'notify "' + text + '"'));
+            break;
+        }
+        case 'af_close_vrchat': {
+            if (typeof sendToCS === 'function') sendToCS({ action: 'afCloseVrchat' });
+            afLog('ok', '[' + flow.name + '] ' + aft('log.close_vrchat', 'closing VRChat'));
+            break;
+        }
+        case 'af_switch_avatar_id': {
+            const avId = String(f.AVATAR_ID || '').trim();
+            if (!avId.startsWith('avtr_')) { afLog('err', '[' + flow.name + '] ' + aft('log.switch_avatar_id_skipped', 'switch avatar skipped: invalid avatar ID')); break; }
+            if (!afTryDispatch(flow)) break;
+            if (typeof sendToCS === 'function') sendToCS({ action: 'vrcSelectAvatar', avatarId: avId });
+            afRecordTask();
+            afLog('ok', '[' + flow.name + '] ' + aftf('log.switch_avatar', { name: avId }, 'switch avatar to ' + avId));
+            break;
+        }
+        case 'af_set_home_world': {
+            const ciHome = afCurInst();
+            const homeWid = ciHome ? String(ciHome.worldId || String(ciHome.location || '').split(':')[0] || '') : '';
+            if (!homeWid.startsWith('wrld_')) { afLog('err', '[' + flow.name + '] ' + aft('log.set_home_world_skipped', 'set home world skipped: not currently in a world')); break; }
+            if (!afTryDispatch(flow)) break;
+            if (typeof sendToCS === 'function') sendToCS({ action: 'vrcSetHomeWorld', worldId: homeWid });
+            afRecordTask();
+            afLog('ok', '[' + flow.name + '] ' + aftf('log.set_home_world', { world: (ciHome && ciHome.worldName) || homeWid }, 'set home world to ' + ((ciHome && ciHome.worldName) || homeWid)));
             break;
         }
         case 'af_switch_own_avatar':
@@ -1735,7 +1866,7 @@ function afExecAction(flow, block) {
                 || meRaw.currentAvatarThumbnailImageUrl || meRaw.currentAvatarImageUrl || '';
             if (typeof sendToCS === 'function') sendToCS({
                 action: 'afInstanceWebhook', url, scope: 'own', advanced,
-                worldId: info.worldId, worldName: info.worldName,
+                worldId: info.worldId, worldName: info.worldName, location: info.location,
                 instanceTypeLabel: info.typeLabel, capacity: info.capacity,
                 authorName: me ? (me.displayName || me.username || '') : '',
                 authorUserId: me ? (me.id || '') : '',
@@ -1755,7 +1886,7 @@ function afExecAction(flow, block) {
             if (!info) { afLog('err', '[' + flow.name + '] ' + aft('log.no_friend_instance', 'friend instance info skipped: no friend in an instance (use inside a "when a friend joins an instance" trigger, or pick a friend)')); break; }
             if (typeof sendToCS === 'function') sendToCS({
                 action: 'afInstanceWebhook', url, scope: 'friend',
-                worldId: info.worldId, worldName: info.worldName,
+                worldId: info.worldId, worldName: info.worldName, location: info.location,
                 instanceTypeLabel: info.typeLabel,
                 authorName: info.friendName,
                 authorUserId: (friend && friend.id) || '',
@@ -1930,6 +2061,65 @@ function afEvalValue(block) {
             const theirBase = String(u.location).split('~')[0];
             return myBase === theirBase;
         }
+        case 'af_get_world_name': {
+            const ci = afCurInst();
+            return ci ? String(ci.worldName || '') : '';
+        }
+        case 'af_get_avatar_name': {
+            const id = typeof currentAvatarId !== 'undefined' ? (currentAvatarId || '') : '';
+            if (!id) return '';
+            const cached = (typeof avatarInfoCache !== 'undefined' && avatarInfoCache[id]) || null;
+            if (cached && cached.name) return String(cached.name);
+            const own = (typeof avatarsData !== 'undefined' && avatarsData.find(a => a && a.id === id)) || null;
+            if (own && own.name) return String(own.name);
+            const fav = (typeof favAvatarsData !== 'undefined' && favAvatarsData.find(a => a && a.id === id)) || null;
+            return (fav && fav.name) ? String(fav.name) : '';
+        }
+        case 'af_get_instance_name': {
+            const ci = afCurInst();
+            return ci ? String(ci.displayName || '') : '';
+        }
+        case 'af_get_instance_id': {
+            const ci = afCurInst();
+            if (!ci || !ci.location) return '';
+            const after = String(ci.location).split(':')[1] || '';
+            return after.split('~')[0] || '';
+        }
+        case 'af_get_player_count': {
+            const ci = afCurInst();
+            if (!ci) return '';
+            const n   = Array.isArray(ci.users) && ci.users.length > 0 ? ci.users.length : (Number(ci.nUsers) || 0);
+            const cap = Number(ci.capacity) || 0;
+            return String(n).padStart(2, '0') + '/' + cap;
+        }
+        case 'af_get_player_list': {
+            const ci = afCurInst();
+            if (!ci || !Array.isArray(ci.users)) return '';
+            return ci.users.map(u => (u && u.displayName) || '').filter(Boolean).join(', ');
+        }
+        case 'af_get_ingame_friends': {
+            if (typeof vrcFriendsData === 'undefined' || !Array.isArray(vrcFriendsData)) return '';
+            return vrcFriendsData
+                .filter(fr => fr && (fr.status || 'offline') !== 'offline' && !!fr.location && fr.location !== 'offline')
+                .map(fr => fr.displayName || '')
+                .filter(Boolean)
+                .join(', ');
+        }
+        case 'af_get_time': {
+            const now = new Date();
+            return typeof fmtTime === 'function' ? fmtTime(now) : now.toLocaleTimeString();
+        }
+        case 'af_get_joined_player_name': {
+            const tu = afContext.triggeringUser;
+            return tu ? String(tu.displayName || tu.id || '') : '';
+        }
+        case 'af_get_instance_type_label': {
+            const ci = afCurInst();
+            if (!ci) return '';
+            const raw = String(ci.instanceType || '');
+            if (!raw) return '';
+            return afInstanceTypeLabel(raw === 'hidden' ? 'friends+' : raw);
+        }
         case 'af_friend_obj':
         case 'af_user_obj':
         case 'af_own_user':
@@ -1938,6 +2128,12 @@ function afEvalValue(block) {
             return afEvalUser(block);
     }
     return null;
+}
+
+function afCurInst() {
+    if (typeof currentInstanceData === 'undefined' || !currentInstanceData) return null;
+    if (currentInstanceData.empty || currentInstanceData.error) return null;
+    return currentInstanceData;
 }
 
 function afCmpEq(a, b) {

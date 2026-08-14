@@ -25,7 +25,7 @@ function snipePopulateGroups(filter) {
 
     list.innerHTML = groups.map(g => {
         const icon = g.iconUrl
-            ? `<img class="fd-group-icon" src="${esc(g.iconUrl)}" onerror="this.style.display='none'">`
+            ? `<img class="fd-group-icon" src="${esc(imgThumb(g.iconUrl, 96))}" onerror="this.style.display='none'">`
             : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
         const sel = g.id === _snipeSelectedGroupId;
         return `<div class="fd-group-card${sel ? ' ci-group-selected' : ''}" onclick="snipeSelectGroup('${jsq(g.id)}','${jsq(g.name||'')}','${jsq(g.iconUrl||'')}')">

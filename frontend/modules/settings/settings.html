@@ -226,43 +226,7 @@
                         </div>
                     </div>
 
-                    <!-- ADDITIONAL OPTIONS -->
-                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
-                        <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="settings.design.additional.title">Additional Options</span></div>
-                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="settings.design.additional.desc">Choose whether the taskbar and both sidebars are separated from the content by a thin line.</div>
-                        <div class="profile-style-picker" id="designStylePicker">
-                            <button type="button" class="profile-style-option" data-style="flat" onclick="setDesignStyle('flat')">
-                                <div class="design-skeleton">
-                                    <div class="dsk-bar"></div>
-                                    <div class="dsk-row">
-                                        <div class="dsk-side"></div>
-                                        <div class="dsk-main">
-                                            <div class="dsk-block"></div>
-                                            <div class="dsk-block short"></div>
-                                        </div>
-                                        <div class="dsk-side dsk-side-r"></div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.design.additional.flat">Flat Design</div>
-                            </button>
-                            <button type="button" class="profile-style-option" data-style="line" onclick="setDesignStyle('line')">
-                                <div class="design-skeleton lines">
-                                    <div class="dsk-bar"></div>
-                                    <div class="dsk-row">
-                                        <div class="dsk-side"></div>
-                                        <div class="dsk-main">
-                                            <div class="dsk-block"></div>
-                                            <div class="dsk-block short"></div>
-                                        </div>
-                                        <div class="dsk-side dsk-side-r"></div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.design.additional.line">Line Design</div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- FONTS -->
+<!-- FONTS -->
                     <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
                         <div class="vrcn-panel-card-header"><span class="msi">text_fields</span> <span data-i18n="settings.design.fonts.title">Fonts</span></div>
                         <div class="set-desc" style="margin:12px 0 14px;" data-i18n="settings.design.fonts.desc">Choose the font VRCNext uses for its interface. All fonts ship with the app, so nothing is downloaded while you browse them.</div>
@@ -285,13 +249,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- OTHER -->
-                    <div class="vrcn-panel-card" data-section="appearance" style="display:none;">
-                        <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="settings.design.tabs.other">Other</span></div>
-                        <div class="sf-toggle-row" style="margin-top:14px;"><span data-i18n="settings.design.clock_enabled">Enable Clock</span><label class="toggle"><input type="checkbox" id="setClockEnabled" checked onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
-                        <div class="sf-toggle-row" style="margin-top:8px;"><span data-i18n="settings.design.clock_ampm">Use AM/PM</span><label class="toggle"><input type="checkbox" id="setClockAmPm" onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
                     </div>
 
                     <!-- BACKGROUND MUSIC -->
@@ -365,6 +322,14 @@
                     <div class="vrcn-panel-card" data-section="general">
                         <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">workspace_premium</span> <span data-i18n="settings.decorations.title">VRC+ Decorations</span></div>
                         <div class="sf-toggle-row">
+                            <span data-i18n="settings.decorations.optimize.label">Optimize VRC+ Usage</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="setVrcPlusOptimize" checked onchange="onVrcPlusOptimizeToggle()">
+                                <div class="toggle-track"><div class="toggle-knob"></div></div>
+                            </label>
+                        </div>
+                        <div class="set-desc" data-i18n="settings.decorations.optimize.desc">Shows animated decorations as static images in friend lists and cards to greatly reduce memory and GPU usage. Animations still play in profile modals and on your own profile.</div>
+                        <div class="sf-toggle-row" style="margin-top:14px;">
                             <span data-i18n="settings.decorations.icon_frames">Enable Profile Icon Frames</span>
                             <label class="toggle">
                                 <input type="checkbox" id="setEnableIconFrames" onchange="settings.enableProfileIconFrames=this.checked;autoSave();if(typeof applyDecorationsSetting==='function')applyDecorationsSetting();if(typeof updateSquareFrameToggle==='function')updateSquareFrameToggle();">
@@ -457,8 +422,6 @@
                         <div class="vrcn-panel-card-header"><span class="msi">groups</span> <span data-i18n="settings.sidebar.title">Friends Sidebar</span></div>
                         <div class="sf-toggle-row"><span data-i18n="settings.sidebar.location_only">Show only location when available</span><label class="toggle"><input type="checkbox" id="setFriendsSidebarLocationOnly" onchange="settings.friendsSidebarLocationOnly=this.checked;autoSave();if(typeof renderVrcFriends==='function'&&typeof vrcFriendsData!=='undefined'&&vrcFriendsData?.length)renderVrcFriends(vrcFriendsData);"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
                         <div class="set-desc" data-i18n="settings.sidebar.location_only_desc">When enabled, friends who are in a world show the instance's region flag and world name instead of their status. Friends who aren't in a world keep showing their status text.</div>
-                        <div class="sf-toggle-row"><span data-i18n="settings.sidebar.rank_color">Use Trusted Rank Color instead of Badge</span><label class="toggle"><input type="checkbox" id="setFriendsSidebarRankColor" onchange="settings.friendsSidebarRankColor=this.checked;autoSave();if(typeof renderVrcFriends==='function'&&typeof vrcFriendsData!=='undefined'&&vrcFriendsData?.length)renderVrcFriends(vrcFriendsData);"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
-                        <div class="set-desc" data-i18n="settings.sidebar.rank_color_desc">When enabled, the friend's username will have the color of their Trusted rank and the Trusted badge will be removed from the sidebar.</div>
                         <div class="sf-toggle-row"><span data-i18n="settings.sidebar.preview_collapsed">Show Preview Profile when collapsed</span><label class="toggle"><input type="checkbox" id="setFriendsSidebarPreviewCollapsed" onchange="settings.friendsSidebarPreviewCollapsed=this.checked;autoSave();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
                         <div class="set-desc" data-i18n="settings.sidebar.preview_collapsed_desc">Shows a friend's profile as a small preview when you hover over them while the friends sidebar is collapsed.</div>
                         <div class="sf-toggle-row"><span data-i18n="settings.sidebar.preview_open">Show Preview Profile when sidebar is open</span><label class="toggle"><input type="checkbox" id="setFriendsSidebarPreviewOpen" onchange="settings.friendsSidebarPreviewOpen=this.checked;autoSave();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
@@ -472,6 +435,15 @@
                         <div class="set-desc" data-i18n="settings.navsidebar.modern_folders_desc">When enabled, clicking a folder (like "Tools" or your own custom folders) opens a compact pop-out grid right next to the sidebar instead of expanding a long list of items inline so you don't have to scroll through the whole sidebar. Turn this off to use the classic layout where folder items expand directly inside the sidebar.</div>
                         <div class="sf-toggle-row"><span data-i18n="settings.navsidebar.hover_text">Show Hover Text on Collapsed Navigation</span><label class="toggle"><input type="checkbox" id="setNavSidebarHoverText" onchange="settings.navSidebarHoverText=this.checked;autoSave();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
                         <div class="set-desc" data-i18n="settings.navsidebar.hover_text_desc">When enabled, the navigation sidebar shows a hover text when collapsed. This makes it easier to navigate and is especially useful when you want to know which menu entry you are hovering over.</div>
+                    </div>
+
+                    <!-- TASKBAR -->
+                    <div class="vrcn-panel-card" data-section="sidebar" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="settings.taskbar.title">Taskbar</span></div>
+                        <div class="sf-toggle-row" style="margin-top:14px;"><span data-i18n="settings.design.show_vrcplus">Show VRC+ Badge</span><label class="toggle"><input type="checkbox" id="setShowVrcPlus" checked onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row" style="margin-top:8px;"><span data-i18n="settings.design.show_vrccredits">Show VRC Credits</span><label class="toggle"><input type="checkbox" id="setShowVrcCredits" checked onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row" style="margin-top:8px;"><span data-i18n="settings.design.clock_enabled">Enable Clock</span><label class="toggle"><input type="checkbox" id="setClockEnabled" onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                        <div class="sf-toggle-row" style="margin-top:8px;"><span data-i18n="settings.design.date_enabled">Enable Date</span><label class="toggle"><input type="checkbox" id="setDateEnabled" onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
                     </div>
 
                     <!-- MODAL NAVIGATION -->
@@ -904,6 +876,13 @@
                                 <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:2px;" data-i18n="settings.image_cache.optimize.desc">PNG images &gt; 1.5 MB are compressed to JPEG automatically</div>
                             </div>
                             <label class="toggle"><input type="checkbox" id="setImgCacheOptimizeEnabled" checked onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="sf-toggle-row" style="margin-top:10px;">
+                            <div>
+                                <span data-i18n="settings.image_cache.mem_optimize.label">Optimize Memory Usage</span>
+                                <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:2px;" data-i18n="settings.image_cache.mem_optimize.desc">Use lower resolution thumb images to save up memory usage</div>
+                            </div>
+                            <label class="toggle"><input type="checkbox" id="setImgMemoryOptimizeEnabled" checked onchange="onImgMemoryOptimizeToggle()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
                         </div>
                         <div id="imgCacheLimitRow" style="margin-top:12px;">
                             <div class="sf-row">

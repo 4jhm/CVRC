@@ -1499,6 +1499,7 @@
     }
 
     function buildModalImageItems(src) {
+        src = (typeof imgOriginal === 'function') ? imgOriginal(src) : src;
         return [
             { icon: 'download',     label: cm('image.download', 'Download Image'), action: () => sendToCS({ action: 'invDownload', url: src, fileName: 'image.png' }) },
             { icon: 'open_in_full', label: cm('image.inspect',  'Inspect Image'),  action: () => openLightbox(src, 'image') },

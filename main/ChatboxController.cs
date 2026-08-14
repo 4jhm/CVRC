@@ -28,6 +28,8 @@ public class ChatboxController : IDisposable
         _vroCtrl = vroCtrl;
         _core.OnChatboxPauseRequest = ms => _chatbox?.PauseDirectSend(ms);
         _core.OnPlayerJoinLeft = (name, joined) => _chatbox?.NotifyPlayerJoinLeave(name, joined);
+        _vroCtrl.OnExpressionSend  += (name, type, value) => SendOscParamValue(name, type, value);
+        _vroCtrl.OnExpressionEmote += emote => TriggerEmoteInternal(emote);
     }
 
     // Message Handler
@@ -170,18 +172,27 @@ public class ChatboxController : IDisposable
                 {
                     _osc ??= new OscService(s => Invoke(() => _core.SendToJS("log", new { msg = s, color = "sec" })));
                     _osc.SetParamCallback((name, val, type) => {
-                        try { Invoke(() => _core.SendToJS("oscParam", new { name, value = val, type })); } catch (Exception ex) { CrashHandler.WriteEntry("Osc.SetParamCallback", ex); }
+                        try
+                        {
+                            Invoke(() => _core.SendToJS("oscParam", new { name, value = val, type }));
+                            _core.VrOverlay?.OscParam(name, val);
+                        }
+                        catch (Exception ex) { CrashHandler.WriteEntry("Osc.SetParamCallback", ex); }
                     });
                     _osc.SetAvatarChangeCallback((avatarId, paramDefs) => {
                         try
                         {
                             var paramList = paramDefs.Select(p => new { p.Name, p.Type, p.HasInput, p.HasOutput }).ToList();
                             Invoke(() => _core.SendToJS("oscAvatarParams", new { avatarId, paramList }));
+                            var inputDefs = paramDefs.Where(p => p.HasInput && p.Name != "VRCEmote")
+                                .Select(p => (p.Name, p.Type)).ToList();
+                            _core.VrOverlay?.OscAvatarParams(inputDefs);
                         }
                         catch (Exception ex) { CrashHandler.WriteEntry("Osc.SetAvatarChangeCallback", ex); }
                     });
                     bool oscOk = _osc.Start();
                     _core.SendToJS("oscState", new { connected = oscOk });
+                    _core.VrOverlay?.OscState(oscOk);
                     if (oscOk)
                     {
                         _ = Task.Run(async () =>
@@ -189,7 +200,12 @@ public class ChatboxController : IDisposable
                             // Try OSCQuery first; gets all live values instantly (VRChat v2023.3.1+)
                             bool gotLive = await _osc.TryOscQueryAsync((name, val, type) =>
                             {
-                                try { Invoke(() => _core.SendToJS("oscParam", new { name, value = val, type })); } catch (Exception ex) { CrashHandler.WriteEntry("Osc.TryOscQueryAsync", ex); }
+                                try
+                                {
+                                    Invoke(() => _core.SendToJS("oscParam", new { name, value = val, type }));
+                                    _core.VrOverlay?.OscParam(name, val);
+                                }
+                                catch (Exception ex) { CrashHandler.WriteEntry("Osc.TryOscQueryAsync", ex); }
                             });
                             // Fallback: load config file as pending params so the full list is visible
                             if (!gotLive)
@@ -199,6 +215,9 @@ public class ChatboxController : IDisposable
                                 {
                                     var paramList = paramDefs.Select(p => new { p.Name, p.Type, p.HasInput, p.HasOutput }).ToList();
                                     Invoke(() => _core.SendToJS("oscAvatarParams", new { avatarId, paramList }));
+                                    var inputDefs = paramDefs.Where(p => p.HasInput && p.Name != "VRCEmote")
+                                        .Select(p => (p.Name, p.Type)).ToList();
+                                    _core.VrOverlay?.OscAvatarParams(inputDefs);
                                 }
                             }
                         });
@@ -209,54 +228,15 @@ public class ChatboxController : IDisposable
             case "oscDisconnect":
                 _osc?.Stop();
                 _core.SendToJS("oscState", new { connected = false });
+                _core.VrOverlay?.OscState(false);
                 break;
 
             case "oscSend":
-                {
-                    var pName = msg["name"]?.ToString() ?? "";
-                    var pType = msg["type"]?.ToString() ?? "";
-                    if (_osc?.IsConnected != true)
-                    {
-                        _core.SendToJS("log", new { msg = $"[OSC] Send skipped — not connected (osc={_osc != null}, running={_osc?.IsConnected})", color = "err" });
-                    }
-                    else if (!string.IsNullOrEmpty(pName))
-                    {
-                        if (pType == "bool") _osc.SendBool(pName, msg["value"]?.Value<bool>() ?? false);
-                        else if (pType == "float") _osc.SendFloat(pName, msg["value"]?.Value<float>() ?? 0f);
-                        else if (pType == "int") _osc.SendInt(pName, msg["value"]?.Value<int>() ?? 0);
-                    }
-                }
+                SendOscParamValue(msg["name"]?.ToString() ?? "", msg["type"]?.ToString() ?? "", msg["value"]);
                 break;
 
             case "oscTriggerEmote":
-                {
-                    if (_osc?.IsConnected != true)
-                    {
-                        _core.SendToJS("log", new { msg = "[OSC] Emote trigger skipped — not connected", color = "err" });
-                        break;
-                    }
-
-                    var emote = msg["emote"]?.Value<int>() ?? 0;
-                    if (emote < 1 || emote > 8) break;
-
-                    int now = Environment.TickCount;
-                    if (now - _lastEmoteTick < EMOTE_COOLDOWN_MS)
-                    {
-                        _core.SendToJS("toast", new { ok = false, msg = "Please wait before triggering another emote" });
-                        break;
-                    }
-                    _lastEmoteTick = now;
-
-                    // VRCEmote must return to 0 before VRChat will play it again, so fire the
-                    // trigger and reset it back after a short delay — a single "press", not a hold.
-                    var osc = _osc;
-                    osc.SendInt("VRCEmote", emote);
-                    _ = Task.Run(async () =>
-                    {
-                        await Task.Delay(EMOTE_RESET_DELAY_MS);
-                        osc.SendInt("VRCEmote", 0);
-                    });
-                }
+                TriggerEmoteInternal(msg["emote"]?.Value<int>() ?? 0);
                 break;
 
             case "oscSendRaw":
@@ -282,6 +262,50 @@ public class ChatboxController : IDisposable
                 }
                 break;
         }
+    }
+
+    // Shared by the desktop OSC Tool/OSC Radial Menu ("oscSend"/"oscTriggerEmote" above) and
+    // the VR-overlay Expressions tab (wired to VROverlayController.OnExpressionSend/OnExpressionEmote
+    // in the constructor) so both paths go through the same connection/cooldown checks.
+    private void SendOscParamValue(string name, string type, JToken? valueToken)
+    {
+        if (_osc?.IsConnected != true)
+        {
+            _core.SendToJS("log", new { msg = $"[OSC] Send skipped — not connected (osc={_osc != null}, running={_osc?.IsConnected})", color = "err" });
+            return;
+        }
+        if (string.IsNullOrEmpty(name)) return;
+        if (type == "bool") _osc.SendBool(name, valueToken?.Value<bool>() ?? false);
+        else if (type == "float") _osc.SendFloat(name, valueToken?.Value<float>() ?? 0f);
+        else if (type == "int") _osc.SendInt(name, valueToken?.Value<int>() ?? 0);
+    }
+
+    private void TriggerEmoteInternal(int emote)
+    {
+        if (_osc?.IsConnected != true)
+        {
+            _core.SendToJS("log", new { msg = "[OSC] Emote trigger skipped — not connected", color = "err" });
+            return;
+        }
+        if (emote < 1 || emote > 8) return;
+
+        int now = Environment.TickCount;
+        if (now - _lastEmoteTick < EMOTE_COOLDOWN_MS)
+        {
+            _core.SendToJS("toast", new { ok = false, msg = "Please wait before triggering another emote" });
+            return;
+        }
+        _lastEmoteTick = now;
+
+        // VRCEmote must return to 0 before VRChat will play it again, so fire the
+        // trigger and reset it back after a short delay — a single "press", not a hold.
+        var osc = _osc;
+        osc.SendInt("VRCEmote", emote);
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(EMOTE_RESET_DELAY_MS);
+            osc.SendInt("VRCEmote", 0);
+        });
     }
 
     // Toggle (called from VR overlay)

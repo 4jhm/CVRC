@@ -39,6 +39,14 @@ public static class DeepLinkService
     public static bool IsValidGroupId(string id) =>
         !string.IsNullOrEmpty(id) && id.StartsWith("grp_", StringComparison.Ordinal) && IsUuid(id.Substring(4));
 
+    public static bool IsValidInstanceLocation(string id)
+    {
+        if (string.IsNullOrEmpty(id)) return false;
+        var colon = id.IndexOf(':');
+        if (colon <= 0 || colon >= id.Length - 1) return false;
+        return IsValidWorldId(id.Substring(0, colon));
+    }
+
     public static (string prefix, string id)? Parse(string? url)
     {
         if (string.IsNullOrWhiteSpace(url)) return null;
@@ -63,6 +71,8 @@ public static class DeepLinkService
             "avatar"  or "avatars" => IsValidAvatarId(id) ? ("avtr", id) : null,
             "world"   or "worlds"  => IsValidWorldId(id)  ? ("wrld", id) : null,
             "group"   or "groups"  => IsValidGroupId(id)  ? ("grp",  id) : null,
+            "instance"             => IsValidInstanceLocation(id) ? ("inst",     id) : null,
+            "instance-join"        => IsValidInstanceLocation(id) ? ("instjoin", id) : null,
             _ => ((string, string)?)null,
         };
     }

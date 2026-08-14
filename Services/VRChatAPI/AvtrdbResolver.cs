@@ -19,6 +19,7 @@ public sealed class AvtrdbResolver
     private readonly Dictionary<string, JObject?> _cache = new();
     private readonly Queue<string> _cacheOrder = new();
     private readonly Action<string>? _log;
+    public static Action<string>? Log;
 
     private Task? _worker;
     private static readonly HttpMethod QueryMethod = new("QUERY");
@@ -102,8 +103,11 @@ public sealed class AvtrdbResolver
             _cache.Remove(old);
     }
 
+    private int _lastBatchSize;
+
     private async Task<Dictionary<string, JObject?>> PostBatchAsync(List<string> fileIds)
     {
+        _lastBatchSize = fileIds.Count;
         var payload = JsonConvert.SerializeObject(new { file_ids = fileIds });
 
         using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(25) };
@@ -134,6 +138,8 @@ public sealed class AvtrdbResolver
             VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact,
             Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json")
         };
+        Log?.Invoke($"[AVTRDB] QRY resolve x{_lastBatchSize}");
+        VRCNext.Services.Helpers.AvtrdbSpamGuard.RecordQuery();
         var resp = await client.SendAsync(req);
         var text = await resp.Content.ReadAsStringAsync();
 

@@ -177,7 +177,6 @@ function nextPage() {
     }
     if (currentPage === PAGE_SIDEBAR) {
         savePrefs({
-            friendsSidebarRankColor: document.getElementById('setupSidebarRankColor').checked,
             friendsSidebarLocationOnly: document.getElementById('setupSidebarLocationOnly').checked,
         });
     }
@@ -301,10 +300,9 @@ function onBackendMessage(e) {
                 var decoOn = !!pr.enableProfileIconFrames;
                 document.getElementById('setupVrcPlusDeco').checked = decoOn;
                 onVrcPlusDecoToggle(decoOn);
-                document.getElementById('setupSidebarRankColor').checked = !!pr.friendsSidebarRankColor;
                 document.getElementById('setupSidebarLocationOnly').checked = !!pr.friendsSidebarLocationOnly;
                 document.getElementById('setupSidebarPreviewCollapsed').checked = !!pr.friendsSidebarPreviewCollapsed;
-                document.getElementById('setupDirectModalNav').checked = !!pr.directModalNav;
+                document.getElementById('setupDirectModalNav').checked = pr.directModalNav !== false;
                 setSetupModalStyle(pr.profileModalStyle);
             }
             if (p && p.startWithSystem) document.getElementById('setupStartWithWindows').checked = true;

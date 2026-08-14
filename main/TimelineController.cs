@@ -756,10 +756,14 @@ public class TimelineController
                     DateTime.TryParse(e.Timestamp, out var ts) && ts >= ftlCutoff).ToList();
 
                 foreach (var ev in recentFevents.Where(e => !string.IsNullOrEmpty(e.WorldId) && !string.IsNullOrEmpty(e.WorldThumb)))
-                    ImageCacheHelper.CacheWorldBackground(ev.WorldId, ev.WorldThumb);
+                {
+                    if (ev.WorldId.StartsWith("avtr_")) ImageCacheHelper.CacheAvatarBackground(ev.WorldId, ev.WorldThumb);
+                    else if (ev.WorldId.StartsWith("wrld_")) ImageCacheHelper.CacheWorldBackground(ev.WorldId, ev.WorldThumb);
+                }
 
                 var unknownGpsWorlds = recentFevents
                     .Where(e => !string.IsNullOrEmpty(e.WorldId)
+                             && e.WorldId.StartsWith("wrld_")
                              && string.IsNullOrEmpty(e.WorldThumb)
                              && ImageCacheHelper.GetWorldCached(e.WorldId) == null)
                     .Select(e => e.WorldId).Distinct().ToList();

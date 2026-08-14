@@ -106,12 +106,12 @@ function renderSearchResults(type, results, offset, hasMore) {
         html = state.results.map(w => renderWorldCard(w)).join('');
     } else if (type === 'groups') {
         html = state.results.map(g => `<div class="vrcn-content-card" onclick="openGroupDetail('${esc(g.id)}')">
-            <div class="cc-bg"><img src="${g.bannerUrl||'fallback_cover.png'}" onerror="this.src='fallback_cover.png'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></div>
+            <div class="cc-bg"><img src="${imgThumb(g.bannerUrl, 256)||'fallback_cover.png'}" onerror="this.src='fallback_cover.png'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;"></div>
             <div class="cc-scrim"></div>
             <div class="cc-content">
                 <div class="cc-name">${esc(g.name)}</div>
                 <div class="cc-bottom-row">
-                    <div class="cc-meta">${g.iconUrl ? `<div class="cc-group-icon" style="background-image:url('${cssUrl(g.iconUrl)}')"></div>` : ''}<span class="msi" style="font-size:12px;">group</span> ${esc(searchGroupMembersText(g.memberCount))}</div>
+                    <div class="cc-meta">${g.iconUrl ? `<div class="cc-group-icon" style="background-image:url('${cssUrl(imgThumb(g.iconUrl, 64))}')"></div>` : ''}<span class="msi" style="font-size:12px;">group</span> ${esc(searchGroupMembersText(g.memberCount))}</div>
                     ${g.shortCode ? `<span style="font-size:calc(10px + var(--fs-off, 0px));color:rgba(255,255,255,.4);">${esc(g.shortCode)}</span>` : ''}
                 </div>
             </div>

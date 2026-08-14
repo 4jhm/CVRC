@@ -243,7 +243,7 @@ function tsRenderWorldItems() {
         const pct = Math.round((world.seconds / maxSec) * 100);
         const rank = _tsWorldPage * TS_PAGE_SIZE + i + 1;
         const thumb = world.worldThumb
-            ? `<img class="ts-item-thumb" src="${esc(world.worldThumb)}" onerror="this.style.display='none'">`
+            ? `<img class="ts-item-thumb" src="${esc(imgThumb(world.worldThumb, 96))}" onerror="this.style.display='none'">`
             : `<div class="ts-item-thumb ts-thumb-placeholder"><span class="msi" style="font-size:18px;color:var(--tx3);">travel_explore</span></div>`;
         const click = world.worldId ? `onclick="openWorldSearchDetail('${esc(world.worldId)}')" style="cursor:pointer"` : '';
         const visits = tf(`timespent.visit.${world.visits === 1 ? 'one' : 'other'}`, { count: world.visits }, `${world.visits} visit${world.visits === 1 ? '' : 's'}`);
@@ -345,7 +345,7 @@ function tsRenderPersonItems() {
         const rank = _tsPersonPage * TS_PAGE_SIZE + i + 1;
         const isFriend = person.isFriend;
         const avatar = person.image
-            ? `<img class="ts-item-avatar" src="${esc(person.image)}" onerror="this.style.display='none'">`
+            ? `<img class="ts-item-avatar" src="${esc(imgThumb(person.image, 96))}" onerror="this.style.display='none'">`
             : `<div class="ts-item-avatar ts-avatar-placeholder"><span class="msi" style="font-size:16px;color:var(--tx3);">person</span></div>`;
         const badge = isFriend
             ? `<span class="vrcn-badge bdg-friend">${esc(t('timespent.badge.friend', 'Friend'))}</span>`

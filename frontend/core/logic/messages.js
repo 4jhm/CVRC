@@ -1,4 +1,4 @@
-/* === Photino message handler === */
+﻿/* === Photino message handler === */
 window.external.receiveMessage(rawMsg => {
     const { type, payload } = JSON.parse(rawMsg);
     // Forward every incoming event to Action Flow's websocket-trigger router.
@@ -147,8 +147,8 @@ window.external.receiveMessage(rawMsg => {
             case 'wsStatus': {
                 const badge = document.getElementById('wsBadge');
                 if (badge) {
-                    badge.className = 'mini-badge ' + (payload.connected ? 'online' : 'offline');
-                    badge.querySelector('.mini-badge-icon').textContent = payload.connected ? 'wifi' : 'wifi_off';
+                    badge.className = 'log-ws ' + (payload.connected ? 'online' : 'offline');
+                    badge.querySelector('.log-ws-icon').textContent = payload.connected ? 'wifi' : 'wifi_off';
                 }
                 break;
             }
@@ -264,8 +264,8 @@ window.external.receiveMessage(rawMsg => {
                 requestInstanceInfo();
                 refreshNotifications();
                 if (typeof libraryFiles !== 'undefined' && !libraryFiles.length && typeof sendToCS === 'function') sendToCS({ action: 'scanLibrary' });
-                { const vp = document.getElementById('badgeVrcPlus');
-                  if (vp) { const isVrcPlus = Array.isArray(payload.tags) && payload.tags.includes('system_supporter'); vp.style.display = isVrcPlus ? '' : 'none'; } }
+                { _hasVrcPlus = Array.isArray(payload.tags) && payload.tags.includes('system_supporter');
+                  applyTbBadgeVisibility(); }
                 if (!window._lastModerationFetch || Date.now() - window._lastModerationFetch >= 120 * 60 * 1000) {
                     window._lastModerationFetch = Date.now();
                     sendToCS({ action: 'vrcGetAllModerations' });
@@ -274,7 +274,7 @@ window.external.receiveMessage(rawMsg => {
             case 'vrcCredits': {
                 const bc = document.getElementById('badgeVrcCredits');
                 const bl = document.getElementById('badgeVrcCreditsLabel');
-                if (bc && bl) { bl.textContent = payload.balance.toLocaleString(); bc.style.display = ''; }
+                if (bc && bl) { bl.textContent = payload.balance.toLocaleString(); _hasVrcCredits = true; applyTbBadgeVisibility(); }
                 break;
             }
             case 'vrcMyBadges':
@@ -296,9 +296,11 @@ window.external.receiveMessage(rawMsg => {
                 break;
             case 'vrcFriendUpdate': {
                 const idx = vrcFriendsData.findIndex(f => f.id === payload.id);
+                const prevFriend = idx >= 0 ? vrcFriendsData[idx] : null;
                 if (idx >= 0) vrcFriendsData[idx] = payload;
                 else vrcFriendsData.push(payload);
-                scheduleRenderVrcFriends();
+                if (!(typeof tryPatchVrcFriendCard === 'function' && tryPatchVrcFriendCard(prevFriend, payload)))
+                    scheduleRenderVrcFriends();
                 if (favFriendsData.length > 0) filterFavFriendsIfVisible();
                 if (typeof filterAllFriendsIfLive === 'function') filterAllFriendsIfLive();
                 if (typeof updateUserItemWorld === 'function') updateUserItemWorld(payload);
@@ -309,13 +311,14 @@ window.external.receiveMessage(rawMsg => {
                 vrcFriendsLoaded = true;
                 if (typeof friendFetchInit === 'function') friendFetchInit();
                 if (payload.friends) {
-                    renderVrcFriends(payload.friends, payload.counts);
                     vrcFriendsData = payload.friends;
+                    _rvfPendingCounts = payload.counts || null;
                 } else {
-                    renderVrcFriends(payload);
                     vrcFriendsData = payload;
+                    _rvfPendingCounts = null;
                 }
-                requestWorldResolution(); renderDashboard(); requestInstanceInfo();
+                scheduleRenderVrcFriends();
+                requestWorldResolution(); renderDashboardFriendSections(); requestInstanceInfo();
                 if (currentInstanceData) renderCurrentInstance(currentInstanceData);
                 if (favFriendsData.length > 0) filterFavFriendsIfVisible();
                 if (typeof filterAllFriendsIfLive === 'function') filterAllFriendsIfLive();
@@ -338,9 +341,9 @@ window.external.receiveMessage(rawMsg => {
             case 'vrcLoggedOut':
                 vrcFriendsLoaded = false;
                 renderVrcProfile(null);
-                document.getElementById('vrcFriendsList').innerHTML = '';
+                { const _fl = document.getElementById('vrcFriendsList'); _fl.innerHTML = ''; _fl.__lastHtml = null; }
                 document.getElementById('vrcLoginPrompt') && (document.getElementById('vrcLoginPrompt').style.display = '');
-                { const vp = document.getElementById('badgeVrcPlus'); if (vp) vp.style.display = 'none'; }
+                { _hasVrcPlus = false; _hasVrcCredits = false; applyTbBadgeVisibility(); }
                 if (typeof updateTbAppUserHeader === 'function') updateTbAppUserHeader();
                 break;
             case 'vrcPrefillLogin':
@@ -375,6 +378,10 @@ window.external.receiveMessage(rawMsg => {
             case 'vrcActionResult':
                 if (payload.action === 'sendChatMessage') { if (typeof handleChatActionResult === 'function') handleChatActionResult(payload); break; }
                 if (payload.action === 'boop') { showToast(payload.success, payload.message); break; }
+                if (payload.action === 'hideNotif') {
+                    if (!payload.success) showToast(false, t('notifications.toast.decline_failed', 'Could not decline notification'));
+                    break;
+                }
                 if (payload.action === 'representGroup') {
                     showToast(payload.success, payload.message);
                     if (payload.success && payload.groupId && typeof myGroups !== 'undefined') {
@@ -1066,6 +1073,9 @@ case 'vrcNews':
             case 'avatarLoggerHistory':
                 if (typeof handleAvatarLoggerHistory === 'function') handleAvatarLoggerHistory(payload);
                 break;
+            case 'emojiSheetSaved':
+                if (typeof onEmojiSheetSaved === 'function') onEmojiSheetSaved(payload);
+                break;
             case 'chatboxUpdate':
                 handleChatboxUpdate(payload);
                 break;
@@ -1108,12 +1118,15 @@ case 'vrcNews':
             case 'snipeJoinResult': handleSnipeJoinResult(payload); break;
             case 'oscState':
                 handleOscState(payload);
+                if (typeof oscmHandleState === 'function') oscmHandleState(payload);
                 break;
             case 'oscParam':
                 handleOscParam(payload);
+                if (typeof oscmHandleParam === 'function') oscmHandleParam(payload);
                 break;
             case 'oscAvatarParams':
                 handleOscAvatarParams(payload);
+                if (typeof oscmHandleAvatarParams === 'function') oscmHandleAvatarParams(payload);
                 break;
             case 'oscOutputsEnabled':
                 handleOscOutputsEnabled(payload);

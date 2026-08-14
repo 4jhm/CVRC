@@ -95,7 +95,7 @@ function lvDateTime(v) {
 function lvIcon(url, name, round) {
     const cls = 'lv-icon' + (round ? ' lv-icon-round' : '');
     return url
-        ? `<span class="${cls}" style="background-image:url('${cssUrl(url)}')"></span>`
+        ? `<span class="${cls}" style="background-image:url('${cssUrl(imgThumb(url, 96))}')"></span>`
         : `<span class="${cls} lv-icon-letter">${esc((name || '?')[0].toUpperCase())}</span>`;
 }
 

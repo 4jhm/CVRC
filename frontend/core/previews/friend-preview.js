@@ -69,7 +69,7 @@
         let html = '<div class="fp-inst-friends">';
         shown.forEach(fr => {
             if (fr.image) {
-                html += `<img class="fp-inst-av" src="${esc(fr.image)}" title="${esc(fr.displayName || '')}">`;
+                html += `<img class="fp-inst-av" src="${esc(imgThumb(fr.image, 64))}" title="${esc(fr.displayName || '')}">`;
             } else {
                 html += `<div class="fp-inst-av fp-inst-av-letter" title="${esc(fr.displayName || '')}">${esc((fr.displayName || '?')[0].toUpperCase())}</div>`;
             }
@@ -111,7 +111,7 @@
 
         if (worldName) {
             const thumbHtml = worldThumb
-                ? `<img class="fd-group-icon" src="${esc(worldThumb)}" onerror="this.style.display='none'">`
+                ? `<img class="fd-group-icon" src="${esc(imgThumb(worldThumb, 96))}" onerror="this.style.display='none'">`
                 : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:16px;">travel_explore</span></div>`;
             return `<div class="fd-group-card" ${onclick}>
                 ${thumbHtml}
@@ -179,7 +179,7 @@
         const instanceHtml = buildInstanceHtml(f);
         const statsHtml = buildStatsRow(f.id);
         const avatarInner = img
-            ? `<img class="fp-av" src="${esc(img)}" onerror="this.style.display='none'">`
+            ? `<img class="fp-av" src="${esc(imgThumb(img, 96))}" onerror="this.style.display='none'">`
             : `<div class="fp-av fp-av-letter">${esc((f.displayName || '?')[0].toUpperCase())}</div>`;
 
         popup.innerHTML = `

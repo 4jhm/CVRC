@@ -6,7 +6,50 @@ public class WorldAPI
 {
     private readonly VRChatApiService ctx;
     private readonly Dictionary<string, Task<JObject?>> _worldFetchTasks = new();
-    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, JObject> _worldCache = new();
+
+    private const int MemCacheMax = 256;
+    private readonly object _worldCacheLock = new();
+    private readonly Dictionary<string, LinkedListNode<(string worldId, JObject world)>> _worldCacheMap = new();
+    private readonly LinkedList<(string worldId, JObject world)> _worldCacheLru = new();
+
+    public int CachedWorldCount { get { lock (_worldCacheLock) return _worldCacheMap.Count; } }
+
+    private bool TryGetCachedWorld(string worldId, out JObject world)
+    {
+        lock (_worldCacheLock)
+        {
+            if (_worldCacheMap.TryGetValue(worldId, out var node))
+            {
+                _worldCacheLru.Remove(node);
+                _worldCacheLru.AddLast(node);
+                world = node.Value.world;
+                return true;
+            }
+        }
+        world = null!;
+        return false;
+    }
+
+    private void StoreCachedWorld(string worldId, JObject world)
+    {
+        lock (_worldCacheLock)
+        {
+            if (_worldCacheMap.TryGetValue(worldId, out var node))
+            {
+                node.Value = (worldId, world);
+                _worldCacheLru.Remove(node);
+                _worldCacheLru.AddLast(node);
+                return;
+            }
+            _worldCacheMap[worldId] = _worldCacheLru.AddLast((worldId, world));
+            while (_worldCacheMap.Count > MemCacheMax)
+            {
+                var oldest = _worldCacheLru.First!;
+                _worldCacheLru.RemoveFirst();
+                _worldCacheMap.Remove(oldest.Value.worldId);
+            }
+        }
+    }
 
     private const int DiskCacheMax = 128;
     private readonly Dictionary<string, JObject> _diskCache;
@@ -71,14 +114,29 @@ public class WorldAPI
                 }
             }
             _diskCache[worldId] = world;
-            try { new CacheHandler().Save(CacheHandler.KeyWorldMeta, new JArray(_diskCache.Values.OfType<object>().ToArray())); }
-            catch { }
+            if (!_saveScheduled)
+            {
+                _saveScheduled = true;
+                _ = Task.Delay(5000).ContinueWith(_ => SaveDiskCache());
+            }
 
             if (!_flushScheduled)
             {
                 _flushScheduled = true;
                 _ = Task.Delay(5000).ContinueWith(_ => FlushStartupCache());
             }
+        }
+    }
+
+    private bool _saveScheduled;
+
+    private void SaveDiskCache()
+    {
+        lock (_diskCache)
+        {
+            _saveScheduled = false;
+            try { new CacheHandler().Save(CacheHandler.KeyWorldMeta, new JArray(_diskCache.Values.OfType<object>().ToArray())); }
+            catch { }
         }
     }
 
@@ -99,13 +157,13 @@ public class WorldAPI
     public Task<JObject?> GetWorldAsync(string worldId)
     {
         if (!ctx.IsLoggedIn || string.IsNullOrEmpty(worldId)) return Task.FromResult<JObject?>(null);
-        if (_worldCache.TryGetValue(worldId, out var mem)) return Task.FromResult<JObject?>(mem);
+        if (TryGetCachedWorld(worldId, out var mem)) return Task.FromResult<JObject?>(mem);
         lock (_diskCache)
         {
             if (_diskCache.TryGetValue(worldId, out var disk))
             {
                 _usedFromCache.Add(worldId);
-                _worldCache[worldId] = disk;
+                StoreCachedWorld(worldId, disk);
                 return Task.FromResult<JObject?>(disk);
             }
         }
@@ -128,7 +186,7 @@ public class WorldAPI
             if (resp.IsSuccessStatusCode)
             {
                 var world = JObject.Parse(body);
-                _worldCache[worldId] = world;
+                StoreCachedWorld(worldId, world);
                 PersistWorld(worldId, world);
                 return world;
             }
@@ -140,13 +198,13 @@ public class WorldAPI
     public async Task<(JObject? result, int status)> GetWorldWithStatusAsync(string worldId)
     {
         if (!ctx.IsLoggedIn || string.IsNullOrEmpty(worldId)) return (null, 0);
-        if (_worldCache.TryGetValue(worldId, out var mem)) return (mem, 200);
+        if (TryGetCachedWorld(worldId, out var mem)) return (mem, 200);
         lock (_diskCache)
         {
             if (_diskCache.TryGetValue(worldId, out var disk))
             {
                 _usedFromCache.Add(worldId);
-                _worldCache[worldId] = disk;
+                StoreCachedWorld(worldId, disk);
                 return (disk, 200);
             }
         }
@@ -157,7 +215,7 @@ public class WorldAPI
             if (resp.IsSuccessStatusCode)
             {
                 var world = JObject.Parse(body);
-                _worldCache[worldId] = world;
+                StoreCachedWorld(worldId, world);
                 PersistWorld(worldId, world);
                 return (world, 200);
             }

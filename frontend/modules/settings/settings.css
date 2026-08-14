@@ -580,53 +580,6 @@
 .profile-style-skeleton.sk-compact .sk-tabs .sk-tab { background: var(--brd); }
 
 /* Flat / Line design preview */
-.design-skeleton {
-    background: var(--bg-base);
-    border-radius: 8px;
-    height: 130px;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-.design-skeleton .dsk-bar {
-    height: 16px;
-    flex-shrink: 0;
-    background: var(--bg-side);
-    border-bottom: 1px solid transparent;
-}
-.design-skeleton .dsk-row {
-    flex: 1;
-    display: flex;
-    min-height: 0;
-}
-.design-skeleton .dsk-side {
-    width: 26%;
-    background: var(--bg-side);
-    border-right: 1px solid transparent;
-}
-.design-skeleton .dsk-side-r {
-    width: 22%;
-    border-right: 0;
-    border-left: 1px solid transparent;
-}
-.design-skeleton .dsk-main {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 7px;
-}
-.design-skeleton .dsk-block {
-    height: 16px;
-    border-radius: 4px;
-    background: var(--bg-card);
-}
-.design-skeleton .dsk-block.short { width: 62%; }
-
-.design-skeleton.lines .dsk-bar { border-bottom-color: var(--brd); }
-.design-skeleton.lines .dsk-side { border-right-color: var(--brd); }
-.design-skeleton.lines .dsk-side-r { border-left-color: var(--brd); }
 
 /* Dashboard background preview */
 .bg-skeleton {

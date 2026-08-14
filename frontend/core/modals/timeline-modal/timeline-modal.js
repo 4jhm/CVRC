@@ -113,7 +113,7 @@ function _tlInsertBanner(el, key, src) {
 }
 function _tlAvRow(image, name, label, labelColor) {
     const av = image
-        ? `<div class="tl-detail-av" style="background-image:url('${cssUrl(image)}')"></div>`
+        ? `<div class="tl-detail-av" style="background-image:url('${cssUrl(imgThumb(image, 128))}')"></div>`
         : `<div class="tl-detail-av tl-detail-av-letter">${esc((name || '?')[0].toUpperCase())}</div>`;
     return `<div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">${av}<div>
         <h2 style="margin:0 0 4px;color:var(--tx0);font-size:calc(18px + var(--fs-off, 0px));">${esc(name || t('timeline.unknown', 'Unknown'))}</h2>
@@ -135,7 +135,7 @@ function _tlPlayerCard(p, instanceStart, instanceEnd) {
     const live   = p.userId ? vrcFriendsData.find(f => f.id === p.userId) : null;
     const image  = live?.image || p.image || '';
     const av     = image
-        ? `<div class="tl-player-card-av" style="background-image:url('${cssUrl(image)}')"></div>`
+        ? `<div class="tl-player-card-av" style="background-image:url('${cssUrl(imgThumb(image, 64))}')"></div>`
         : `<div class="tl-player-card-av">${esc(name[0].toUpperCase())}</div>`;
     const badge  = live ? `<span class="vrcn-badge bdg-friend"><span class="msi" style="font-size:10px;">check_circle</span>${t('profiles.badges.friend', 'Friend')}</span>` : '';
     const onclick = p.userId ? `onclick="navOpenModal('friend','${jsq(p.userId)}','${jsq(name)}')"` : '';
@@ -244,6 +244,7 @@ function renderTlDetailJoin(ev, el) {
     const loc = ev.location || '';
     const { instanceType } = parseFriendLocation(loc);
     const { cls: instCls, label: instLabel } = getInstanceBadge(instanceType);
+    const regionCode  = parseInstanceRegion(loc);
     const instIdMatch = loc.match(/:(\d+)/);
     const instanceId  = instIdMatch ? instIdMatch[1] : '';
 
@@ -254,6 +255,7 @@ function renderTlDetailJoin(ev, el) {
         (ev.tracked && ev.leftAt && ev.timestamp) ? _tlMr(esc(t('nav.time_spent', 'Time Spent')), esc(formatDuration(Math.floor((new Date(ev.leftAt) - new Date(ev.timestamp)) / 1000)))) : '',
         ev.worldId ? `<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:calc(11px + var(--fs-off, 0px));"${worldRowClick}><span style="color:var(--tx3);">${esc(t('timeline.detail.world', 'World'))}</span><span style="color:var(--accent-lt);text-align:right;">${esc(ev.worldName || ev.worldId)}</span></div>` : '',
         _tlMr(esc(t('timeline.detail.instance_type', 'Instance Type')), `<span class="vrcn-badge ${instCls}">${instLabel}</span>`),
+        regionCode ? _tlMr(esc(t('timeline.detail.server', 'Server')), `<span class="vrcn-badge"><span class="msi" style="font-size:10px;">language</span>${esc(getRegionShortLabel(regionCode))}</span>`) : '',
         instanceId ? _tlMr(esc(t('timeline.detail.instance_id', 'Instance ID')), `<span style="font-family:monospace;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);">#${esc(instanceId)}</span>`) : '',
     ].filter(Boolean).join('');
 
@@ -331,7 +333,7 @@ function renderTlDetailMeetAgain(ev, el) {
         ev.worldId ? `<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-size:calc(11px + var(--fs-off, 0px));"${worldRowClick}><span style="color:var(--tx3);">${esc(t('timeline.detail.world', 'World'))}</span><span style="color:var(--accent-lt);text-align:right;">${esc(ev.worldName || ev.worldId)}</span></div>` : '',
     ].filter(Boolean).join('');
     el.innerHTML = `${_tlBar(ev.userName || t('timeline.unknown', 'Unknown'))}<div class="fd-content" style="padding:20px 0;">
-        ${_tlAvRow(ev.userImage, ev.userName, t('timeline.detail.met_again', 'MET AGAIN'), '#AB47BC')}
+        ${_tlAvRow(ev.userImage, ev.userName, t('timeline.detail.met_again', 'MET AGAIN'), '#6554FF')}
         ${_tlInfoCard(esc(t('timeline.detail.info', 'Info')), infoRows)}
         ${ev.userId ? `<div style="margin-top:14px;display:flex;gap:8px;">
             <button class="vrcn-button-round vrcn-btn-join" onclick="navOpenModal('friend','${jsq(ev.userId)}','${jsq(ev.userName || '')}')">${esc(t('timeline.actions.view_profile', 'View Profile'))}</button>
@@ -473,7 +475,7 @@ function renderTlDetailProfile(ev, el) {
     if (ev.notifType === 'status') {
         const oldCls = statusCssClass(ev.notifTitle);
         const newCls = statusCssClass(ev.message);
-        infoRows.push(_tlMr(esc(t('timeline.detail.change', 'Change')), `<span style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span class="ft-status-chip ${oldCls}">${esc(statusLabel(ev.notifTitle) || '?')}</span><span class="msi" style="font-size:12px;color:var(--tx3);">arrow_forward</span><span class="ft-status-chip ${newCls}">${esc(statusLabel(ev.message) || '?')}</span></span>`));
+        infoRows.push(_tlMr(esc(t('timeline.detail.change', 'Change')), `<span style="display:flex;align-items:center;gap:6px;justify-content:flex-end;"><span class="ft-status-chip ${oldCls}" title="${esc(statusLabel(ev.notifTitle) || '?')}">${esc(statusLabel(ev.notifTitle) || '?')}</span><span class="msi" style="font-size:12px;color:var(--tx3);">arrow_forward</span><span class="ft-status-chip ${newCls}" title="${esc(statusLabel(ev.message) || '?')}">${esc(statusLabel(ev.message) || '?')}</span></span>`));
     } else if (ev.notifType === 'launch') {
         infoRows.push(_tlMr(esc(t('timeline.detail.event', 'Event')), `<span style="color:${meta.color};font-weight:600;">${esc(meta.label)}</span>`));
     }
@@ -491,7 +493,7 @@ function renderTlDetailProfile(ev, el) {
     el.innerHTML = `${_tlBar(meta.label)}<div class="fd-content" style="padding:20px 0;">
         <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;">
             ${ev.userImage
-                ? `<div class="tl-detail-av" style="background-image:url('${cssUrl(ev.userImage)}')"></div>`
+                ? `<div class="tl-detail-av" style="background-image:url('${cssUrl(imgThumb(ev.userImage, 128))}')"></div>`
                 : `<div style="display:flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:12px;background:var(--bg2);"><span class="msi" style="font-size:30px;color:${meta.color};">${meta.icon}</span></div>`}
             <div>
                 <h2 style="margin:0 0 4px;color:var(--tx0);font-size:calc(18px + var(--fs-off, 0px));">${esc(meta.label)}</h2>
@@ -533,6 +535,7 @@ function renderFtGpsDetailModal(ev) {
     const loc = ev.location || '';
     const { instanceType } = parseFriendLocation(loc);
     const { cls: instCls, label: instLabel } = getInstanceBadge(instanceType);
+    const regionCode = parseInstanceRegion(loc);
 
     const instIdMatch = loc.match(/:(\d+)/);
     const instanceId = instIdMatch ? instIdMatch[1] : '';
@@ -551,6 +554,7 @@ function renderFtGpsDetailModal(ev) {
         (fromStr && ev.tracked) ? _tlMr(esc(t('timeline.detail.to', 'To')), toStr ? esc(toStr) : `<span style="color:var(--ok);">&#9679;&nbsp;${esc(t('timeline.detail.ongoing', 'Ongoing'))}</span>`) : '',
         (ev.tracked && ev.leftAt && ev.timestamp) ? _tlMr(esc(t('nav.time_spent', 'Time Spent')), esc(formatDuration(Math.floor((new Date(ev.leftAt) - new Date(ev.timestamp)) / 1000)))) : '',
         _tlMr(esc(t('timeline.detail.instance_type', 'Instance Type')), `<span class="vrcn-badge ${instCls}">${instLabel}</span>`),
+        regionCode ? _tlMr(esc(t('timeline.detail.server', 'Server')), `<span class="vrcn-badge"><span class="msi" style="font-size:10px;">language</span>${esc(getRegionShortLabel(regionCode))}</span>`) : '',
         instanceId ? _tlMr(esc(t('timeline.detail.instance_id', 'Instance ID')), `<span style="font-family:monospace;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);">#${esc(instanceId)}</span>`) : '',
         _tlMr(esc(t('timeline.detail.event', 'Event')), `<span style="color:var(--tx2);">${esc(tf('timeline.detail.friend_joined_world', { name: ev.friendName || t('timeline.unknown', 'Unknown') }, `${ev.friendName || 'Unknown'} joined this world`))}</span>`),
     ].filter(Boolean).join(''));
@@ -680,7 +684,7 @@ function ftDetailDatetime(ev) {
 
 function ftDetailAvRow(ev) {
     const av = ev.friendImage
-        ? `<div class="tl-detail-av" style="background-image:url('${cssUrl(ev.friendImage)}')"></div>`
+        ? `<div class="tl-detail-av" style="background-image:url('${cssUrl(imgThumb(ev.friendImage, 128))}')"></div>`
         : `<div class="tl-detail-av tl-detail-av-letter">${esc((ev.friendName || '?')[0].toUpperCase())}</div>`;
     return `<div style="display:flex;gap:16px;align-items:center;margin-bottom:20px;">${av}
         <div><h2 style="margin:0 0 4px;color:var(--tx0);font-size:calc(18px + var(--fs-off, 0px));">${esc(ev.friendName || t('timeline.unknown', 'Unknown'))}</h2>
@@ -726,7 +730,7 @@ function renderFtDetailStatus(ev, el) {
     const infoRows = [
         _tlMr(esc(t('timeline.detail.date', 'Date')), esc(dateStr)),
         _tlMr(esc(t('timeline.detail.time', 'Time')), esc(timeStr)),
-        _tlMr(esc(t('timeline.detail.change', 'Change')), `<span style="display:flex;align-items:center;gap:6px;"><span class="ft-status-chip ${oldCls}">${esc(statusLabel(ev.oldValue) || '?')}</span><span class="msi" style="font-size:12px;color:var(--tx3);">arrow_forward</span><span class="ft-status-chip ${newCls}">${esc(statusLabel(ev.newValue) || '?')}</span></span>`),
+        _tlMr(esc(t('timeline.detail.change', 'Change')), `<span style="display:flex;align-items:center;gap:6px;"><span class="ft-status-chip ${oldCls}" title="${esc(statusLabel(ev.oldValue) || '?')}">${esc(statusLabel(ev.oldValue) || '?')}</span><span class="msi" style="font-size:12px;color:var(--tx3);">arrow_forward</span><span class="ft-status-chip ${newCls}" title="${esc(statusLabel(ev.newValue) || '?')}">${esc(statusLabel(ev.newValue) || '?')}</span></span>`),
     ].join('');
     el.innerHTML = `${ftDetailBar(ev)}<div class="fd-content" style="padding:20px 0;">
         ${ftDetailAvRow(ev)}
@@ -847,7 +851,7 @@ function renderFtDetailFriendAvatar(ev, el) {
 // ═══════════════════════════════════════════════════════════════════
 
 function _tlListProfHtml(img, name) {
-    if (img) return `<div class="tl-av" style="width:26px;height:26px;background-image:url('${cssUrl(img)}')"></div>`;
+    if (img) return `<div class="tl-av" style="width:26px;height:26px;background-image:url('${cssUrl(imgThumb(img, 64))}')"></div>`;
     if (name) return `<div class="tl-av tl-av-letter" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:calc(10px + var(--fs-off, 0px));">${esc(name[0].toUpperCase())}</div>`;
     return '';
 }
@@ -897,7 +901,7 @@ function _tlListPlayerAvatars(players, max) {
     let html = '<span class="tl-list-avs">';
     shown.forEach(p => {
         html += p.image
-            ? `<span class="tl-list-av" style="background-image:url('${cssUrl(p.image)}')" title="${esc(p.displayName || '')}"></span>`
+            ? `<span class="tl-list-av" style="background-image:url('${cssUrl(imgThumb(p.image, 64))}')" title="${esc(p.displayName || '')}"></span>`
             : `<span class="tl-list-av tl-list-av-letter" title="${esc(p.displayName || '')}">${esc((p.displayName || '?')[0].toUpperCase())}</span>`;
     });
     if (rest > 0) html += `<span class="tl-list-av tl-list-av-more">+${rest}</span>`;
@@ -908,7 +912,7 @@ function _tlListPlayerAvatars(players, max) {
 function _tlListData(ev) {
     switch (ev.type) {
         case 'instance_join':
-            return { userHtml: esc(currentVrcUser?.displayName || t('timeline.unknown', 'Unknown')), detail: esc(ev.worldName || ev.worldId || t('timeline.unknown_world', 'Unknown World')) };
+            return { userHtml: esc(currentVrcUser?.displayName || t('timeline.unknown', 'Unknown')), detail: tlInstanceListDetail(ev, ev.worldName || ev.worldId || t('timeline.unknown_world', 'Unknown World')) };
         case 'photo':
             return { userHtml: _tlListPlayerAvatars(ev.players, 3), detail: esc(ev.photoPath ? ev.photoPath.split(/[\\/]/).pop() : t('timeline.photo', 'Photo')) };
         case 'first_meet':
@@ -949,9 +953,9 @@ function _tlListData(ev) {
             if (ev.notifType === 'status') {
                 const oldCls = statusCssClass(ev.notifTitle);
                 const newCls = statusCssClass(ev.message);
-                detail = `<span class="ft-status-chip ${oldCls}">${esc(statusLabel(ev.notifTitle) || '?')}</span>`
+                detail = `<span class="ft-status-chip ${oldCls}" title="${esc(statusLabel(ev.notifTitle) || '?')}">${esc(statusLabel(ev.notifTitle) || '?')}</span>`
                        + `<span class="msi" style="font-size:12px;color:var(--tx3);vertical-align:middle;margin:0 4px;">arrow_forward</span>`
-                       + `<span class="ft-status-chip ${newCls}">${esc(statusLabel(ev.message) || '?')}</span>`;
+                       + `<span class="ft-status-chip ${newCls}" title="${esc(statusLabel(ev.message) || '?')}">${esc(statusLabel(ev.message) || '?')}</span>`;
             } else if (ev.notifType === 'statusdesc' || ev.notifType === 'bio') {
                 const v = (ev.message || '').slice(0, 80);
                 detail = v ? esc(v) + ((ev.message || '').length > 80 ? '...' : '') : tlClearedHtml();
@@ -1000,13 +1004,13 @@ function _ftListDetail(ev) {
     switch (ev.type) {
         case 'friend_online':      return `<span style="color:var(--ok)">${esc(t('timeline.friend.came_online', 'Came Online'))}</span>`;
         case 'friend_offline':     return `<span style="color:var(--tx3)">${esc(t('timeline.friend.went_offline', 'Went Offline'))}</span>`;
-        case 'friend_gps':        return esc(ev.worldName || ev.worldId || t('timeline.unknown_world', 'Unknown World'));
+        case 'friend_gps':        return tlInstanceListDetail(ev, ev.worldName || ev.worldId || t('timeline.unknown_world', 'Unknown World'));
         case 'friend_status': {
             const oldCls = statusCssClass(ev.oldValue);
             const newCls = statusCssClass(ev.newValue);
-            return `<span class="ft-status-chip ${oldCls}">${esc(statusLabel(ev.oldValue) || '?')}</span>`
+            return `<span class="ft-status-chip ${oldCls}" title="${esc(statusLabel(ev.oldValue) || '?')}">${esc(statusLabel(ev.oldValue) || '?')}</span>`
                  + `<span class="msi" style="font-size:12px;color:var(--tx3);vertical-align:middle;margin:0 4px;">arrow_forward</span>`
-                 + `<span class="ft-status-chip ${newCls}">${esc(statusLabel(ev.newValue) || '?')}</span>`;
+                 + `<span class="ft-status-chip ${newCls}" title="${esc(statusLabel(ev.newValue) || '?')}">${esc(statusLabel(ev.newValue) || '?')}</span>`;
         }
         case 'friend_statusdesc': {
             const v = (ev.newValue || '').slice(0, 80);

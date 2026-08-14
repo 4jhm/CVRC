@@ -1,0 +1,50 @@
+                <div class="sf-layout">
+                    <div class="vrcn-panel-card">
+                        <div class="vrcn-panel-card-header"><span class="msi">emoji_emotions</span> <span data-i18n="emoji.title">Emoji Maker</span></div>
+                        <div class="set-desc" style="margin:12px 0 14px;" data-i18n="emoji.desc">Turn a GIF, MP4, MOV, or WebM clip into a VRChat animated emoji sprite sheet.</div>
+                    </div>
+
+                    <div class="emoji-grid">
+                        <div class="vrcn-panel-card">
+                            <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">upload_file</span> <span data-i18n="emoji.source.title">Source</span></div>
+                            <div class="emoji-dropzone" id="emojiDropzone" onclick="document.getElementById('emojiFileInput').click()"
+                                 ondragover="event.preventDefault();this.classList.add('emoji-drag-over')"
+                                 ondragleave="this.classList.remove('emoji-drag-over')"
+                                 ondrop="emojiDrop(event)">
+                                <span class="msi" style="font-size:32px;">movie</span>
+                                <div id="emojiDropText" data-i18n="emoji.source.pick">Click or drop a GIF / MP4 / MOV / WebM here</div>
+                            </div>
+                            <input type="file" id="emojiFileInput" accept=".gif,.mp4,.mov,.webm,video/*,image/gif" style="display:none;" onchange="emojiOnFilePicked(event)">
+                            <video id="emojiSrcVideo" style="display:none;" muted playsinline></video>
+                            <div class="emoji-source-preview" id="emojiSourcePreviewWrap" style="display:none;">
+                                <img id="emojiSourcePreviewImg" class="emoji-source-preview-media" alt="">
+                            </div>
+
+                            <div class="cb-form-row"><label data-i18n="emoji.opt.frames">Frame Count</label>
+                                <select id="emojiFrameCount" class="cb-select" onchange="emojiRegenerate()">
+                                    <option value="4">4 (2x2)</option>
+                                    <option value="8">8 (4x4)</option>
+                                    <option value="16" selected>16 (4x4)</option>
+                                    <option value="32">32 (8x8)</option>
+                                    <option value="64">64 (8x8)</option>
+                                </select>
+                            </div>
+                            <div class="cb-form-row"><label data-i18n="emoji.opt.fps">Playback FPS</label><input type="number" id="emojiFps" class="vrcn-edit-field" min="1" max="30" step="1" value="10" style="width:90px;" onchange="emojiRegenerate()"></div>
+                            <div class="emoji-unit" id="emojiDurationHint" style="display:none;"></div>
+
+                            <button class="vrcn-button" id="emojiGenerateBtn" onclick="emojiRegenerate()" disabled><span class="msi" style="font-size:16px;">auto_awesome</span> <span data-i18n="emoji.generate">Generate Sprite Sheet</span></button>
+                        </div>
+
+                        <div class="vrcn-panel-card">
+                            <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">grid_view</span> <span data-i18n="emoji.preview.title">Sprite Sheet Preview</span></div>
+                            <canvas id="emojiSheetCanvas" width="1024" height="1024" class="emoji-sheet-canvas"></canvas>
+                            <div class="emoji-anim-row">
+                                <canvas id="emojiAnimPreview" width="128" height="128" class="emoji-anim-canvas"></canvas>
+                                <div class="emoji-anim-label" data-i18n="emoji.preview.anim">Live playback preview</div>
+                            </div>
+                            <div class="emoji-status" id="emojiStatusText"></div>
+                            <button class="vrcn-button" id="emojiSaveBtn" onclick="emojiSaveSheet()" disabled><span class="msi" style="font-size:16px;">save</span> <span data-i18n="emoji.save">Save PNG…</span></button>
+                            <div class="set-desc emoji-hint" data-i18n="emoji.hint">Upload the saved PNG on VRChat's website under Inventory → Emojis (VRC+ required). Pick the same frame count and FPS you set here.</div>
+                        </div>
+                    </div>
+                </div>

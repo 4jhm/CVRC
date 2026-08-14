@@ -631,14 +631,18 @@ function buildPeopleListHtml(friends) {
         const uid = jsq(f.id || '');
         const img = f.image || '';
         const av = img
-            ? `<span class="pl-av" style="background-image:url('${cssUrl(img)}')"></span>`
+            ? `<span class="pl-av" style="background-image:url('${cssUrl(imgThumb(img, 64))}')"></span>`
             : `<span class="pl-av pl-av-letter">${esc((f.displayName || '?')[0].toUpperCase())}</span>`;
         const rank = getTrustRank(f.tags || []);
         const st = _peopleStatsMap[f.id];
         const cat = f.presence ? _allFriendCategory(f) : '';
         const dotKind = f.presence === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
-        const dotCls = cat === 'offline' ? 's-offline' : statusDotClass(f.status);
-        const statusTxt = f.statusDescription || statusLabel(f.status);
+        const dotCls = (f.pendingOffline || cat === 'offline') ? 's-offline' : statusDotClass(f.status);
+        const statusTxt = f.pendingOffline
+            ? t('profiles.friends.pending_offline', 'Pending offline...')
+            : f.traveling
+                ? t('profiles.friends.traveling', 'Traveling...')
+                : (f.statusDescription || statusLabel(f.status));
         const statusCell = f.status
             ? `<span class="${dotKind} ${dotCls}"></span><span class="pl-status-txt">${esc(statusTxt)}</span>`
             : '';
@@ -789,7 +793,7 @@ function buildModListHtml(entries, actionType) {
         const friend = vrcFriendsData.find(f => f.id === entry.targetUserId);
         const img = entry.image || (friend && friend.image) || '';
         const av = img
-            ? `<span class="pl-av" style="background-image:url('${cssUrl(img)}')"></span>`
+            ? `<span class="pl-av" style="background-image:url('${cssUrl(imgThumb(img, 64))}')"></span>`
             : `<span class="pl-av pl-av-letter">${esc(displayName[0].toUpperCase())}</span>`;
         rows += tlTableRow('modList', ` onclick="openFriendDetail('${uid}')"`, {
             profile: `<td class="pl-profile">${av}</td>`,
@@ -928,42 +932,34 @@ function setFavFriendGroup(val) {
 }
 
 function updateFavFriendGroupHeader() {
-    const label = document.getElementById('favFriendGroupLabel');
-    const editBtn = document.getElementById('favFriendGroupEditBtn');
+    const header = document.getElementById('favFriendGroupHeader');
     const delBtn = document.getElementById('favFriendGroupDeleteBtn');
-    const localBadge = document.getElementById('favFriendGroupLocalBadge');
-    const visEl = document.getElementById('favFriendGroupVisLabel');
-    const visDropWrap = document.getElementById('favFriendGroupVisDropWrap');
-    const visDrop = document.getElementById('favFriendGroupVisDrop');
-    if (!label) return;
+    if (!header) return;
     if (!favFriendGroupFilter) {
-        label.textContent = t('friends.favorites.group.all', 'All Favorites');
-        if (editBtn) editBtn.style.display = 'none';
         if (delBtn) delBtn.style.display = 'none';
-        if (localBadge) localBadge.style.display = 'none';
-        if (visEl) visEl.style.display = 'none';
-        if (visDropWrap) visDropWrap.style.display = 'none';
     } else {
         const g = favFriendGroups.find(x => x.name === favFriendGroupFilter);
-        const isLocal = isLocalFavGroup(g);
-        label.textContent = g ? (g.displayName || g.name) : favFriendGroupFilter;
-        if (editBtn) editBtn.style.display = '';
-        if (delBtn) delBtn.style.display = isLocal ? '' : 'none';
-        if (localBadge) localBadge.style.display = isLocal ? '' : 'none';
-        if (visEl) {
-            visEl.textContent = g ? _favGroupVisLabel(g.visibility) : '';
-            visEl.style.display = (_favFriendEditMode || !g || isLocal) ? 'none' : '';
-        }
-        if (visDropWrap) {
-            const showDrop = _favFriendEditMode && !!g && !isLocal;
-            visDropWrap.style.display = showDrop ? '' : 'none';
-            if (showDrop && visDrop) visDrop.value = g.visibility || 'private';
-        }
+        if (delBtn) delBtn.style.display = isLocalFavGroup(g) ? '' : 'none';
     }
+    const anyVisible = [delBtn].some(el => el && el.style.display !== 'none');
+    header.style.display = anyVisible ? 'flex' : 'none';
 }
 
-function saveFavFriendGroupVisibility(visibility) {
-    const g = favFriendGroups.find(x => x.name === favFriendGroupFilter);
+function _ffGroupVisDropdown(groupName, currentVis) {
+    const opts = [
+        { value: 'public',  key: 'friends.favorites.visibility.public',  label: 'Visible for everyone' },
+        { value: 'friends', key: 'friends.favorites.visibility.friends', label: 'Visible for friends' },
+        { value: 'private', key: 'friends.favorites.visibility.private', label: 'Visible only to you' },
+    ];
+    const optsHtml = opts.map(o =>
+        `<option value="${o.value}"${o.value === currentVis ? ' selected' : ''}>${esc(t(o.key, o.label))}</option>`
+    ).join('');
+    return `<select class="vrcn-dropdown" style="min-width:160px;" onchange="saveFavFriendGroupVisibility(this.value,'${jsq(groupName)}')">${optsHtml}</select>`;
+}
+
+function saveFavFriendGroupVisibility(visibility, groupName) {
+    const name = groupName || favFriendGroupFilter;
+    const g = favFriendGroups.find(x => x.name === name);
     if (!g) return;
     sendToCS({ action: 'vrcUpdateFavoriteFriendGroup', groupName: g.name, displayName: g.displayName || g.name, visibility });
 }
@@ -980,7 +976,7 @@ function startEditFriendGroupName() {
 }
 
 function cancelEditFriendGroupName() {
-    document.getElementById('favFriendGroupHeader').style.display = 'flex';
+    updateFavFriendGroupHeader();
     const row = document.getElementById('favFriendGroupRenameRow');
     if (row) row.style.display = 'none';
     const saveBtn = document.querySelector('#favFriendGroupRenameRow .vrcn-btn-primary');
@@ -1013,6 +1009,20 @@ function onFriendFavoriteGroupUpdated(data) {
     cancelEditFriendGroupName();
     updateFavFriendGroupHeader();
     filterFavFriends();
+}
+
+function _ffGroupHeaderHtml(g, count, first) {
+    const isLocal = isLocalFavGroup(g);
+    const cap = g.capacity || 150;
+    const visHtml = (!isLocal && _favFriendEditMode)
+        ? _ffGroupVisDropdown(g.name, g.visibility)
+        : '';
+    return `<div class="fav-group-header${first ? ' fav-group-header-first' : ''}">
+        ${_ffGroupTitleHtml(g)}
+        ${favGroupBadge(g)}
+        <span class="fav-group-count">${count}/${cap}</span>
+        ${visHtml}
+    </div>`;
 }
 
 function _ffGroupTitleHtml(g) {
@@ -1105,23 +1115,19 @@ function filterFavFriends() {
         favFriendGroups.forEach(g => {
             const gFriends = friends.filter(f => favMap.get(f.id)?.groupName === g.name);
             if (!gFriends.length && !_favFriendEditMode) return;
-            const isLocal = isLocalFavGroup(g);
-            const cap = g.capacity || 150;
-            const visLabel = _favGroupVisLabel(g.visibility);
-            const visHtml = (g.visibility && !_favFriendEditMode && !isLocal)
-                ? `<span style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-left:4px;">${esc(visLabel)}</span>` : '';
-            html += `<div class="fav-group-header${first ? ' fav-group-header-first' : ''}">
-                ${_ffGroupTitleHtml(g)}
-                ${favGroupBadge(g)}
-                <span class="fav-group-count">${gFriends.length}/${cap}</span>
-                ${visHtml}
-            </div>`;
+            html += _ffGroupHeaderHtml(g, gFriends.length, first);
             html += gFriends.map(f => renderFavFriendCard(f)).join('');
             first = false;
         });
         el.innerHTML = html || `<div class="empty-msg">${t('friends.favorites.empty', 'No favorite friends yet')}</div>`;
+        el.querySelectorAll('select.vrcn-dropdown').forEach(initVnSelect);
     } else {
-        el.innerHTML = friends.map(f => renderFavFriendCard(f)).join('');
+        const selected = favFriendGroupFilter
+            ? favFriendGroups.find(x => x.name === favFriendGroupFilter)
+            : null;
+        const head = selected ? _ffGroupHeaderHtml(selected, friends.length, true) : '';
+        el.innerHTML = head + friends.map(f => renderFavFriendCard(f)).join('');
+        if (head) el.querySelectorAll('select.vrcn-dropdown').forEach(initVnSelect);
     }
     if (_favFriendEditMode) updateFriendEditBar();
 }

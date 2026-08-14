@@ -288,6 +288,20 @@ body:has(#tab0.active) .rsidebar.collapsed .sidebar-sep {
     overflow: visible;
 }
 
+.nav-btn.locked {
+    cursor: not-allowed;
+    opacity: .45;
+    filter: grayscale(.3);
+}
+.nav-btn.locked:hover { background: none; }
+.nav-btn-lock {
+    margin-left: auto;
+    font-size: 14px !important;
+    min-width: 0 !important;
+    color: var(--tx3);
+    flex-shrink: 0;
+}
+
 .sidebar.collapsed .nav-btn {
     justify-content: center;
     padding: 10px;
@@ -388,7 +402,7 @@ body:has(#tab0.active) .rsidebar.collapsed .sidebar-sep {
 .nav-folder-popout {
     position: fixed;
     z-index: 4000;
-    width: 264px;
+    width: 436px;
     max-width: calc(100vw - 16px);
     background: var(--bg-card);
     border: 1px solid var(--brd-lt);
@@ -413,7 +427,7 @@ body:has(#tab0.active) .rsidebar.collapsed .sidebar-sep {
 }
 .nav-folder-popout-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 6px;
     max-height: 240px;
     overflow-y: auto;
@@ -441,6 +455,37 @@ body:has(#tab0.active) .rsidebar.collapsed .sidebar-sep {
     background: color-mix(in srgb, var(--accent) 14%, transparent);
     color: var(--accent-lt);
 }
+.nav-folder-cell {
+    position: relative;
+}
+.nav-folder-cell.locked {
+    cursor: not-allowed;
+    opacity: .45;
+    filter: grayscale(.3);
+}
+.nav-folder-cell.locked:hover { background: rgba(255,255,255,.03); color: var(--tx2); }
+.nav-folder-cell-lock {
+    position: absolute;
+    top: 5px;
+    right: 6px;
+    font-size: 11px !important;
+    min-height: 0 !important;
+    color: var(--tx3);
+}
+.nav-folder-cell-soon {
+    position: absolute;
+    top: 5px;
+    left: 6px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background: var(--warn);
+    color: #1a1200;
+    font-size: 7.5px;
+    font-weight: 800;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
 .nav-folder-cell-icon { font-size: calc(22px + var(--fs-off, 0px)); min-height: 22px; }
 .nav-folder-cell-label {
     font-size: calc(10.5px + var(--fs-off, 0px));
@@ -456,47 +501,6 @@ body:has(#tab0.active) .rsidebar.collapsed .sidebar-sep {
     white-space: normal;
 }
 
-.clock-area {
-    padding: 10px 10px 4px;
-    text-align: center;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.clock-time {
-    font-family: var(--font-app);
-    font-variant-numeric: tabular-nums;
-    font-size: calc(18px + var(--fs-off, 0px));
-    font-weight: 600;
-    color: var(--tx0);
-    letter-spacing: 2px;
-    line-height: 1;
-}
-
-.clock-date {
-    font-family: var(--font-app);
-    font-variant-numeric: tabular-nums;
-    font-size: calc(9px + var(--fs-off, 0px));
-    font-weight: 500;
-    color: var(--tx3);
-    margin-top: 4px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-}
-
-.sidebar.collapsed .clock-date {
-    display: none;
-}
-
-.sidebar.collapsed .clock-time {
-    font-size: calc(9px + var(--fs-off, 0px));
-    letter-spacing: 2px;
-    writing-mode: vertical-rl;
-    color: var(--tx3);
-    padding: 6px 0;
-}
 
 .play-area {
     padding: 6px 10px 10px;

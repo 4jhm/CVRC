@@ -119,7 +119,8 @@ function openBoopModal(userId, displayName) {
     overlay.innerHTML = `
         <div class="modal-box wide narrow">
             ${renderModalBar(t('boop.title', 'Send a Boop'), [modalCloseAction('closeBoopModal()')])}
-            <div class="modal-msg" style="margin:20px 0 14px;">${esc(tf('boop.target', { name: _boopContext.displayName }, `To: ${_boopContext.displayName}`))}</div>
+            <div class="modal-card">
+            <div class="modal-msg" style="margin:0 0 14px;">${esc(tf('boop.target', { name: _boopContext.displayName }, `To: ${_boopContext.displayName}`))}</div>
             <div class="fd-tabs">
                 <button class="fd-tab active" id="boopTabDefault" onclick="switchBoopTab('default')">${esc(t('boop.tab_default', 'Default Emojis'))}</button>
                 ${boopHasVrcPlus() ? `<button class="fd-tab" id="boopTabCustom" onclick="switchBoopTab('custom')">${esc(t('boop.tab_custom', 'Custom'))}</button>` : ''}
@@ -131,8 +132,9 @@ function openBoopModal(userId, displayName) {
                 <button class="vrcn-button" id="boopClearBtn" onclick="selectBoopEmoji('')" style="display:none;">${esc(t('boop.clear', 'Clear'))}</button>
                 <button class="vrcn-button" id="boopRefreshBtn" onclick="refreshBoopCustomEmojis()" title="${esc(t('common.refresh', 'Refresh'))}" style="display:none;"><span class="msi">refresh</span></button>
             </div>
-            <div class="modal-btns" style="margin-top:16px;">
-                <button class="vrcn-button vrcn-btn-primary" id="boopSendBtn" onclick="sendBoopFromModal()">${esc(t('boop.send', 'Send Boop'))}</button>
+            </div>
+            <div class="modal-foot"><div class="modal-foot-spacer"></div>
+                <button class="vrcn-button" id="boopSendBtn" onclick="sendBoopFromModal()">${esc(t('boop.send', 'Send Boop'))}</button>
             </div>
         </div>`;
     document.body.appendChild(overlay);

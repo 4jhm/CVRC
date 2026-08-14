@@ -43,7 +43,7 @@ function renderPerminiList() {
         const uid    = jsq(e.userId);
 
         const av = img
-            ? `<img class="pm-avatar" src="${esc(img)}" onerror="this.outerHTML='<div class=\\'pm-avatar pm-avatar-fallback\\'>${esc((name||'?')[0].toUpperCase())}</div>'">`
+            ? `<img class="pm-avatar" src="${esc(imgThumb(img, 96))}" onerror="this.outerHTML='<div class=\\'pm-avatar pm-avatar-fallback\\'>${esc((name||'?')[0].toUpperCase())}</div>'">`
             : `<div class="pm-avatar pm-avatar-fallback">${esc((name || '?')[0].toUpperCase())}</div>`;
 
         const collapsed = _pmExpanded.has(e.userId) ? '' : ' collapsed';

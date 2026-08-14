@@ -4,6 +4,7 @@
     --bg-card: #0D0D0E;
     --bg-hover: #1C1C1F;
     --bg-input: #101011;
+    --tab-card-bg: #0B0B0C;
     --bg-btn: #0D0D0E;
     --bg-btn-h: #1C1C1F;
     --ui-input-bg: var(--bg-card);
@@ -26,17 +27,16 @@
     --rsidebar-c: 60px;
     --rsidebar-w: 260px;
     --status-online: #2DD48C;
-    --status-join:   #42A5F5;
-    --status-ask:    #FFA726;
-    --status-busy:   #EF5350;
-    --status-offline:#747F8D;
+    --status-join:   #3783FF;
+    --status-ask:    #FF8D26;
+    --status-busy:   #FF2D2D;
+    --status-offline:#6D7694;
     --sep-color: var(--brd);
     --fs-off: 0px;
     --font-app: 'Google Sans', sans-serif;
     --font-mono: 'Google Sans Mono', monospace;
 }
 
-.clock-date,
 .topbar-title,
 .modal-fname,
 .lib-world-badge-text,
@@ -155,10 +155,8 @@
     box-sizing: border-box;
 }
 
-html.design-flat { --sep-color: transparent; }
-
 .tab-toolbar {
-    background: var(--bg-input);
+    background: var(--tab-card-bg, var(--bg-input));
     border: 1px solid var(--brd);
     border-radius: 12px;
     padding: 10px 12px;
@@ -171,7 +169,7 @@ html.design-flat { --sep-color: transparent; }
     margin-bottom: 0;
 }
 .tab-toolbar-body {
-    background: var(--bg-input);
+    background: var(--tab-card-bg, var(--bg-input));
     border: 1px solid var(--brd);
     border-top: none;
     border-radius: 0 0 12px 12px;
@@ -420,7 +418,7 @@ html.deco-dashboard-on.nameplate-deco-on .dash-flocs-card > .dash-flocs-world-th
     justify-content: space-between;
     gap: 8px;
     height: 44px;
-    margin: -28px -32px 0;
+    margin: -28px calc(-1 * var(--modal-pad-x, 32px)) 0;
     padding: 0 10px 0 18px;
     background: var(--bg-card);
     border-bottom: 1px solid var(--brd);

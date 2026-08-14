@@ -318,7 +318,7 @@ function renderAccountSwitcher(accounts) {
         const uname = esc(a.username || a.Username || '');
         const img   = esc(a.avatarUrl || a.AvatarUrl || '');
         return `<div class="acct-sw-item" onclick="doSwitchAccount('${uid}','${uname}')">
-            <img class="acct-sw-avatar" src="${img}" onerror="this.src='';this.style.background='var(--bg2)'" alt="">
+            <img class="acct-sw-avatar" src="${imgThumb(img, 96)}" onerror="this.src='';this.style.background='var(--bg2)'" alt="">
             <div class="acct-sw-info">
                 <div class="acct-sw-name">${name}</div>
                 <div class="acct-sw-username">${uname}</div>

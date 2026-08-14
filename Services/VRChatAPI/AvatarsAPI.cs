@@ -168,6 +168,7 @@ public class AvatarsAPI(VRChatApiService ctx)
         client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
         try
         {
+            ctx.Log("[AVTRDB] GET search");
             ctx.Log($"SearchAvatars: {url}");
             var resp = await client.GetAsync(url);
             var body = await resp.Content.ReadAsStringAsync();
@@ -309,6 +310,7 @@ public class AvatarsAPI(VRChatApiService ctx)
             JArray? arr = null;
             try
             {
+                ctx.Log("[AVTRDB] GET author-search");
                 ctx.Log($"SearchAvatarsByAuthor: {url}");
                 var resp = await client.GetAsync(url);
                 var body = await resp.Content.ReadAsStringAsync();
