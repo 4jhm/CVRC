@@ -49,6 +49,8 @@
   "avlog.history.empty": "No avatars logged yet.",
   "avlog.row.worn_by": "worn by",
   "avlog.row.upload": "Upload",
+  "avlog.row.upload_to_files": "Upload to Files",
+  "avlog.row.reveal_file": "File",
   "avlog.row.status.posted": "Posted",
   "avlog.row.status.listed": "Listed",
   "avlog.row.status.error": "Error",

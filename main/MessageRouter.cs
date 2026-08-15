@@ -2988,6 +2988,7 @@ public partial class AppShell
                 case "avlogClearSeen":
                 case "avlogGetHistory":
                 case "avlogManualUpload":
+                case "avlogUploadToFiles":
                 case "avlogTestWebhook":
                     _avatarLoggerCtrl.HandleMessage(action, msg);
                     break;

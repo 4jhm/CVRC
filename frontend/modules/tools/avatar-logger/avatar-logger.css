@@ -39,7 +39,8 @@
 .avlog-row {
     display: flex;
     align-items: center;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 8px 10px;
     background: var(--bg-card, #1e1e22);
     border: 1px solid var(--brd);
     border-radius: 10px;
@@ -94,6 +95,18 @@
     white-space: nowrap;
 }
 
+.avlog-row-when {
+    font-size: calc(9.5px + var(--fs-off, 0px));
+    color: var(--tx3);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .avlog-row-status {
     font-size: calc(10px + var(--fs-off, 0px));
     padding: 3px 8px;
@@ -107,7 +120,9 @@
 .avlog-row-status.skipped_small { background: rgba(255,255,255,.06); color: var(--tx3); }
 .avlog-row-status.repeat        { background: rgba(255,255,255,.06); color: var(--tx3); }
 
-.avlog-row-upload-btn {
+.avlog-row-upload-btn,
+.avlog-row-files-btn,
+.avlog-row-reveal-btn {
     flex-shrink: 0;
     padding: 5px 10px;
 }
@@ -182,4 +197,12 @@
 .avlog-history-meta {
     font-size: calc(10.5px + var(--fs-off, 0px));
     color: var(--tx3);
+}
+
+.avlog-history-when {
+    font-size: calc(9.5px + var(--fs-off, 0px));
+    color: var(--tx3);
+    display: flex;
+    align-items: center;
+    gap: 3px;
 }

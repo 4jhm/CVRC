@@ -468,6 +468,22 @@ public class AvatarLoggerService : IDisposable
         return string.IsNullOrEmpty(a) ? n : $"{n} - {a}";
     }
 
+    // Manual "Upload to Files" button — just copies straight to AvlogLocalArchivePath, no
+    // GoFile/Discord involved. Independent of delivery Status, so it works even on an entry
+    // that was already posted (or failed to post) elsewhere.
+    public (bool ok, string message) ManualArchiveToFiles(AvatarLogEntry entry)
+    {
+        if (string.IsNullOrEmpty(entry.CachePath) || !File.Exists(entry.CachePath))
+            return (false, "matched file no longer exists");
+        var dir = _core.Settings.AvlogLocalArchivePath;
+        if (string.IsNullOrWhiteSpace(dir))
+            return (false, "no Local Archive Folder set — configure one in Settings first");
+
+        string fileName = SafeFileName(entry.Name, entry.Author) + ".vrca";
+        TryArchiveLocalCopy(entry.CachePath, fileName);
+        return (true, $"Saved to {dir}");
+    }
+
     // Best-effort local backup copy — independent of whether Discord/GoFile delivery actually
     // succeeds, so a failed upload still leaves you with the file. Never blocks or fails delivery.
     private void TryArchiveLocalCopy(string cachePath, string fileName)

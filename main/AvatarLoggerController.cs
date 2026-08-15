@@ -81,6 +81,16 @@ public class AvatarLoggerController
                 break;
             }
 
+            case "avlogUploadToFiles":
+            {
+                var key = msg["key"]?.ToString() ?? "";
+                var entry = Service.FindEntry(key);
+                if (entry == null) break;
+                var (ok, message) = Service.ManualArchiveToFiles(entry);
+                _core.SendToJS("toast", new { ok, msg = message });
+                break;
+            }
+
             case "avlogTestWebhook":
             {
                 var url = msg["webhookUrl"]?.ToString() ?? _core.Settings.AvlogWebhookUrl;

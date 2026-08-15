@@ -40,6 +40,29 @@ function avlogManualUpload(key) {
     sendToCS({ action: 'avlogManualUpload', key });
 }
 
+// Saves straight to the configured Local Archive Folder, no GoFile/Discord involved.
+function avlogUploadToFiles(key) {
+    sendToCS({ action: 'avlogUploadToFiles', key });
+}
+
+// Opens the OS file browser at the exact cached avatar file (the "__data" asset bundle
+// inside VRChat's own disk cache), so you can see/copy it without hunting for it manually.
+function avlogRevealFile(key) {
+    const entry = _avlogFeedEntries[key];
+    if (!entry || !entry.cachePath) return;
+    sendToCS({ action: 'revealInExplorer', path: entry.cachePath });
+}
+
+function avlogFormatWhen(whenIso) {
+    if (!whenIso) return '';
+    const d = new Date(whenIso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString(undefined, {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+}
+
 // Clicking the thumbnail uploads it (if not delivered yet), or re-opens/copies the
 // link it already got (if it was).
 function avlogThumbClick(key, downloadLink) {
@@ -158,8 +181,15 @@ function _avlogFillRow(row, entry) {
     if (entry.wearer) metaParts.push(t('avlog.row.worn_by', 'worn by') + ' ' + esc(entry.wearer));
     if (entry.sizeMb != null) metaParts.push(entry.sizeMb.toFixed(1) + ' MB');
     if (entry.downloadLink) metaParts.push(t('avlog.row.has_link', 'link ready'));
+    const whenText = avlogFormatWhen(entry.whenIso);
     const uploadBtnHtml = AVLOG_UPLOADABLE_STATUSES.includes(entry.status)
         ? `<button class="vrcn-button avlog-row-upload-btn"><span class="msi" style="font-size:14px;">upload</span> ${esc(t('avlog.row.upload', 'Upload'))}</button>`
+        : '';
+    const filesBtnHtml = entry.cachePath
+        ? `<button class="vrcn-button avlog-row-files-btn"><span class="msi" style="font-size:14px;">drive_file_move</span> ${esc(t('avlog.row.upload_to_files', 'Upload to Files'))}</button>`
+        : '';
+    const revealBtnHtml = entry.cachePath
+        ? `<button class="vrcn-button avlog-row-reveal-btn"><span class="msi" style="font-size:14px;">folder_open</span> ${esc(t('avlog.row.reveal_file', 'File'))}</button>`
         : '';
 
     row.innerHTML = `
@@ -167,9 +197,12 @@ function _avlogFillRow(row, entry) {
         <div class="avlog-row-body">
             <div class="avlog-row-name" title="${esc(entry.name)}">${esc(entry.name || '(unnamed avatar)')}</div>
             <div class="avlog-row-meta" title="${esc(entry.note || '')}">${metaParts.join(' · ')}</div>
+            ${whenText ? `<div class="avlog-row-when" title="${esc(whenText)}"><span class="msi" style="font-size:11px;">schedule</span> ${esc(whenText)}</div>` : ''}
         </div>
         ${_avlogStatusHtml(entry)}
         ${uploadBtnHtml}
+        ${filesBtnHtml}
+        ${revealBtnHtml}
     `;
 
     // Bound here instead of inline onclick="..." strings — a name/link containing a double
@@ -191,6 +224,20 @@ function _avlogFillRow(row, entry) {
         uploadBtnEl.onclick = (e) => {
             e.stopPropagation();
             avlogManualUpload(entry.key);
+        };
+    }
+    const filesBtnEl = row.querySelector('.avlog-row-files-btn');
+    if (filesBtnEl) {
+        filesBtnEl.onclick = (e) => {
+            e.stopPropagation();
+            avlogUploadToFiles(entry.key);
+        };
+    }
+    const revealBtnEl = row.querySelector('.avlog-row-reveal-btn');
+    if (revealBtnEl) {
+        revealBtnEl.onclick = (e) => {
+            e.stopPropagation();
+            avlogRevealFile(entry.key);
         };
     }
 }
@@ -222,14 +269,18 @@ function handleAvatarLoggerHistory(data) {
         grid.innerHTML = `<div class="osc-empty">${esc(t('avlog.history.empty', 'No avatars logged yet.'))}</div>`;
         return;
     }
-    grid.innerHTML = entries.map(e => `
+    grid.innerHTML = entries.map(e => {
+        const whenText = avlogFormatWhen(e.whenIso);
+        return `
         <div class="avlog-history-card">
             ${e.thumbUrl ? `<img class="avlog-history-thumb" src="${esc(e.thumbUrl)}" alt="">` : ''}
             <div class="avlog-history-name" title="${esc(e.name)}">${esc(e.name || '(unnamed avatar)')}</div>
             <div class="avlog-history-meta">${esc(e.author || '')}</div>
+            ${whenText ? `<div class="avlog-history-when" title="${esc(whenText)}"><span class="msi" style="font-size:11px;">schedule</span> ${esc(whenText)}</div>` : ''}
             ${e.downloadLink ? `<a class="vrcn-button" href="#" onclick="sendToCS({action:'avatarDbOpenLink', url:'${jsq(e.downloadLink)}'});return false;"><span class="msi" style="font-size:14px;">download</span> ${t('avdb.download', 'Download')}</a>` : ''}
         </div>
-    `).join('');
+    `;
+    }).join('');
 }
 
 function cssEscape(s) {

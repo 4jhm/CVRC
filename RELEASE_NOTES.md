@@ -150,7 +150,7 @@ This includes searches and avatar lookups.
 * Now identifies itself to the VRChat API with its own User-Agent (`CVRC/<version> (4jhmweb@gmail.com)`) instead of the original VRCNext developer's, per their request that forks use their own identity/contact info
 * VRChat Accounts tool — launch up to 10 independent, concurrently logged-in VRChat instances via `--profile=N`
 * Avatar Database tool — browse/sort downloadable avatars from the community Gofile database
-* Avatar Logger tool — watches your VRChat log for avatars you and others switch into, tracks size/visibility/thumbnails, and can auto-upload delivered avatar files to GoFile with a local archive-folder backup
+* Avatar Logger tool — watches your VRChat log for avatars you and others switch into, tracks size/visibility/thumbnails, and can auto-upload delivered avatar files to GoFile with a local archive-folder backup. Each entry now shows the exact date/time it was obtained, plus one-click "Upload to Files" (saves straight to your Local Archive Folder) and a "File" button that opens the exact cache folder in Explorer
 * Emoji Maker tool — converts a GIF/MP4/MOV/WebM clip into a VRChat animated emoji sprite sheet entirely client-side
 * OSC Radial Menu tool — paged radial control for avatar emotes and OSC parameters, on desktop and as a new Expressions tab in the VR wrist overlay
 * OSC avatar emotes and live avatar height/scale controls
