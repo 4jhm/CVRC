@@ -588,26 +588,50 @@ public class AvatarLoggerService : IDisposable
         return a;
     }
 
-    // VRChat's cache bundles are always named "__data" regardless of nesting depth, so a
-    // plain recursive search finds them all in one pass — no need to probe fixed-depth globs.
-    private static IEnumerable<string> IterDataFiles(string cacheDir)
+    // VRChat's cache bundles are usually named "__data" (no extension) regardless of nesting
+    // depth, but that's not universal across every setup. Blank AvlogCacheFileName auto-detects:
+    // match any file in a cache leaf folder that isn't a known non-bundle sidecar
+    // ("__lock"/"__info"). If a user's setup has a distinguishing extension instead (e.g. their
+    // files end up named "*.l" or "*.data"), they can type just that extension — with or
+    // without the leading dot — and only files with that extension are matched. Either way, the
+    // file this finds is only ever a *source*: the delivered/archived copy is always renamed to
+    // "<avatar name>.vrca", never anything the user types here.
+    private static readonly HashSet<string> NonBundleSiblingNames =
+        new(StringComparer.OrdinalIgnoreCase) { "__lock", "__info" };
+
+    private static IEnumerable<string> IterDataFiles(string cacheDir, string filter)
     {
         if (!Directory.Exists(cacheDir)) yield break;
+        var autoDetect = string.IsNullOrWhiteSpace(filter);
+        string pattern;
+        if (autoDetect) pattern = "*";
+        else if (filter.Contains('*') || filter.Contains('?')) pattern = filter; // already a full glob pattern
+        else pattern = "*." + filter.TrimStart('.'); // treat bare input as a file extension
+
         IEnumerable<string> matches;
-        try { matches = Directory.EnumerateFiles(cacheDir, "__data", SearchOption.AllDirectories); }
+        try { matches = Directory.EnumerateFiles(cacheDir, pattern, SearchOption.AllDirectories); }
         catch { yield break; }
-        foreach (var m in matches) yield return m;
+        foreach (var m in matches)
+        {
+            if (autoDetect && NonBundleSiblingNames.Contains(Path.GetFileName(m)))
+                continue;
+            yield return m;
+        }
     }
 
     private string? FindCacheFile(DateTime when)
     {
-        var logDir = VrcPathsHelper.AppDataDir();
-        var cache = AutoCacheDir(logDir);
+        var overridePath = _core.Settings.AvlogCachePathOverride;
+        var cache = !string.IsNullOrWhiteSpace(overridePath)
+            ? overridePath
+            : AutoCacheDir(VrcPathsHelper.AppDataDir());
         if (!Directory.Exists(cache)) return null;
+
+        var targetFileName = _core.Settings.AvlogCacheFileName; // blank = auto-detect
 
         var whenTicks = when;
         (double Score, string Path)? best = null;
-        foreach (var data in IterDataFiles(cache))
+        foreach (var data in IterDataFiles(cache, targetFileName))
         {
             if (_claimedFiles.Contains(data)) continue;
             DateTime touch;

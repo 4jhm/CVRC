@@ -43,6 +43,8 @@ public class AvatarLoggerController
                 _core.Settings.AvlogLogMySwitches     = msg["logMySwitches"]?.Value<bool>() ?? true;
                 _core.Settings.AvlogIgnorePeople      = msg["ignorePeople"]?.ToObject<List<string>>() ?? new();
                 _core.Settings.AvlogLocalArchivePath  = msg["localArchivePath"]?.ToString() ?? "";
+                _core.Settings.AvlogCachePathOverride = msg["cachePathOverride"]?.ToString() ?? "";
+                _core.Settings.AvlogCacheFileName     = msg["cacheFileName"]?.ToString()?.Trim() ?? "";
                 _core.Settings.Save();
 
                 try { if (enabled) Service.Start(); else Service.Stop(); }
@@ -111,6 +113,16 @@ public class AvatarLoggerController
                 });
                 break;
             }
+
+            case "avlogBrowseCachePath":
+            {
+                var defaultDir = _core.Settings.AvlogCachePathOverride;
+                if (string.IsNullOrWhiteSpace(defaultDir) || !Directory.Exists(defaultDir))
+                    defaultDir = VRCNext.Services.Helpers.VrcPathsHelper.AppDataDir();
+                var r = NativeFileDialogSharp.Dialog.FolderPicker(defaultDir);
+                if (r.IsOk) _core.SendToJS("avlogCachePathResult", r.Path);
+                break;
+            }
         }
     }
 
@@ -132,6 +144,8 @@ public class AvatarLoggerController
             logMySwitches = _core.Settings.AvlogLogMySwitches,
             ignorePeople = _core.Settings.AvlogIgnorePeople,
             localArchivePath = _core.Settings.AvlogLocalArchivePath,
+            cachePathOverride = _core.Settings.AvlogCachePathOverride,
+            cacheFileName = _core.Settings.AvlogCacheFileName,
         });
     }
 

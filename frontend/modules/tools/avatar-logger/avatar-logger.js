@@ -23,9 +23,23 @@ function avlogSaveConfig() {
         gofileToken: document.getElementById('avlogGofileToken').value.trim(),
         gofileFolder: document.getElementById('avlogGofileFolder').value.trim(),
         localArchivePath: document.getElementById('avlogLocalArchivePath').value.trim(),
+        cachePathOverride: document.getElementById('avlogCachePathOverride').value.trim(),
+        cacheFileName: document.getElementById('avlogCacheFileName').value.trim(),
         logMySwitches: document.getElementById('avlogLogMySwitches').checked,
         ignorePeople: document.getElementById('avlogIgnorePeople').value.split('\n').map(s => s.trim()).filter(Boolean),
     });
+}
+
+// Opens a native folder picker for the VRChat cache folder override.
+function avlogBrowseCachePath() {
+    sendToCS({ action: 'avlogBrowseCachePath' });
+}
+
+function handleAvlogCachePathResult(path) {
+    if (!path) return;
+    const input = document.getElementById('avlogCachePathOverride');
+    if (input) input.value = path;
+    avlogSaveConfig();
 }
 
 function avlogTestWebhook() {
@@ -87,6 +101,8 @@ function handleAvatarLoggerStatus(data) {
     document.getElementById('avlogGofileToken').value = data.gofileToken || '';
     document.getElementById('avlogGofileFolder').value = data.gofileFolder || '';
     document.getElementById('avlogLocalArchivePath').value = data.localArchivePath || '';
+    document.getElementById('avlogCachePathOverride').value = data.cachePathOverride || '';
+    document.getElementById('avlogCacheFileName').value = data.cacheFileName || '';
     document.getElementById('avlogLogMySwitches').checked = data.logMySwitches !== false;
     document.getElementById('avlogIgnorePeople').value = (data.ignorePeople || []).join('\n');
 
@@ -299,6 +315,8 @@ function rerenderAvatarLoggerTranslations() {
         gofileToken: document.getElementById('avlogGofileToken')?.value,
         gofileFolder: document.getElementById('avlogGofileFolder')?.value,
         localArchivePath: document.getElementById('avlogLocalArchivePath')?.value,
+        cachePathOverride: document.getElementById('avlogCachePathOverride')?.value,
+        cacheFileName: document.getElementById('avlogCacheFileName')?.value,
         logMySwitches: document.getElementById('avlogLogMySwitches')?.checked,
         ignorePeople: (document.getElementById('avlogIgnorePeople')?.value || '').split('\n').filter(Boolean),
     });

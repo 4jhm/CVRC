@@ -1073,6 +1073,9 @@ case 'vrcNews':
             case 'avatarLoggerHistory':
                 if (typeof handleAvatarLoggerHistory === 'function') handleAvatarLoggerHistory(payload);
                 break;
+            case 'avlogCachePathResult':
+                if (typeof handleAvlogCachePathResult === 'function') handleAvlogCachePathResult(payload);
+                break;
             case 'emojiSheetSaved':
                 if (typeof onEmojiSheetSaved === 'function') onEmojiSheetSaved(payload);
                 break;

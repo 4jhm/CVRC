@@ -151,6 +151,7 @@ This includes searches and avatar lookups.
 * VRChat Accounts tool — launch up to 10 independent, concurrently logged-in VRChat instances via `--profile=N`
 * Avatar Database tool — browse/sort downloadable avatars from the community Gofile database
 * Avatar Logger tool — watches your VRChat log for avatars you and others switch into, tracks size/visibility/thumbnails, and can auto-upload delivered avatar files to GoFile with a local archive-folder backup. Each entry now shows the exact date/time it was obtained, plus one-click "Upload to Files" (saves straight to your Local Archive Folder) and a "File" button that opens the exact cache folder in Explorer
+* **Abyss Support** — Avatar Logger no longer assumes a stock VRChat install. A custom **VRChat Cache Folder** setting lets you point it at a relocated cache directory, and a custom **Cache File Extension** filter (or auto-detect by default) finds the cached avatar bundle even on setups where it isn't named the usual `__data`. Also fixed GoFile uploads silently failing/showing "No files found" after repeated app restarts — the guest account token is now persisted to disk and reused instead of minting a new throwaway account (and tripping Gofile's rate limit) on every launch
 * Emoji Maker tool — converts a GIF/MP4/MOV/WebM clip into a VRChat animated emoji sprite sheet entirely client-side
 * OSC Radial Menu tool — paged radial control for avatar emotes and OSC parameters, on desktop and as a new Expressions tab in the VR wrist overlay
 * OSC avatar emotes and live avatar height/scale controls

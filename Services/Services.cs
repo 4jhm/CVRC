@@ -441,6 +441,15 @@ public class AppSettings
     // When set, every avatar that passes the size check gets copied here (as "<Name> - <Author>.vrca")
     // alongside whatever gets uploaded to Discord/GoFile — a local backup, independent of delivery.
     public string AvlogLocalArchivePath { get; set; } = "";
+    // Optional override for VRChat's disk cache folder (the one containing "__data" bundles) —
+    // auto-detected by default (LocalLow\VRChat\VRChat\Cache-WindowsPlayer), but useful if
+    // VRChat or its cache was moved to a non-standard drive/location.
+    public string AvlogCachePathOverride { get; set; } = "";
+    // Optional filter for the cache bundle Avatar Logger looks for — a bare file extension
+    // (e.g. "data" or ".l"), a full glob pattern (containing * or ?), or blank for auto-detect
+    // (matches anything except VRChat's known "__lock"/"__info" sidecars). The *output* file
+    // (local archive / GoFile / Discord) is always named "<avatar name>.vrca" regardless of this.
+    public string AvlogCacheFileName { get; set; } = "";
 
     // Space Flight settings
     public float SfMultiplier { get; set; } = 1f;

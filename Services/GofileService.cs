@@ -23,12 +23,43 @@ public class GofileService
     private readonly HttpClient _http = new() { Timeout = TimeSpan.FromMinutes(30) };
     private readonly Action<string> _log;
 
-    private string? _accountToken;
-    private DateTime _accountTokenAt = DateTime.MinValue;
+    // Static/shared across every GofileService instance in the process (Avatar Database and
+    // Avatar Logger each own one) and persisted to disk so a restarted app reuses the same
+    // guest account instead of minting a new one every launch — Gofile rate-limits new guest
+    // account creation per IP, and repeated app restarts during dev/testing was enough to trip it.
+    private static string? _accountToken;
+    private static DateTime _accountTokenAt = DateTime.MinValue;
+    private static readonly string _tokenCachePath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCNext", "Caches", "gofile_guest_token.json");
+
     private string? _uploadServer;
     private DateTime _uploadServerAt = DateTime.MinValue;
 
     public GofileService(Action<string> log) { _log = log; }
+
+    private static (string token, DateTime at)? LoadCachedToken()
+    {
+        try
+        {
+            if (!File.Exists(_tokenCachePath)) return null;
+            var obj = JObject.Parse(File.ReadAllText(_tokenCachePath));
+            var token = obj["token"]?.ToString();
+            var at = obj["at"]?.Value<DateTime?>();
+            if (string.IsNullOrEmpty(token) || at == null) return null;
+            return (token, at.Value);
+        }
+        catch { return null; }
+    }
+
+    private void SaveCachedToken(string token, DateTime at)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_tokenCachePath)!);
+            File.WriteAllText(_tokenCachePath, JObject.FromObject(new { token, at }).ToString());
+        }
+        catch (Exception ex) { _log($"[Gofile] Could not persist guest token: {ex.Message}"); }
+    }
 
     private static string GenerateWebsiteToken(string accountToken)
     {
@@ -40,9 +71,18 @@ public class GofileService
 
     private async Task<string?> GetAccountTokenAsync()
     {
-        // Guest tokens are effectively long-lived; reuse for an hour before minting a new one.
+        // Guest tokens are effectively long-lived; reuse in-memory for an hour before checking
+        // disk, and reuse the disk-cached token for up to 30 days before minting a new one.
         if (_accountToken != null && (DateTime.UtcNow - _accountTokenAt).TotalMinutes < 60)
             return _accountToken;
+
+        var cached = LoadCachedToken();
+        if (cached != null && (DateTime.UtcNow - cached.Value.at).TotalDays < 30)
+        {
+            _accountToken = cached.Value.token;
+            _accountTokenAt = cached.Value.at;
+            return _accountToken;
+        }
 
         try
         {
@@ -53,13 +93,20 @@ public class GofileService
             req.Headers.UserAgent.ParseAdd(UserAgent);
             using var resp = await _http.SendAsync(req);
             var body = await resp.Content.ReadAsStringAsync();
-            if (!resp.IsSuccessStatusCode) { _log($"[Gofile] Account creation failed: {(int)resp.StatusCode}"); return null; }
+            if (!resp.IsSuccessStatusCode)
+            {
+                _log($"[Gofile] Account creation failed: {(int)resp.StatusCode}");
+                // A rate-limited/failed fresh account creation is still better served by a stale
+                // cached token (if we have one) than by giving up outright.
+                return cached?.token;
+            }
 
             var token = JObject.Parse(body)["data"]?["token"]?.ToString();
-            if (string.IsNullOrEmpty(token)) { _log("[Gofile] Account creation returned no token."); return null; }
+            if (string.IsNullOrEmpty(token)) { _log("[Gofile] Account creation returned no token."); return cached?.token; }
 
             _accountToken = token;
             _accountTokenAt = DateTime.UtcNow;
+            SaveCachedToken(token, _accountTokenAt);
             return token;
         }
         catch (Exception ex)
@@ -187,6 +234,7 @@ public class GofileService
                 {
                     _log("[Gofile] Retrying once with a fresh guest account token...");
                     _accountToken = null; _accountTokenAt = DateTime.MinValue;
+                    try { File.Delete(_tokenCachePath); } catch { }
                     return await ListFolderAsync(contentId, allowRetry: false);
                 }
                 return null;
