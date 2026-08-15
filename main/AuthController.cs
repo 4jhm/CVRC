@@ -80,6 +80,34 @@ public class AuthController
     // Invoke shim (Photino is thread-safe)
     private static void Invoke(Action action) => action();
 
+    // Reads a chosen background-music file straight into a data URI so the player never has to
+    // round-trip an HTTP fetch for it. Anonymous return type is fine — SendToJS serializes by
+    // reflection, not the declared type.
+    private const int MaxCustomMusicBytes = 60 * 1024 * 1024; // 60 MB safety cap for embedding
+
+    private static object BuildCustomMusicPayload(string? path)
+    {
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            return new { hasCustom = false, fileName = "" };
+        try
+        {
+            var bytes = File.ReadAllBytes(path);
+            if (bytes.Length > MaxCustomMusicBytes)
+                return new { hasCustom = false, fileName = "", error = $"file too large to embed ({bytes.Length / 1024 / 1024} MB, max 60 MB)" };
+            var mime = Path.GetExtension(path).ToLowerInvariant() switch
+            {
+                ".wav" => "audio/wav",
+                ".ogg" => "audio/ogg",
+                _      => "audio/mpeg",
+            };
+            return new { hasCustom = true, fileName = Path.GetFileName(path), dataUri = $"data:{mime};base64,{Convert.ToBase64String(bytes)}" };
+        }
+        catch (Exception ex)
+        {
+            return new { hasCustom = false, fileName = "", error = ex.Message };
+        }
+    }
+
     // Message Handler
 
     public async Task HandleMessage(string action, JObject msg)
@@ -396,6 +424,29 @@ public class AuthController
                 });
                 break;
 
+            case "exportConfig":
+                {
+                    var r = Dialog.FileSave("json", "CVRC-config.json");
+                    if (r.IsOk)
+                    {
+                        var ok = _core.Settings.ExportTo(r.Path);
+                        _core.SendToJS("toast", new { ok, msg = ok ? $"Settings exported to {r.Path}" : $"Export failed: {_core.Settings.LastSaveError}" });
+                    }
+                }
+                break;
+
+            case "importConfig":
+                {
+                    var r = Dialog.FileOpen("json");
+                    if (r.IsOk)
+                    {
+                        var ok = AppSettings.ImportFrom(r.Path, out var err);
+                        if (ok) _core.SendToJS("configImported", new { });
+                        else _core.SendToJS("toast", new { ok = false, msg = $"Import failed: {err}" });
+                    }
+                }
+                break;
+
             case "forceFfcAll":
                 _ = Task.Run(ForceFfcAllAsync);
                 break;
@@ -558,7 +609,10 @@ public class AuthController
                         _core.Settings.CustomMusicPath = r.Path;
                         _core.Settings.Save();
                         _core.SendToJS("log", new { msg = $"[Music] Saved CustomMusicPath='{_core.Settings.CustomMusicPath}' saveError={_core.Settings.LastSaveError ?? "none"}", color = "sec" });
-                        _core.SendToJS("customMusicChanged", new { fileName = Path.GetFileName(r.Path), hasCustom = true });
+                        var payload = BuildCustomMusicPayload(r.Path);
+                        var sizeMb = new FileInfo(r.Path).Length / 1024.0 / 1024.0;
+                        _core.SendToJS("log", new { msg = $"[Music] Sending custom track to player ({sizeMb:F1} MB)", color = "sec" });
+                        _core.SendToJS("customMusicChanged", payload);
                     }
                 }
                 break;
@@ -566,7 +620,15 @@ public class AuthController
             case "resetCustomMusic":
                 _core.Settings.CustomMusicPath = "";
                 _core.Settings.Save();
-                _core.SendToJS("customMusicChanged", new { fileName = "", hasCustom = false });
+                _core.SendToJS("customMusicChanged", new { hasCustom = false, fileName = "" });
+                break;
+
+            // Sent once by the player on startup instead of it fetching an HTTP URL for the
+            // track — embedding the audio directly as a data URI sidesteps whatever was
+            // silently swallowing the old /custommusic fetch (never even reached the backend,
+            // per the request log showing zero hits on that route across full sessions).
+            case "getCustomMusicData":
+                _core.SendToJS("customMusicChanged", BuildCustomMusicPayload(_core.Settings.CustomMusicPath));
                 break;
 
             case "vrcLoadDashBg":
@@ -800,9 +862,6 @@ public class AuthController
                         if (!string.IsNullOrEmpty(avatarId))
                             _core.SendToJS("vrcAvatarSelected", new { avatarId });
 
-                        // Submit public avatar to avtrdb if enabled
-                        if (!string.IsNullOrEmpty(avatarId) && av?["releaseStatus"]?.ToString() == "public")
-                            _core.AvtrdbSubmit?.Invoke(avatarId);
                         if (!string.IsNullOrEmpty(avatarId))
                             _core.VrcndbSubmit?.Invoke(avatarId);
                     }
@@ -2188,15 +2247,8 @@ public class AuthController
             ImageCacheHelper.OptimizeEnabled = _core.Settings.ImgCacheOptimizeEnabled;
 
             // Fast Fetch Cache
+            _core.Settings.MusicVolume = Math.Clamp(data["musicVolume"]?.Value<double>() ?? 0.1, 0.0, 1.0);
             _core.Settings.FfcEnabled = data["ffcEnabled"]?.Value<bool>() ?? true;
-
-            // Avtrdb Support
-            _core.Settings.AvtrdbReportDeleted = data["avtrdbReportDeleted"]?.Value<bool>() ?? true;
-            _core.Settings.AvtrdbSubmitAvatars = data["avtrdbSubmitAvatars"]?.Value<bool>() ?? false;
-
-            // Avtr.icu Support
-            _core.Settings.AvtrIcuReportDeleted = data["avtrIcuReportDeleted"]?.Value<bool>() ?? true;
-            _core.Settings.AvtrIcuSubmitAvatars = data["avtrIcuSubmitAvatars"]?.Value<bool>() ?? false;
 
             // VRCNDb
             _core.Settings.VrcndbSubmitAvatars = data["vrcndbSubmitAvatars"]?.Value<bool>() ?? false;

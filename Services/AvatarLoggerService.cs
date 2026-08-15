@@ -591,11 +591,13 @@ public class AvatarLoggerService : IDisposable
     // VRChat's cache bundles are usually named "__data" (no extension) regardless of nesting
     // depth, but that's not universal across every setup. Blank AvlogCacheFileName auto-detects:
     // match any file in a cache leaf folder that isn't a known non-bundle sidecar
-    // ("__lock"/"__info"). If a user's setup has a distinguishing extension instead (e.g. their
-    // files end up named "*.l" or "*.data"), they can type just that extension — with or
-    // without the leading dot — and only files with that extension are matched. Either way, the
-    // file this finds is only ever a *source*: the delivered/archived copy is always renamed to
-    // "<avatar name>.vrca", never anything the user types here.
+    // ("__lock"/"__info"). A bare word typed here (e.g. "__data" or "l") is ambiguous — it could
+    // mean "match this exact filename" or "match this extension" — so both interpretations are
+    // tried and the results merged, rather than guessing one and silently matching nothing for
+    // the other (as a plain "__data" input used to, since "*.  __data" matches nothing on a real
+    // VRChat cache where the file's whole name is "__data" with no extension at all). Either way,
+    // the file this finds is only ever a *source*: the delivered/archived copy is always renamed
+    // to "<avatar name>.vrca", never anything the user types here.
     private static readonly HashSet<string> NonBundleSiblingNames =
         new(StringComparer.OrdinalIgnoreCase) { "__lock", "__info" };
 
@@ -603,19 +605,23 @@ public class AvatarLoggerService : IDisposable
     {
         if (!Directory.Exists(cacheDir)) yield break;
         var autoDetect = string.IsNullOrWhiteSpace(filter);
-        string pattern;
-        if (autoDetect) pattern = "*";
-        else if (filter.Contains('*') || filter.Contains('?')) pattern = filter; // already a full glob pattern
-        else pattern = "*." + filter.TrimStart('.'); // treat bare input as a file extension
 
-        IEnumerable<string> matches;
-        try { matches = Directory.EnumerateFiles(cacheDir, pattern, SearchOption.AllDirectories); }
-        catch { yield break; }
-        foreach (var m in matches)
+        var patterns = autoDetect ? new[] { "*" }
+            : (filter.Contains('*') || filter.Contains('?')) ? new[] { filter } // already a full glob pattern
+            : new[] { filter, "*." + filter.TrimStart('.') }; // bare word: try as exact name AND as extension
+
+        var seen = new HashSet<string>();
+        foreach (var pattern in patterns)
         {
-            if (autoDetect && NonBundleSiblingNames.Contains(Path.GetFileName(m)))
-                continue;
-            yield return m;
+            IEnumerable<string> matches;
+            try { matches = Directory.EnumerateFiles(cacheDir, pattern, SearchOption.AllDirectories); }
+            catch { continue; }
+            foreach (var m in matches)
+            {
+                if (autoDetect && NonBundleSiblingNames.Contains(Path.GetFileName(m)))
+                    continue;
+                if (seen.Add(m)) yield return m;
+            }
         }
     }
 

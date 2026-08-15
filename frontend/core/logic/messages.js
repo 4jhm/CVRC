@@ -709,15 +709,6 @@ window.external.receiveMessage(rawMsg => {
             case 'vrcAvatarsDeleted':
                 _markDeletedAvatars(payload.ids || []);
                 break;
-            case 'avtrdbCollecting':
-                avtrdbCollecting(payload.count);
-                break;
-            case 'avtrdbReport':
-                addAvtrdbReport(payload.count, payload.enqueued, payload.invalid, payload.ticket, payload.type, 'avtrdb');
-                break;
-            case 'avtrIcuReport':
-                addAvtrdbReport(payload.count, payload.count, 0, null, payload.type, 'avtricu');
-                break;
             case 'vrcndbReport':
                 if (typeof addVrcndbReport === 'function') addVrcndbReport(payload.count, payload.enqueued, payload.duplicates, payload.type);
                 break;
@@ -1075,6 +1066,9 @@ case 'vrcNews':
                 break;
             case 'avlogCachePathResult':
                 if (typeof handleAvlogCachePathResult === 'function') handleAvlogCachePathResult(payload);
+                break;
+            case 'configImported':
+                if (typeof handleConfigImported === 'function') handleConfigImported();
                 break;
             case 'emojiSheetSaved':
                 if (typeof onEmojiSheetSaved === 'function') onEmojiSheetSaved(payload);

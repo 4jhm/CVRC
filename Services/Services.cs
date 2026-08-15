@@ -296,6 +296,7 @@ public class AppSettings
     public string CustomFont { get; set; } = "";
     public int FontSizeOffset { get; set; } = 0;
     public string CustomMusicPath { get; set; } = "";
+    public double MusicVolume { get; set; } = 0.1;
     public List<string> ActiveCustomThemes { get; set; } = ["VRCNext v2 Preview"];
     public int GuiZoom { get; set; } = 100;
     public string DashBgPath { get; set; } = "";
@@ -590,14 +591,6 @@ public class AppSettings
     public int  VroWaterHours   { get; set; } = 1;
     public int  VroWaterMinutes { get; set; } = 0;
 
-    // Avtrdb Support — report deleted avatars to help clean the database
-    public bool AvtrdbReportDeleted { get; set; } = true;
-    public bool AvtrdbSubmitAvatars { get; set; }
-
-    // Avtr.icu Support
-    public bool AvtrIcuReportDeleted { get; set; } = true;
-    public bool AvtrIcuSubmitAvatars { get; set; }
-
     // VRCNDb (db.vrcnext.com) — default off
     public bool VrcndbSubmitAvatars { get; set; }
     public bool VrcndbReportDeleted { get; set; }
@@ -830,6 +823,42 @@ public class AppSettings
             LastSaveError = null;
         }
         catch (Exception ex) { LastSaveError = ex.Message; }
+    }
+
+    // Exports the live settings file (accounts, Avatar Logger config, everything in this
+    // class) to a location the user picked, so it survives a reset even if it's stored on a
+    // different drive/cloud folder/USB stick entirely outside %AppData%. Saves first so nothing
+    // recently changed is missed. DPAPI-encrypted credential fields travel along encrypted but
+    // will only decrypt again on the same Windows user profile that exported them — that's fine,
+    // since re-logging in after importing on a fresh profile is expected either way.
+    public bool ExportTo(string destPath)
+    {
+        try
+        {
+            Save();
+            File.Copy(FilePath, destPath, overwrite: true);
+            return true;
+        }
+        catch (Exception ex) { LastSaveError = ex.Message; return false; }
+    }
+
+    // Overwrites the live settings file with a previously-exported one. Takes effect on next
+    // launch — the caller is responsible for prompting a restart.
+    public static bool ImportFrom(string srcPath, out string? error)
+    {
+        error = null;
+        try
+        {
+            var json = File.ReadAllText(srcPath);
+            JsonConvert.DeserializeObject<AppSettings>(json,
+                new JsonSerializerSettings { ObjectCreationHandling = ObjectCreationHandling.Replace }); // sanity check
+            var dir = Path.GetDirectoryName(FilePath)!;
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+            File.Copy(srcPath, FilePath, overwrite: true);
+            VRCNext.Services.Helpers.SecretProtector.RestrictToOwner(FilePath);
+            return true;
+        }
+        catch (Exception ex) { error = ex.Message; return false; }
     }
 }
 

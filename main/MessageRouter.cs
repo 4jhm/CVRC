@@ -104,19 +104,6 @@ public partial class AppShell
 
     private readonly HashSet<string> _checkedAvatarIds = new();
     private readonly HashSet<string> _deletedAvatarIds = new();
-    private readonly HashSet<string> _reportedToAvtrdb = new();
-    private readonly List<string> _avtrdbReportQueue = new();
-    private System.Threading.Timer? _avtrdbReportTimer;
-    private readonly List<string> _avtrdbSubmitQueue = new();
-    private readonly HashSet<string> _avtrdbSubmittedIds = new();
-    private System.Threading.Timer? _avtrdbSubmitTimer;
-
-    private readonly HashSet<string> _reportedToAvtrIcu = new();
-    private readonly List<string> _avtrIcuReportQueue = new();
-    private System.Threading.Timer? _avtrIcuReportTimer;
-    private readonly List<string> _avtrIcuSubmitQueue = new();
-    private readonly HashSet<string> _avtrIcuSubmittedIds = new();
-    private System.Threading.Timer? _avtrIcuSubmitTimer;
 
     private const string VrcndbBase = "https://db.vrcnext.com/api";
     private readonly List<string> _vrcndbSubmitQueue = new();
@@ -132,209 +119,6 @@ public partial class AppShell
         {
             _deletedAvatarIds.Add(id);
             _checkedAvatarIds.Add(id);
-        }
-    }
-
-    private void QueueAvtrdbReport(List<string> ids)
-    {
-        int added = 0;
-        lock (_avtrdbReportQueue)
-        {
-            foreach (var id in ids)
-                if (_reportedToAvtrdb.Add(id)) { _avtrdbReportQueue.Add(id); added++; }
-        }
-        if (added > 0)
-            Invoke(() => SendToJS("avtrdbCollecting", new { count = added }));
-        // Debounce: wait 60s for more IDs to accumulate, then send in one batch
-        _avtrdbReportTimer?.Dispose();
-        _avtrdbReportTimer = new System.Threading.Timer(_ => _ = Task.Run(FlushAvtrdbReportQueue), null, 60_000, Timeout.Infinite);
-    }
-
-    private async Task FlushAvtrdbReportQueue()
-    {
-        List<string> batch;
-        lock (_avtrdbReportQueue)
-        {
-            if (_avtrdbReportQueue.Count == 0) return;
-            batch = new List<string>(_avtrdbReportQueue);
-            _avtrdbReportQueue.Clear();
-        }
-        await SendToAvtrdb(batch, "deletion");
-    }
-
-    private void QueueAvtrdbSubmit(string avatarId)
-    {
-        if (!_settings.AvtrdbSubmitAvatars) return;
-        lock (_avtrdbSubmitQueue)
-        {
-            if (!_avtrdbSubmittedIds.Add(avatarId)) return;
-            _avtrdbSubmitQueue.Add(avatarId);
-        }
-        // Check if avatar already exists in avtrdb before submitting
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                var result = await _core.Avatars.SearchAvatarsAsync(avatarId, 1);
-                foreach (var a in result.Cast<JObject>())
-                {
-                    var vid = a["vrc_id"]?.ToString() ?? a["id"]?.ToString() ?? "";
-                    if (vid.StartsWith("avtr_")) QueueVrcndbSubmit(vid);
-                }
-                bool exists = result.Count > 0 && result.Any(a =>
-                    (a["vrc_id"]?.ToString() ?? a["id"]?.ToString() ?? "") == avatarId);
-                if (exists)
-                {
-                    lock (_avtrdbSubmitQueue) _avtrdbSubmitQueue.Remove(avatarId);
-                    return;
-                }
-                // Avatar not in avtrdb — keep in queue, debounce submit
-                Invoke(() => SendToJS("avtrdbCollecting", new { count = 0, submit = 1 }));
-                _avtrdbSubmitTimer?.Dispose();
-                _avtrdbSubmitTimer = new System.Threading.Timer(_ => _ = Task.Run(FlushAvtrdbSubmitQueue), null, 60_000, Timeout.Infinite);
-            }
-            catch (Exception ex)
-            {
-                lock (_avtrdbSubmitQueue)
-                {
-                    _avtrdbSubmittedIds.Remove(avatarId);
-                    _avtrdbSubmitQueue.Remove(avatarId);
-                }
-                CrashHandler.WriteEntry("QueueAvtrdbSubmit", ex);
-            }
-        });
-    }
-
-    private async Task FlushAvtrdbSubmitQueue()
-    {
-        List<string> batch;
-        lock (_avtrdbSubmitQueue)
-        {
-            if (_avtrdbSubmitQueue.Count == 0) return;
-            batch = new List<string>(_avtrdbSubmitQueue);
-            _avtrdbSubmitQueue.Clear();
-        }
-        await SendToAvtrdb(batch, "submit");
-    }
-
-    private async Task SendToAvtrdb(List<string> avatarIds, string reportType = "deletion")
-    {
-        try
-        {
-            using var client = new HttpClient();
-            client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
-            client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact;
-            client.Timeout = TimeSpan.FromSeconds(15);
-            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", AppInfo.UserAgent);
-            var userId = _vrcApi.CurrentUserId;
-            var payload = new { avatar_ids = avatarIds, attribution = string.IsNullOrEmpty(userId) ? null : userId };
-            var json = JsonConvert.SerializeObject(payload);
-            SendToJS("log", new { msg = $"[AVTRDB] SUB {reportType} x{avatarIds.Count}", color = "sec" });
-            var resp = await client.PostAsync("https://api.avtrdb.com/v3/avatar/ingest",
-                new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
-            var body = await resp.Content.ReadAsStringAsync();
-
-            if (resp.IsSuccessStatusCode)
-            {
-                var r = JObject.Parse(body);
-                var enqueued = r["avatars_enqueued"]?.Value<int>() ?? 0;
-                var invalid = r["invalid_ids"]?.Value<int>() ?? 0;
-                var ticket = r["ticket"]?.ToString() ?? "";
-                Invoke(() =>
-                {
-                    var label = reportType == "submit" ? "Submitted" : "Reported";
-                    SendToJS("log", new { msg = $"[avtrdb] {label} {avatarIds.Count} avatar(s) — {enqueued} enqueued, {invalid} invalid", color = "ok" });
-                    SendToJS("avtrdbReport", new { count = avatarIds.Count, enqueued, invalid, ticket, type = reportType });
-                });
-            }
-            else
-                Invoke(() => SendToJS("log", new { msg = $"[avtrdb] Failed to report: {(int)resp.StatusCode} {body[..Math.Min(200, body.Length)]}", color = "err" }));
-        }
-        catch (Exception ex)
-        {
-            Invoke(() => SendToJS("log", new { msg = $"[avtrdb] Error: {ex.Message}", color = "err" }));
-        }
-    }
-
-    private void QueueAvtrIcuReport(List<string> ids)
-    {
-        if (!_settings.AvtrIcuReportDeleted) return;
-        int added = 0;
-        lock (_avtrIcuReportQueue)
-        {
-            foreach (var id in ids)
-                if (_reportedToAvtrIcu.Add(id)) { _avtrIcuReportQueue.Add(id); added++; }
-        }
-        if (added > 0)
-        {
-            _avtrIcuReportTimer?.Dispose();
-            _avtrIcuReportTimer = new System.Threading.Timer(_ => _ = Task.Run(FlushAvtrIcuReportQueue), null, 60_000, Timeout.Infinite);
-        }
-    }
-
-    private async Task FlushAvtrIcuReportQueue()
-    {
-        List<string> batch;
-        lock (_avtrIcuReportQueue)
-        {
-            if (_avtrIcuReportQueue.Count == 0) return;
-            batch = new List<string>(_avtrIcuReportQueue);
-            _avtrIcuReportQueue.Clear();
-        }
-        await SendToAvtrIcu(batch, "deletion");
-    }
-
-    private void QueueAvtrIcuSubmit(string avatarId)
-    {
-        if (!_settings.AvtrIcuSubmitAvatars) return;
-        lock (_avtrIcuSubmitQueue)
-        {
-            if (!_avtrIcuSubmittedIds.Add(avatarId)) return;
-            _avtrIcuSubmitQueue.Add(avatarId);
-        }
-        _avtrIcuSubmitTimer?.Dispose();
-        _avtrIcuSubmitTimer = new System.Threading.Timer(_ => _ = Task.Run(FlushAvtrIcuSubmitQueue), null, 60_000, Timeout.Infinite);
-    }
-
-    private async Task FlushAvtrIcuSubmitQueue()
-    {
-        List<string> batch;
-        lock (_avtrIcuSubmitQueue)
-        {
-            if (_avtrIcuSubmitQueue.Count == 0) return;
-            batch = new List<string>(_avtrIcuSubmitQueue);
-            _avtrIcuSubmitQueue.Clear();
-        }
-        await SendToAvtrIcu(batch, "submit");
-    }
-
-    private async Task SendToAvtrIcu(List<string> avatarIds, string reportType = "deletion")
-    {
-        try
-        {
-            using var client = new HttpClient();
-            client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
-            client.DefaultVersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionOrLower;
-            client.Timeout = TimeSpan.FromSeconds(15);
-            client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", AppInfo.UserAgent);
-            var payload = avatarIds.Select(id => new { id }).ToArray();
-            var json = JsonConvert.SerializeObject(payload);
-            var resp = await client.PostAsync("https://avtr.icu/upload-bulk",
-                new StringContent(json, System.Text.Encoding.UTF8, "application/json"));
-            var body = await resp.Content.ReadAsStringAsync();
-            if (resp.IsSuccessStatusCode)
-                Invoke(() =>
-                {
-                    var label = reportType == "submit" ? "Submitted" : "Reported";
-                    SendToJS("log", new { msg = $"[avtr.icu] {label} {avatarIds.Count} avatar(s)", color = "ok" });
-                    SendToJS("avtrIcuReport", new { count = avatarIds.Count, type = reportType });
-                });
-            else
-                Invoke(() => SendToJS("log", new { msg = $"[avtr.icu] Failed: {(int)resp.StatusCode} {body[..Math.Min(200, body.Length)]}", color = "err" }));
-        }
-        catch (Exception ex)
-        {
-            Invoke(() => SendToJS("log", new { msg = $"[avtr.icu] Error: {ex.Message}", color = "err" }));
         }
     }
 
@@ -496,6 +280,8 @@ public partial class AppShell
                 case "dbOptimize":
                 case "dbBackup":
                 case "regBackup":
+                case "exportConfig":
+                case "importConfig":
                 case "forceFfcAll":
                 case "setupSaveLanguage":
                 case "setupSaveStartWithWindows":
@@ -622,6 +408,7 @@ public partial class AppShell
                 case "vrcRandomDashBg":
                 case "pickCustomMusic":
                 case "resetCustomMusic":
+                case "getCustomMusicData":
                     await _authCtrl.HandleMessage(action, msg);
                     break;
 
@@ -1344,11 +1131,6 @@ public partial class AppShell
                         {
                             Invoke(() => SendToJS("vrcAvatarsDeleted", new { ids = cachedDeleted }));
 
-                            // Queue cached deleted IDs for batched report to avtrdb
-                            if (_settings.AvtrdbReportDeleted)
-                                QueueAvtrdbReport(cachedDeleted);
-                            if (_settings.AvtrIcuReportDeleted)
-                                _ = Task.Run(() => QueueAvtrIcuReport(cachedDeleted));
                             if (_settings.VrcndbReportDeleted)
                                 QueueVrcndbRecheck(cachedDeleted);
                         }
@@ -1405,10 +1187,6 @@ public partial class AppShell
                                     AvtrdbCacheHelper.MarkDeletedBatch(deleted, "avtrdb");
                                     Invoke(() => SendToJS("vrcAvatarsDeleted", new { ids = deleted }));
 
-                                    if (_settings.AvtrdbReportDeleted)
-                                        QueueAvtrdbReport(deleted);
-                                    if (_settings.AvtrIcuReportDeleted)
-                                        _ = Task.Run(() => QueueAvtrIcuReport(deleted));
                                     if (_settings.VrcndbReportDeleted)
                                         QueueVrcndbRecheck(deleted);
                                 }

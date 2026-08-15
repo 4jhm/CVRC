@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
-APP_NAME="VRCNext"
-INSTALL_DIR="/opt/vrcnext"
-DESKTOP_FILE="$HOME/.local/share/applications/vrcnext.desktop"
-BINARY_NAME="VRCNext"
+APP_NAME="CVRC"
+INSTALL_DIR="/opt/cvrc"
+DESKTOP_FILE="$HOME/.local/share/applications/cvrc.desktop"
+BINARY_NAME="CVRC"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BINARY_PATH="$SCRIPT_DIR/$BINARY_NAME"
 
 if [ ! -f "$BINARY_PATH" ]; then
     echo "Error: $BINARY_NAME not found in $SCRIPT_DIR"
-    echo "Run this script from the same directory as the VRCNext binary."
+    echo "Run this script from the same directory as the CVRC binary."
     exit 1
 fi
 
@@ -73,13 +73,13 @@ mkdir -p "$(dirname "$DESKTOP_FILE")"
 cat > "$DESKTOP_FILE" <<EOF
 [Desktop Entry]
 Type=Application
-Name=VRCNext
+Name=CVRC
 Comment=VRChat companion app
 Exec=$INSTALL_DIR/$BINARY_NAME
 Icon=$ICON_PATH
 Terminal=false
 Categories=Game;Utility;
-StartupWMClass=VRCNext
+StartupWMClass=CVRC
 EOF
 chmod +x "$DESKTOP_FILE"
 
@@ -90,7 +90,7 @@ fi
 
 echo "[4/4] Done."
 echo ""
-echo "VRCNext installed to $INSTALL_DIR/$BINARY_NAME"
+echo "CVRC installed to $INSTALL_DIR/$BINARY_NAME"
 echo "You can launch it from your application menu or run:"
 echo "  $INSTALL_DIR/$BINARY_NAME"
 echo ""

@@ -203,7 +203,6 @@ public partial class AppShell
         _core.IsVrcRunning = RelayController.IsVrcRunning;
         _core.IsSteamVrRunning = RelayController.IsSteamVrRunning;
         _core.DispatchMessage = rawMsg => OnWebMessage(rawMsg);
-        _core.AvtrdbSubmit        = id => { QueueAvtrdbSubmit(id); QueueAvtrIcuSubmit(id); };
         _core.VrcndbSubmit        = id => QueueVrcndbSubmit(id);
         _core.PrefetchSharedContent = () => PrefetchSharedContentAsync();
 #if WINDOWS
@@ -1243,15 +1242,6 @@ public partial class AppShell
                     .FirstOrDefault();
                 if (!string.IsNullOrEmpty(fileParam) && File.Exists(fileParam))
                     await ServeFileAsync(ctx, fileParam);
-                else
-                    ctx.Response.StatusCode = 404;
-            }
-            else if (path == "/custommusic")
-            {
-                var exists = !string.IsNullOrEmpty(_settings.CustomMusicPath) && File.Exists(_settings.CustomMusicPath);
-                SendToJS("log", new { msg = $"[Music] /custommusic requested — CustomMusicPath='{_settings.CustomMusicPath}' exists={exists}", color = "sec" });
-                if (exists)
-                    await ServeFileAsync(ctx, _settings.CustomMusicPath);
                 else
                     ctx.Response.StatusCode = 404;
             }

@@ -155,5 +155,9 @@ This includes searches and avatar lookups.
 * Emoji Maker tool — converts a GIF/MP4/MOV/WebM clip into a VRChat animated emoji sprite sheet entirely client-side
 * OSC Radial Menu tool — paged radial control for avatar emotes and OSC parameters, on desktop and as a new Expressions tab in the VR wrist overlay
 * OSC avatar emotes and live avatar height/scale controls
+* Export / Import Settings (Settings → Data) — saves everything in the app (accounts, Avatar Logger config, all other settings) to a file you choose anywhere, and imports it back after a reset
+* Background Music now has a volume slider, and custom tracks are sent to the player directly instead of over a local HTTP fetch that could silently fail — picking your own track now reliably takes effect
+* Removed the Avtrdb/Avtr.icu "Community Support" report/submit toggles from Settings (searching avatars via those services in the Avatars tab is unaffected) — CVRC's own VRCNDb submission is untouched
+* Linux install script renamed `install_vrcnext.sh` → `install_cvrc.sh` and rebranded throughout; also fixed the Linux AppImage build script, which had been looking for a `VRCNext` binary that hasn't existed since the executable was renamed to `CVRC`
 * Background music with a custom track picker
 * Chatbox "Now Playing" media-source pinning and native typing indicator

@@ -286,6 +286,7 @@ function saveSettings() {
             imgCacheOptimizeEnabled: document.getElementById('setImgCacheOptimizeEnabled').checked,
             imgMemoryOptimizeEnabled: document.getElementById('setImgMemoryOptimizeEnabled')?.checked ?? true,
             vrcPlusOptimizeEnabled: document.getElementById('setVrcPlusOptimize')?.checked ?? true,
+            musicVolume: (parseInt(document.getElementById('setMusicVolume')?.value) ?? 10) / 100,
             ffcEnabled: document.getElementById('setFfcEnabled').checked,
             memoryTrimEnabled: document.getElementById('setMemoryTrimEnabled').checked,
             mediaFixEnabled: document.getElementById('setMediaFixEnabled')?.checked ?? true,
@@ -309,10 +310,6 @@ function saveSettings() {
             animationsEnabled:  document.getElementById('setPerfAnimations')?.checked   ?? true,
             blurEnabled:        document.getElementById('setPerfBlur')?.checked         ?? true,
             efficiencyMode:     document.getElementById('setPerfEfficiency')?.checked   ?? false,
-            avtrdbReportDeleted: document.getElementById('setAvtrdbReport').checked,
-            avtrdbSubmitAvatars: document.getElementById('setAvtrdbSubmit').checked,
-            avtrIcuReportDeleted: document.getElementById('setAvtrIcuReport').checked,
-            avtrIcuSubmitAvatars: document.getElementById('setAvtrIcuSubmit').checked,
             vrcndbSubmitAvatars: document.getElementById('setVrcndbSubmit').checked,
             vrcndbReportDeleted: document.getElementById('setVrcndbReport').checked,
             dashSectionOrder:  (typeof _dashLayout !== 'undefined') ? _dashLayout.order  : [],
@@ -550,6 +547,7 @@ function loadSettingsToUI(s) {
     applyCustomFont(s.CustomFont || s.customFont || '');
     applyFontSizeOffset(s.FontSizeOffset ?? s.fontSizeOffset ?? 0);
     if (typeof applyMusicSettingsUI === 'function') applyMusicSettingsUI(s.CustomMusicPath || s.customMusicPath || '');
+    if (typeof applyMusicVolumeUI === 'function') applyMusicVolumeUI(s.MusicVolume ?? s.musicVolume ?? 0.1);
     if (typeof applyVrcAccountLabels === 'function') applyVrcAccountLabels(s.VrcAccountLabels || s.vrcAccountLabels || []);
     sendToCS({ action: 'getSystemFonts' });
     renderFontGrid();
@@ -831,11 +829,6 @@ function loadSettingsToUI(s) {
     // Fast Fetch Cache
     document.getElementById('setFfcEnabled').checked = s.FfcEnabled ?? s.ffcEnabled ?? true;
 
-    // Avtrdb Support
-    document.getElementById('setAvtrdbReport').checked = s.AvtrdbReportDeleted ?? s.avtrdbReportDeleted ?? true;
-    document.getElementById('setAvtrdbSubmit').checked = s.AvtrdbSubmitAvatars ?? s.avtrdbSubmitAvatars ?? false;
-    document.getElementById('setAvtrIcuReport').checked = s.AvtrIcuReportDeleted ?? s.avtrIcuReportDeleted ?? true;
-    document.getElementById('setAvtrIcuSubmit').checked = s.AvtrIcuSubmitAvatars ?? s.avtrIcuSubmitAvatars ?? false;
     document.getElementById('setVrcndbSubmit').checked = s.VrcndbSubmitAvatars ?? s.vrcndbSubmitAvatars ?? false;
     document.getElementById('setVrcndbReport').checked = s.VrcndbReportDeleted ?? s.vrcndbReportDeleted ?? false;
 
@@ -1226,15 +1219,6 @@ function vrcxShowError(err) {
 
 // === Design Tabs ===
 
-// === Avtrdb Community Support ===
-
-function switchAvtrdbTab(tab, btn) {
-    document.getElementById('avtrdbTabSupport').style.display = tab === 'support' ? '' : 'none';
-    document.getElementById('avtrdbTabReports').style.display = tab === 'reports' ? '' : 'none';
-    btn.closest('.fd-tabs').querySelectorAll('.fd-tab').forEach(t => t.classList.remove('active'));
-    btn.classList.add('active');
-}
-
 // === VRCNDb ===
 
 function switchVrcndbTab(tab, btn) {
@@ -1316,95 +1300,8 @@ function confirmVrcndbConsent() {
     if (m) m.remove();
 }
 
-const _avtrdbReports = [];
-let _avtrdbCollecting = 0;
-let _avtrdbCollectTimer = null;
-let _avtrdbCollectEnd = 0;
-
-function avtrdbCollecting(count) {
-    _avtrdbCollecting += count;
-    // Reset 60s countdown on each new batch
-    _avtrdbCollectEnd = Date.now() + 60000;
-    if (!_avtrdbCollectTimer) {
-        _avtrdbCollectTimer = setInterval(() => {
-            renderAvtrdbReports();
-            if (Date.now() >= _avtrdbCollectEnd) {
-                clearInterval(_avtrdbCollectTimer);
-                _avtrdbCollectTimer = null;
-            }
-        }, 1000);
-    }
-    renderAvtrdbReports();
-}
-
-function addAvtrdbReport(count, enqueued, invalid, ticket, type, db) {
-    _avtrdbReports.push({ ts: Date.now(), count, enqueued, invalid, ticket, type: type || 'deletion', db: db || 'avtrdb' });
-    // Clear collecting state
-    _avtrdbCollecting = 0;
-    _avtrdbCollectEnd = 0;
-    if (_avtrdbCollectTimer) { clearInterval(_avtrdbCollectTimer); _avtrdbCollectTimer = null; }
-    renderAvtrdbReports();
-}
-
-function renderAvtrdbReports() {
-    const el = document.getElementById('avtrdbReportsList');
-    if (!el) return;
-
-    let html = '';
-
-    // Show collecting banner if active
-    if (_avtrdbCollecting > 0 && _avtrdbCollectEnd > Date.now()) {
-        const secsLeft = Math.max(0, Math.ceil((_avtrdbCollectEnd - Date.now()) / 1000));
-        html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(var(--accent-rgb,100,140,255),.12);border:1px solid rgba(var(--accent-rgb,100,140,255),.25);border-radius:8px;margin-bottom:10px;">
-            <span class="msi" style="font-size:18px;color:var(--accent);">hourglass_top</span>
-            <div style="flex:1;">
-                <div style="font-size:calc(12px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);">${t('settings.avtrdb.reports.collecting_title', 'Collecting Data')}</div>
-                <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:2px;">${tf('settings.avtrdb.reports.collecting_desc', { count: _avtrdbCollecting, seconds: secsLeft }, `${_avtrdbCollecting} deleted avatar(s) queued, sending in ${secsLeft}s`)}</div>
-            </div>
-        </div>`;
-    }
-
-    if (!_avtrdbReports.length && !html) {
-        el.innerHTML = `<div class="empty-msg">${t('settings.avtrdb.reports.empty', 'No reports sent yet this session.')}</div>`;
-        return;
-    }
-
-    html += _avtrdbReports.slice().reverse().map(r => {
-        const isDeletion = r.type === 'deletion';
-        const typeLabel = isDeletion
-            ? t('settings.avtrdb.reports.type.deletion', 'Mark for deletion')
-            : t('settings.avtrdb.reports.type.submitted', 'Submitted Avatar');
-        const typeColor = isDeletion ? 'var(--err)' : 'var(--ok)';
-        const typeIcon = isDeletion ? 'delete' : 'upload';
-        const time = fmtTimeSeconds(new Date(r.ts || Date.now()));
-        const summaryParts = [tf('settings.avtrdb.reports.enqueued', { count: r.enqueued }, `${r.enqueued} enqueued`)];
-        if (r.invalid > 0) {
-            summaryParts.push(tf('settings.avtrdb.reports.invalid', { count: r.invalid }, `${r.invalid} invalid`));
-        }
-        const isIcu = r.db === 'avtricu';
-        const dbBadge = isIcu
-            ? `<span class="vrcn-badge db-avtricu" style="font-size:calc(10px + var(--fs-off, 0px));flex-shrink:0;">Avtr.icu</span>`
-            : `<span class="vrcn-badge db-avtrdb" style="font-size:calc(10px + var(--fs-off, 0px));flex-shrink:0;">Avtrdb</span>`;
-        const ticketBtn = (!isIcu && r.ticket)
-            ? `<button class="vrcn-button-round" style="font-size:calc(11px + var(--fs-off, 0px));padding:4px 10px;" onclick="sendToCS({action:'openUrl',url:'https://avtrdb.com/check_ticket_status/${esc(r.ticket)}'})">
-            <span class="msi" style="font-size:13px;">open_in_new</span> ${t('settings.avtrdb.reports.ticket', 'Ticket')}
-        </button>`
-            : '';
-        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg-input);border-radius:8px;margin-bottom:6px;">
-        <span style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);white-space:nowrap;">${esc(time)}</span>
-        ${dbBadge}
-        <span class="vrcn-badge" style="font-size:calc(10px + var(--fs-off, 0px));color:${typeColor};flex-shrink:0;"><span class="msi" style="font-size:10px;">${typeIcon}</span> ${esc(typeLabel)}</span>
-        <span style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx1);flex:1;">${esc(summaryParts.join(', '))}</span>
-        ${ticketBtn}
-    </div>`;
-    }).join('');
-
-    el.innerHTML = html;
-}
-
 function rerenderSettingsTranslations() {
     renderFileList();
-    renderAvtrdbReports();
 
     const selectBtn = document.getElementById('vrcxSelectBtn');
     if (selectBtn && selectBtn.style.display !== 'none') {
@@ -1740,6 +1637,20 @@ function dbCreateBackup() {
     const btn = document.getElementById('btnDbBackup');
     if (btn) { btn.disabled = true; btn.textContent = 'Creating backup…'; }
     sendToCS({ action: 'dbBackup' });
+}
+
+function exportConfig() {
+    sendToCS({ action: 'exportConfig' });
+}
+
+function importConfig() {
+    sendToCS({ action: 'importConfig' });
+}
+
+function handleConfigImported() {
+    if (confirm(t('settings.configio.import_restart_confirm', 'Settings imported. Restart now to apply them?'))) {
+        sendToCS({ action: 'restartApp' });
+    }
 }
 
 function manualDbBackup() {

@@ -260,6 +260,11 @@
                             <button class="vrcn-button" onclick="pickCustomMusic()"><span class="msi" style="font-size:16px;">folder_open</span> <span data-i18n="settings.music.choose">Choose File</span></button>
                             <button class="vrcn-button" id="musicResetBtn" style="display:none;" onclick="resetCustomMusic()"><span class="msi" style="font-size:16px;">restart_alt</span> <span data-i18n="settings.music.reset">Reset to Default</span></button>
                         </div>
+                        <div class="cb-form-row" style="margin-top:12px;">
+                            <label data-i18n="settings.music.volume">Volume</label>
+                            <input type="range" id="setMusicVolume" min="0" max="100" step="1" value="10" style="flex:1;accent-color:var(--accent);" oninput="document.getElementById('musicVolumeVal').textContent=this.value+'%';setMusicVolumeLive(this.value);autoSave()">
+                            <span id="musicVolumeVal" style="min-width:38px;text-align:right;color:var(--tx2);font-size:calc(12px + var(--fs-off, 0px));">10%</span>
+                        </div>
                     </div>
 
                     <!-- THEMES -->
@@ -804,6 +809,16 @@
                         <div id="manualBackupResult" style="display:none;margin-top:10px;"></div>
                     </div>
 
+                    <!-- CONFIG EXPORT/IMPORT -->
+                    <div class="vrcn-panel-card" data-section="data" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">save</span> <span data-i18n="settings.configio.title">Export / Import Settings</span></div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.configio.desc">Save everything in this app — accounts, Avatar Logger config, and all other settings — to a file you choose, anywhere you like. If your settings ever reset, log in again and import that file to get everything else back.</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="vrcn-button" onclick="exportConfig()"><span class="msi" style="font-size:16px;">upload_file</span> <span data-i18n="settings.configio.export">Export Settings...</span></button>
+                            <button class="vrcn-button" onclick="importConfig()"><span class="msi" style="font-size:16px;">download</span> <span data-i18n="settings.configio.import">Import Settings...</span></button>
+                        </div>
+                    </div>
+
                     <!-- WATCH FOLDERS -->
                     <div class="vrcn-panel-card" data-section="vrchat" style="display:none;">
                         <div class="vrcn-panel-card-header"><span class="msi">folder_open</span> <span data-i18n="settings.watch_folders.title">Watch Folders</span></div>
@@ -975,38 +990,6 @@
                             <span id="dbOptProgressLabel" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:4px;display:block;">Analyzing…</span>
                         </div>
                         <div id="dbAnalysisResults" style="display:none;margin-top:14px;"></div>
-                    </div>
-
-                    <div class="vrcn-panel-card" data-section="community" style="display:none;">
-                        <div class="vrcn-panel-card-header"><span class="msi">database</span> <span data-i18n="settings.avtrdb.title">Avatar Avtrdb and Avtr.icu Community Support</span></div>
-                        <div class="fd-tabs" style="margin-top:10px;">
-                            <button class="fd-tab active" onclick="switchAvtrdbTab('support',this)" data-i18n="settings.avtrdb.tabs.support">Support</button>
-                            <button class="fd-tab" onclick="switchAvtrdbTab('reports',this)" data-i18n="settings.avtrdb.tabs.reports">Reports</button>
-                        </div>
-                        <div id="avtrdbTabSupport">
-                            <div class="set-desc" data-i18n="settings.avtrdb.support.deleted_desc">Help improve the avatar databases by reporting deleted avatars. When enabled, VRCNext will notify the respective database whenever you encounter a deleted or DMCA'd avatar, but only if that avatar exists in that database.</div>
-                            <div class="sf-toggle-row">
-                                <span data-i18n="settings.avtrdb.support.deleted_toggle">Report deleted avatars to Avtrdb</span>
-                                <label class="toggle"><input type="checkbox" id="setAvtrdbReport" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-                            </div>
-                            <div class="sf-toggle-row" style="margin-top:8px;">
-                                <span data-i18n="settings.avtrdb.support.deleted_toggle_icu">Report deleted avatars to Avtr.icu</span>
-                                <label class="toggle"><input type="checkbox" id="setAvtrIcuReport" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-                            </div>
-                            <div class="set-desc" style="margin-top:14px;" data-i18n="settings.avtrdb.support.submit_desc">Submit new public avatars you encounter in-game to the avatar databases. When you switch to an avatar that isn't indexed yet, VRCNext will automatically submit it. This helps expand the databases and makes more avatars discoverable for everyone.</div>
-                            <div class="sf-toggle-row">
-                                <span data-i18n="settings.avtrdb.support.submit_toggle">Submit new avatars to Avtrdb</span>
-                                <label class="toggle"><input type="checkbox" id="setAvtrdbSubmit" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-                            </div>
-                            <div class="sf-toggle-row" style="margin-top:8px;">
-                                <span data-i18n="settings.avtrdb.support.submit_toggle_icu">Submit new avatars to Avtr.icu</span>
-                                <label class="toggle"><input type="checkbox" id="setAvtrIcuSubmit" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-                            </div>
-                        </div>
-                        <div id="avtrdbTabReports" style="display:none;">
-                            <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.avtrdb.reports.desc">All reports sent to avatar databases during this session. Avtrdb reports include a ticket link to check status.</div>
-                            <div id="avtrdbReportsList"><div class="empty-msg" data-i18n="settings.avtrdb.reports.empty">No reports sent yet this session.</div></div>
-                        </div>
                     </div>
 
                     <div class="vrcn-panel-card" data-section="community" style="display:none;">
