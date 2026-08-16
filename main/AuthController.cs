@@ -24,6 +24,9 @@ public class AuthController
     private string _pending2faType = "totp";
     private bool _vrcDebugSetup;
     private string _lastAvatarName = "";
+    // Short-lived avtrdb resolution cache for AvatarFullyLoaded (name -> id/author/when), so the
+    // same public avatar seen on several players in a busy instance isn't re-searched every time.
+    private readonly Dictionary<string, (string? Id, string Author, DateTime When)> _nearbyAvatarCache = new();
     private string _lastVideoUrl = "";
     private DateTime _lastVideoUrlTime = DateTime.MinValue;
     private DateTime _readyAt = DateTime.MaxValue;
@@ -871,6 +874,59 @@ public class AuthController
         _core.LogWatcher.AvatarSeen += id =>
         {
             try { _core.VrcndbSubmit?.Invoke(id); } catch (Exception ex) { CrashHandler.WriteEntry("LogWatcher.AvatarSeen", ex); }
+        };
+        _core.LogWatcher.AvatarFullyLoaded += (wearerName, avatarName, authorName) =>
+        {
+            try
+            {
+                var myName = _core.VrcApi.CurrentUserRaw?["displayName"]?.ToString() ?? "";
+                if (string.IsNullOrEmpty(wearerName) || wearerName == myName) return; // self already covered by AvatarChanged
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        string? avatarId;
+                        string resolvedAuthor;
+                        if (_nearbyAvatarCache.TryGetValue(avatarName, out var cached) && (DateTime.UtcNow - cached.When) < TimeSpan.FromMinutes(10))
+                        {
+                            avatarId = cached.Id;
+                            resolvedAuthor = cached.Author;
+                        }
+                        else
+                        {
+                            avatarId = null;
+                            resolvedAuthor = authorName;
+                            var results = await _core.Avatars.SearchAvatarsAsync(avatarName);
+                            JObject? exact = null, byNameAuthor = null;
+                            foreach (var r in results.OfType<JObject>())
+                            {
+                                var rName = r["name"]?.ToString() ?? "";
+                                if (!string.Equals(rName, avatarName, StringComparison.OrdinalIgnoreCase)) continue;
+                                exact ??= r;
+                                var rAuthor = r["author"]?["name"]?.ToString() ?? "";
+                                if (!string.IsNullOrEmpty(authorName) && string.Equals(rAuthor, authorName, StringComparison.OrdinalIgnoreCase))
+                                    byNameAuthor = r;
+                            }
+                            var pick = byNameAuthor ?? exact;
+                            avatarId = pick?["vrc_id"]?.ToString() ?? pick?["id"]?.ToString();
+                            if (string.IsNullOrEmpty(resolvedAuthor)) resolvedAuthor = pick?["author"]?["name"]?.ToString() ?? "";
+                            _nearbyAvatarCache[avatarName] = (avatarId, resolvedAuthor, DateTime.UtcNow);
+                            if (_nearbyAvatarCache.Count > 500)
+                                foreach (var k in _nearbyAvatarCache.Where(kv => (DateTime.UtcNow - kv.Value.When) > TimeSpan.FromMinutes(10)).Select(kv => kv.Key).ToList())
+                                    _nearbyAvatarCache.Remove(k);
+                        }
+                        _core.SendToJS("vrcPlayerAvatarInfo", new
+                        {
+                            displayName = wearerName,
+                            avatarName,
+                            authorName = resolvedAuthor,
+                            avatarId = avatarId ?? "",
+                        });
+                    }
+                    catch (Exception ex) { CrashHandler.WriteEntry("LogWatcher.AvatarFullyLoaded.Async", ex); }
+                });
+            }
+            catch (Exception ex) { CrashHandler.WriteEntry("LogWatcher.AvatarFullyLoaded", ex); }
         };
         _core.LogWatcher.PrintSeen += printId =>
         {

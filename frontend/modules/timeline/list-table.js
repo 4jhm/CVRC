@@ -41,6 +41,7 @@ const TL_TABLE_DEFS = {
         { id: 'timer',    key: 'instance.table.timer',            fallback: 'Timer',        width: '100px', sort: 'timer' },
         { id: 'joined',   key: 'instance.table.joined',           fallback: 'Joined',       width: '100px', sort: 'joined' },
         { id: 'name',     key: 'instance.table.display_name',     fallback: 'Display Name', width: '',      sort: 'name' },
+        { id: 'avatar',   key: 'instance.table.avatar',           fallback: 'Avatar',       width: '220px', sort: 'avatar' },
         { id: 'rank',     key: 'instance.table.rank',             fallback: 'Rank',         width: '120px', sort: 'rank' },
         { id: 'status',   key: 'instance.table.status',           fallback: 'Status',       width: '160px', sort: 'status' },
         { id: 'age',      key: 'instance.table.age',              fallback: '18+',          width: '70px',  sort: 'age' },

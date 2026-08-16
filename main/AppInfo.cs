@@ -2,7 +2,7 @@
 
 public static class AppInfo
 {
-    public const string Version = "2026.41.16";
+    public const string Version = "2026.41.17";
     public const string ContactEmail = "4jhmweb@gmail.com";
     public const string Website = "github.com/4jhm/CVRC";
     public const string UserAgent = $"CVRC/{Version} ({ContactEmail})";

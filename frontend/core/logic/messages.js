@@ -1007,6 +1007,9 @@ case 'vrcNews':
             case 'vrcCurrentInstance':
                 renderCurrentInstance(payload);
                 break;
+            case 'vrcPlayerAvatarInfo':
+                if (typeof onPlayerAvatarInfo === 'function') onPlayerAvatarInfo(payload);
+                break;
             case 'vrcWorldJoined':
                 // Fired immediately when log watcher detects a new instance join
                 requestInstanceInfo();

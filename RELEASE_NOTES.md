@@ -258,3 +258,4 @@ This includes searches and avatar lookups.
 * Linux install script renamed `install_vrcnext.sh` → `install_cvrc.sh` and rebranded throughout; also fixed the Linux AppImage build script, which had been looking for a `VRCNext` binary that hasn't existed since the executable was renamed to `CVRC`
 * Background music with a custom track picker
 * Chatbox "Now Playing" media-source pinning and native typing indicator
+* People → Instance tab now shows a live **Avatar** column — the name and creator of the avatar each nearby player is wearing, filled in the moment VRChat finishes loading it. Once resolved you can **Wear** it yourself (VRChat's own avatar-select API, same as pedestal avatars) or **Favorite** it, straight from the row

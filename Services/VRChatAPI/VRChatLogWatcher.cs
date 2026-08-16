@@ -22,6 +22,11 @@ public class VRChatLogWatcher : IDisposable
     public readonly record struct GameLogLine(string Type, string Timestamp, string Message, string Detail);
 
     private readonly Dictionary<string, PlayerInfo> _players = new();
+    // Recent "Switching X to avatar Y" sightings, used to correlate the later "Unpacking Avatar"
+    // line (which carries the avatar name but not the wearer) back to a player. Same approach as
+    // AvatarLoggerService._recentSwitches, kept separate since that service isn't always running.
+    private readonly List<(DateTime When, string Wearer, string Avatar)> _recentAvatarSwitches = new();
+    private static readonly TimeSpan AvatarWearerWindow = TimeSpan.FromSeconds(30);
     // Append-only log of every OnPlayerJoined / OnPlayerLeft since the last room change.
     // Captured during catchUp AND live, used as source-of-truth for restart reconciliation.
     private readonly List<PlayerEvent> _playerEventLog = new();
@@ -56,6 +61,9 @@ public class VRChatLogWatcher : IDisposable
     public event Action<string, string, bool>? PlayerModerated;
     public event Action<string>? AvatarSeen;
     public event Action<string>? PrintSeen;
+    // Fires once an avatar has actually finished downloading/unpacking (not just "switch initiated"),
+    // for ANY player including yourself. Args: wearer display name, avatar name, author name (may be "").
+    public event Action<string, string, string>? AvatarFullyLoaded;
 
     public event Action<GameLogLine>? GameLogEntry;
 
@@ -101,6 +109,8 @@ public class VRChatLogWatcher : IDisposable
         @"Instance closed: (wrld_[^\s]+)", RegexOptions.Compiled);
     private static readonly Regex RxAvatarSwitch = new(
         @"Switching (.+?) to avatar (.+)$", RegexOptions.Compiled);
+    private static readonly Regex RxAvatarUnpack = new(
+        @"\[AssetBundleDownloadManager\]\s+\[\d+\]\s+Unpacking Avatar \((.+)\)\s*$", RegexOptions.Compiled);
     private static readonly Regex RxVideoUrl = new(
         @"(?:Attempting to resolve|Resolving) URL '([^']+)'", RegexOptions.Compiled);
     private static readonly Regex RxRoomEnter = new(
@@ -507,8 +517,39 @@ public class VRChatLogWatcher : IDisposable
         if (line.Contains("Switching ") && line.Contains(" to avatar "))
         {
             var m = RxAvatarSwitch.Match(line);
-            if (m.Success && !catchUp)
-                AvatarChanged?.Invoke(m.Groups[1].Value.Trim(), m.Groups[2].Value.Trim());
+            if (m.Success)
+            {
+                var wearer = m.Groups[1].Value.Trim();
+                var avatar = m.Groups[2].Value.Trim();
+                if (!catchUp)
+                {
+                    AvatarChanged?.Invoke(wearer, avatar);
+                    _recentAvatarSwitches.Add((ParseLogTimestamp(line), wearer, avatar));
+                    if (_recentAvatarSwitches.Count > 200) _recentAvatarSwitches.RemoveRange(0, 100);
+                }
+            }
+            return;
+        }
+
+        if (line.Contains("[AssetBundleDownloadManager]") && line.Contains("Unpacking Avatar ("))
+        {
+            var m = RxAvatarUnpack.Match(line);
+            if (m.Success && !catchUp && AvatarFullyLoaded != null)
+            {
+                var inner = m.Groups[1].Value;
+                var byIdx = inner.LastIndexOf(" by ", StringComparison.Ordinal);
+                var avatarName = byIdx >= 0 ? inner[..byIdx].Trim() : inner.Trim();
+                var authorName = byIdx >= 0 ? inner[(byIdx + 4)..].Trim() : "";
+                var when = ParseLogTimestamp(line);
+                string? wearer = null;
+                for (int i = _recentAvatarSwitches.Count - 1; i >= 0; i--)
+                {
+                    var (ts, player, avatar) = _recentAvatarSwitches[i];
+                    if (avatar == avatarName && (when - ts).Duration() <= AvatarWearerWindow) { wearer = player; break; }
+                }
+                if (!string.IsNullOrEmpty(wearer))
+                    AvatarFullyLoaded.Invoke(wearer, avatarName, authorName);
+            }
             return;
         }
 

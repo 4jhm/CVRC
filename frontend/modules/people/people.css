@@ -205,6 +205,39 @@
 }
 .pl-num { color: var(--tx2); }
 .pl-date { white-space: nowrap; color: var(--tx2); }
+.pl-avatar-cell { display: flex !important; align-items: center; gap: 8px; min-width: 0; }
+.pl-avatar-text { flex: 1; min-width: 0; }
+.pl-avatar-name {
+    font-weight: 600;
+    color: var(--tx1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pl-avatar-author {
+    font-size: calc(10px + var(--fs-off, 0px));
+    color: var(--tx3);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.pl-avatar-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.pl-avatar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: var(--tx3);
+    cursor: pointer;
+    padding: 0;
+    transition: background .12s, color .12s;
+}
+.pl-avatar-btn:hover { background: var(--bg-hover); color: var(--accent); }
+.pl-avatar-btn .msi { font-size: 15px; }
 
 #instancePlayersGrid {
     flex: 1;

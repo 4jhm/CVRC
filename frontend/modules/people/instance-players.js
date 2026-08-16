@@ -5,9 +5,28 @@ function _ipActive() {
     return !!(tab && tab.classList.contains('active') && peopleFilter === 'instance');
 }
 
+// Avatar name/author/id per nearby player, keyed by lowercased display name. Populated live as
+// VRChat finishes loading each player's avatar (backend: VRChatLogWatcher.AvatarFullyLoaded).
+// Not part of currentInstanceData since that gets rebuilt wholesale on each poll — this survives it.
+let _ipAvatarInfo = {};
+let _ipAvatarInfoLoc = null;
+
+function onPlayerAvatarInfo(payload) {
+    if (!payload || !payload.displayName) return;
+    const data = (typeof currentInstanceData !== 'undefined') ? currentInstanceData : null;
+    if (data && data.location !== _ipAvatarInfoLoc) { _ipAvatarInfo = {}; _ipAvatarInfoLoc = data.location; }
+    _ipAvatarInfo[payload.displayName.toLowerCase()] = {
+        avatarName: payload.avatarName || '',
+        authorName: payload.authorName || '',
+        avatarId: payload.avatarId || '',
+    };
+    if (_ipActive()) renderInstancePlayers();
+}
+
 function _ipUsers() {
     const data = (typeof currentInstanceData !== 'undefined') ? currentInstanceData : null;
     if (!data || data.empty || data.error) return { data: null, users: [] };
+    if (data.location !== _ipAvatarInfoLoc) { _ipAvatarInfo = {}; _ipAvatarInfoLoc = data.location; }
 
     let users = (data.users || []).slice();
     if (users.length === 0 && data.location) {
@@ -28,7 +47,8 @@ function _ipUsers() {
         data,
         users: users.map(u => {
             const friend = (u.id && byId[u.id]) || (u.displayName && byName[(u.displayName || '').toLowerCase()]) || null;
-            return { ...u, _friend: friend };
+            const avatar = (u.displayName && _ipAvatarInfo[u.displayName.toLowerCase()]) || null;
+            return { ...u, _friend: friend, _avatar: avatar };
         }),
     };
 }
@@ -38,6 +58,7 @@ function _ipValue(u, field) {
     switch (field) {
         case 'timer':
         case 'joined':   return u.joinedAt || 0;
+        case 'avatar':   return (u._avatar?.avatarName || '').toLowerCase();
         case 'rank':     return _PL_RANK_ORDER.indexOf(getTrustRank((f?.tags?.length ? f.tags : u.tags) || [])?.cls || '');
         case 'status':   return (f?.status || u.status || '').toLowerCase();
         case 'age':      return (f?.ageVerificationStatus || u.ageVerificationStatus) === '18+' ? 2 : ((f?.ageVerified || u.ageVerified) ? 1 : 0);
@@ -51,6 +72,25 @@ function _ipValue(u, field) {
         case 'lastseen':  return u.lastSeen || '';
         default:         return (u.displayName || '').toLowerCase();
     }
+}
+
+// Renders the avatar name/author + Wear/Favorite actions for a resolved nearby-player avatar.
+// avatarId is only known once the name has matched an indexed public avatar on avtrdb — until
+// then (or for a private/unlisted avatar) just the name/author show, with no action buttons.
+function _plAvatarInfoCell(info, isSelf) {
+    if (!info || !info.avatarName) return '';
+    const name = esc(info.avatarName);
+    const author = info.authorName
+        ? `<div class="pl-avatar-author">${esc(t('instance.avatar.by', 'by'))} ${esc(info.authorName)}</div>` : '';
+    let actions = '';
+    if (info.avatarId && !isSelf) {
+        const aid = jsq(info.avatarId);
+        actions = `<div class="pl-avatar-actions">
+            <button type="button" class="pl-avatar-btn" title="${esc(t('instance.avatar.wear', 'Wear this avatar'))}" onclick="event.stopPropagation();sendToCS({action:'vrcSelectAvatar',avatarId:'${aid}'})"><span class="msi">checkroom</span></button>
+            <button type="button" class="pl-avatar-btn" title="${esc(t('instance.avatar.favorite', 'Add to favorites'))}" onclick="event.stopPropagation();if(typeof openAvFavPicker==='function')openAvFavPicker('${aid}',this)"><span class="msi">star</span></button>
+        </div>`;
+    }
+    return `<div class="pl-avatar-text"><div class="pl-avatar-name" title="${name}">${name}</div>${author}</div>${actions}`;
 }
 
 function buildInstancePlayersHtml(users, iStart, iTotal, now) {
@@ -97,6 +137,7 @@ function buildInstancePlayersHtml(users, iStart, iTotal, now) {
             timer:    `<td class="pl-date">${u.joinedAt ? esc(formatInstanceTimer(u.joinedAt, now)) : ''}</td>`,
             joined:   `<td class="pl-date">${u.joinedAt ? esc(fmtTime(new Date(u.joinedAt))) : ''}</td>`,
             name:     `<td class="pl-name">${esc(displayName)}</td>`,
+            avatar:   `<td class="pl-avatar-cell">${_plAvatarInfoCell(u._avatar, isSelf)}</td>`,
             rank:     `<td>${rank ? `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>` : ''}</td>`,
             status:   `<td class="pl-status">${status ? `<span class="vrc-status-dot ${statusDotClass(status)}"></span><span class="pl-status-txt">${esc(statusDesc || statusLabel(status))}</span>` : ''}</td>`,
             age:      `<td>${is18 ? `<span class="vrcn-badge ip-age">18+</span>` : (ageVerified ? `<span class="vrcn-badge ip-age">Verified</span>` : '')}</td>`,
