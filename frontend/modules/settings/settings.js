@@ -548,7 +548,10 @@ function loadSettingsToUI(s) {
     applyFontSizeOffset(s.FontSizeOffset ?? s.fontSizeOffset ?? 0);
     if (typeof applyMusicSettingsUI === 'function') applyMusicSettingsUI(s.CustomMusicPath || s.customMusicPath || '');
     if (typeof applyMusicVolumeUI === 'function') applyMusicVolumeUI(s.MusicVolume ?? s.musicVolume ?? 0.1);
-    if (typeof applyVrcAccountLabels === 'function') applyVrcAccountLabels(s.VrcAccountLabels || s.vrcAccountLabels || []);
+    if (typeof applyVrcAccountLabels === 'function') applyVrcAccountLabels(
+        s.VrcAccountLabels || s.vrcAccountLabels || [],
+        s.VrcAccountExePaths || s.vrcAccountExePaths || [],
+        s.VrcAccountOfflineMode || s.vrcAccountOfflineMode || []);
     sendToCS({ action: 'getSystemFonts' });
     renderFontGrid();
     sendToCS({ action: 'getCursorFiles' });

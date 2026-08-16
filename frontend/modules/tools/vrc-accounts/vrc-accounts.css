@@ -2,7 +2,7 @@
 
 .vrca-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
     gap: 12px;
 }
 
@@ -36,4 +36,30 @@
 .vrca-launch-btn.vrca-launching {
     opacity: .6;
     pointer-events: none;
+}
+
+.vrca-path-row {
+    display: flex;
+    gap: 6px;
+}
+
+.vrca-path-input {
+    flex: 1;
+    min-width: 0;
+    box-sizing: border-box;
+    font-size: calc(11px + var(--fs-off, 0px));
+}
+
+.vrca-path-browse {
+    flex-shrink: 0;
+    padding: 6px 8px;
+}
+
+.vrca-offline-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: calc(11.5px + var(--fs-off, 0px));
+    color: var(--tx2);
 }

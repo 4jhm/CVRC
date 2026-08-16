@@ -277,21 +277,48 @@ function handleAvatarLoggerEvent(entry) {
     else avlogRenderFeed();
 }
 
+let _avlogHistoryEntries = [];
+let _avlogHistoryQuery = '';
+
 function handleAvatarLoggerHistory(data) {
+    _avlogHistoryEntries = (data.entries || []).slice().reverse();
+    _avlogRenderHistory();
+}
+
+function avlogHistorySearch(query) {
+    _avlogHistoryQuery = (query || '').trim().toLowerCase();
+    _avlogRenderHistory();
+}
+
+function _avlogRenderHistory() {
     const grid = document.getElementById('avlogHistoryGrid');
     if (!grid) return;
-    const entries = (data.entries || []).slice().reverse();
+
+    const q = _avlogHistoryQuery;
+    const entries = q
+        ? _avlogHistoryEntries.filter(e =>
+            (e.name || '').toLowerCase().includes(q) ||
+            (e.wearer || '').toLowerCase().includes(q))
+        : _avlogHistoryEntries;
+
     if (entries.length === 0) {
-        grid.innerHTML = `<div class="osc-empty">${esc(t('avlog.history.empty', 'No avatars logged yet.'))}</div>`;
+        grid.innerHTML = `<div class="osc-empty">${esc(q
+            ? t('avlog.history.no_matches', 'No logged avatars match your search.')
+            : t('avlog.history.empty', 'No avatars logged yet.'))}</div>`;
         return;
     }
     grid.innerHTML = entries.map(e => {
         const whenText = avlogFormatWhen(e.whenIso);
+        const sizeText = e.sizeMb != null ? e.sizeMb.toFixed(1) + ' MB' : null;
         return `
         <div class="avlog-history-card">
-            ${e.thumbUrl ? `<img class="avlog-history-thumb" src="${esc(e.thumbUrl)}" alt="">` : ''}
+            <div class="avlog-history-thumb-wrap">
+                ${e.thumbUrl ? `<img class="avlog-history-thumb" src="${esc(e.thumbUrl)}" alt="">` : '<div class="avlog-history-thumb-fallback"><span class="msi">checkroom</span></div>'}
+                ${sizeText ? `<div class="avlog-history-size-badge">${esc(sizeText)}</div>` : ''}
+            </div>
             <div class="avlog-history-name" title="${esc(e.name)}">${esc(e.name || '(unnamed avatar)')}</div>
             <div class="avlog-history-meta">${esc(e.author || '')}</div>
+            ${e.wearer ? `<div class="avlog-history-meta">${esc(t('avlog.row.worn_by', 'worn by'))} ${esc(e.wearer)}</div>` : ''}
             ${whenText ? `<div class="avlog-history-when" title="${esc(whenText)}"><span class="msi" style="font-size:11px;">schedule</span> ${esc(whenText)}</div>` : ''}
             ${e.downloadLink ? `<a class="vrcn-button" href="#" onclick="sendToCS({action:'avatarDbOpenLink', url:'${jsq(e.downloadLink)}'});return false;"><span class="msi" style="font-size:14px;">download</span> ${t('avdb.download', 'Download')}</a>` : ''}
         </div>
@@ -321,6 +348,7 @@ function rerenderAvatarLoggerTranslations() {
         ignorePeople: (document.getElementById('avlogIgnorePeople')?.value || '').split('\n').filter(Boolean),
     });
     avlogRenderFeed();
+    _avlogRenderHistory();
 }
 document.documentElement.addEventListener('languagechange', rerenderAvatarLoggerTranslations);
 

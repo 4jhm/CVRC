@@ -2753,6 +2753,9 @@ public partial class AppShell
                 case "vrcLaunchAndJoin":
                 case "vrcAccountsSaveLabel":
                 case "vrcAccountsLaunch":
+                case "vrcAccountsSavePath":
+                case "vrcAccountsBrowsePath":
+                case "vrcAccountsSaveOffline":
                     _relayCtrl.HandleMessage(action, msg);
                     break;
 

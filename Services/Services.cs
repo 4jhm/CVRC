@@ -314,6 +314,14 @@ public class AppSettings
     // Index N maps directly to VRChat's own "--profile=N" launch argument (a separate local login
     // session per slot) — independent of the Accounts/ActiveAccountId system above.
     public List<string> VrcAccountLabels { get; set; } = new();
+    // Per-slot overrides, index-aligned with VrcAccountLabels. Empty path = fall back to the
+    // global VrcPath / auto-detect, same chain the regular Play button uses.
+    public List<string> VrcAccountExePaths { get; set; } = new();
+    // Per-slot: if true, make sure the Steam client is running in offline mode (-offline) before
+    // launching that profile. Only takes effect when Steam isn't already running — an
+    // already-running Steam session can't be forced offline without restarting it, which would
+    // kick out every other Steam game/feature the user has open, so that's never done silently.
+    public List<bool> VrcAccountOfflineMode { get; set; } = new();
 
     // Legacy single-account fields migrated into Accounts on Load and cleared on Save.
     public string VrcUsername { get; set; } = "";

@@ -1052,6 +1052,9 @@ case 'vrcNews':
             case 'vrcAccountsLaunchResult':
                 if (typeof handleVrcAccountsLaunchResult === 'function') handleVrcAccountsLaunchResult(payload);
                 break;
+            case 'vrcAccountsPathResult':
+                if (typeof handleVrcAccountsPathResult === 'function') handleVrcAccountsPathResult(payload);
+                break;
             case 'avatarDbResult':
                 if (typeof handleAvatarDbResult === 'function') handleAvatarDbResult(payload);
                 break;

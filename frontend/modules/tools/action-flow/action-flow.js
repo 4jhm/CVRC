@@ -14,6 +14,7 @@ const COLOR_TRIGGER = '#c27dff';
 const COLOR_GAME    = '#2c4e8a';
 const COLOR_OTHER   = '#43c59e';
 const COLOR_INFO    = '#f0a14e';
+const COLOR_CONTROL = '#ffab19';
 
 const WORLD_CHANGE_DELAY_MS = 15 * 1000;
 const EVENT_TICK_MS = 5 * 1000;
@@ -89,6 +90,34 @@ let afConditions = {};         /* name -> current boolean value, persisted via b
 let afVrcGameRunning = false;  /* mirrored from backend every tick via afGetGameRunning IPC */
 let afConditionsSaveTimer = null;
 let afContext = { triggeringUser: null, triggerKind: null, notificationId: null };
+
+/* Trigger fires are queued and run strictly one at a time (not concurrently). This is what
+   makes af_wait safe: afContext is a single shared global read throughout execution, so two
+   overlapping runs (e.g. a second trigger firing while a first flow is mid-wait) would corrupt
+   each other's triggering-user/notification context if they ran interleaved. Queuing avoids
+   that entirely at the cost of later runs waiting for an in-progress one (including its waits)
+   to finish first. */
+let afRunQueue = [];
+let afRunQueueBusy = false;
+
+function afEnqueueRun(fn) {
+    afRunQueue.push(fn);
+    afDrainRunQueue();
+}
+
+async function afDrainRunQueue() {
+    if (afRunQueueBusy) return;
+    afRunQueueBusy = true;
+    try {
+        while (afRunQueue.length) {
+            const fn = afRunQueue.shift();
+            try { await fn(); }
+            catch (e) { afLog('err', (e && e.message) || String(e)); }
+        }
+    } finally {
+        afRunQueueBusy = false;
+    }
+}
 
 function afEnsureBlockly() {
     if (afBlocklyLoaded) return Promise.resolve();
@@ -682,6 +711,17 @@ function afDefineBlocks() {
         this.setTooltip(aft('game.close_vrchat_tooltip', 'Closes VRChat if it is running. Uses no VRChat API call.'));
     } };
 
+    B.Blocks['af_wait'] = { init() {
+        this.appendDummyInput()
+            .appendField(aft('control.wait', 'wait'))
+            .appendField(new B.FieldNumber(1, 0, 300, 0.1), 'SECONDS')
+            .appendField(aft('control.wait_seconds', 'seconds'));
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(COLOR_CONTROL);
+        this.setTooltip(aft('control.wait_tooltip', 'Pauses this flow for the given number of seconds, then continues to the next block. While waiting, other flows are held back too — flows run one at a time.'));
+    } };
+
     B.Blocks['af_send_notification_value'] = { init() {
         this.appendValueInput('VALUE').appendField(aft('action.send_notification', 'send notification'));
         this.setInputsInline(true);
@@ -758,6 +798,9 @@ function afToolbox() {
                 { kind: 'sep' },
                 { kind: 'block', type: 'af_get_condition' },
                 { kind: 'block', type: 'af_set_condition' },
+            ]},
+            { kind: 'category', name: aft('toolbox.control', 'Control'), colour: COLOR_CONTROL, contents: [
+                { kind: 'block', type: 'af_wait' },
             ]},
             { kind: 'category', name: aft('toolbox.time', 'Time'), colour: COLOR_TIME, contents: [
                 { kind: 'block', type: 'af_is_date' },
@@ -1533,17 +1576,19 @@ function afFireTrigger(flow, block, reason, triggeringUser, notificationId) {
         afLog('err', '[' + flow.name + '] ' + aftf('log.over_trigger_limit', { count: triggerCount, limit: TRIGGER_LIMIT }, 'over global trigger limit (' + triggerCount + '/' + TRIGGER_LIMIT + '). All triggers disabled until trimmed.'));
         return;
     }
-    const prevCtx = afContext;
     const triggerKind =
         block.type === 'af_trigger_invite_received'         ? 'invite' :
         block.type === 'af_trigger_invite_request_received' ? 'requestInvite' : null;
-    afContext = { triggeringUser: triggeringUser || null, triggerKind, notificationId: notificationId || null };
-    try {
-        afLog('info', '[' + flow.name + '] ' + aftf('log.trigger_fired', { reason }, 'trigger fired (' + reason + ')'));
-        afExecStatements(flow, afInputStatement(block, 'DO'));
-    } finally {
-        afContext = prevCtx;
-    }
+    afLog('info', '[' + flow.name + '] ' + aftf('log.trigger_fired', { reason }, 'trigger fired (' + reason + ')'));
+    afEnqueueRun(async () => {
+        const prevCtx = afContext;
+        afContext = { triggeringUser: triggeringUser || null, triggerKind, notificationId: notificationId || null };
+        try {
+            await afExecStatements(flow, afInputStatement(block, 'DO'));
+        } finally {
+            afContext = prevCtx;
+        }
+    });
 }
 
 function afLookupUser(id) {
@@ -1664,10 +1709,10 @@ function afExtractUserId(payload) {
     return payload.userId || payload.id || payload.senderUserId || (payload.user && payload.user.id) || null;
 }
 
-function afExecStatements(flow, block) {
+async function afExecStatements(flow, block) {
     let cur = block;
     while (cur) {
-        afExecAction(flow, cur);
+        await afExecAction(flow, cur);
         cur = cur.next?.block;
     }
 }
@@ -1713,16 +1758,22 @@ function afFriendInstanceInfo(friend) {
     };
 }
 
-function afExecAction(flow, block) {
+async function afExecAction(flow, block) {
     const f = block.fields || {};
     switch (block.type) {
         case 'af_if': {
-            if (afEvalValue(afInput(block, 'IF0'))) afExecStatements(flow, afInputStatement(block, 'DO0'));
+            if (afEvalValue(afInput(block, 'IF0'))) await afExecStatements(flow, afInputStatement(block, 'DO0'));
             return;
         }
         case 'af_if_else': {
             const branch = afEvalValue(afInput(block, 'IF0')) ? 'DO0' : 'ELSE';
-            afExecStatements(flow, afInputStatement(block, branch));
+            await afExecStatements(flow, afInputStatement(block, branch));
+            return;
+        }
+        case 'af_wait': {
+            const seconds = Math.max(0, Math.min(300, Number(f.SECONDS) || 0));
+            afLog('info', '[' + flow.name + '] ' + aftf('log.waiting', { seconds }, 'waiting ' + seconds + 's'));
+            await new Promise(resolve => setTimeout(resolve, seconds * 1000));
             return;
         }
         case 'af_set_condition': {

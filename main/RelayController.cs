@@ -267,6 +267,50 @@ public class RelayController : IDisposable
                     if (slot >= 0 && slot < 10) LaunchVRChatProfile(slot);
                 }
                 break;
+
+            case "vrcAccountsSavePath":
+                {
+                    var slot = msg["slot"]?.Value<int>() ?? -1;
+                    var path = msg["path"]?.ToString() ?? "";
+                    if (slot >= 0 && slot < 10)
+                    {
+                        var paths = GetVrcAccountExePaths();
+                        paths[slot] = path;
+                        _core.Settings.VrcAccountExePaths = paths;
+                        _core.Settings.Save();
+                    }
+                }
+                break;
+
+            case "vrcAccountsBrowsePath":
+                {
+                    var slot = msg["slot"]?.Value<int>() ?? -1;
+                    if (slot < 0 || slot >= 10) break;
+                    var r = NativeFileDialogSharp.Dialog.FileOpen("exe");
+                    if (r.IsOk)
+                    {
+                        var paths = GetVrcAccountExePaths();
+                        paths[slot] = r.Path;
+                        _core.Settings.VrcAccountExePaths = paths;
+                        _core.Settings.Save();
+                        _core.SendToJS("vrcAccountsPathResult", new { slot, path = r.Path });
+                    }
+                }
+                break;
+
+            case "vrcAccountsSaveOffline":
+                {
+                    var slot = msg["slot"]?.Value<int>() ?? -1;
+                    var offline = msg["offline"]?.Value<bool>() ?? false;
+                    if (slot >= 0 && slot < 10)
+                    {
+                        var flags = GetVrcAccountOfflineFlags();
+                        flags[slot] = offline;
+                        _core.Settings.VrcAccountOfflineMode = flags;
+                        _core.Settings.Save();
+                    }
+                }
+                break;
         }
     }
 
@@ -461,11 +505,48 @@ public class RelayController : IDisposable
         return labels;
     }
 
+    // Always exactly 10 entries — pads with "" (falls back to the global VrcPath/auto-detect).
+    private List<string> GetVrcAccountExePaths()
+    {
+        var paths = new List<string>(_core.Settings.VrcAccountExePaths ?? new List<string>());
+        while (paths.Count < 10) paths.Add("");
+        if (paths.Count > 10) paths = paths.Take(10).ToList();
+        return paths;
+    }
+
+    // Always exactly 10 entries — pads with false.
+    private List<bool> GetVrcAccountOfflineFlags()
+    {
+        var flags = new List<bool>(_core.Settings.VrcAccountOfflineMode ?? new List<bool>());
+        while (flags.Count < 10) flags.Add(false);
+        if (flags.Count > 10) flags = flags.Take(10).ToList();
+        return flags;
+    }
+
     // Launches a fresh, independent VRChat process on a specific "--profile=N" slot (0-9), each of
     // which VRChat treats as a fully separate local login session — this is what lets 10 buttons run
     // 10 concurrently logged-in accounts side by side. Always desktop mode: these are alt/bot
     // instances, not something you'd wear a headset for, and only one HMD session can be VR anyway.
     private void LaunchVRChatProfile(int slot)
+    {
+#if WINDOWS
+        var offlineFlags = GetVrcAccountOfflineFlags();
+        if (slot >= 0 && slot < offlineFlags.Count && offlineFlags[slot])
+        {
+            var labels0 = GetVrcAccountLabels();
+            var label0 = slot >= 0 && slot < labels0.Count ? labels0[slot] : $"Account {slot + 1}";
+            _ = Task.Run(async () =>
+            {
+                await EnsureSteamOfflineAsync(label0);
+                LaunchVRChatProfileCore(slot);
+            });
+            return;
+        }
+#endif
+        LaunchVRChatProfileCore(slot);
+    }
+
+    private void LaunchVRChatProfileCore(int slot)
     {
         var labels = GetVrcAccountLabels();
         var label = slot >= 0 && slot < labels.Count ? labels[slot] : $"Account {slot + 1}";
@@ -480,7 +561,10 @@ public class RelayController : IDisposable
             // the game exe directly (bypassing Steam's launcher) is the only way multiple
             // "--profile=N" sessions can run side by side — same approach community multi-account
             // launcher scripts use.
-            var vrcPath = _core.Settings.VrcPath;
+            var exePaths = GetVrcAccountExePaths();
+            var vrcPath = slot >= 0 && slot < exePaths.Count ? exePaths[slot] : "";
+            if (string.IsNullOrWhiteSpace(vrcPath) || !File.Exists(vrcPath))
+                vrcPath = _core.Settings.VrcPath;
             if (string.IsNullOrWhiteSpace(vrcPath) || !File.Exists(vrcPath))
                 vrcPath = AuthController.DetectVrcLaunchExe();
 
@@ -818,6 +902,37 @@ public class RelayController : IDisposable
             if (File.Exists(candidate)) return candidate;
         }
         return null;
+    }
+
+    // Starts Steam fresh in offline mode if it isn't already running. VRChat's own Steamworks
+    // auth still needs the Steam client process alive in the background even though we launch
+    // VRChat.exe directly (see LaunchVRChatProfileCore) — this just controls whether that
+    // background client is online or offline. If Steam is already running online, it is
+    // deliberately left alone rather than force-restarted, since that would kick out every other
+    // Steam game/feature the user currently has open.
+    private async Task EnsureSteamOfflineAsync(string label)
+    {
+        try
+        {
+            if (Process.GetProcessesByName("steam").Length > 0)
+            {
+                _core.SendToJS("log", new { msg = $"Steam is already running online — can't force offline mode for {label} without restarting Steam, so it was left as-is.", color = "sec" });
+                return;
+            }
+            var steamExe = FindSteamExe();
+            if (steamExe == null)
+            {
+                _core.SendToJS("log", new { msg = $"Offline mode requested for {label} but steam.exe could not be found.", color = "sec" });
+                return;
+            }
+            Process.Start(new ProcessStartInfo { FileName = steamExe, Arguments = "-offline", UseShellExecute = true });
+            _core.SendToJS("log", new { msg = $"Starting Steam in offline mode for {label}...", color = "sec" });
+            await Task.Delay(4000); // give Steam a moment to initialize before launching VRChat
+        }
+        catch (Exception ex)
+        {
+            _core.SendToJS("log", new { msg = $"Could not start Steam in offline mode: {ex.Message}", color = "err" });
+        }
     }
 #endif
 

@@ -157,6 +157,26 @@
     font-variant-numeric: tabular-nums;
 }
 
+.avlog-history-search-wrap {
+    position: relative;
+    margin-bottom: 12px;
+}
+
+.avlog-history-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: var(--tx3);
+    pointer-events: none;
+}
+
+.avlog-history-search {
+    width: 100%;
+    padding-left: 34px;
+}
+
 .avlog-history-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -179,12 +199,50 @@
     gap: 8px;
 }
 
+.avlog-history-thumb-wrap {
+    position: relative;
+    width: 100%;
+}
+
 .avlog-history-thumb {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
     border-radius: 8px;
     background: var(--bg-hover);
+    display: block;
+}
+
+.avlog-history-thumb-fallback {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    background: var(--bg-hover);
+    color: var(--tx3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Hidden until the card is hovered, then pops in clearly over the thumbnail — deliberately
+   not a native title tooltip, which is too easy to miss. */
+.avlog-history-size-badge {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    font-size: calc(15px + var(--fs-off, 0px));
+    font-weight: 700;
+    border-radius: 8px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .12s;
+}
+.avlog-history-card:hover .avlog-history-size-badge {
+    opacity: 1;
 }
 
 .avlog-history-name {

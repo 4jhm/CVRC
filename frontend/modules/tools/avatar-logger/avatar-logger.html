@@ -55,6 +55,10 @@
 
                     <div class="vrcn-panel-card">
                         <div class="vrcn-panel-card-header"><span class="msi" style="font-size:16px;">inventory_2</span> <span data-i18n="avlog.history.title">Database</span></div>
+                        <div class="avlog-history-search-wrap">
+                            <span class="msi avlog-history-search-icon">search</span>
+                            <input type="text" id="avlogHistorySearch" class="vrcn-edit-field avlog-history-search" placeholder="Search by avatar name or who wore it..." data-i18n-placeholder="avlog.history.search_placeholder" oninput="avlogHistorySearch(this.value)">
+                        </div>
                         <div class="avlog-history-grid" id="avlogHistoryGrid">
                             <div class="osc-empty" data-i18n="avlog.history.empty">No avatars logged yet.</div>
                         </div>
