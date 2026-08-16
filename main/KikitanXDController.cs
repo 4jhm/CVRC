@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using VRCNext.Services;
+using VRCNext.Services.Helpers;
 using VRCNext.Services.KikitanXD;
 
 namespace VRCNext;
@@ -17,6 +18,36 @@ public class KikitanXDController : IDisposable
     {
         _core = core;
         _settings = KikitanXDSettings.Load();
+        MigrateDeviceSelections();
+    }
+
+    private AudioSelection InputSelection => AudioSelection.From(_settings.InputDeviceId, _settings.InputDeviceName);
+    private AudioSelection TtsSelection   => AudioSelection.From(_settings.TtsDeviceId, _settings.TtsDeviceName);
+
+    private void MigrateDeviceSelections()
+    {
+        var changed = false;
+        var inSel = AudioDeviceManager.TryMigrateLegacy(true, InputSelection);
+        if (inSel.Mode == AudioSelectionMode.Endpoint && _settings.InputDeviceId.Length == 0)
+        {
+            _settings.InputDeviceId = inSel.EndpointId;
+            _settings.InputDeviceName = inSel.DisplayName;
+            changed = true;
+        }
+        var ttsSel = AudioDeviceManager.TryMigrateLegacy(false, TtsSelection);
+        if (ttsSel.Mode == AudioSelectionMode.Endpoint && _settings.TtsDeviceId.Length == 0)
+        {
+            _settings.TtsDeviceId = ttsSel.EndpointId;
+            _settings.TtsDeviceName = ttsSel.DisplayName;
+            changed = true;
+        }
+        if (changed) _settings.Save();
+    }
+
+    private static void ApplyDeviceSelection(JObject msg, string idKey, string nameKey, bool input, Action<string, string> store, string currentName)
+    {
+        if (AudioDeviceManager.TryReadSelectionFromMessage(msg[idKey], msg[nameKey]?.ToString(), input, currentName, out var id, out var name))
+            store(id, name);
     }
 
     public void HandleMessage(string action, JObject msg)
@@ -25,11 +56,12 @@ public class KikitanXDController : IDisposable
         {
             case "kxdGetDevices":
             {
-                var devices = KikitanXDService.GetInputDevices();
+                var inputSel = InputSelection;
+                var ttsSel   = TtsSelection;
                 _core.SendToJS("kxdDevices", new
                 {
-                    devices,
-                    savedIndex = _settings.InputDeviceIndex,
+                    devices = AudioDeviceManager.ListInputs().Select(d => new { id = d.Id, name = d.Name }).ToArray(),
+                    input = new { mode = inputSel.ModeString, id = inputSel.EndpointId, name = inputSel.DisplayName, available = AudioDeviceManager.IsAvailable(true, inputSel) },
                     apiKey = _settings.ApiKey,
                     sourceLang = _settings.SourceLang,
                     targetLang = _settings.TargetLang,
@@ -45,11 +77,11 @@ public class KikitanXDController : IDisposable
                     model = _settings.Model,
                     googleApiKey = _settings.GoogleApiKey,
                     ttsEnabled = _settings.TtsEnabled,
-                    ttsDevice = _settings.TtsDevice,
+                    tts = new { mode = ttsSel.ModeString, id = ttsSel.EndpointId, name = ttsSel.DisplayName, available = AudioDeviceManager.IsAvailable(false, ttsSel) },
                     ttsVoice = _settings.TtsVoice,
                     ttsEngine = _settings.TtsEngine,
                     ttsRate = _settings.TtsRate,
-                    ttsDevices = VRCNext.Services.Helpers.TtsService.GetOutputDevices(),
+                    ttsDevices = AudioDeviceManager.ListOutputs().Select(d => new { id = d.Id, name = d.Name }).ToArray(),
                     ttsVoices = VRCNext.Services.Helpers.TtsService.GetSapiVoices()
                 });
                 break;
@@ -57,7 +89,7 @@ public class KikitanXDController : IDisposable
 
             case "kxdStart":
             {
-                if (msg["deviceIndex"]?.Value<int?>() is int di0) { _settings.InputDeviceIndex = di0; _settings.InputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.InputNameAt(di0); }
+                ApplyDeviceSelection(msg, "deviceId", "deviceName", true, (id, name) => { _settings.InputDeviceId = id; _settings.InputDeviceName = name; }, _settings.InputDeviceName);
                 if (msg["apiKey"] is JToken ak0) _settings.ApiKey = ak0.ToString();
                 if (msg["googleApiKey"] is JToken gk0) _settings.GoogleApiKey = gk0.ToString();
                 if (msg["sourceLang"] is JToken sl0) _settings.SourceLang = sl0.ToString();
@@ -95,7 +127,7 @@ public class KikitanXDController : IDisposable
 
             case "kxdSaveSettings":
             {
-                if (msg["deviceIndex"]?.Value<int?>() is int di) { _settings.InputDeviceIndex = di; _settings.InputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.InputNameAt(di); }
+                ApplyDeviceSelection(msg, "deviceId", "deviceName", true, (id, name) => { _settings.InputDeviceId = id; _settings.InputDeviceName = name; }, _settings.InputDeviceName);
                 if (msg["apiKey"] is JToken ak) _settings.ApiKey = ak.ToString();
                 if (msg["googleApiKey"] is JToken gk) _settings.GoogleApiKey = gk.ToString();
                 if (msg["model"] is JToken md) _settings.Model = md.ToString();
@@ -111,7 +143,7 @@ public class KikitanXDController : IDisposable
                 if (msg["blockWords"] is JToken bw) _settings.BlockedWords = bw.ToObject<List<string>>() ?? new();
                 if (msg["blockSentences"] is JToken bs) _settings.BlockedSentences = bs.ToObject<List<string>>() ?? new();
                 if (msg["ttsEnabled"] is JToken tts) _settings.TtsEnabled = tts.Value<bool>();
-                if (msg["ttsDevice"]?.Value<int?>() is int ttd) { _settings.TtsDevice = ttd; _settings.TtsDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(ttd); }
+                ApplyDeviceSelection(msg, "ttsDeviceId", "ttsDeviceName", false, (id, name) => { _settings.TtsDeviceId = id; _settings.TtsDeviceName = name; }, _settings.TtsDeviceName);
                 if (msg["ttsVoice"] is JToken ttv) _settings.TtsVoice = ttv.ToString();
                 if (msg["ttsEngine"] is JToken tte) _settings.TtsEngine = tte.ToString();
                 if (msg["ttsRate"]?.Value<int?>() is int ttr) _settings.TtsRate = Math.Clamp(ttr, -10, 10);
@@ -192,7 +224,13 @@ public class KikitanXDController : IDisposable
         };
         _service.OnOutput += SpeakTts;
         _service.OnChatboxSent += () => _core.OnChatboxPauseRequest?.Invoke(15_000);
-        _service.Start(VRCNext.Services.Helpers.AudioDeviceHelper.ResolveInput(_settings.InputDeviceIndex, _settings.InputDeviceName), _settings);
+        var micSel = InputSelection;
+        var micIdx = AudioDeviceManager.ResolveInputIndex(micSel);
+        if (micIdx == null)
+            throw new Exception(micSel.Mode == AudioSelectionMode.UnresolvedLegacy
+                ? $"Microphone '{micSel.DisplayName}' could not be identified after the update, please re-select it."
+                : $"Microphone '{micSel.DisplayName}' is not connected.");
+        _service.Start(micIdx.Value, _settings);
         _kxLastSource = "";
         _kxLastTranslation = "";
         _kxLastFinal = true;
@@ -250,7 +288,7 @@ public class KikitanXDController : IDisposable
         if (!_settings.TtsEnabled || string.IsNullOrWhiteSpace(text)) return;
         VRCNext.Services.Helpers.TtsService.Speak(
             text, _settings.TtsEngine, _settings.TtsVoice,
-            VRCNext.Services.Helpers.AudioDeviceHelper.ResolveOutput(_settings.TtsDevice, _settings.TtsDeviceName), 100, _settings.TtsRate);
+            TtsSelection, 100, _settings.TtsRate);
     }
 
     private static void Invoke(Action action) => action();

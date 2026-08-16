@@ -6,6 +6,15 @@ let _mypWorldsPage = 0;
 let _mypAvatarsPage = 0;
 let _mypWorldsRequested = false;
 let _mypAvatarsRequested = false;
+let _mypAvatarsLoaded = false;
+
+function _mypTrustUser() {
+    const u = (typeof currentVrcUser !== 'undefined' && currentVrcUser) ? currentVrcUser : {};
+    const groups = (typeof myGroups !== 'undefined' && Array.isArray(myGroups)) ? myGroups : [];
+    const rep = (typeof myRepresentedGroup !== 'undefined' && myRepresentedGroup)
+        || groups.find(g => g.isRepresenting === true) || null;
+    return Object.assign({}, u, { userGroups: groups, representedGroup: rep });
+}
 let _mypFavsRequested = false;
 let _mypHeatmapDays = 30;
 let _mypHeatmapView = 'online';
@@ -34,6 +43,7 @@ function openMyProfileModal() {
     if (typeof navSetCurrent === 'function') navSetCurrent('myprofile', currentVrcUser.id || 'me');
     if (typeof navUpdateLabel === 'function') navUpdateLabel(currentVrcUser.displayName || '');
     _mypAvatarsRequested = false;
+    _mypAvatarsLoaded = false;
     _mypFavsRequested    = false;
     _mypHeatmapDays      = 30;
     _mypHeatmapView      = 'online';
@@ -132,13 +142,10 @@ function renderMyProfileContent() {
         vrcnPlusOnProfileOpened(u.id, box);
     }
 
-    const useCompact = (typeof settings !== 'undefined' && settings.profileModalStyle === 'compact');
     const _mypModal = document.getElementById('modalMyProfile');
-    if (_mypModal) _mypModal.classList.toggle('fd-style-compact', useCompact);
+    if (_mypModal) _mypModal.classList.add('fd-style-compact');
 
     const changeBannerTitle = t('profiles.my_profile.change_banner', 'Change banner');
-    const addBannerTitle    = t('profiles.my_profile.add_banner', 'Add banner');
-    const bannerLabel       = t('profiles.my_profile.banner', 'Banner');
     const changeIconTitle   = t('profiles.my_profile.change_icon', 'Change icon');
     const noLanguagesLabel  = t('profiles.my_profile.empty.no_languages', 'No languages set');
     const noLinksLabel      = t('profiles.my_profile.empty.no_links', 'No links added');
@@ -149,9 +156,6 @@ function renderMyProfileContent() {
     // Banner
     const bannerSrc = u.bannerUrl || u.profilePicOverride || u.currentAvatarImageUrl || u.image || '';
     const _mypEffect = (typeof profileEffectHtml === 'function') ? profileEffectHtml(u.profileEffectUrl) : '';
-    const bannerHtml = bannerSrc
-        ? `<div class="fd-banner" id="myp-banner-slot"><div class="fd-banner-fade"></div>${_mypEffect}</div>`
-        : `<div style="display:flex;justify-content:flex-end;padding:4px 0 2px 0;"><button class="myp-edit-btn" onclick="openImagePicker('profile-banner')" title="${esc(addBannerTitle)}"><span class="msi" style="font-size:13px;">edit</span><span style="font-size:calc(11px + var(--fs-off, 0px));margin-left:3px;">${esc(bannerLabel)}</span></button></div>`;
     const bannerCompactHtml = `<div class="fd-left-banner" id="myp-banner-slot">${bannerSrc ? `<div class="fd-banner-fade"></div>` : ''}${_mypEffect}<span class="vrcn-keybind" style="position:absolute;top:8px;right:8px;z-index:3;border-radius:5px;">CTRL P</span></div>`;
     const mypHeaderActions = renderModalActions([
         { icon: 'edit', title: changeBannerTitle, onclick: `openImagePicker('profile-banner')` },
@@ -169,43 +173,33 @@ function renderMyProfileContent() {
     ]);
 
     // Avatar with edit overlay
-    const avatarImg = useCompact
-        ? (u.image
-            ? `<img class="fd-avatar" src="${esc(u.image)}" onerror="this.style.display='none'">`
-            : `<div class="fd-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(20px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((u.displayName||'?')[0])}</div>`)
-        : (u.image
-            ? `<img class="myp-avatar" src="${esc(u.image)}" onerror="this.outerHTML='<div class=\\'myp-avatar myp-avatar-fb\\'>${esc((u.displayName||'?')[0])}</div>'">`
-            : `<div class="myp-avatar myp-avatar-fb">${esc((u.displayName||'?')[0])}</div>`);
+    const avatarImg = u.image
+        ? `<img class="fd-avatar" src="${esc(u.image)}" onerror="this.style.display='none'">`
+        : `<div class="fd-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(20px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((u.displayName||'?')[0])}</div>`;
     const _mypFrame = (typeof iconFrameHtml === 'function') ? iconFrameHtml(u.iconFrameUrl, true) : '';
-    const _editBtnPos = useCompact ? 'top:-4px;left:-4px;' : 'bottom:-4px;right:-4px;';
+    const _editBtnPos = 'top:-4px;left:-4px;';
     const imgTag = `<div style="position:relative;display:inline-block;flex-shrink:0;line-height:0;">${avatarImg}${_mypFrame}<button class="myp-edit-btn" style="position:absolute;${_editBtnPos}z-index:5;padding:2px;min-width:0;width:18px;height:18px;display:flex;align-items:center;justify-content:center;" onclick="openImagePicker('profile-icon')" title="${esc(changeIconTitle)}"><span class="msi" style="font-size:11px;">edit</span></button></div>`;
 
     // Trust rank & badges row
     const rank = getTrustRank(u.tags || []);
     const vrcPlusBadge = (u.tags || []).includes('system_supporter') ? `<span class="vrcn-supporter-badge">VRC+</span>` : '';
     const platBadge = getPlatformBadgeHtml(u.platform || u.lastPlatform || '');
+    const creatorBadge = getCreatorBadgeHtml(u);
     let badgesRowHtml = '<div class="fd-badges-row">';
     if (platBadge) badgesRowHtml += platBadge;
+    if (creatorBadge) badgesRowHtml += creatorBadge;
     if (u.ageVerified) badgesRowHtml += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>${t('profiles.meta.age_verified', 'Age Verified')}</span>`;
     if (u.ageVerificationStatus === '18+') badgesRowHtml += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>18+</span>`;
     if (rank) badgesRowHtml += `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>`;
     if (u.id) badgesRowHtml += idBadge(u.id);
-    if (!useCompact) badgesRowHtml += `<span class="vrcn-keybind" style="margin-left:auto;border-radius:5px;">CTRL P</span>`;
     badgesRowHtml += '</div>';
 
-    const _bioBadgesHtml = useCompact
-        ? badgesRowHtml.replace('<div class="fd-badges-row">', '<div class="fd-badges-row fd-bio-badges-row" style="margin-bottom:10px;">')
-        : '';
+    const _bioBadgesHtml = badgesRowHtml.replace('<div class="fd-badges-row">', '<div class="fd-badges-row fd-bio-badges-row" style="margin-bottom:10px;">');
 
     // Representing group — prefer dedicated endpoint result, fall back to myGroups
     const _repG = myRepresentedGroup || ((typeof myGroups !== 'undefined') && myGroups.find(g => g.isRepresenting === true));
-    let repGroupBadgeHtml = '';
     let repGroupCardHtml  = '';
     if (_repG) {
-        const _rbi = _repG.iconUrl
-            ? `<img class="fd-rep-group-badge-icon" src="${esc(imgThumb(_repG.iconUrl, 64))}" onerror="this.style.display='none'">`
-            : `<span class="msi" style="font-size:13px;flex-shrink:0;">group</span>`;
-        repGroupBadgeHtml = `<div class="fd-rep-group-badge" onclick="closeMyProfile();openGroupDetail('${esc(_repG.id)}')">${_rbi}<span class="fd-rep-group-badge-name">${esc(_repG.name || '')}</span></div>`;
         const _ri = _repG.iconUrl
             ? `<img class="fd-group-icon" src="${esc(imgThumb(_repG.iconUrl, 96))}" onerror="this.style.display='none'">`
             : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">group</span></div>`;
@@ -313,18 +307,20 @@ function renderMyProfileContent() {
 
     const _infosCard = `<div class="fd-info-card">
         <div class="fd-group-rep-label">${t('profiles.meta.infos_title', 'Infos')}</div>
-        <div style="display:grid;gap:6px;${useCompact ? '' : 'margin-bottom:10px;'}">${_infosRows}</div>
-        ${useCompact ? '' : _pronounsSection}
+        <div style="display:grid;gap:6px;">${_infosRows}</div>
     </div>`;
 
-    const _pronounsCard = useCompact ? `<div class="fd-info-card">${_pronounsSection}</div>` : '';
+    const _pronounsCard = `<div class="fd-info-card">${_pronounsSection}</div>`;
 
     // Trust & Safety card (right)
-    const _trustCard = rank ? `<div class="fd-info-card">
+    const _trustBadgesRow = (rank || creatorBadge)
+        ? `<div class="fd-badges-row" style="margin-bottom:0;">${rank ? `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>` : ''}${creatorBadge}</div>`
+        : '';
+    const _trustCard = `<div class="fd-info-card">
         <div class="fd-group-rep-label">${t('profiles.trust.title', 'Trust &amp; Safety')}</div>
-        <span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>
-        <p style="margin:10px 0 0;font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);line-height:1.45;">${t('profiles.trust.description', 'This user has a trusted user standing within the community.')}</p>
-    </div>` : '';
+        ${_trustBadgesRow}
+        <div id="mypTrustBarSlot">${getTrustBarHtml(_mypTrustUser(), _mypAllAvatars.length, _mypAvatarsLoaded)}</div>
+    </div>`;
 
     const pronounsHtml = u.pronouns ? `<div class="fd-pronouns">${esc(u.pronouns)}</div>` : '';
 
@@ -381,20 +377,10 @@ function renderMyProfileContent() {
         <div class="fd-hm-status-wrap" id="mypHmStatusWrap"${_hmOnline ? ' style="display:none;"' : ''}></div>
     </div>`;
 
-    const infoContent = useCompact
-        ? `<div class="fd-info-wrap">
+    const infoContent = `<div class="fd-info-wrap">
             <div class="fd-info-cols">
                 <div class="fd-info-left">${_bioCard}</div>
                 <div class="fd-info-right">${repGroupCardHtml}${_pronounsCard}${_trustCard}</div>
-            </div>
-            ${_mypTlCard}
-            ${_mypInsightsCard}
-            ${_mypHeatmapCard}
-        </div>`
-        : `<div class="fd-info-wrap" style="margin-top:10px;">
-            <div class="fd-info-cols">
-                <div class="fd-info-left">${_badgesCard}${_bioCard}</div>
-                <div class="fd-info-right">${repGroupCardHtml}${_infosCard}${_trustCard}</div>
             </div>
             ${_mypTlCard}
             ${_mypInsightsCard}
@@ -444,7 +430,7 @@ function renderMyProfileContent() {
 
     const _tabBadge = (n) => `<span class="vrcn-badge fd-tab-badge">${n}</span>`;
     const _mypGroupCount = (typeof myGroups !== 'undefined' && Array.isArray(myGroups)) ? myGroups.length : 0;
-    const tabsHtml = `<div class="fd-tabs"${useCompact ? '' : ' style="margin-bottom:14px;"'}>
+    const tabsHtml = `<div class="fd-tabs">
         <button class="fd-tab active" data-myptab="info" onclick="switchMypTab('info',this)">${t('profiles.tabs.info', 'Info')}</button>
         <button class="fd-tab" data-myptab="groups" onclick="switchMypTab('groups',this)">${t('profiles.tabs.groups_label', 'Groups')} ${_tabBadge(_mypGroupCount)}</button>
         <button class="fd-tab" id="mypTabContentBtn" data-myptab="content" onclick="switchMypTab('content',this)">${t('profiles.tabs.content_label', 'Content')} ${_tabBadge(0)}</button>
@@ -459,7 +445,7 @@ function renderMyProfileContent() {
         <div id="mypTabFavs" style="display:none;"></div>
         <div id="mypTabJson" style="display:none;"><div class="json-viewer">${jsonHighlight(_mypRawJson || {})}</div></div>`;
 
-    if (useCompact) {
+    {
         const _dotHtml = `<span class="${u.vrcRunning ? 'vrc-status-dot' : 'vrc-status-ring'} ${statusDotClass(u.status)} fd-left-status-dot"></span>`;
         c.innerHTML = `${mypHeaderActions}<div class="fd-layout">
             <div class="fd-left">
@@ -479,24 +465,6 @@ function renderMyProfileContent() {
             </div>
             <div class="fd-right"><div class="fd-right-scroll">${tabsHtml}${tabPanesHtml}</div></div>
         </div>`;
-    } else {
-        c.innerHTML = `
-            ${mypHeaderActions}
-            ${bannerHtml}
-            <div class="fd-content${bannerSrc ? ' fd-has-banner' : ''}">
-                <div class="fd-header">
-                    ${imgTag}
-                    <div>
-                        <div class="fd-name" style="display:flex;align-items:center;gap:6px;">${esc(u.displayName)}${vrcPlusBadge}</div>
-                        ${pronounsHtml}
-                        ${statusRowHtml}
-                        ${repGroupBadgeHtml}
-                    </div>
-                </div>
-                ${badgesRowHtml}
-                ${tabsHtml}
-                ${tabPanesHtml}
-            </div>`;
     }
 
     if (bannerSrc) {
@@ -540,31 +508,13 @@ function renderMyProfileContent() {
     // Own VRC+ profile background, same treatment as other profiles.
     if (typeof applyProfileBg === 'function') {
         const _bgLeft = c.querySelector('.fd-left');
-        applyProfileBg(box,     useCompact ? null : u);
-        applyProfileBg(_bgLeft, useCompact ? u : null);
+        applyProfileBg(box,     null);
+        applyProfileBg(_bgLeft, u);
     }
     if (typeof applyProfileTheme === 'function') applyProfileTheme(box, u);
 }
 
 let _myBadgesEditing = false;
-
-function _renderMyBadgesSection(u) {
-    const badges = u.badges || [];
-    if (badges.length === 0) return '';
-    const noBadgesLabel = t('profiles.my_profile.empty.no_badges', 'No badges');
-    const badgesTitle = t('profiles.my_profile.sections.badges', 'Badges');
-    const iconsHtml = badges.map(b => {
-        const hidden = !b.showcased;
-        return `<div class="myp-badge-item fd-vrc-badge-wrap${hidden ? ' myp-badge-hidden' : ''}${_myBadgesEditing ? ' myp-badge-editing' : ''}" data-badge-id="${esc(b.id)}" data-badge-img="${esc(b.imageUrl)}" data-badge-name="${encodeURIComponent(b.name)}" data-badge-desc="${encodeURIComponent(b.description || '')}" onclick="${_myBadgesEditing ? `toggleMyBadge('${esc(b.id)}')` : ''}"><img class="fd-vrc-badge-icon" src="${esc(imgThumb(b.imageUrl, 64))}" alt="${esc(b.name)}" onerror="this.closest('.myp-badge-item').style.display='none'"></div>`;
-    }).join('');
-    return `<div class="myp-section">
-        <div class="myp-section-header">
-            <span class="myp-section-title">${badgesTitle}</span>
-            <button class="myp-edit-btn" onclick="toggleBadgeEditMode()"><span class="msi" style="font-size:14px;">${_myBadgesEditing ? 'check' : 'edit'}</span></button>
-        </div>
-        <div class="myp-badges-row">${iconsHtml}</div>
-    </div>`;
-}
 
 function toggleBadgeEditMode() {
     _myBadgesEditing = !_myBadgesEditing;
@@ -888,6 +838,8 @@ function onMypMyWorlds(worlds) {
 function onMypUserAvatars(payload) {
     if (!_mypIsSelf(payload.userId)) return;
     _mypAllAvatars = payload.avatars || [];
+    _mypAvatarsLoaded = true;
+    updateTrustBar('mypTrustBarSlot', _mypTrustUser(), _mypAllAvatars.length);
     _mypUpdateContentCounts();
     renderMypAvatarsPage(0);
 }

@@ -267,8 +267,6 @@ public class AuthController
                         enableProfileIconFrames        = _core.Settings.EnableProfileIconFrames,
                         friendsSidebarLocationOnly     = _core.Settings.FriendsSidebarLocationOnly,
                         friendsSidebarPreviewCollapsed = _core.Settings.FriendsSidebarPreviewCollapsed,
-                        directModalNav                 = _core.Settings.DirectModalNav,
-                        profileModalStyle              = _core.Settings.ProfileModalStyle,
                     },
                 });
                 _ = VrcTryResumeAsync();
@@ -1179,13 +1177,6 @@ public class AuthController
     }
 
     // Public wrapper that acquires the mutation lock itself.
-    public async Task SaveVrcCookiesAsync()
-    {
-        await _core.AccountMutationLock.WaitAsync();
-        try { SaveVrcCookiesUnlocked(); _core.Settings.Save(); }
-        finally { _core.AccountMutationLock.Release(); }
-    }
-
     // Public wrapper for SendVrcUserData that acquires the mutation lock synchronously for callback sites.
     public void SendVrcUserData(JObject user, bool loginFlow = false)
     {
@@ -1417,6 +1408,7 @@ public class AuthController
             lastPlatform      = user["last_platform"]?.ToString() ?? "",
             platform          = user["platform"]?.ToString() ?? "",
             ageVerified       = user["ageVerified"]?.Value<bool>() ?? false,
+            isEconomyCreator  = user["isEconomyCreator"]?.Value<bool>() ?? false,
             ageVerificationStatus = user["ageVerificationStatus"]?.ToString() ?? "",
             vrcRunning        = _core.IsVrcRunning?.Invoke() ?? false,
             allowAvatarCopying = user["allowAvatarCopying"]?.Value<bool>() ?? false,
@@ -1943,12 +1935,6 @@ public class AuthController
             var v = prefs[key];
             if (v != null && v.Type != JTokenType.Null) set(v.Value<bool>());
         }
-        void Style(string key, Action<string> set)
-        {
-            var v = prefs[key]?.ToString();
-            if (v == "classic" || v == "compact") set(v);
-        }
-
         Flag("enableProfileIconFrames",        v => _core.Settings.EnableProfileIconFrames = v);
         Flag("squareIconFrames",               v => _core.Settings.SquareIconFrames = v);
         Flag("enableNameplateDecoration",      v => _core.Settings.EnableNameplateDecoration = v);
@@ -1961,11 +1947,6 @@ public class AuthController
         Flag("showDecorationsOnDashboard",     v => _core.Settings.ShowDecorationsOnDashboard = v);
         Flag("friendsSidebarLocationOnly",     v => _core.Settings.FriendsSidebarLocationOnly = v);
         Flag("friendsSidebarPreviewCollapsed", v => _core.Settings.FriendsSidebarPreviewCollapsed = v);
-        Flag("directModalNav",                 v => _core.Settings.DirectModalNav = v);
-        Style("profileModalStyle",             v => _core.Settings.ProfileModalStyle = v);
-        Style("worldModalStyle",               v => _core.Settings.WorldModalStyle = v);
-        Style("groupModalStyle",               v => _core.Settings.GroupModalStyle = v);
-        Style("avatarModalStyle",              v => _core.Settings.AvatarModalStyle = v);
 
         _core.Settings.Save();
     }
@@ -1987,6 +1968,14 @@ public class AuthController
             _core.Settings.MessageSoundEnabled = data["messageSoundEnabled"]?.Value<bool>() ?? false;
             _core.Settings.MediaRelaySoundEnabled = data["mediaRelaySoundEnabled"]?.Value<bool>() ?? false;
             _core.Settings.SteamOverlaySoundEnabled = data["steamOverlaySoundEnabled"]?.Value<bool>() ?? true;
+            _core.Settings.NotifySoundFile = data["notifySoundFile"]?.ToString() ?? "";
+            _core.Settings.MessageSoundFile = data["messageSoundFile"]?.ToString() ?? "";
+            _core.Settings.MediaRelaySoundFile = data["mediaRelaySoundFile"]?.ToString() ?? "";
+            _core.Settings.SteamOverlaySoundFile = data["steamOverlaySoundFile"]?.ToString() ?? "";
+            _core.Settings.NotifySoundVolume = data["notifySoundVolume"]?.Value<int>() ?? 50;
+            _core.Settings.MessageSoundVolume = data["messageSoundVolume"]?.Value<int>() ?? 50;
+            _core.Settings.MediaRelaySoundVolume = data["mediaRelaySoundVolume"]?.Value<int>() ?? 50;
+            _core.Settings.SteamOverlaySoundVolume = data["steamOverlaySoundVolume"]?.Value<int>() ?? 50;
             _core.Settings.FriendOnlineToastEnabled = data["friendOnlineToastEnabled"]?.Value<bool>() ?? false;
             _core.Settings.FriendOnlineToastFavOnly = data["friendOnlineToastFavOnly"]?.Value<bool>() ?? false;
             _core.Settings.FriendsSidebarLocationOnly = data["friendsSidebarLocationOnly"]?.Value<bool>() ?? true;
@@ -1995,7 +1984,6 @@ public class AuthController
             _core.Settings.PeopleAlwaysStats = data["peopleAlwaysStats"]?.Value<bool>() ?? false;
             _core.Settings.ModernFolderLayout = data["modernFolderLayout"]?.Value<bool>() ?? true;
             _core.Settings.NavSidebarHoverText = data["navSidebarHoverText"]?.Value<bool>() ?? true;
-            _core.Settings.DirectModalNav = data["directModalNav"]?.Value<bool>() ?? true;
             _core.Settings.EnableProfileIconFrames = data["enableProfileIconFrames"]?.Value<bool>() ?? false;
             _core.Settings.SquareIconFrames = data["squareIconFrames"]?.Value<bool>() ?? false;
             _core.Settings.EnableNameplateDecoration = data["enableNameplateDecoration"]?.Value<bool>() ?? false;
@@ -2006,10 +1994,6 @@ public class AuthController
             _core.Settings.ProfileThemeContrast = data["profileThemeContrast"]?.Value<bool>() ?? true;
             _core.Settings.TransparentProfileCards = data["transparentProfileCards"]?.Value<bool>() ?? false;
             _core.Settings.ShowDecorationsOnDashboard = data["showDecorationsOnDashboard"]?.Value<bool>() ?? false;
-            _core.Settings.ProfileModalStyle = data["profileModalStyle"]?.ToString() ?? "classic";
-            _core.Settings.WorldModalStyle = data["worldModalStyle"]?.ToString() ?? "classic";
-            _core.Settings.GroupModalStyle = data["groupModalStyle"]?.ToString() ?? "classic";
-            _core.Settings.AvatarModalStyle = data["avatarModalStyle"]?.ToString() ?? "classic";
             _core.Settings.MinimizeToTray = data["minimizeToTray"]?.Value<bool>() ?? false;
             _core.Settings.TrayNotificationsEnabled = data["trayNotificationsEnabled"]?.Value<bool>() ?? false;
 #if WINDOWS
@@ -2038,8 +2022,11 @@ public class AuthController
             _core.Settings.VroToastTtsGroupInv = data["vroToastTtsGroupInv"]?.Value<bool>() ?? false;
             _core.Settings.VroToastTtsJoined = data["vroToastTtsJoined"]?.Value<bool>() ?? false;
             _core.Settings.VroToastJoined = data["vroToastJoined"]?.Value<bool>() ?? true;
-            _core.Settings.VroTtsDevice = data["vroTtsDevice"]?.Value<int?>() ?? -1;
-            _core.Settings.VroTtsDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(_core.Settings.VroTtsDevice);
+            if (VRCNext.Services.Helpers.AudioDeviceManager.TryReadSelectionFromMessage(data["vroTtsDeviceId"], data["vroTtsDeviceName"]?.ToString(), false, _core.Settings.VroTtsDeviceName, out var vroTtsId, out var vroTtsName))
+            {
+                _core.Settings.VroTtsDeviceId = vroTtsId;
+                _core.Settings.VroTtsDeviceName = vroTtsName;
+            }
             _core.Settings.VroTtsVoice  = data["vroTtsVoice"]?.ToString() ?? "";
             _core.Settings.VroTtsEngine = data["vroTtsEngine"]?.ToString() ?? "sapi";
             _core.Settings.VroTtsLang   = data["vroTtsLang"]?.ToString() ?? "";
@@ -2167,7 +2154,11 @@ public class AuthController
                 _core.Settings.FsLeftButton  = SfIn("fsLeftButton",  _core.Settings.FsLeftButton);
                 _core.Settings.FsRightButton = SfIn("fsRightButton", _core.Settings.FsRightButton);
             }
-            _core.Settings.FsOutputDevice          = data["fsOutputDevice"]?.Value<string>()        ?? "";
+            if (VRCNext.Services.Helpers.AudioDeviceManager.TryReadSelectionFromMessage(data["fsOutputDeviceId"], data["fsOutputDeviceName"]?.ToString(), false, _core.Settings.FsOutputDevice, out var fsOutId, out var fsOutName))
+            {
+                _core.Settings.FsOutputDeviceId = fsOutId;
+                _core.Settings.FsOutputDevice = fsOutName;
+            }
             _core.Settings.FsActivationRadius      = data["fsActivationRadius"]?.Value<int>()       ?? 15;
             if (vrIdx)
             {
@@ -2256,7 +2247,7 @@ public class AuthController
             _core.Settings.VrcndbConsentShown  = data["vrcndbConsentShown"]?.Value<bool>() ?? _core.Settings.VrcndbConsentShown;
 
             // Memory Trim
-            _core.Settings.MemoryTrimEnabled = data["memoryTrimEnabled"]?.Value<bool>() ?? false;
+            _core.Settings.MemoryTrimEnabled = data["memoryTrimEnabled"]?.Value<bool>() ?? true;
             _core.MemTrim.SetEnabled(_core.Settings.MemoryTrimEnabled);
 
             // Windows Fixes
@@ -2306,8 +2297,12 @@ public class AuthController
             // Dashboard layout
             var dashOrder  = data["dashSectionOrder"]?.ToObject<List<string>>();
             var dashHidden = data["dashSectionHidden"]?.ToObject<List<string>>();
+            var dashRows   = data["dashRows"]?.ToObject<List<string>>();
+            var dashHero   = data["dashHero"]?.ToObject<List<string>>();
             if (dashOrder  != null) _core.Settings.DashSectionOrder  = dashOrder;
             if (dashHidden != null) _core.Settings.DashSectionHidden = dashHidden;
+            if (dashRows   != null) _core.Settings.DashRows          = dashRows;
+            if (dashHero   != null) _core.Settings.DashHero          = dashHero;
 
             _core.Settings.Save();
             if (_core.Settings.LastSaveError != null)

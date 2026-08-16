@@ -45,11 +45,6 @@ function sfApplyInputMode() {
     sfSendConfig();
 }
 
-function sfBtnSets() {
-    const cur = sfReadBtns();
-    const idx = typeof vrInputMode !== 'undefined' && vrInputMode === 1;
-    return { legacy: idx ? _sfOtherBtns : cur, index: idx ? cur : _sfOtherBtns };
-}
 
 function sfSetMode(mode) {
     if (!SF_MODE_SELECTS[mode]) return;
@@ -155,7 +150,6 @@ function sfAutoSave() {
 function handleSfUpdate(data) {
     _sfLastState = { ...data };
     sfConnected = data.connected;
-    if (typeof updateDashQuickControls === 'function') updateDashQuickControls();
 
     const dot = document.getElementById('sfDot');
     const txt = document.getElementById('sfStatusText');

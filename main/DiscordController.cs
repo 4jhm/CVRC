@@ -49,10 +49,6 @@ public class DiscordController : IDisposable
                 _core.SendToJS("dpState", new { running = false });
                 _vroCtrl.UpdateToolStates();
                 break;
-
-            case "dpRefresh":
-                PushPresence();
-                break;
         }
     }
 

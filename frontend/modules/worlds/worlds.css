@@ -1,8 +1,6 @@
 /* === Worlds Module === */
 
 .launch-modal { min-width: 300px; text-align: center; width: auto; }
-.launch-modal-title { font-size: calc(15px + var(--fs-off, 0px)); font-weight: 700; color: var(--tx0); margin-bottom: 4px; }
-.launch-modal-sub { font-size: calc(12px + var(--fs-off, 0px)); color: var(--tx3); margin-bottom: 20px; }
 
 /* Filter row uses the profile modal's segmented control (.fd-tabs). The tabs there
    are flex:1 and fill their container; here the row also holds the edit bar and the

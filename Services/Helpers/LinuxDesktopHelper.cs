@@ -31,17 +31,6 @@ public static class LinuxDesktopHelper
         return false;
     }
 
-    public static bool CopyTextToClipboard(string text, out string? error)
-    {
-        error = null;
-        if (IsWayland && TryPipeText("wl-copy", Array.Empty<string>(), text, out error))
-            return true;
-        if (TryPipeText("xclip", new[] { "-selection", "clipboard" }, text, out error))
-            return true;
-        error ??= "No clipboard tool found. Install wl-clipboard (Wayland) or xclip (X11).";
-        return false;
-    }
-
     public static bool SetWallpaper(string path, out string? error)
     {
         error = null;
@@ -177,12 +166,6 @@ public static class LinuxDesktopHelper
             return TryPipeStream(file, args, fs, out error);
         }
         catch (Exception ex) { error = ex.Message; return false; }
-    }
-
-    private static bool TryPipeText(string file, string[] args, string text, out string? error)
-    {
-        using var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(text));
-        return TryPipeStream(file, args, ms, out error);
     }
 
     private static bool TryPipeStream(string file, string[] args, Stream input, out string? error)

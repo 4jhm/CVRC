@@ -84,12 +84,6 @@ public sealed class VoiceFightService : IDisposable
     public bool IsRunning => _waveIn != null;
     public bool ModelOk => _modelLoaded;
 
-    public static string[] GetInputDevices()
-        => VRCNext.Services.Helpers.AudioDeviceHelper.GetInputNames();
-
-    public static string[] GetOutputDevices()
-        => VRCNext.Services.Helpers.AudioDeviceHelper.GetOutputNames();
-
     public static TimeSpan GetDuration(string path)
     {
         try

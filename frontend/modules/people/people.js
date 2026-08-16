@@ -11,16 +11,7 @@ function vrcLogout() {
     currentVrcUser = null;
 }
 
-function vrcRefresh() {
-    sendToCS({ action: 'vrcRefreshFriends' });
-    requestInstanceInfo();
-    refreshNotifications();
-}
 
-function closeDetailModal(fromNav = false) {
-    document.getElementById('modalDetail').style.display = 'none';
-    if (!fromNav && typeof navClear === 'function') navClear();
-}
 
 function statusDotClass(s) {
     if (!s) return 's-offline';
@@ -72,22 +63,7 @@ function getFriendSectionLabel(section, count) {
     return tf(entry[0], { count }, entry[1]);
 }
 
-function getFriendSectionShortLabel(section) {
-    const map = {
-        favorites: ['profiles.friends.sections_short.favorites', 'FAV'],
-        ingame: ['profiles.friends.sections_short.in_game', 'GME'],
-        web: ['profiles.friends.sections_short.web', 'WEB'],
-        offline: ['profiles.friends.sections_short.offline', 'OFF']
-    };
-    const entry = map[section];
-    return entry ? t(entry[0], entry[1]) : '';
-}
 
-function getProfileMutualBadgeLabel(count) {
-    return count === 1
-        ? tf('profiles.badges.mutual.one', { count }, '{count} Mutual')
-        : tf('profiles.badges.mutual.other', { count }, '{count} Mutuals');
-}
 
 function getStatusText(status, description) {
     return `${statusLabel(status)}${description ? ' - ' + esc(description) : ''}`;
@@ -887,11 +863,6 @@ function _scheduleBgFavFriendRefresh() {
     _favFriendRefreshTimer = setTimeout(() => sendToCS({ action: 'vrcGetFavoriteFriends' }), 2000);
 }
 
-function refreshFavFriends() {
-    const btn = document.getElementById('peopleRefreshBtn');
-    if (btn) { btn.disabled = true; btn.querySelector('.msi').textContent = 'hourglass_empty'; }
-    sendToCS({ action: 'vrcGetFavoriteFriends' });
-}
 
 function _ffGroupOptionLabel(g) {
     const count = favFriendsData.filter(f => f.groupName === g.name).length;
@@ -964,16 +935,6 @@ function saveFavFriendGroupVisibility(visibility, groupName) {
     sendToCS({ action: 'vrcUpdateFavoriteFriendGroup', groupName: g.name, displayName: g.displayName || g.name, visibility });
 }
 
-function startEditFriendGroupName() {
-    const g = favFriendGroups.find(x => x.name === favFriendGroupFilter);
-    if (!g) return;
-    const input = document.getElementById('favFriendGroupNameInput');
-    if (input) input.value = g.displayName || g.name;
-    document.getElementById('favFriendGroupHeader').style.display = 'none';
-    const row = document.getElementById('favFriendGroupRenameRow');
-    if (row) row.style.display = 'flex';
-    if (input) input.focus();
-}
 
 function cancelEditFriendGroupName() {
     updateFavFriendGroupHeader();

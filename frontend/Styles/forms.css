@@ -1,14 +1,4 @@
-.sect-label {
-    font-size: calc(10px + var(--fs-off, 0px));
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 1.5px;
-    margin-bottom: 14px;
-}
 
-.sect-label:not(:first-child) {
-    margin-top: 24px;
-}
 
 .input-row {
     display: flex;

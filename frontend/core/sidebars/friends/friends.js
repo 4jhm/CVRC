@@ -130,21 +130,14 @@ function renderVrcFriends(friends, counts) {
             if (detailStatusEl) {
                 const isWeb = lf.presence === 'web';
                 const isOff = lf.presence === 'offline';
-                const isCompact = document.getElementById('modalFriendDetail')?.classList.contains('fd-style-compact');
-                if (isCompact) {
-                    // Compact: status text is just the description; dot lives on the avatar.
-                    detailStatusEl.innerHTML = lf.statusDescription ? esc(lf.statusDescription) : '';
-                    const statusRow = detailStatusEl.closest('.fd-status-row');
-                    if (statusRow) statusRow.style.display = lf.statusDescription ? '' : 'none';
-                    const detailDotEl = document.getElementById('fd-live-dot');
-                    if (detailDotEl) {
-                        const dotClass = isWeb ? 'vrc-status-ring' : 'vrc-status-dot';
-                        detailDotEl.className = `${dotClass} ${isOff ? 's-offline' : statusDotClass(lf.status)} fd-left-status-dot`;
-                    }
-                } else {
-                    // Classic: dot is inline in the status text, full status label + web suffix + description.
+                // Status text is just the description; dot lives on the avatar.
+                detailStatusEl.innerHTML = lf.statusDescription ? esc(lf.statusDescription) : '';
+                const statusRow = detailStatusEl.closest('.fd-status-row');
+                if (statusRow) statusRow.style.display = lf.statusDescription ? '' : 'none';
+                const detailDotEl = document.getElementById('fd-live-dot');
+                if (detailDotEl) {
                     const dotClass = isWeb ? 'vrc-status-ring' : 'vrc-status-dot';
-                    detailStatusEl.innerHTML = `<span class="${dotClass} ${isOff ? 's-offline' : statusDotClass(lf.status)}" style="width:8px;height:8px;"></span>${isOff ? t('status.offline', 'Offline') : statusLabel(lf.status)}${(!isOff && isWeb) ? ' ' + t('profiles.friends.web_suffix', '(Web)') : ''}${(!isOff && lf.statusDescription) ? ' - ' + esc(lf.statusDescription) : ''}`;
+                    detailDotEl.className = `${dotClass} ${isOff ? 's-offline' : statusDotClass(lf.status)} fd-left-status-dot`;
                 }
             }
         }

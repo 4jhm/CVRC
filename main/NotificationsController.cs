@@ -144,10 +144,6 @@ public class NotificationsController
                 _ = GetHiddenNotificationsAsync();
                 break;
 
-            case "vrcGetAllNotifications":
-                _ = GetAllNotificationsAsync();
-                break;
-
             case "vrcAcceptNotification":
             {
                 var anId   = msg["notifId"]?.ToString();
@@ -283,12 +279,6 @@ public class NotificationsController
                 }
                 break;
             }
-
-            case "vrcMarkNotifRead":
-                var mnId = msg["notifId"]?.ToString();
-                if (!string.IsNullOrEmpty(mnId))
-                    _ = Task.Run(async () => await _core.Notifications.MarkNotificationReadAsync(mnId));
-                break;
 
             case "vrcHideNotification":
             {
@@ -769,63 +759,6 @@ public class NotificationsController
         });
     });
 
-    // Enriches a list of normalized notifications with user avatar images.
-    // Priority: in-memory notif cache → friend store → disk image cache → API call.
-    // API calls are batched in parallel and only made for users not found by faster means.
-    private async Task<JArray> EnrichNotifUserImagesAsync(IEnumerable<dynamic> list)
-    {
-        var items = list.Select(n => (n, j: JObject.FromObject(n))).ToList();
-
-        // Collect senderUserIds that still need an image after cheap lookups
-        var needApi = new List<(string uid, JObject j)>();
-
-        foreach (var (n, j) in items)
-        {
-            var sid = (string?)n.senderUserId;
-            string img = "";
-
-            // 1. In-memory notif image cache (seeded from timeline)
-            lock (_notifImageCache)
-            {
-                var nid = (string?)n.id ?? "";
-                if (!string.IsNullOrEmpty(nid)) _notifImageCache.TryGetValue(nid, out img!);
-            }
-
-            // 2. Friend store
-            if (string.IsNullOrEmpty(img) && !string.IsNullOrEmpty(sid)
-                && _friends.TryGetNameImage(sid, out var fi))
-                img = fi.image ?? "";
-
-            // 3. Disk image cache (already downloaded from a previous profile view)
-            if (string.IsNullOrEmpty(img) && !string.IsNullOrEmpty(sid))
-            {
-                var diskPath = ImageCacheHelper.GetUserCached(sid);
-                if (diskPath != null) img = ImageCacheHelper.ToLocalUrl(diskPath);
-            }
-
-            j["_image"] = img;
-
-            // 4. Queue for API call if still empty
-            if (string.IsNullOrEmpty(img) && !string.IsNullOrEmpty(sid))
-                needApi.Add((sid, j));
-        }
-
-        // Batch API calls in parallel for users not found by any cheap method
-        if (needApi.Count > 0)
-        {
-            await Task.WhenAll(needApi.Select(async entry =>
-            {
-                var user = await _core.Users.GetUserAsync(entry.uid);
-                if (user != null)
-                    entry.j["_image"] = ImageCacheHelper.GetUserUrl(entry.uid, VRChatApiService.GetUserImage(user));
-            }));
-        }
-
-        var result = new JArray();
-        foreach (var (_, j) in items) result.Add(j);
-        return result;
-    }
-
     public Task GetHiddenNotificationsAsync() => Task.Run(async () =>
     {
         var raw  = await _core.Notifications.GetHiddenFriendRequestsAsync();
@@ -877,30 +810,6 @@ public class NotificationsController
                     Invoke(() => _core.SendToJS("vrcNotifImageUpdate", new { notifId = entry.notifId, image = img }));
             }));
         }
-    });
-
-    public Task GetAllNotificationsAsync() => Task.Run(async () =>
-    {
-        var t1 = _core.Notifications.GetNotificationsAsync();
-        var t2 = _core.Notifications.GetNotificationsV2Async();
-        var t3 = _core.Notifications.GetHiddenFriendRequestsAsync();
-        await Task.WhenAll(t1, t2, t3);
-
-        var list = t1.Result.Cast<JObject>().Select(NormalizeNotifV1).ToList();
-        var seenIds = new HashSet<string>(list.Select(n => (string)n.id));
-        foreach (JObject n in t2.Result.Cast<JObject>())
-        {
-            var id = n["id"]?.ToString() ?? "";
-            if (!seenIds.Contains(id)) { list.Add(NormalizeNotifV2(n)); seenIds.Add(id); }
-        }
-        foreach (JObject n in t3.Result.Cast<JObject>())
-        {
-            var id = n["id"]?.ToString() ?? "";
-            if (!seenIds.Contains(id)) { list.Add(NormalizeNotifV1(n)); seenIds.Add(id); }
-        }
-        var sorted   = list.OrderByDescending(n => (string)n.created_at);
-        var enriched = await EnrichNotifUserImagesAsync(sorted);
-        Invoke(() => _core.SendToJS("vrcAllNotifications", enriched));
     });
 
     // Push actionable notifications to VR overlay (wrist alerts tab + HMD toast)

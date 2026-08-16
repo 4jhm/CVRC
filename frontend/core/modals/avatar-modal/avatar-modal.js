@@ -15,16 +15,15 @@ const _avRawJsonCache = {};
 
 function openAvatarDetail(avatarId) {
     if (typeof navSetCurrent === 'function') navSetCurrent('avatar', avatarId);
-    const _avCompact = (typeof settings !== 'undefined' && settings.avatarModalStyle === 'compact');
     const _avMod = document.getElementById('modalAvatarDetail');
-    _avMod.classList.toggle('av-style-compact', _avCompact);
+    _avMod.classList.add('av-style-compact');
     _avMod.style.display = 'flex';
     const cached = _avatarDetailCache[avatarId];
     if (cached) {
         renderAvatarDetail(cached);
     } else {
         const c = document.getElementById('avatarDetailContent');
-        if (c) c.innerHTML = sk(_avCompact ? 'content-modal-compact' : 'detail');
+        if (c) c.innerHTML = sk('content-modal-compact');
     }
     sendToCS({ action: 'vrcGetAvatarDetail', avatarId });
 }
@@ -148,8 +147,7 @@ function renderAvatarDetail(a) {
         ? `<div class="fd-lang-tags">${a.tags.map(tag => `<span class="vrcn-badge">${esc(fmtAvatarTag(tag))}</span>`).join('')}</div>`
         : `<div class="myp-empty">${t('avatars.detail.empty_tags', 'No tags')}</div>`;
 
-    const useAvCompact = (typeof settings !== 'undefined' && settings.avatarModalStyle === 'compact');
-    const _avIdRow = useAvCompact ? `<div class="fd-badges-row fd-bio-badges-row" style="margin:0 0 10px;">${idBadge(a.id)}</div>` : '';
+    const _avIdRow = `<div class="fd-badges-row fd-bio-badges-row" style="margin:0 0 10px;">${idBadge(a.id)}</div>`;
 
     const _descCard = `<div class="fd-info-card">
         <div class="myp-section-header">
@@ -229,7 +227,6 @@ function renderAvatarDetail(a) {
     </div>`;
 
     const avHeaderActions = renderModalActions([
-        (isOwn && !useAvCompact) ? { icon: 'edit', title: t('avatars.detail.actions.change_image', 'Change Image'), onclick: `avUploadBannerImage('${aid}')`, header: true } : null,
         { icon: 'checkroom', title: t('avatars.detail.actions.use_avatar', 'Use Avatar'), onclick: `selectAvatar('${aid}');closeAvatarDetail()` },
         { icon: _avIsFav ? 'favorite' : 'favorite_border', iconClass: _avIsFav ? 'fd-action-fav' : '', title: avatarFavoriteActionLabel(_avIsFav), onclick: `openAvFavPicker('${aid}',this)` },
         { icon: 'refresh', iconClass: 'fd-refresh-spin', title: t('common.refresh', 'Refresh'), onclick: `triggerModalRefresh({action:'vrcGetAvatarDetail',avatarId:'${aid}',force:true})` },
@@ -261,8 +258,7 @@ function renderAvatarDetail(a) {
             </div>`;
     const _avJsonTab = `<div id="avTabJson" style="display:none;"><div class="json-viewer">${jsonHighlight((a.id && _avRawJsonCache[a.id]) || {})}</div></div>`;
 
-    if (useAvCompact) {
-        c.innerHTML = `${avHeaderActions}<div class="fd-layout">
+    c.innerHTML = `${avHeaderActions}<div class="fd-layout">
             <div class="fd-left">
                 <div class="fd-left-banner" id="av-banner-slot">${thumb ? `<img src="${thumb}" onerror="this.style.display='none'"><div class="fd-banner-fade"></div>` : ''}${isOwn ? `<button class="fd-banner-edit" onclick="avUploadBannerImage('${aid}')" title="${esc(t('avatars.detail.actions.change_image', 'Change Image'))}"><span class="msi">edit</span></button>` : ''}</div>
                 <div class="fd-left-body">
@@ -278,30 +274,9 @@ function renderAvatarDetail(a) {
                 ${_avJsonTab}
             </div></div>
         </div>`;
-    } else {
-        c.innerHTML = `${avHeaderActions}
-        ${thumb ? `<div class="fd-banner"><img src="${thumb}" onerror="this.parentElement.style.display='none'"><div class="fd-banner-fade"></div></div>` : ''}
-        <div class="fd-content${thumb ? ' fd-has-banner' : ''}">
-            <div class="fd-header">
-                <div style="flex:1;min-width:0;">${_avNameAuthor}</div>
-            </div>
-            <div class="fd-badges-row" style="margin-bottom:10px;">${statusBadge}${idBadge(a.id)}</div>
-            ${_avTabsHtml}
-            <div id="avTabInfo">
-                <div class="fd-info-wrap">
-                    <div class="fd-info-cols">
-                        <div class="fd-info-left">${_descCard}${_tagsCard}</div>
-                        <div class="fd-info-right">${_infosCard}</div>
-                    </div>
-                </div>
-            </div>
-            ${_avGalleryTab}
-            ${_avJsonTab}
-        </div>`;
-    }
 
     const _avModal = document.getElementById('modalAvatarDetail');
-    if (_avModal) _avModal.classList.toggle('av-style-compact', useAvCompact);
+    if (_avModal) _avModal.classList.add('av-style-compact');
 }
 
 function updateAvatarModalFavBtn(avatarId) {

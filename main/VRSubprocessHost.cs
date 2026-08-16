@@ -52,7 +52,7 @@ public sealed class VRSubprocessHost : IDisposable
     public event Action? OnSfQuit;
     public event Action<JObject>? OnFsUpdate;
     public event Action? OnFsQuit;
-    public event Action<List<string>>? OnFsDevices;
+    public event Action<JArray>? OnFsDevices;
     public event Action<string>? OnFsPhotoSaved;
 
     public VRSubprocessHost(Action<string> log) => _log = log;
@@ -232,7 +232,7 @@ public sealed class VRSubprocessHost : IDisposable
                 OnFsUpdate?.Invoke(msg);
                 break;
             case "fs_devices":
-                OnFsDevices?.Invoke(msg["devices"]?.ToObject<List<string>>() ?? new());
+                OnFsDevices?.Invoke(msg["devices"] as JArray ?? new JArray());
                 break;
             case "fs_photo_saved":
                 OnFsPhotoSaved?.Invoke(msg["path"]?.Value<string>() ?? "");
@@ -296,8 +296,6 @@ public sealed class VRSubprocessHost : IDisposable
 
     public void VroShow()            => Send("vro_show");
     public void VroHide()            => Send("vro_hide");
-    public void VroToggle()          => Send("vro_toggle");
-    public void VroSetTab(int tab)   => Send("vro_set_tab",   new { tab });
     public void VroRecordKeybind()   => Send("vro_record_keybind");
     public void VroCancelRecording() => Send("vro_cancel_recording");
 
@@ -412,7 +410,7 @@ public sealed class VRSubprocessHost : IDisposable
 
     public void SfReset() => Send("sf_reset");
 
-    public void FsConnect(uint leftButton, uint rightButton, string outputDevice, int activationRadius,
+    public void FsConnect(uint leftButton, uint rightButton, string outputDeviceId, string outputDeviceName, int activationRadius,
                           uint leftRecordButton, uint rightRecordButton,
                           int gifMaxDim, int gifFps, bool useHmdRotations,
                           uint leftVideoButton, uint rightVideoButton,
@@ -420,7 +418,7 @@ public sealed class VRSubprocessHost : IDisposable
                           int videoFps, string videoQuality, string videoBitrateQuality, int audioKbps)
     {
         FsConnected = true;
-        Send("fs_connect", new { leftButton, rightButton, outputDevice, activationRadius, leftRecordButton, rightRecordButton, gifMaxDim, gifFps, useHmdRotations, leftVideoButton, rightVideoButton, videoDeviceA, videoDeviceB, videoFps, videoQuality, videoBitrateQuality, audioKbps });
+        Send("fs_connect", new { leftButton, rightButton, outputDeviceId, outputDeviceName, activationRadius, leftRecordButton, rightRecordButton, gifMaxDim, gifFps, useHmdRotations, leftVideoButton, rightVideoButton, videoDeviceA, videoDeviceB, videoFps, videoQuality, videoBitrateQuality, audioKbps });
     }
 
     public void FsDisconnect()
@@ -441,8 +439,8 @@ public sealed class VRSubprocessHost : IDisposable
     public void FsGetAudioDevices() => Send("fs_get_audio_devices");
     public event Action<List<(string id, string label)>>? OnFsAudioDevices;
 
-    public void FsSetOutput(string deviceName)
-        => Send("fs_set_output", new { deviceName });
+    public void FsSetOutput(string deviceId, string deviceName)
+        => Send("fs_set_output", new { deviceId, deviceName });
 
     public void FsGetDevices()
         => Send("fs_get_devices");
@@ -477,8 +475,6 @@ public sealed class VRSubprocessHost : IDisposable
     public void VroDisconnect() { }
     public void VroShow()       { }
     public void VroHide()       { }
-    public void VroToggle()     { }
-    public void VroSetTab(int tab) { }
     public void VroRecordKeybind()   { }
     public void VroCancelRecording() { }
     public void VroConfig(bool a, bool b, float c, float d, float e, float f, float g, float h, float i,
@@ -507,16 +503,16 @@ public sealed class VRSubprocessHost : IDisposable
     public void SfDisconnect() { }
     public void SfConfig(float a, bool b, bool c, bool d, uint e, uint f, uint g, uint h, uint i, uint j, float k) { }
     public void SfReset() { }
-    public void FsConnect(uint a, uint b, string c, int d, uint e, uint f, int g, int h, bool i, uint j, uint k, string l, string m, int n2, string n, string o, int p) { }
+    public void FsConnect(uint a, uint b, string c, string c2, int d, uint e, uint f, int g, int h, bool i, uint j, uint k, string l, string m, int n2, string n, string o, int p) { }
     public void FsDisconnect() { }
     public void FsConfig(uint a, uint b, int c, uint d, uint e, int f, int g, bool h, uint i, uint j, string k, string l, int m2, string m, string n, int o) { }
     public void FsGetAudioDevices() { }
     public event System.Action<System.Collections.Generic.List<(string, string)>>? OnFsAudioDevices;
-    public void FsSetOutput(string a) { }
+    public void FsSetOutput(string a, string b) { }
     public void FsGetDevices() { }
     public event System.Action<Newtonsoft.Json.Linq.JObject>? OnFsUpdate;
     public event System.Action? OnFsQuit;
-    public event System.Action<System.Collections.Generic.List<string>>? OnFsDevices;
+    public event System.Action<Newtonsoft.Json.Linq.JArray>? OnFsDevices;
     public event System.Action<string>? OnFsPhotoSaved;
     public void TrimMemory() { }
     public void VroWaterConfig(bool enabled, int intervalSec) { }

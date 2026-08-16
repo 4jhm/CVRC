@@ -20,19 +20,19 @@ function updateDashHeroStats() {
     }
 }
 
-function getDashFriendCountLabel(count, keyBase) {
-    return count === 1
-        ? tf(`${keyBase}.one`, { count }, '{count} friend')
-        : tf(`${keyBase}.other`, { count }, '{count} friends');
-}
-
 function updateDashSub() {
-    const name = currentVrcUser?.displayName;
-    const status = name
-        ? (currentVrcUser.statusDescription || statusLabel(currentVrcUser.status))
-        : t('dashboard.sub.connect_world', 'Connect to VRChat to see your world');
-
-    document.getElementById('dashSub').textContent = status;
+    const el = document.getElementById('dashSub');
+    if (!el) return;
+    if (!currentVrcUser?.displayName) {
+        el.textContent = t('dashboard.sub.connect_world', 'Connect to VRChat to see your world');
+        return;
+    }
+    const status = currentVrcUser.statusDescription || statusLabel(currentVrcUser.status);
+    el.innerHTML = `<div class="myp-status-row" onclick="openStatusModal()">
+        <span class="${currentVrcUser.vrcRunning ? 'vrc-status-dot' : 'vrc-status-ring'} ${statusDotClass(currentVrcUser.status)}" style="width:9px;height:9px;flex-shrink:0;"></span>
+        <span>${esc(status)}</span>
+        <span class="msi" style="font-size:15px;opacity:.45;">edit</span>
+    </div>`;
 }
 
 function _dashVideoSync() {
@@ -115,12 +115,16 @@ function applyDashHeroBg() {
     _dashVideoSync();
 }
 
+const DASH_GREETING_COUNT = 37;
+let _dashGreetingIdx = 1 + Math.floor(Math.random() * DASH_GREETING_COUNT);
+function _dashRollGreeting() { _dashGreetingIdx = 1 + Math.floor(Math.random() * DASH_GREETING_COUNT); }
+
 function renderDashboard() {
     const _tab0 = document.getElementById('tab0');
     if (_tab0 && !_tab0.classList.contains('active')) return;
     const name = currentVrcUser?.displayName;
     document.getElementById('dashWelcome').innerHTML = name
-        ? tf('dashboard.welcome.named', { name: `<span style="color:var(--accent)">${esc(name)}</span>` }, 'Welcome, {name}!')
+        ? tf(`dashboard.welcome.greeting.${_dashGreetingIdx}`, { name: `<span style="color:var(--accent)">${esc(name)}</span>` }, 'Welcome back, {name}!')
         : esc(t('dashboard.welcome.default', 'Welcome!'));
     updateDashSub();
     updateDashHeroStats();
@@ -129,8 +133,7 @@ function renderDashboard() {
     if (currentSpecialTheme === 'auto') applyAutoColor();
     renderDashBgPreview();
 
-    renderDashWorlds();
-    renderDashFriendsFeed();
+    renderDashHeroWidgets();
     renderDashFriendsLocationSmall();
     renderDashFavWorlds();
     renderDashFavAvatars();
@@ -139,8 +142,6 @@ function renderDashboard() {
     renderDashRecentlyVisited();
     renderDashPopularWorlds();
     renderDashActiveWorlds();
-    renderDashGroupActivity();
-    renderDashGroupActivityInstances();
     renderDashGroupActivityInstancesSmall();
     renderDashRecentTimeline();
     if (currentVrcUser && _dashUpcomingEvents === null && !_dashUpcomingLoading && !_dashLayout.hidden.includes('upcoming_events')) {
@@ -156,11 +157,7 @@ function renderDashboard() {
 function renderDashboardFriendSections() {
     const _tab0 = document.getElementById('tab0');
     if (_tab0 && !_tab0.classList.contains('active')) return;
-    renderDashWorlds();
-    renderDashFriendsFeed();
     renderDashFriendsLocationSmall();
-    renderDashGroupActivity();
-    renderDashGroupActivityInstances();
     renderDashGroupActivityInstancesSmall();
 }
 
@@ -181,142 +178,7 @@ function requestWorldResolution() {
     }
 }
 
-function renderDashWorlds() {
-    const el = document.getElementById('dashFavWorlds');
-    if (!currentVrcUser || !vrcFriendsLoaded) {
-        setHtmlIfChanged(el, sk('world', 3));
-        return;
-    }
-    if (!vrcFriendsData.length) {
-        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.worlds.empty', 'No friends in worlds right now')}</div>`);
-        return;
-    }
 
-    // Group friends by worldId
-    const worlds = {};
-    vrcFriendsData.forEach(f => {
-        const { worldId, instanceType } = parseFriendLocation(f.location);
-        if (!worldId || !worldId.startsWith('wrld_')) return;
-
-        if (!worlds[worldId]) {
-            const cached = dashWorldCache[worldId];
-            worlds[worldId] = {
-                worldId: worldId,
-                name: cached?.name || null,
-                thumb: cached?.thumbnailImageUrl || cached?.imageUrl || '',
-                instanceType: instanceType,
-                friends: [],
-                location: f.location,
-                instances: new Set()
-            };
-        }
-        worlds[worldId].friends.push(f);
-        worlds[worldId].instances.add(f.location);
-    });
-
-    const worldList = Object.values(worlds);
-    if (!worldList.length) {
-        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.worlds.empty', 'No friends in worlds right now')}</div>`);
-        return;
-    }
-
-    // Check if we have unresolved worlds
-    const unresolved = worldList.filter(w => !w.name);
-    if (unresolved.length > 0 && Object.keys(dashWorldCache).length === 0) {
-        // Show placeholder while resolving
-        setHtmlIfChanged(el, worldList.map(w => {
-            const friendAvatars = w.friends.slice(0, 5).map(f => {
-                const img = f.image || '';
-                return img
-                    ? `<img class="cc-friend-av" src="${imgThumb(img, 64)}" loading="lazy" decoding="async" title="${esc(f.displayName)}" onerror="this.style.display='none'">`
-                    : `<div class="cc-friend-av" title="${esc(f.displayName)}" style="display:flex;align-items:center;justify-content:center;font-size:calc(9px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName||'?')[0])}</div>`;
-            }).join('');
-            const extra = w.friends.length > 5 ? `<span class="cc-extra">+${w.friends.length - 5}</span>` : '';
-            const friendCountLabel = getDashFriendCountLabel(w.friends.length, 'dashboard.worlds.count_world');
-            return `<div class="vrcn-content-card">
-                <div class="cc-bg"></div>
-                <div class="cc-scrim"></div>
-                <div class="cc-content">
-                    <div class="cc-name" style="color:var(--tx3)">${t('dashboard.worlds.loading_world', 'Loading world...')}</div>
-                    <div class="cc-friends-row">${friendAvatars}${extra}</div>
-                    <div class="cc-bottom-row">
-                        <div class="cc-meta"><span class="msi">person</span>${friendCountLabel}</div>
-                    </div>
-                </div>
-            </div>`;
-        }).join(''));
-        return;
-    }
-
-    setHtmlIfChanged(el, worldList.map(w => {
-        const friendAvatars = w.friends.slice(0, 5).map(f => {
-            const img = f.image || '';
-            return img
-                ? `<img class="cc-friend-av" src="${imgThumb(img, 64)}" loading="lazy" decoding="async" title="${esc(f.displayName)}" onerror="this.style.display='none'">`
-                : `<div class="cc-friend-av" title="${esc(f.displayName)}" style="display:flex;align-items:center;justify-content:center;font-size:calc(9px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName||'?')[0])}</div>`;
-        }).join('');
-        const extra = w.friends.length > 5 ? `<span class="cc-extra">+${w.friends.length - 5}</span>` : '';
-        const thumbStyle = w.thumb ? `background-image:url('${cssUrl(imgThumb(w.thumb, 256))}')` : '';
-        const wid = (w.worldId || '').replace(/'/g, "\\'");
-        const safeLoc = (w.location || '').replace(/'/g, "\\'");
-        const displayName = w.name || w.worldId;
-        const instCount = w.instances ? w.instances.size : 1;
-        const countLabel = instCount > 1
-            ? getDashFriendCountLabel(w.friends.length, 'dashboard.worlds.count_world')
-            : getDashFriendCountLabel(w.friends.length, 'dashboard.worlds.count_here');
-        const { cls: dwInstCls, label: dwInstLabel } = getInstanceBadge(w.instanceType);
-        const dwAgeGate = (w.location || '').includes('~ageGate')
-            ? `<span class="vrcn-badge" style="background:rgba(255,75,85,.15);color:var(--err);">${esc(t('worlds.instances.age_gated', 'Age Gated'))}</span>` : '';
-        return `<div class="vrcn-content-card" onclick="openFriendLocationDetail('${wid}','${safeLoc}')">
-            <div class="cc-bg" style="${thumbStyle}"></div>
-            <div class="cc-scrim"></div>
-            <div class="cc-badges-top"><span class="vrcn-badge ${dwInstCls}">${dwInstLabel}</span>${dwAgeGate}</div>
-            <div class="cc-content">
-                <div class="cc-name">${esc(displayName)}</div>
-                <div class="cc-friends-row">${friendAvatars}${extra}</div>
-                <div class="cc-bottom-row">
-                    <div class="cc-meta"><span class="msi">person</span>${countLabel}</div>
-                    ${instCount > 1 ? `<span style="font-size:calc(9px + var(--fs-off, 0px));color:rgba(255,255,255,.4);">${tf('dashboard.worlds.instances', { count: instCount }, '{count} instances')}</span>` : ''}
-                </div>
-            </div>
-        </div>`;
-    }).join(''));
-}
-
-function renderDashFriendsFeed() {
-    const el = document.getElementById('dashFriendsFeed');
-    if (!currentVrcUser || !vrcFriendsLoaded) {
-        setHtmlIfChanged(el, sk('feed', 8));
-        return;
-    }
-    if (!vrcFriendsData.length) {
-        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.friends.empty', 'No friends online')}</div>`);
-        return;
-    }
-    const activeFriends = vrcFriendsData.filter(f => f.presence !== 'offline');
-    setHtmlIfChanged(el, activeFriends.slice(0, 12).map(f => {
-        const img = f.image || '';
-        const imgTag = img
-            ? `<img class="dash-feed-avatar" src="${imgThumb(img, 96)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
-            : `<div class="dash-feed-avatar" style="display:flex;align-items:center;justify-content:center;font-size:calc(12px + var(--fs-off, 0px));font-weight:700;color:var(--tx3)">${esc((f.displayName||'?')[0])}</div>`;
-        const { worldId } = parseFriendLocation(f.location);
-        const cached = worldId ? dashWorldCache[worldId] : null;
-        const isPrivate = !f.location || f.location === 'private';
-        const loc = f.presence === 'web'
-            ? t('dashboard.friends.location_web', 'Web / Mobile')
-            : (isPrivate ? t('dashboard.friends.location_private', 'Private Instance') : (cached?.name || t('dashboard.friends.location_world', 'In World')));
-        const fid = (f.id || '').replace(/'/g, "\\'");
-        const dotClass = f.presence === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
-        return `<div class="dash-feed-card" onclick="openFriendDetail('${fid}')">
-            ${imgTag}
-            <div class="dash-feed-info">
-                <div class="dash-feed-name"><span class="${dotClass} ${statusDotClass(f.status)}" style="width:7px;height:7px;"></span>${esc(f.displayName)}</div>
-                <div class="dash-feed-status">${esc(f.statusDescription || statusLabel(f.status))}</div>
-                <div class="dash-feed-loc">${esc(loc)}</div>
-            </div>
-        </div>`;
-    }).join(''));
-}
 
 function browseDashBg() {
     sendToCS({ action: 'browseDashBg' });
@@ -340,6 +202,41 @@ function openFriendLocationDetail(worldId, location) {
     });
 }
 
+function _dashFlocsCardHtml(f) {
+        const { worldId } = parseFriendLocation(f.location);
+        const cached   = worldId ? dashWorldCache[worldId] : null;
+        const thumb    = cached?.thumbnailImageUrl || cached?.imageUrl || '';
+        const wname    = esc(cached?.name || (worldId
+        ? t('dashboard.friends.location_world', 'In World')
+        : t('dashboard.friends.location_private', 'Private Instance')));
+        const wid      = (worldId || '').replace(/'/g, "\\'");
+        const safeLoc  = (f.location || '').replace(/'/g, "\\'");
+        const img      = f.image || '';
+        const dotClass = f.presence === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
+        const avatarEl = img
+            ? `<img class="dash-flocs-avatar" src="${imgThumb(img, 96)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
+            : `<div class="dash-flocs-avatar dash-flocs-avatar-letter">${esc((f.displayName||'?')[0])}</div>`;
+        const worldThumb = thumb
+            ? `<img class="dash-flocs-world-thumb" src="${cssUrl(imgThumb(thumb, 96))}" alt="" loading="lazy" onerror="this.style.display='none'">`
+            : '';
+        const fid = (f.id || '').replace(/'/g, "\'");
+    const click = worldId ? `openFriendLocationDetail('${wid}','${safeLoc}')` : `openFriendDetail('${fid}')`;
+    return `<div class="dash-flocs-card" data-uid="${esc(f.id || '')}" onclick="${click}">
+            ${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(f.nameplateUrl) : ''}
+            <div class="dash-flocs-avatar-wrap">
+                ${avatarEl}
+                ${(typeof iconFrameHtml === 'function') ? iconFrameHtml(f.iconFrameUrl) : ''}
+                <span class="${dotClass} ${statusDotClass(f.status)} dash-flocs-dot"></span>
+            </div>
+            <div class="dash-flocs-info">
+                <div class="dash-flocs-name">${esc(f.displayName)}</div>
+                <div class="dash-flocs-status">${esc(f.statusDescription || statusLabel(f.status))}</div>
+                <div class="dash-flocs-world"><span class="msi">public</span>${wname}</div>
+            </div>
+            ${worldThumb}
+        </div>`;
+}
+
 function renderDashFriendsLocationSmall() {
     const el = document.getElementById('dashFriendLocSmallShelf');
     if (!el) return;
@@ -355,36 +252,7 @@ function renderDashFriendsLocationSmall() {
         setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.section.friend_locations_small_empty', 'No friends in worlds right now')}</div>`);
         return;
     }
-    setHtmlIfChanged(el, inWorld.slice(0, 24).map(f => {
-        const { worldId } = parseFriendLocation(f.location);
-        const cached   = worldId ? dashWorldCache[worldId] : null;
-        const thumb    = cached?.thumbnailImageUrl || cached?.imageUrl || '';
-        const wname    = esc(cached?.name || t('dashboard.friends.location_world', 'In World'));
-        const wid      = (worldId || '').replace(/'/g, "\\'");
-        const safeLoc  = (f.location || '').replace(/'/g, "\\'");
-        const img      = f.image || '';
-        const dotClass = f.presence === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
-        const avatarEl = img
-            ? `<img class="dash-flocs-avatar" src="${imgThumb(img, 96)}" loading="lazy" decoding="async" onerror="this.style.display='none'">`
-            : `<div class="dash-flocs-avatar dash-flocs-avatar-letter">${esc((f.displayName||'?')[0])}</div>`;
-        const worldThumb = thumb
-            ? `<img class="dash-flocs-world-thumb" src="${cssUrl(imgThumb(thumb, 96))}" alt="" loading="lazy" onerror="this.style.display='none'">`
-            : '';
-        return `<div class="dash-flocs-card" onclick="openFriendLocationDetail('${wid}','${safeLoc}')">
-            ${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(f.nameplateUrl) : ''}
-            <div class="dash-flocs-avatar-wrap">
-                ${avatarEl}
-                ${(typeof iconFrameHtml === 'function') ? iconFrameHtml(f.iconFrameUrl) : ''}
-                <span class="${dotClass} ${statusDotClass(f.status)} dash-flocs-dot"></span>
-            </div>
-            <div class="dash-flocs-info">
-                <div class="dash-flocs-name">${esc(f.displayName)}</div>
-                <div class="dash-flocs-status">${esc(f.statusDescription || statusLabel(f.status))}</div>
-                <div class="dash-flocs-world"><span class="msi">public</span>${wname}</div>
-            </div>
-            ${worldThumb}
-        </div>`;
-    }).join(''));
+    setHtmlIfChanged(el, inWorld.slice(0, 24).map(_dashFlocsCardHtml).join(''));
 }
 
 /* === My Instances === */
@@ -436,15 +304,20 @@ function renderMyInstances(instances) {
         const safeLoc = (inst.location || '').replace(/'/g, "\\'");
         const miAgeGate = (inst.location || '').includes('~ageGate')
             ? `<span class="vrcn-badge" style="background:rgba(255,75,85,.15);color:var(--err);">${esc(t('worlds.instances.age_gated', 'Age Gated'))}</span>` : '';
+        const miRegion = ((inst.location || '').match(/~region\(([^)]+)\)/) || [])[1] || '';
+        const miRegionBadge = miRegion ? `<span class="vrcn-badge cc-glass-badge">${esc(miRegion.toUpperCase())}</span>` : '';
+        const miPct = cap > 0 ? Math.max(0, Math.min(100, count / cap * 100)) : 0;
+        const miBar = cap > 0 ? `<div class="cc-capbar"><div class="cc-capbar-fill" style="width:${miPct.toFixed(0)}%"></div></div>` : '';
         return `<div class="vrcn-content-card" onclick="openMyInstanceDetail('${wid}','${safeLoc}')" data-location="${esc(inst.location || '')}">
             <div class="cc-bg" style="${thumbStyle}"></div>
             <div class="cc-scrim"></div>
-            <div class="cc-badges-top"><span class="vrcn-badge ${cls}">${esc(typeLabel)}</span>${miAgeGate}</div>
+            <div class="cc-badges-top"><span class="vrcn-badge ${cls}">${esc(typeLabel)}</span>${miRegionBadge}${miAgeGate}</div>
             <div class="cc-content">
                 <div class="cc-name">${esc(inst.worldName || inst.worldId || t('dashboard.instances.unknown_world', 'Unknown World'))}</div>
                 <div class="cc-bottom-row">
                     <div class="cc-meta"><span class="msi">person</span>${esc(countStr)}</div>
                 </div>
+                ${miBar}
             </div>
         </div>`;
     }).join('');
@@ -467,18 +340,16 @@ let _vrcNewsLoading = false;
 function _fetchVrcNews() {
     if (_vrcNewsLoading) return;
     if (Date.now() - _vrcNewsCache.ts < _VRC_NEWS_TTL && _vrcNewsCache.items.length) {
-        renderDashVrcNews();
         return;
     }
     _vrcNewsLoading = true;
-    renderDashVrcNews();
     sendToCS({ action: 'vrcGetNews' });
 }
 
 function onVrcNews(items) {
     _vrcNewsLoading = false;
     _vrcNewsCache   = { items: items || [], ts: Date.now() };
-    renderDashVrcNews();
+    renderDashHeroWidgets();
 }
 
 function _fmtNewsDate(str) {
@@ -490,29 +361,6 @@ function _fmtNewsDate(str) {
     } catch { return ''; }
 }
 
-function renderDashVrcNews() {
-    const el = document.getElementById('dashVrcNewsGrid');
-    if (!el) return;
-    if (_vrcNewsLoading && !_vrcNewsCache.items.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.news.loading', 'Loading news...')}</div>`;
-        return;
-    }
-    if (!_vrcNewsCache.items.length) {
-        el.innerHTML = `<div class="empty-msg">${t('dashboard.news.empty', 'No news available')}</div>`;
-        return;
-    }
-    el.innerHTML = _vrcNewsCache.items.map(item => `
-        <div class="dash-news-card${item.img ? ' has-img' : ''}" onclick="openNewsArticle('${jsq(String(item.id || ''))}','${jsq(item.link)}','${jsq(item.title)}')">
-            ${item.img ? `<img class="dash-news-img" src="${esc(item.img)}" alt="" loading="lazy" onerror="this.closest('.dash-news-card').classList.remove('has-img')">` : ''}
-            <div class="dash-news-body">
-                <div class="dash-news-meta">${esc(_fmtNewsDate(item.pubDate))}</div>
-                <div class="dash-news-title">${esc(item.title)}</div>
-                ${item.excerpt ? `<div class="dash-news-excerpt">${esc(item.excerpt)}</div>` : ''}
-                <button class="vrcn-button active" type="button">${t('dashboard.news.show_more', 'Show more')}</button>
-            </div>
-        </div>
-    `).join('');
-}
 
 let _newsArticleLink = '';
 
@@ -612,35 +460,8 @@ function newsArticleLinkClick(e) {
     if (a) { e.preventDefault(); sendToCS({ action: 'openUrl', url: a.getAttribute('data-href') }); }
 }
 
-function refreshDashVrcNews() {
-    const btn = document.getElementById('dashVrcNewsRefreshBtn');
-    if (btn) btn.classList.add('spinning');
-    _vrcNewsCache = { items: [], ts: 0 };
-    _fetchVrcNews();
-    setTimeout(() => { if (btn) btn.classList.remove('spinning'); }, 1500);
-}
 
 /* === Discovery Section === */
-let _discTab  = 'popular';
-let _discPage = 0;
-const DISC_PER_PAGE   = 8;
-const DISC_CACHE_TTL  = 10 * 60 * 1000;
-let _popularCache = { worlds: [], ts: 0 };
-let _activeCache  = { worlds: [], ts: 0 };
-let _recentCache  = { worlds: [], ts: 0 };
-let _recentInFlight  = false;
-let _popularInFlight = false;
-let _activeInFlight  = false;
-
-// Refresh every 10 minutes — only when Dashboard tab is active and at least one consumer is visible
-const _discRefreshInterval = setInterval(() => {
-    const tab0 = document.getElementById('tab0');
-    if (!tab0 || !tab0.classList.contains('active')) return;
-    const popHidden = _dashLayout.hidden.includes('discovery') && _dashLayout.hidden.includes('popular_worlds');
-    const actHidden = _dashLayout.hidden.includes('discovery') && _dashLayout.hidden.includes('active_worlds');
-    if (!popHidden) sendToCS({ action: 'vrcGetPopularWorlds' });
-    if (!actHidden) sendToCS({ action: 'vrcGetActiveWorlds' });
-}, DISC_CACHE_TTL);
 
 // Group Activity: refresh every 10 min
 const _groupInstRefreshInterval = setInterval(() => {
@@ -664,127 +485,18 @@ const _dashSlow120Interval = setInterval(() => {
     const tab0 = document.getElementById('tab0');
     if (!tab0 || !tab0.classList.contains('active')) return;
     if (!_dashLayout.hidden.includes('own_avatars')) sendToCS({ action: 'vrcGetAvatars', filter: 'own' });
-    if (!_dashLayout.hidden.includes('upcoming_events') && !_dashUpcomingLoading) refreshDashUpcomingEvents();
+    if ((!_dashLayout.hidden.includes('upcoming_events') || _dashLayout.hero.right === 'next_event') && !_dashUpcomingLoading) refreshDashUpcomingEvents();
 }, 120 * 60 * 1000);
 
-function fetchWorldTabs() {
-    if (!(_dashLayout.hidden.includes('discovery') && _dashLayout.hidden.includes('popular_worlds')))
-        sendToCS({ action: 'vrcGetPopularWorlds' });
-    if (!(_dashLayout.hidden.includes('discovery') && _dashLayout.hidden.includes('active_worlds')))
-        sendToCS({ action: 'vrcGetActiveWorlds' });
-}
 
-function setDiscoveryTab(tab) {
-    _discTab  = tab;
-    _discPage = 0;
-    document.querySelectorAll('.disc-tab').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
-    });
-    if (tab === 'popular') _fetchPopularWorlds();
-    else if (tab === 'active') _fetchActiveWorlds();
-    else if (tab === 'recent') _fetchRecentWorlds();
-}
 
-function _fetchPopularWorlds() {
-    if (Date.now() - _popularCache.ts < DISC_CACHE_TTL && _popularCache.worlds.length) {
-        renderDiscoverySection();
-        return;
-    }
-    document.getElementById('dashDiscoveryGrid').innerHTML = `<div class="empty-msg">${t('dashboard.discovery.loading', 'Loading worlds...')}</div>`;
-    sendToCS({ action: 'vrcGetPopularWorlds' });
-}
 
-function _fetchActiveWorlds() {
-    if (Date.now() - _activeCache.ts < DISC_CACHE_TTL && _activeCache.worlds.length) {
-        renderDiscoverySection();
-        return;
-    }
-    document.getElementById('dashDiscoveryGrid').innerHTML = `<div class="empty-msg">${t('dashboard.discovery.loading', 'Loading worlds...')}</div>`;
-    sendToCS({ action: 'vrcGetActiveWorlds' });
-}
 
-function _fetchRecentWorlds() {
-    if (Date.now() - _recentCache.ts < DISC_CACHE_TTL && _recentCache.worlds.length) {
-        renderDiscoverySection();
-        return;
-    }
-    document.getElementById('dashDiscoveryGrid').innerHTML = `<div class="empty-msg">${t('dashboard.discovery.loading', 'Loading worlds...')}</div>`;
-    sendToCS({ action: 'vrcGetRecentWorlds' });
-}
 
-function onRecentWorlds(worlds) {
-    _recentInFlight = false;
-    _recentCache = { worlds: worlds || [], ts: Date.now() };
-    if (_discTab === 'recent') renderDiscoverySection();
-    renderDashRecentlyVisited();
-}
 
-function onPopularWorlds(worlds) {
-    _popularInFlight = false;
-    _popularCache = { worlds: worlds || [], ts: Date.now() };
-    if (_discTab === 'popular') renderDiscoverySection();
-    renderDashPopularWorlds();
-}
 
-function onActiveWorlds(worlds) {
-    _activeInFlight = false;
-    _activeCache = { worlds: worlds || [], ts: Date.now() };
-    if (_discTab === 'active') renderDiscoverySection();
-    renderDashActiveWorlds();
-}
 
-function discPageChange(dir) {
-    const cache = _discTab === 'popular' ? _popularCache : _discTab === 'active' ? _activeCache : _recentCache;
-    const maxPage = Math.max(0, Math.ceil(cache.worlds.length / DISC_PER_PAGE) - 1);
-    _discPage = Math.max(0, Math.min(maxPage, _discPage + dir));
-    renderDiscoverySection();
-}
 
-function renderDiscoverySection() {
-    const grid       = document.getElementById('dashDiscoveryGrid');
-    const pagination = document.getElementById('discPagination');
-    if (!grid) return;
-
-    const cache = _discTab === 'popular' ? _popularCache : _discTab === 'active' ? _activeCache : _recentCache;
-    if (!cache.worlds.length) {
-        grid.innerHTML = `<div class="empty-msg">${t('dashboard.discovery.loading', 'Loading worlds...')}</div>`;
-        if (pagination) pagination.style.display = 'none';
-        return;
-    }
-
-    const totalPages = Math.max(1, Math.ceil(cache.worlds.length / DISC_PER_PAGE));
-    _discPage = Math.min(_discPage, totalPages - 1);
-    const page = cache.worlds.slice(_discPage * DISC_PER_PAGE, (_discPage + 1) * DISC_PER_PAGE);
-
-    grid.innerHTML = page.map(w => {
-        const name  = esc(w.name || w.id || '');
-        const thumb = w.thumbnailImageUrl || w.imageUrl || '';
-        const thumbStyle = thumb ? `background-image:url('${cssUrl(imgThumb(thumb, 256))}')` : '';
-        const wid = (w.id || '').replace(/'/g, "\\'");
-        const occupants = w.occupants ?? w.publicOccupants ?? 0;
-        const playingStr = occupants > 0
-            ? tf('dashboard.discovery.playing', { count: occupants.toLocaleString() }, '{count} playing')
-            : '';
-        return `<div class="vrcn-content-card" onclick="openWorldSearchDetail('${wid}')">
-            <div class="cc-bg" style="${thumbStyle}"></div>
-            <div class="cc-scrim"></div>
-            <div class="cc-content">
-                <div class="cc-name">${name}</div>
-                ${playingStr ? `<div class="cc-bottom-row"><div class="cc-meta"><span class="msi">person</span>${playingStr}</div></div>` : ''}
-            </div>
-        </div>`;
-    }).join('');
-
-    if (pagination) {
-        pagination.style.display = totalPages > 1 ? 'flex' : 'none';
-        const lbl = document.getElementById('discPageLabel');
-        if (lbl) lbl.textContent = `${_discPage + 1} / ${totalPages}`;
-        const prev = document.getElementById('discPrevBtn');
-        const next = document.getElementById('discNextBtn');
-        if (prev) prev.disabled = _discPage === 0;
-        if (next) next.disabled = _discPage >= totalPages - 1;
-    }
-}
 
 /* === Dashboard — Favorite Worlds shelf === */
 
@@ -920,12 +632,7 @@ function renderDashRecentPhotos() {
             <div class="dpi-date">${esc(dateStr)}</div>
         </div>`;
     };
-    const big1   = renderPhoto(photos[0], 'dash-photo-big-1');
-    const big2   = photos[1] ? renderPhoto(photos[1], 'dash-photo-big-2') : '';
-    const big3   = photos[2] ? renderPhoto(photos[2], 'dash-photo-big-3') : '';
-    const big4   = photos[3] ? renderPhoto(photos[3], 'dash-photo-big-4') : '';
-    const smalls = photos.slice(4).map(f => renderPhoto(f)).join('');
-    el.innerHTML = `${big1}${big2}${big3}${big4}${smalls}`;
+    el.innerHTML = photos.map(f => renderPhoto(f)).join('');
 }
 
 /* === Dashboard — Avatar card (shared by fav + own shelves) === */
@@ -935,11 +642,9 @@ function _dashAvatarCard(a) {
     const aid       = jsq(a.id || '');
     const isActive  = a.id === currentAvatarId;
     const activeBadge = (typeof avatarCurrentBadge === 'function') ? avatarCurrentBadge(isActive) : '';
-    return `<div class="vrcn-content-card av-card${isActive ? ' av-active' : ''}" onclick="selectAvatar('${aid}')">
-        <div class="cc-bg"${thumb ? ` style="background-image:url('${cssUrl(imgThumb(thumb, 256))}')"` : ''}></div>
-        <div class="cc-scrim"></div>
-        <div class="cc-badges-top">${activeBadge}</div>
-        <div class="cc-content"><div class="cc-name">${esc(a.name || t('avatars.labels.unnamed', 'Unnamed'))}</div></div>
+    return `<div class="dash-av-tile${isActive ? ' dav-active' : ''}" onclick="selectAvatar('${aid}')">
+        <div class="dav-img"${thumb ? ` style="background-image:url('${cssUrl(imgThumb(thumb, 256))}')"` : ''}>${activeBadge ? `<div class="dav-badge">${activeBadge}</div>` : ''}</div>
+        <div class="dav-name">${esc(a.name || t('avatars.labels.unnamed', 'Unnamed'))}</div>
     </div>`;
 }
 
@@ -963,6 +668,44 @@ function _dashWorldShelfSkeleton() {
     return Array.from({ length: 8 }, () => `<div class="vrcn-content-card sk-block" style="pointer-events:none;"></div>`).join('');
 }
 
+const WORLDS_CACHE_TTL = 10 * 60 * 1000;
+let _popularCache = { worlds: [], ts: 0 };
+let _activeCache  = { worlds: [], ts: 0 };
+let _recentCache  = { worlds: [], ts: 0 };
+let _recentInFlight  = false;
+let _popularInFlight = false;
+let _activeInFlight  = false;
+
+const _worldsRefreshInterval = setInterval(() => {
+    const tab0 = document.getElementById('tab0');
+    if (!tab0 || !tab0.classList.contains('active')) return;
+    if (!_dashLayout.hidden.includes('popular_worlds')) sendToCS({ action: 'vrcGetPopularWorlds' });
+    if (!_dashLayout.hidden.includes('active_worlds')) sendToCS({ action: 'vrcGetActiveWorlds' });
+}, WORLDS_CACHE_TTL);
+
+function _dashRankRow(w, idx) {
+    const thumb = w.thumbnailImageUrl || w.imageUrl || '';
+    const wid   = jsq(w.id || '');
+    const occupants = w.occupants ?? w.publicOccupants ?? 0;
+    return `<div class="dash-rank-row" onclick="openWorldSearchDetail('${wid}')">
+        <span class="drr-rank${idx < 3 ? ' drr-top' : ''}">${idx + 1}</span>
+        <div class="drr-thumb"${thumb ? ` style="background-image:url('${cssUrl(imgThumb(thumb, 128))}')"` : ''}></div>
+        <div class="drr-info">
+            <div class="drr-name">${esc(w.name || w.id || '?')}</div>
+            ${occupants > 0 ? `<div class="drr-meta"><span class="msi">person</span>${occupants.toLocaleString()}</div>` : ''}
+        </div>
+    </div>`;
+}
+
+function _dashRankSkeleton() {
+    const row = `<div class="dash-rank-row" style="pointer-events:none;">
+        <span class="drr-rank">·</span>
+        <div class="drr-thumb sk-block"></div>
+        <div class="drr-info"><div class="sk-block" style="height:11px;width:70%;border-radius:4px;"></div></div>
+    </div>`;
+    return Array.from({ length: 10 }, () => row).join('');
+}
+
 function refreshDashRecentlyVisited() {
     const btn = document.getElementById('dashRecentlyVisitedRefreshBtn');
     if (btn) btn.classList.add('spinning');
@@ -977,8 +720,8 @@ function renderDashRecentlyVisited() {
     if (_btn) _btn.classList.remove('spinning');
     if (!currentVrcUser) { el.innerHTML = `<div class="empty-msg">${t('dashboard.worlds.login','Login to see worlds')}</div>`; return; }
     const worlds = _recentCache.worlds;
-    if (!worlds.length) { el.innerHTML = _dashWorldShelfSkeleton(); if (!_recentInFlight && !(_dashLayout.hidden.includes('recently_visited') && _dashLayout.hidden.includes('discovery'))) { _recentInFlight = true; sendToCS({ action: 'vrcGetRecentWorlds' }); } return; }
-    el.innerHTML = worlds.slice(0, 20).map(w => _dashWorldCard(w, false)).join('');
+    if (!worlds.length) { el.innerHTML = _dashWorldShelfSkeleton(); if (!_recentInFlight && !_dashLayout.hidden.includes('recently_visited')) { _recentInFlight = true; sendToCS({ action: 'vrcGetRecentWorlds' }); } return; }
+    el.innerHTML = worlds.slice(0, 20).map(w => _dashWorldCard(w, true)).join('');
 }
 
 function renderDashPopularWorlds() {
@@ -986,8 +729,8 @@ function renderDashPopularWorlds() {
     if (!el) return;
     if (!currentVrcUser) { el.innerHTML = `<div class="empty-msg">${t('dashboard.worlds.login','Login to see worlds')}</div>`; return; }
     const worlds = _popularCache.worlds;
-    if (!worlds.length) { el.innerHTML = _dashWorldShelfSkeleton(); if (!_popularInFlight && !(_dashLayout.hidden.includes('popular_worlds') && _dashLayout.hidden.includes('discovery'))) { _popularInFlight = true; sendToCS({ action: 'vrcGetPopularWorlds' }); } return; }
-    el.innerHTML = worlds.slice(0, 20).map(_dashWorldCard).join('');
+    if (!worlds.length) { el.innerHTML = _dashRankSkeleton(); if (!_popularInFlight && !_dashLayout.hidden.includes('popular_worlds')) { _popularInFlight = true; sendToCS({ action: 'vrcGetPopularWorlds' }); } return; }
+    el.innerHTML = worlds.slice(0, 10).map(_dashRankRow).join('');
 }
 
 function renderDashActiveWorlds() {
@@ -995,61 +738,35 @@ function renderDashActiveWorlds() {
     if (!el) return;
     if (!currentVrcUser) { el.innerHTML = `<div class="empty-msg">${t('dashboard.worlds.login','Login to see worlds')}</div>`; return; }
     const worlds = _activeCache.worlds;
-    if (!worlds.length) { el.innerHTML = _dashWorldShelfSkeleton(); if (!_activeInFlight && !(_dashLayout.hidden.includes('active_worlds') && _dashLayout.hidden.includes('discovery'))) { _activeInFlight = true; sendToCS({ action: 'vrcGetActiveWorlds' }); } return; }
-    el.innerHTML = worlds.slice(0, 20).map(_dashWorldCard).join('');
+    if (!worlds.length) { el.innerHTML = _dashRankSkeleton(); if (!_activeInFlight && !_dashLayout.hidden.includes('active_worlds')) { _activeInFlight = true; sendToCS({ action: 'vrcGetActiveWorlds' }); } return; }
+    el.innerHTML = worlds.slice(0, 10).map(_dashRankRow).join('');
 }
+
+function onRecentWorlds(worlds) {
+    _recentInFlight = false;
+    _recentCache = { worlds: worlds || [], ts: Date.now() };
+    renderDashRecentlyVisited();
+}
+
+function onPopularWorlds(worlds) {
+    _popularInFlight = false;
+    _popularCache = { worlds: worlds || [], ts: Date.now() };
+    renderDashPopularWorlds();
+}
+
+function onActiveWorlds(worlds) {
+    _activeInFlight = false;
+    _activeCache = { worlds: worlds || [], ts: Date.now() };
+    renderDashActiveWorlds();
+}
+
+
+
+
 
 /* === Dashboard — Group Activity grid === */
 
-function _dashGroupSkeleton() {
-    const card = `<div class="dash-group-card" style="pointer-events:none;">
-        <div class="dash-group-icon sk-block"></div>
-        <div class="dash-group-info">
-            <div class="sk-block" style="height:11px;width:70%;border-radius:4px;margin-bottom:5px;"></div>
-            <div class="sk-block" style="height:9px;width:45%;border-radius:4px;"></div>
-        </div>
-    </div>`;
-    return Array.from({ length: 4 }, () => card).join('');
-}
 
-function renderDashGroupActivity() {
-    const el = document.getElementById('dashGroupActivityGrid');
-    if (!el) return;
-    if (!currentVrcUser) {
-        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.groups.login', 'Login to see your groups')}</div>`);
-        return;
-    }
-    const groups = (typeof myGroups !== 'undefined') ? myGroups : [];
-    const loaded = (typeof myGroupsLoaded !== 'undefined') ? myGroupsLoaded : false;
-    if (!groups.length && !loaded) {
-        if (_dashLayout.hidden.includes('groups')) return;
-        setHtmlIfChanged(el, _dashGroupSkeleton());
-        sendToCS({ action: 'vrcGetMyGroups' });
-        return;
-    }
-    if (!groups.length) {
-        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.groups.empty', 'No groups joined yet')}</div>`);
-        return;
-    }
-    setHtmlIfChanged(el, groups.slice(0, 8).map(g => {
-        const gid  = jsq(g.id || '');
-        const icon = g.iconUrl || '';
-        const cnt  = g.memberCount || 0;
-        const iconHtml = icon
-            ? `<img src="${imgThumb(icon, 96)}" loading="lazy" decoding="async" onerror="this.parentElement.innerHTML='<span class=msi>group</span>'">`
-            : `<span class="msi">group</span>`;
-        const metaHtml = cnt > 0
-            ? `<span class="msi">person</span>${esc(cnt.toLocaleString())}`
-            : (g.shortCode ? esc(g.shortCode) : '');
-        return `<div class="dash-group-card" onclick="openGroupDetail('${gid}')">
-            <div class="dash-group-icon">${iconHtml}</div>
-            <div class="dash-group-info">
-                <div class="dash-group-name">${esc(g.name || '?')}</div>
-                <div class="dash-group-meta">${metaHtml}</div>
-            </div>
-        </div>`;
-    }).join(''));
-}
 
 /* === Dashboard — Group Activity Instances === */
 
@@ -1077,61 +794,14 @@ function onDashGroupInstances(instances) {
     const btn2 = document.getElementById('dashGroupActivitySmallRefreshBtn');
     if (btn1) btn1.classList.remove('spinning');
     if (btn2) btn2.classList.remove('spinning');
-    renderDashGroupActivityInstances();
+    const gBtn = document.getElementById('groupsRefreshBtn');
+    if (gBtn && gBtn.disabled) { gBtn.disabled = false; gBtn.querySelector('.msi').textContent = 'refresh'; }
     renderDashGroupActivityInstancesSmall();
-}
-
-function _ensureDashGroupInstancesLoaded() {
-    if (_dashGroupInstances === null) {
-        loadDashGroupInstances();
-        return false;
+    renderDashHeroWidgets();
+    if (typeof renderGroupInstancesView === 'function') {
+        if (typeof lvKeepScroll === 'function') lvKeepScroll(document.getElementById('groupInstancesGrid'), () => renderGroupInstancesView());
+        else renderGroupInstancesView();
     }
-    return true;
-}
-
-function renderDashGroupActivityInstances() {
-    const el = document.getElementById('dashGroupActivityCards');
-    if (!el) return;
-    if (!currentVrcUser) {
-        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.groups.login', 'Login to see your groups')}</div>`);
-        return;
-    }
-    if (_dashGroupInstances === null) {
-        setHtmlIfChanged(el, sk('world', 3));
-        loadDashGroupInstances();
-        return;
-    }
-    if (!_dashGroupInstances.length) {
-        setHtmlIfChanged(el, `<div class="empty-msg">${t('dashboard.section.group_activity_empty', 'No active group instances right now')}</div>`);
-        return;
-    }
-    setHtmlIfChanged(el, _dashGroupInstances.slice(0, 24).map(inst => {
-        const thumb    = inst.worldThumb || '';
-        const wname    = inst.worldName || t('dashboard.instances.unknown_world', 'Unknown World');
-        const gname    = inst.groupName || '';
-        const loc      = (inst.location || '').replace(/'/g, "\\'");
-        const users    = inst.capacity > 0 ? `${inst.userCount}/${inst.capacity}` : String(inst.userCount || 0);
-        const thumbStyle = thumb ? `background-image:url('${cssUrl(imgThumb(thumb, 256))}')` : '';
-        const { instanceType } = (typeof parseFriendLocation === 'function') ? parseFriendLocation(inst.location || '') : { instanceType: 'group' };
-        const { cls: instCls, label: instLabel } = (typeof getInstanceBadge === 'function') ? getInstanceBadge(instanceType) : { cls: '', label: '' };
-        const gaAgeGate = (inst.location || '').includes('~ageGate')
-            ? `<span class="vrcn-badge" style="background:rgba(255,75,85,.15);color:var(--err);">${esc(t('worlds.instances.age_gated', 'Age Gated'))}</span>` : '';
-        const groupAvatar = inst.groupIcon
-            ? `<img class="cc-friend-av" src="${imgThumb(inst.groupIcon, 64)}" title="${esc(gname)}" onerror="this.style.display='none'">`
-            : `<div class="cc-friend-av" title="${esc(gname)}" style="display:flex;align-items:center;justify-content:center;"><span class="msi" style="font-size:10px;color:var(--tx3)">group</span></div>`;
-        return `<div class="vrcn-content-card" onclick="openGroupInstanceDetail('${loc}')">
-            <div class="cc-bg" style="${thumbStyle}"></div>
-            <div class="cc-scrim"></div>
-            ${(instLabel || gaAgeGate) ? `<div class="cc-badges-top">${instLabel ? `<span class="vrcn-badge ${instCls}">${instLabel}</span>` : ''}${gaAgeGate}</div>` : ''}
-            <div class="cc-content">
-                <div class="cc-name">${esc(wname)}</div>
-                <div class="cc-friends-row">${groupAvatar}<span class="cc-extra" style="background:transparent;color:rgba(255,255,255,.85);padding-left:4px;">${esc(gname)}</span></div>
-                <div class="cc-bottom-row">
-                    <div class="cc-meta"><span class="msi">person</span>${esc(users)}</div>
-                </div>
-            </div>
-        </div>`;
-    }).join(''));
 }
 
 function renderDashGroupActivityInstancesSmall() {
@@ -1201,33 +871,23 @@ function openGroupInstanceDetail(location) {
 
 /* === Dashboard — Recent Activity Timeline === */
 
-function _dashTlSkeleton(n = 5) {
-    const row = `<tr style="pointer-events:none;">
-        <td><span class="sk-block" style="height:9px;width:80px;border-radius:3px;display:inline-block;"></span></td>
-        <td><span class="sk-block" style="height:9px;width:70px;border-radius:3px;display:inline-block;"></span></td>
-        <td><span class="sk-block" style="height:9px;width:50px;border-radius:3px;display:inline-block;"></span></td>
-        <td><span class="sk-block" style="height:9px;width:100px;border-radius:3px;display:inline-block;"></span></td>
-    </tr>`;
-    return `<div class="tl-list-wrap"><table class="tl-list-table"><tbody>${Array.from({ length: n }, () => row).join('')}</tbody></table></div>`;
-}
-
-function _dashTlRelative(ts) {
-    const diff = Date.now() - new Date(ts).getTime();
-    const m = Math.floor(diff / 60000);
-    if (m < 1)  return t('common.time.just_now', 'just now');
-    if (m < 60) return tf('common.time.min_ago',  { m }, '{m}m ago');
-    const h = Math.floor(m / 60);
-    if (h < 24) return tf('common.time.hour_ago', { h }, '{h}h ago');
-    const d = Math.floor(h / 24);
-    return tf('common.time.day_ago', { d }, '{d}d ago');
+function _dashTlSkeleton(n = 6) {
+    const row = `<div class="dash-act-row" style="pointer-events:none;">
+        <span class="sk-block" style="height:14px;width:14px;border-radius:4px;"></span>
+        <span class="sk-block" style="height:9px;width:110px;border-radius:3px;"></span>
+        <span class="sk-block" style="height:24px;width:24px;border-radius:7px;"></span>
+        <span class="sk-block" style="height:9px;width:110px;border-radius:3px;"></span>
+        <span class="sk-block" style="height:9px;flex:1;border-radius:3px;"></span>
+    </div>`;
+    return `<div class="dash-act-list">${Array.from({ length: n }, () => row).join('')}</div>`;
 }
 
 function _dashTlDetail(ev, isFriend) {
     if (isFriend) {
         switch (ev.type) {
             case 'friend_gps':        return ev.worldName || ev.worldId || '';
-            case 'friend_status':     return ev.newValue || '';
-            case 'friend_statusdesc': return ev.newValue || '';
+            case 'friend_status':     return '';
+            case 'friend_statusdesc': return ev.newValue || t('timeline.value.cleared', '(cleared)');
             case 'friend_bio':        return ev.newValue || '';
             case 'friend_online':
             case 'friend_offline':
@@ -1240,27 +900,81 @@ function _dashTlDetail(ev, isFriend) {
         case 'instance_join':  return ev.worldName || ev.worldId || '';
         case 'photo':          return ev.worldName || (ev.photoPath ? ev.photoPath.split(/[\\/]/).pop() : '') || '';
         case 'first_meet':
-        case 'meet_again':     return ev.userName || '';
-        case 'avatar_switch':  return ev.avatarName || '';
-        case 'notification':   return ev.notifType || '';
-        case 'video_url':      return ev.url || '';
+        case 'meet_again':     return ev.worldName || '';
+        case 'avatar_switch':  return '';
+        case 'notification':   return (typeof tlNotifTypeLabel === 'function') ? tlNotifTypeLabel(ev.notifType) : (ev.notifType || '');
+        case 'moderation':     return (typeof tlModTypeLabel === 'function')
+            ? tlModTypeLabel(ev.notifType, (typeof tlModIsActive === 'function') ? tlModIsActive(ev) : false)
+            : (ev.notifType || '');
+        case 'profile': {
+            if (ev.notifType === 'status') return '';
+            if (ev.notifType === 'statusdesc') return ev.message || t('timeline.value.cleared', '(cleared)');
+            if (ev.notifType === 'bio') return ev.message || '';
+            return (typeof tlProfileMeta === 'function') ? tlProfileMeta(ev).label : '';
+        }
+        case 'video_url':      return ev.message || ev.url || '';
         default:               return '';
     }
+}
+
+function _dashTlStatusChips(oldV, newV) {
+    return `<span class="ft-status-chip ${statusCssClass(oldV)}">${esc(statusLabel(oldV) || '?')}</span>`
+        + `<span class="msi" style="font-size:11px;color:var(--tx3);">arrow_forward</span>`
+        + `<span class="ft-status-chip ${statusCssClass(newV)}">${esc(statusLabel(newV) || '?')}</span>`;
 }
 
 function _dashTlRows(events, isFriend) {
     if (!events.length) {
         return `<div class="empty-msg" style="padding:16px 8px;">${t('dashboard.timeline.empty', 'No events yet')}</div>`;
     }
-    const sliced = events.slice(0, 8);
-    if (isFriend) {
-        return typeof buildFriendListHtml === 'function'
-            ? buildFriendListHtml(sliced, true)
-            : `<div class="empty-msg">${t('dashboard.timeline.empty', 'No events yet')}</div>`;
-    }
-    return typeof buildPersonalListHtml === 'function'
-        ? buildPersonalListHtml(sliced, true)
-        : `<div class="empty-msg">${t('dashboard.timeline.empty', 'No events yet')}</div>`;
+    const rows = events.slice(0, 10).map(ev => {
+        const ei = jsq(ev.id);
+        let icon, color, name, click;
+        if (isFriend) {
+            const meta = (typeof ftTypeMeta === 'function') ? ftTypeMeta(ev.type) : { icon: 'group', label: '' };
+            icon  = meta.icon;
+            color = ev.type === 'friend_gps'
+                ? ((typeof getFtGpsColor === 'function') ? getFtGpsColor(ev) : 'var(--accent)')
+                : ((typeof FT_TYPE_COLOR !== 'undefined' && FT_TYPE_COLOR[ev.type]) || 'var(--tx3)');
+            name  = ev.friendName || t('timeline.unknown', 'Unknown');
+            click = ev.type === 'friend_gps' ? `openFtGpsDetail('${ei}')` : `openFtDetail('${ei}')`;
+        } else {
+            const meta = (typeof tlTypeMeta === 'function') ? tlTypeMeta(ev.type) : { icon: 'schedule', label: '' };
+            icon  = meta.icon;
+            color = (typeof getTlEventColor === 'function') ? getTlEventColor(ev) : 'var(--accent)';
+            name  = ev.userName || ev.senderName || (currentVrcUser?.displayName ?? '');
+            click = `openTlDetail('${ei}')`;
+        }
+        let detail = _dashTlDetail(ev, isFriend);
+        if (!detail) {
+            const meta = isFriend
+                ? ((typeof ftTypeMeta === 'function') ? ftTypeMeta(ev.type) : null)
+                : ((typeof tlTypeMeta === 'function') ? tlTypeMeta(ev.type) : null);
+            detail = meta?.label || '';
+        }
+        const img = isFriend
+            ? (ev.friendImage || '')
+            : (ev.type === 'notification' ? (ev.senderImage || '') : (ev.userImage || currentVrcUser?.image || ''));
+        const av = img
+            ? `<span class="dash-act-av" style="background-image:url('${cssUrl(imgThumb(img, 48))}')"></span>`
+            : `<span class="dash-act-av dash-act-av-letter">${esc((name || '?')[0].toUpperCase())}</span>`;
+        const d = new Date(ev.timestamp);
+        const isStatusChange = typeof statusCssClass === 'function' && (
+            (isFriend && ev.type === 'friend_status') ||
+            (!isFriend && ev.type === 'profile' && ev.notifType === 'status'));
+        const detailHtml = isStatusChange
+            ? `<span class="dash-act-detail" style="display:flex;align-items:center;gap:5px;overflow:hidden;">${
+                isFriend ? _dashTlStatusChips(ev.oldValue, ev.newValue) : _dashTlStatusChips(ev.notifTitle, ev.message)}</span>`
+            : `<span class="dash-act-detail">${esc(detail)}</span>`;
+        return `<div class="dash-act-row" onclick="${click}">
+            <span class="msi dash-act-icon" style="color:${color}">${icon}</span>
+            <span class="dash-act-time">${esc(fmtShortDate(d))}<span class="dash-act-clock">${esc(fmtTime(d))}</span></span>
+            ${av}
+            <span class="dash-act-name">${esc(name)}</span>
+            ${detailHtml}
+        </div>`;
+    }).join('');
+    return `<div class="dash-act-list">${rows}</div>`;
 }
 
 function renderDashMyRecentTimeline() {
@@ -1271,7 +985,7 @@ function renderDashMyRecentTimeline() {
         return;
     }
     const personal = (typeof timelineEvents !== 'undefined') ? timelineEvents : [];
-    if (!personal.length && !_dashLayout.hidden.includes('my_recent_activity')) sendToCS({ action: 'vrcGetTimeline', offset: 0 });
+    if (!personal.length && !_dashLayout.hidden.includes('my_recent_activity')) sendToCS({ action: 'getTimeline', offset: 0 });
     el.innerHTML = personal.length ? _dashTlRows(personal, false) : _dashTlSkeleton();
 }
 
@@ -1296,46 +1010,89 @@ function renderDashRecentTimeline() {
 
 const DASH_SECTION_META = [
     { id: 'my_instances',            nameKey: 'dashboard.section.my_instances',            name: 'Your Instances' },
-    { id: 'vrchat_news',             nameKey: 'dashboard.section.vrchat_news',             name: 'VRChat News' },
     { id: 'upcoming_events',         nameKey: 'dashboard.section.upcoming_events',         name: 'Upcoming Events' },
     { id: 'group_activity_small',    nameKey: 'dashboard.section.group_activity_small',    name: 'Group Activity (Small)' },
     { id: 'friend_locations_small',  nameKey: 'dashboard.section.friend_locations_small',  name: 'Friends Location (Small)' },
     { id: 'recently_visited',        nameKey: 'dashboard.section.recently_visited',        name: 'Recently Visited' },
     { id: 'recent_photos',           nameKey: 'dashboard.section.recent_photos',           name: 'Recent Photos' },
-    { id: 'quick_controls',          nameKey: 'dashboard.section.quick_controls',          name: 'Quick Controls', windowsOnly: true },
-    { id: 'friend_locations',        nameKey: 'dashboard.section.friend_locations',        name: 'Friends Locations' },
-    { id: 'discovery',               nameKey: 'dashboard.section.discovery',               name: 'Discover Worlds' },
-    { id: 'friend_activity',         nameKey: 'dashboard.section.friend_activity',         name: 'Friends Activity' },
     { id: 'fav_worlds',              nameKey: 'dashboard.section.fav_worlds',              name: 'Favorite Worlds' },
     { id: 'fav_avatars',             nameKey: 'dashboard.section.fav_avatars',             name: 'Favorite Avatars' },
     { id: 'own_avatars',             nameKey: 'dashboard.section.own_avatars',             name: 'My Avatars' },
-    { id: 'groups',                  nameKey: 'dashboard.section.your_groups',             name: 'Your Groups' },
-    { id: 'group_activity',          nameKey: 'dashboard.section.group_activity',          name: 'Group Activity' },
     { id: 'popular_worlds',          nameKey: 'dashboard.section.popular_worlds',          name: 'Popular Worlds' },
     { id: 'active_worlds',           nameKey: 'dashboard.section.active_worlds',           name: 'Very Active Worlds' },
     { id: 'my_recent_activity',      nameKey: 'dashboard.section.my_recent_activity',      name: 'My Recent Activity' },
     { id: 'friends_recent_activity', nameKey: 'dashboard.section.friends_recent_activity', name: 'Friends Recent Activity' },
 ];
 const DASH_DEFAULT_ORDER   = DASH_SECTION_META.map(s => s.id);
-const DASH_DEFAULT_VISIBLE = new Set(['my_instances', 'vrchat_news', 'upcoming_events', 'group_activity_small', 'friend_locations_small', 'recently_visited', 'recent_photos']);
+const DASH_DEFAULT_ROWS = [
+    ['my_instances'],
+    ['my_recent_activity', 'friends_recent_activity'],
+    ['friend_locations_small'],
+    ['group_activity_small'],
+    ['upcoming_events'],
+    ['recent_photos'],
+    ['own_avatars', 'fav_avatars'],
+    ['popular_worlds', 'active_worlds'],
+    ['recently_visited', 'fav_worlds'],
+];
+const DASH_DEFAULT_VISIBLE = new Set(DASH_DEFAULT_ROWS.flat());
+
+const DASH_HERO_OPTIONS = {
+    left:  [
+        { id: 'friends_activity', nameKey: 'dashboard.section.friend_activity', name: 'Friends Activity' },
+        { id: 'group_activity',   nameKey: 'dashboard.section.group_activity',  name: 'Group Activity' },
+        { id: 'pins',             nameKey: 'dashboard.hero.pins',               name: 'Pins' },
+    ],
+    right: [
+        { id: 'next_event',       nameKey: 'dashboard.hero.next_event',          name: 'Next Event' },
+        { id: 'vrchat_news',      nameKey: 'dashboard.section.vrchat_news',      name: 'VRChat News' },
+        { id: 'friends_activity', nameKey: 'dashboard.section.friend_activity',  name: 'Friends Activity' },
+        { id: 'group_activity',   nameKey: 'dashboard.section.group_activity',   name: 'Group Activity' },
+        { id: 'pins',             nameKey: 'dashboard.hero.pins',                name: 'Pins' },
+    ],
+};
 
 let _dashLayout = {
+    hero:   { left: 'friends_activity', right: 'group_activity' },
+    rows:   DASH_DEFAULT_ROWS.map(r => [...r]),
     order:  [...DASH_DEFAULT_ORDER],
     hidden: DASH_DEFAULT_ORDER.filter(id => !DASH_DEFAULT_VISIBLE.has(id)),
 };
 let _dashModalLayout = null;
+let _dashEditMode = false;
+
+function _dashSyncDerived() {
+    _dashLayout.order  = _dashLayout.rows.flat().filter(Boolean);
+    _dashLayout.hidden = DASH_DEFAULT_ORDER.filter(id => !_dashLayout.order.includes(id));
+}
 
 function loadDashLayout(data) {
     if (!data) { applyDashLayout(); return; }
-    const rawOrder  = data.order  ?? data.dashSectionOrder  ?? data.DashSectionOrder  ?? null;
-    const rawHidden = data.hidden ?? data.dashSectionHidden ?? data.DashSectionHidden ?? null;
-    if (Array.isArray(rawOrder) && rawOrder.length) {
-        const known   = rawOrder.filter(id => DASH_DEFAULT_ORDER.includes(id));
-        const missing = DASH_DEFAULT_ORDER.filter(id => !known.includes(id));
-        _dashLayout.order = [...known, ...missing];
+    const rawHero = data.hero ?? data.dashHero ?? data.DashHero ?? null;
+    if (Array.isArray(rawHero)) {
+        const okL = DASH_HERO_OPTIONS.left.some(o => o.id === rawHero[0]);
+        const okR = DASH_HERO_OPTIONS.right.some(o => o.id === rawHero[1]);
+        _dashLayout.hero.left  = okL ? rawHero[0] : (rawHero[0] === '' ? null : _dashLayout.hero.left);
+        _dashLayout.hero.right = okR ? rawHero[1] : (rawHero[1] === '' ? null : _dashLayout.hero.right);
     }
-    if (Array.isArray(rawHidden)) {
-        _dashLayout.hidden = rawHidden.filter(id => DASH_DEFAULT_ORDER.includes(id));
+    const rawRows = data.rows ?? data.dashRows ?? data.DashRows ?? null;
+    if (Array.isArray(rawRows) && rawRows.length) {
+        const seen = new Set();
+        const rows = [];
+        rawRows.forEach(r => {
+            const cols = String(r).split('|').slice(0, 2)
+                .map(id => (DASH_DEFAULT_ORDER.includes(id) && !seen.has(id)) ? (seen.add(id), id) : null);
+            if (cols.length) rows.push(cols);
+        });
+        _dashLayout.rows = rows.length ? rows : DASH_DEFAULT_ROWS.map(r => [...r]);
+    } else {
+        const rawOrder  = data.order  ?? data.dashSectionOrder  ?? data.DashSectionOrder  ?? null;
+        const rawHidden = data.hidden ?? data.dashSectionHidden ?? data.DashSectionHidden ?? null;
+        if (Array.isArray(rawOrder) && rawOrder.length) {
+            const hidden = Array.isArray(rawHidden) ? rawHidden : [];
+            const visible = rawOrder.filter(id => DASH_DEFAULT_ORDER.includes(id) && !hidden.includes(id));
+            if (visible.length) _dashLayout.rows = visible.map(id => [id]);
+        }
     }
     applyDashLayout();
 }
@@ -1343,38 +1100,437 @@ function loadDashLayout(data) {
 function applyDashLayout() {
     const container = document.getElementById('dashSectionsContainer');
     if (!container) return;
-    // CSS flex order — no DOM moves, no scroll jumps
-    _dashLayout.order.forEach((id, idx) => {
-        const wrap = container.querySelector(`.dash-section-wrap[data-section="${id}"]`);
-        if (!wrap) return;
-        wrap.style.order = idx;
-        const meta = DASH_SECTION_META.find(s => s.id === id);
-        const hidden = _dashLayout.hidden.includes(id) || !!(meta?.windowsOnly && window._isLinuxUi);
-        wrap.toggleAttribute('data-hidden', hidden);
-        if (!hidden && id === 'my_instances') renderMyInstances(_myInstancesData);
-        if (!hidden && id === 'quick_controls') renderDashQuickControls();
-        if (!hidden && id === 'fav_worlds') renderDashFavWorlds();
-        if (!hidden && id === 'fav_avatars') renderDashFavAvatars();
-        if (!hidden && id === 'own_avatars') renderDashOwnAvatars();
-        if (!hidden && id === 'recent_photos') renderDashRecentPhotos();
-        if (!hidden && id === 'recently_visited') renderDashRecentlyVisited();
-        if (!hidden && id === 'popular_worlds') renderDashPopularWorlds();
-        if (!hidden && id === 'active_worlds') renderDashActiveWorlds();
-        if (!hidden && id === 'discovery') { renderDiscoverySection(); if (!_popularInFlight && (!_popularCache.worlds.length || Date.now() - _popularCache.ts > DISC_CACHE_TTL)) _fetchPopularWorlds(); }
-        if (!hidden && id === 'groups') renderDashGroupActivity();
-        if (!hidden && id === 'group_activity') renderDashGroupActivityInstances();
-        if (!hidden && id === 'group_activity_small') renderDashGroupActivityInstancesSmall();
-        if (!hidden && id === 'my_recent_activity') renderDashMyRecentTimeline();
-        if (!hidden && id === 'friends_recent_activity') renderDashFriendsRecentTimeline();
-        if (!hidden && id === 'upcoming_events') { renderDashUpcomingEvents(); if (_dashUpcomingEvents === null && !_dashUpcomingLoading) refreshDashUpcomingEvents(); }
-        if (!hidden && id === 'vrchat_news') { renderDashVrcNews(); if (!_vrcNewsCache.items.length && !_vrcNewsLoading) _fetchVrcNews(); }
+    _dashSyncDerived();
+
+    container.querySelectorAll('.dash-section-wrap').forEach(w => {
+        container.appendChild(w);
+        w.toggleAttribute('data-hidden', true);
+        w.style.order = '';
+        w.querySelector(':scope > .dash-widget-x')?.remove();
+    });
+    container.querySelectorAll(':scope > .dash-drow, :scope > .dash-edit-bar, :scope > .dash-add-row').forEach(r => r.remove());
+    _dashCloseEditMenu();
+
+    if (_dashEditMode) {
+        const bar = document.createElement('div');
+        bar.className = 'dash-edit-bar';
+        bar.innerHTML = `<span class="dash-edit-bar-title"><span class="msi">dashboard_customize</span>${esc(t('dashboard.edit.title', 'Dashboard Layout'))}</span>
+            <button class="vrcn-button" onclick="dashEditReset()"><span class="msi" style="font-size:16px;">restart_alt</span>${esc(t('dashboard.edit.reset', 'Reset'))}</button>
+            <button class="vrcn-button active" onclick="dashEditDone()"><span class="msi" style="font-size:16px;">check</span>${esc(t('dashboard.edit.done', 'Done'))}</button>`;
+        container.appendChild(bar);
+    }
+
+    _dashLayout.rows.forEach((cols, rowIdx) => {
+        const row = document.createElement('div');
+        row.className = 'dash-drow';
+        row.dataset.cols = String(cols.length);
+        cols.forEach((id, colIdx) => {
+            const slot = document.createElement('div');
+            slot.className = 'dash-drow-slot';
+            const meta = id ? DASH_SECTION_META.find(s => s.id === id) : null;
+            const excluded = !!(meta?.windowsOnly && window._isLinuxUi);
+            const wrap = (id && !excluded) ? container.querySelector(`.dash-section-wrap[data-section="${id}"]`) : null;
+            if (wrap) {
+                wrap.toggleAttribute('data-hidden', false);
+                slot.appendChild(wrap);
+                if (_dashEditMode) {
+                    const x = document.createElement('button');
+                    x.className = 'dash-widget-x';
+                    x.title = t('dashboard.edit.remove_widget', 'Remove widget');
+                    x.innerHTML = '<span class="msi">close</span>';
+                    x.onclick = ev => { ev.stopPropagation(); dashEditRemoveWidget(rowIdx, colIdx); };
+                    wrap.appendChild(x);
+                }
+            } else if (_dashEditMode) {
+                const add = document.createElement('button');
+                add.className = 'dash-slot-add';
+                add.innerHTML = `<span class="msi">add</span><span>${esc(t('dashboard.edit.add_widget', 'Add Widget'))}</span>`;
+                add.onclick = ev => dashEditPickWidget(ev, rowIdx, colIdx);
+                slot.appendChild(add);
+            }
+            row.appendChild(slot);
+        });
+        if (_dashEditMode) {
+            const tools = document.createElement('div');
+            tools.className = 'dash-drow-tools';
+
+            const drag = document.createElement('button');
+            drag.className = 'dash-drow-btn dash-drow-drag';
+            drag.title = t('dashboard.edit.drag_row', 'Drag to reorder');
+            drag.innerHTML = '<span class="msi">drag_indicator</span>';
+            drag.draggable = true;
+            drag.addEventListener('dragstart', ev => {
+                _dashDragRow = rowIdx;
+                ev.dataTransfer.effectAllowed = 'move';
+                try { ev.dataTransfer.setData('text/plain', String(rowIdx)); } catch {}
+                row.classList.add('dash-dragging');
+                _dashDragY = ev.clientY;
+                if (!_dashDragScrollRaf) _dashDragScrollRaf = requestAnimationFrame(_dashDragAutoScroll);
+            });
+            drag.addEventListener('dragend', () => {
+                _dashDragRow = null;
+                document.querySelectorAll('.dash-drow').forEach(r =>
+                    r.classList.remove('dash-dragging', 'dash-drop-before', 'dash-drop-after'));
+            });
+
+            const rx = document.createElement('button');
+            rx.className = 'dash-drow-btn dash-drow-x';
+            rx.title = t('dashboard.edit.remove_row', 'Remove container');
+            rx.innerHTML = '<span class="msi">delete</span>';
+            rx.onclick = () => dashEditRemoveRow(rowIdx);
+
+            tools.appendChild(drag);
+            tools.appendChild(rx);
+            row.appendChild(tools);
+
+            row.addEventListener('dragover', ev => {
+                if (_dashDragRow === null || _dashDragRow === rowIdx) return;
+                ev.preventDefault();
+                ev.dataTransfer.dropEffect = 'move';
+                const r = row.getBoundingClientRect();
+                const before = ev.clientY < r.top + r.height / 2;
+                row.classList.toggle('dash-drop-before', before);
+                row.classList.toggle('dash-drop-after', !before);
+            });
+            row.addEventListener('dragleave', () => {
+                row.classList.remove('dash-drop-before', 'dash-drop-after');
+            });
+            row.addEventListener('drop', ev => {
+                ev.preventDefault();
+                const from = _dashDragRow;
+                _dashDragRow = null;
+                row.classList.remove('dash-drop-before', 'dash-drop-after');
+                if (from === null || from === rowIdx) return;
+                const r = row.getBoundingClientRect();
+                const before = ev.clientY < r.top + r.height / 2;
+                let to = rowIdx + (before ? 0 : 1);
+                const [moved] = _dashLayout.rows.splice(from, 1);
+                if (from < to) to--;
+                _dashLayout.rows.splice(to, 0, moved);
+                applyDashLayout();
+                saveSettings();
+            });
+        }
+        container.appendChild(row);
+    });
+
+    if (_dashEditMode) {
+        const add = document.createElement('button');
+        add.className = 'dash-add-row';
+        add.innerHTML = `<span class="msi">add</span><span>${esc(t('dashboard.edit.add_container', 'Add Container'))}</span>`;
+        add.onclick = ev => dashEditPickContainer(ev);
+        container.appendChild(add);
+    }
+
+    _dashLayout.order.forEach(id => {
+        if (id === 'my_instances') renderMyInstances(_myInstancesData);
+        if (id === 'fav_worlds') renderDashFavWorlds();
+        if (id === 'fav_avatars') renderDashFavAvatars();
+        if (id === 'own_avatars') renderDashOwnAvatars();
+        if (id === 'recent_photos') renderDashRecentPhotos();
+        if (id === 'recently_visited') renderDashRecentlyVisited();
+        if (id === 'popular_worlds') renderDashPopularWorlds();
+        if (id === 'active_worlds') renderDashActiveWorlds();
+        if (id === 'group_activity_small') renderDashGroupActivityInstancesSmall();
+        if (id === 'my_recent_activity') renderDashMyRecentTimeline();
+        if (id === 'friends_recent_activity') renderDashFriendsRecentTimeline();
+        if (id === 'upcoming_events') { renderDashUpcomingEvents(); if (_dashUpcomingEvents === null && !_dashUpcomingLoading) refreshDashUpcomingEvents(); }
+    });
+    renderDashHeroWidgets();
+}
+
+
+let _dashDragY = 0;
+let _dashDragScrollRaf = 0;
+document.addEventListener('dragover', e => { _dashDragY = e.clientY; }, { capture: true, passive: true });
+
+function _dashDragAutoScroll() {
+    if (_dashDragRow === null) { _dashDragScrollRaf = 0; return; }
+    const c = document.querySelector('.content');
+    if (c) {
+        const r = c.getBoundingClientRect();
+        const zone = 90;
+        if (_dashDragY < r.top + zone) {
+            c.scrollTop -= Math.ceil((r.top + zone - _dashDragY) / zone * 18);
+        } else if (_dashDragY > r.bottom - zone) {
+            c.scrollTop += Math.ceil((_dashDragY - (r.bottom - zone)) / zone * 18);
+        }
+    }
+    _dashDragScrollRaf = requestAnimationFrame(_dashDragAutoScroll);
+}
+
+function dashHeroScrollDown() {
+    const c = document.querySelector('.content');
+    const sec = document.getElementById('dashSectionsContainer');
+    if (c && sec) c.scrollTo({ top: Math.max(0, sec.offsetTop - 70), behavior: 'smooth' });
+}
+
+function _dashHeroLabel(side, id) {
+    const o = DASH_HERO_OPTIONS[side].find(x => x.id === id);
+    return o ? t(o.nameKey, o.name) : '';
+}
+
+function _dashHeroFriendsHtml() {
+    if (!currentVrcUser) return `<div class="dash-hw-empty">${esc(t('dashboard.section.login', 'Login to VRChat'))}</div>`;
+    const all = (typeof vrcFriendsData !== 'undefined' ? vrcFriendsData : [])
+        .filter(f => f.presence === 'game');
+    const list = all.slice(0, 60);
+    if (!list.length) return `<div class="dash-hw-empty">${esc(t('dashboard.friends.empty', 'No friends online'))}</div>`;
+    const more = all.length > 60 ? `<button class="dash-hw-more" onclick="showTab(3)">+${all.length - 60}</button>` : '';
+    return `<div class="dash-hw-friends">` + list.map(_dashFlocsCardHtml).join('') + more + `</div>`;
+}
+
+function _dashHeroGroupsHtml() {
+    if (!currentVrcUser) return `<div class="dash-hw-empty">${esc(t('dashboard.section.login', 'Login to VRChat'))}</div>`;
+    if (_dashGroupInstances === null) { loadDashGroupInstances(); return `<div class="dash-hw-empty">${esc(t('dashboard.discovery.loading', 'Loading worlds...'))}</div>`; }
+    const list = _dashGroupInstances.slice(0, 60);
+    if (!list.length) return `<div class="dash-hw-empty">${esc(t('dashboard.section.group_activity_empty', 'No active group instances right now'))}</div>`;
+    return `<div class="dash-hw-friends">` + list.map(inst => {
+        const loc = (inst.location || '').replace(/'/g, "\\'");
+        const icon = inst.groupIcon || '';
+        const av = icon
+            ? `<span class="dash-hw-av" style="background-image:url('${cssUrl(imgThumb(icon, 64))}')"></span>`
+            : `<span class="dash-hw-av dash-hw-av-letter"><span class="msi" style="font-size:14px;">group</span></span>`;
+        const users = inst.capacity > 0 ? `${inst.userCount}/${inst.capacity}` : String(inst.userCount || 0);
+        return `<div class="dash-hw-card" onclick="openGroupInstanceDetail('${loc}')">
+            ${av}
+            <div class="dash-hw-info">
+                <div class="dash-hw-name">${esc(inst.groupName || '?')}</div>
+                <div class="dash-hw-status">${esc(inst.worldName || '')}</div>
+                <div class="dash-hw-world"><span class="msi" style="font-size:11px;">person</span>${esc(users)}</div>
+            </div>
+        </div>`;
+    }).join('') + `</div>`;
+}
+
+function _dashHeroPinsHtml() {
+    const list = (typeof pinsList === 'function') ? pinsList() : [];
+    if (!list.length) return `<div class="dash-hw-empty">${esc(t('pins.empty', 'No pins yet.'))}</div>`;
+    return `<div class="dash-hw-friends">` + list.map(pin => {
+        const label = pin.name || pin.id;
+        const typeLabel = (typeof _pinsTypeLabel === 'function') ? _pinsTypeLabel(pin.type) : '';
+        const sub = pin.sub ? `${typeLabel} · ${pin.sub}` : typeLabel;
+        const typeIcon = (typeof pinsTypeIcon === 'function') ? pinsTypeIcon(pin.type) : 'push_pin';
+        let av;
+        if (pin.type === 'feature') {
+            av = `<span class="dash-hw-av dash-hw-av-letter"><span class="msi" style="font-size:14px;">${esc(pin.icon || typeIcon)}</span></span>`;
+        } else if (pin.image) {
+            av = `<span class="dash-hw-av" style="background-image:url('${cssUrl(imgThumb(pin.image, 96))}')"></span>`;
+        } else {
+            av = `<span class="dash-hw-av dash-hw-av-letter">${esc((label[0] || '?').toUpperCase())}</span>`;
+        }
+        return `<div class="dash-hw-card" data-pin-type="${esc(pin.type)}" data-pin-id="${esc(pin.id)}" onclick="pinsOpen('${jsq(pin.type)}','${jsq(pin.id)}')">
+            ${av}
+            <div class="dash-hw-info">
+                <div class="dash-hw-name">${esc(label)}</div>
+                <div class="dash-hw-world"><span class="msi" style="font-size:11px;">${esc(typeIcon)}</span>${esc(sub)}</div>
+            </div>
+        </div>`;
+    }).join('') + `</div>`;
+}
+
+function dashHeroRefreshPins() {
+    if (_dashLayout.hero.left === 'pins' || _dashLayout.hero.right === 'pins') renderDashHeroWidgets();
+}
+
+function _dashHeroEventHtml() {
+    if (!currentVrcUser) return `<div class="dash-hw-empty">${esc(t('dashboard.section.login', 'Login to VRChat'))}</div>`;
+    if (_dashUpcomingEvents === null) {
+        if (!_dashUpcomingLoading) refreshDashUpcomingEvents();
+        return `<div class="dash-hw-empty">${esc(t('dashboard.upcoming.loading', 'Loading events...'))}</div>`;
+    }
+    const evt = _dashUpcomingEvents[0];
+    if (!evt) return `<div class="dash-hw-empty">${esc(t('dashboard.upcoming.empty', 'No upcoming events found'))}</div>`;
+    const groupId = jsq(evt.ownerId || evt.groupId || '');
+    const eventId = jsq(evt.id || '');
+    const title = esc(evt.title || evt.name || t('calendar.untitled_event', 'Untitled Event'));
+    const start = new Date(evt.startsAt || evt.startDateTime || evt.startDate || '');
+    const hasStart = !isNaN(start.getTime());
+    const end = new Date(evt.endsAt || '');
+    const timeStr = hasStart ? fmtTime(start) + (!isNaN(end.getTime()) ? ' – ' + fmtTime(end) : '') : '';
+    const gid = evt.ownerId || evt.groupId || '';
+    const gd = ((typeof myGroups !== 'undefined' ? myGroups : []) || []).find(g => g.id === gid) || {};
+    const gname = evt.group?.name || gd.name || '';
+    const img = evt.imageUrl || '';
+    const desc = esc(evt.description || '');
+    const featured = evt.featured === true || (Array.isArray(evt.tags) && evt.tags.some(tag => /featured/i.test(tag)));
+    const dateTile = hasStart
+        ? `<div class="dash-evt-date ded-overlay"><span class="ded-day">${esc(String(start.getDate()))}</span><span class="ded-mon">${esc(start.toLocaleDateString(getLanguageLocale(), { month: 'short' }))}</span></div>`
+        : '';
+    return `<div class="dash-evt-feature dash-hw-event${img ? ' has-img' : ''}" onclick="openEventDetail('${groupId}','${eventId}')">
+        ${img ? `<img class="dash-evt-img" src="${esc(img)}" alt="" loading="lazy" onerror="this.closest('.dash-evt-feature').classList.remove('has-img')">` : ''}
+        ${dateTile}
+        <div class="dash-evt-feature-body">
+            <div class="dash-evt-title">${title}${featured ? `<span class="dash-evt-featured"><span class="msi">star</span>${esc(t('dashboard.upcoming.featured', 'Featured'))}</span>` : ''}</div>
+            ${desc ? `<div class="dash-evt-desc">${desc}</div>` : ''}
+            <div class="dash-evt-badge-row">
+                ${timeStr ? `<span class="vrcn-badge dash-evt-time-badge"><span class="msi" style="font-size:11px;">schedule</span>${esc(timeStr)}</span>` : ''}
+                ${gname ? `<span class="vrcn-badge dash-evt-group-badge"><span class="msi" style="font-size:11px;">group</span>${esc(gname)}</span>` : ''}
+            </div>
+        </div>
+    </div>`;
+}
+
+function _dashHeroNewsHtml() {
+    if (!_vrcNewsCache.items.length) {
+        if (!_vrcNewsLoading) _fetchVrcNews();
+        return `<div class="dash-hw-empty">${esc(t('dashboard.news.loading', 'Loading news...'))}</div>`;
+    }
+    const hero = _vrcNewsCache.items[0];
+    return `<div class="dash-news-hero dash-hw-news${hero.img ? ' has-img' : ''}" onclick="openNewsArticle('${jsq(String(hero.id || ''))}','${jsq(hero.link)}','${jsq(hero.title)}')">
+        ${hero.img ? `<img class="dash-news-img" src="${esc(hero.img)}" alt="" loading="lazy" onerror="this.closest('.dash-news-hero').classList.remove('has-img')">` : ''}
+        <div class="dash-news-hero-body">
+            <div class="dash-news-meta">${esc(_fmtNewsDate(hero.pubDate))}</div>
+            <div class="dash-news-hero-title">${esc(hero.title)}</div>
+            ${hero.excerpt ? `<div class="dash-news-excerpt">${esc(hero.excerpt)}</div>` : ''}
+        </div>
+    </div>`;
+}
+
+
+function renderDashHeroWidgets() {
+    ['left', 'right'].forEach(side => {
+        const slot = document.getElementById(side === 'left' ? 'dashHeroLeft' : 'dashHeroRight');
+        if (!slot) return;
+        const id = _dashLayout.hero[side];
+        let body = '';
+        if (id === 'friends_activity') body = _dashHeroFriendsHtml();
+        else if (id === 'group_activity') body = _dashHeroGroupsHtml();
+        else if (id === 'next_event') body = _dashHeroEventHtml();
+        else if (id === 'vrchat_news') body = _dashHeroNewsHtml();
+        else if (id === 'pins') body = _dashHeroPinsHtml();
+        if (!id) {
+            slot.innerHTML = _dashEditMode
+                ? `<button class="dash-slot-add" onclick="dashHeroPick(event, '${side}')"><span class="msi">add</span><span>${esc(t('dashboard.edit.add_widget', 'Add Widget'))}</span></button>`
+                : '';
+            return;
+        }
+        const editBtn = _dashEditMode
+            ? `<button class="dash-hw-edit" onclick="dashHeroPick(event, '${side}')"><span class="msi">dashboard_customize</span></button>`
+            : '';
+        let seeAll = '';
+        if (!_dashEditMode && id === 'friends_activity')
+            seeAll = `<button class="dash-hw-seeall" onclick="showTab(3);setTimeout(()=>{if(typeof setPeopleFilter==='function')setPeopleFilter('all');if(typeof setAllFriendsStatusFilter==='function')setAllFriendsStatusFilter('ingame');},80)">${esc(t('dashboard.section.see_all', 'SEE ALL →'))}</button>`;
+        else if (!_dashEditMode && id === 'group_activity')
+            seeAll = `<button class="dash-hw-seeall" onclick="showTab(2);setTimeout(()=>{if(typeof setGroupFilter==='function')setGroupFilter('instances');},80)">${esc(t('dashboard.section.see_all', 'SEE ALL →'))}</button>`;
+        slot.innerHTML = `<div class="dash-hw-label">${esc(_dashHeroLabel(side, id))}${editBtn}${seeAll}</div>${body}`;
     });
 }
 
+function dashHeroPick(ev, side) {
+    const items = DASH_HERO_OPTIONS[side].map(o =>
+        `<button class="dash-pick-item" data-id="${esc(o.id)}"><span class="msi">dashboard_customize</span>${esc(t(o.nameKey, o.name))}</button>`).join('')
+        + `<button class="dash-pick-item" data-id=""><span class="msi">close</span>${esc(t('dashboard.edit.remove_widget', 'Remove widget'))}</button>`;
+    const menu = _dashOpenEditMenu(ev, items);
+    menu.querySelectorAll('.dash-pick-item').forEach(b => {
+        b.onclick = () => {
+            _dashLayout.hero[side] = b.dataset.id || null;
+            _dashCloseEditMenu();
+            renderDashHeroWidgets();
+            saveSettings();
+        };
+    });
+}
+
+let _dashEditMenu = null;
+let _dashDragRow = null;
+
+function _dashCloseEditMenu() {
+    if (_dashEditMenu) { _dashEditMenu.remove(); _dashEditMenu = null; }
+}
+
+function _dashOpenEditMenu(ev, itemsHtml) {
+    _dashCloseEditMenu();
+    const menu = document.createElement('div');
+    menu.className = 'dash-pick-menu';
+    menu.innerHTML = itemsHtml;
+    document.body.appendChild(menu);
+    const r = menu.getBoundingClientRect();
+    let x = ev.clientX, y = ev.clientY + 8;
+    if (x + r.width  > window.innerWidth  - 8) x = window.innerWidth  - r.width  - 8;
+    if (y + r.height > window.innerHeight - 8) y = ev.clientY - r.height - 8;
+    menu.style.left = x + 'px';
+    menu.style.top  = y + 'px';
+    _dashEditMenu = menu;
+    setTimeout(() => {
+        document.addEventListener('mousedown', function close(e) {
+            if (_dashEditMenu && !_dashEditMenu.contains(e.target)) {
+                _dashCloseEditMenu();
+                document.removeEventListener('mousedown', close, true);
+            }
+        }, true);
+    }, 0);
+    return menu;
+}
+
+function dashEditPickContainer(ev) {
+    const menu = _dashOpenEditMenu(ev, `
+        <button class="dash-pick-item" data-cols="1"><span class="msi">remove</span>${esc(t('dashboard.edit.cols1', '1 Column'))}</button>
+        <button class="dash-pick-item" data-cols="2"><span class="msi">grid_view</span>${esc(t('dashboard.edit.cols2', '2 Columns'))}</button>`);
+    menu.querySelectorAll('.dash-pick-item').forEach(b => {
+        b.onclick = () => {
+            const n = parseInt(b.dataset.cols, 10) || 1;
+            _dashLayout.rows.push(n === 2 ? [null, null] : [null]);
+            _dashCloseEditMenu();
+            applyDashLayout();
+            saveSettings();
+        };
+    });
+}
+
+function dashEditPickWidget(ev, rowIdx, colIdx) {
+    const placed = new Set(_dashLayout.rows.flat().filter(Boolean));
+    const avail = DASH_SECTION_META.filter(s => !placed.has(s.id) && !(s.windowsOnly && window._isLinuxUi));
+    if (!avail.length) {
+        _dashOpenEditMenu(ev, `<div class="dash-pick-empty">${esc(t('dashboard.edit.all_placed', 'All widgets are already placed'))}</div>`);
+        return;
+    }
+    const menu = _dashOpenEditMenu(ev, avail.map(s =>
+        `<button class="dash-pick-item" data-id="${esc(s.id)}"><span class="msi">dashboard_customize</span>${esc(t(s.nameKey, s.name))}</button>`).join(''));
+    menu.querySelectorAll('.dash-pick-item').forEach(b => {
+        b.onclick = () => {
+            const row = _dashLayout.rows[rowIdx];
+            if (row && colIdx < row.length) row[colIdx] = b.dataset.id;
+            _dashCloseEditMenu();
+            applyDashLayout();
+            saveSettings();
+        };
+    });
+}
+
+function dashEditRemoveWidget(rowIdx, colIdx) {
+    const row = _dashLayout.rows[rowIdx];
+    if (row && colIdx < row.length) row[colIdx] = null;
+    applyDashLayout();
+    saveSettings();
+}
+
+function dashEditRemoveRow(rowIdx) {
+    _dashLayout.rows.splice(rowIdx, 1);
+    applyDashLayout();
+    saveSettings();
+}
+
+function dashEditReset() {
+    _dashLayout.rows = DASH_DEFAULT_ROWS.map(r => [...r]);
+    applyDashLayout();
+    saveSettings();
+}
+
+function dashEditDone() {
+    _dashEditMode = false;
+    document.body.classList.remove('dash-edit-mode');
+    _dashCloseEditMenu();
+    applyDashLayout();
+    saveSettings();
+}
+
 function openDashLayoutEditor() {
-    _dashModalLayout = { order: [..._dashLayout.order], hidden: [..._dashLayout.hidden] };
-    _renderDashLayoutList();
-    document.getElementById('dashLayoutModal').style.display = 'flex';
+    if (typeof showTab === 'function') showTab(0);
+    _dashEditMode = true;
+    document.body.classList.add('dash-edit-mode');
+    applyDashLayout();
+    document.querySelector('.content')?.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function closeDashLayoutEditor() {
@@ -1555,6 +1711,103 @@ function saveDashLayoutFromModal() {
     saveSettings();
 }
 
+// Edge fade on horizontally scrollable shelves
+function _dashShelfFade(el) {
+    const canL = el.scrollLeft > 4;
+    const canR = el.scrollLeft + el.clientWidth < el.scrollWidth - 4;
+    el.classList.toggle('shelf-fade-l', canL);
+    el.classList.toggle('shelf-fade-r', canR);
+}
+
+let _dashShelfFadeRaf = 0;
+function _dashShelfFadeAll() {
+    if (_dashShelfFadeRaf) return;
+    _dashShelfFadeRaf = requestAnimationFrame(() => {
+        _dashShelfFadeRaf = 0;
+        document.querySelectorAll('.vrcn-dash-fav-shelf').forEach(_dashShelfFade);
+    });
+}
+
+document.addEventListener('scroll', e => {
+    if (e.target instanceof Element && e.target.classList.contains('vrcn-dash-fav-shelf')) _dashShelfFade(e.target);
+}, { capture: true, passive: true });
+window.addEventListener('resize', _dashShelfFadeAll);
+(function () {
+    const container = document.getElementById('dashSectionsContainer');
+    if (!container || typeof MutationObserver === 'undefined') return;
+    new MutationObserver(_dashShelfFadeAll).observe(container, { childList: true, subtree: true });
+    _dashShelfFadeAll();
+})();
+
+// Edge fade on vertically scrollable hero widget lists.
+// The mask sits on each card, not on the scroll container: an ancestor mask
+// would isolate the cards and kill their backdrop-filter blur.
+function _dashHeroFade(el) {
+    const box = el.getBoundingClientRect();
+    const zone = Math.min(56, (box.bottom - box.top) / 3);
+    const canT = el.scrollTop > 4;
+    const canB = el.scrollTop + el.clientHeight < el.scrollHeight - 4;
+    let zT = box.top + zone, zB = box.bottom - zone;
+    if (canT && canB && zB < zT) { const mid = (box.top + box.bottom) / 2; zT = mid; zB = mid; }
+    for (const card of el.children) {
+        const r = card.getBoundingClientRect();
+        const stops = [];
+        if (canT && r.top < zT) {
+            stops.push(`transparent ${(box.top - r.top).toFixed(1)}px`, `#000 ${(zT - r.top).toFixed(1)}px`);
+        }
+        if (canB && r.bottom > zB) {
+            stops.push(`#000 ${(zB - r.top).toFixed(1)}px`, `transparent ${(box.bottom - r.top).toFixed(1)}px`);
+        }
+        if (stops.length) {
+            const m = `linear-gradient(to bottom, ${stops.join(', ')})`;
+            card.style.webkitMaskImage = m;
+            card.style.maskImage = m;
+        } else if (card.style.maskImage || card.style.webkitMaskImage) {
+            card.style.webkitMaskImage = '';
+            card.style.maskImage = '';
+        }
+    }
+}
+
+let _dashHeroFadeRaf = 0;
+function _dashHeroFadeAll() {
+    if (_dashHeroFadeRaf) return;
+    _dashHeroFadeRaf = requestAnimationFrame(() => {
+        _dashHeroFadeRaf = 0;
+        document.querySelectorAll('.dash-hw-friends').forEach(_dashHeroFade);
+    });
+}
+
+document.addEventListener('scroll', e => {
+    if (e.target instanceof Element && e.target.classList.contains('dash-hw-friends')) _dashHeroFade(e.target);
+}, { capture: true, passive: true });
+window.addEventListener('resize', _dashHeroFadeAll);
+(function () {
+    const widgets = document.querySelector('.dash-hero-widgets');
+    if (!widgets || typeof MutationObserver === 'undefined') return;
+    const ro = typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(entries => {
+            const seen = new Set();
+            for (const en of entries) {
+                const list = en.target.classList.contains('dash-hw-friends') ? en.target : en.target.parentElement;
+                if (list && !seen.has(list)) { seen.add(list); _dashHeroFade(list); }
+            }
+        })
+        : null;
+    const rewire = () => {
+        if (ro) {
+            ro.disconnect();
+            widgets.querySelectorAll('.dash-hw-friends').forEach(el => {
+                ro.observe(el);
+                for (const card of el.children) ro.observe(card);
+            });
+        }
+        _dashHeroFadeAll();
+    };
+    new MutationObserver(rewire).observe(widgets, { childList: true, subtree: true });
+    rewire();
+})();
+
 // Drag-to-scroll on shelves
 (function () {
     let _shelf = null, _startX = 0, _scrollStart = 0, _dragging = false;
@@ -1589,47 +1842,13 @@ function saveDashLayoutFromModal() {
 })();
 
 /* === Quick Controls Widget === */
-const _DASH_QC = [
-    { id: 'chatbox', icon: 'chat',          labelKey: 'nav.custom_chatbox',   defaultLabel: 'Chatbox',      isOn: () => typeof chatboxEnabled !== 'undefined' && chatboxEnabled,   toggle: () => toggleChatbox() },
-    { id: 'relay',   icon: 'cell_tower',    labelKey: 'nav.media_relay',      defaultLabel: 'Media Relay',  isOn: () => typeof relayOn !== 'undefined' && relayOn,                 toggle: () => toggleRelay() },
-    { id: 'vf',      icon: 'mic',           labelKey: 'nav.voice_fight',      defaultLabel: 'Voice Fight',  isOn: () => typeof vfRunning !== 'undefined' && vfRunning,             toggle: () => { if (!vfRunning) vfOnTabOpen(); vfConnect(); } },
-    { id: 'dp',      icon: 'sensors',       labelKey: 'nav.discord_presence', defaultLabel: 'Discord',      isOn: () => typeof _dpRunning !== 'undefined' && _dpRunning,           toggle: () => dpToggle() },
-    { id: 'yt',      icon: 'smart_display', labelKey: 'nav.youtube_fix',      defaultLabel: 'YouTube Fix',  isOn: () => typeof _vcLastState !== 'undefined' && !!_vcLastState?.running, toggle: () => toggleVc() },
-    { id: 'sf',      icon: 'rocket_launch', labelKey: 'nav.space_flight',     defaultLabel: 'Space Flight', isOn: () => typeof sfConnected !== 'undefined' && sfConnected,         toggle: () => sfConnect() },
-    { id: 'fs',      icon: 'photo_camera',  labelKey: 'nav.frame_shot',       defaultLabel: 'FrameShot',    isOn: () => typeof fsConnected !== 'undefined' && fsConnected,         toggle: () => fsConnect() },
-];
 
-function dashQcToggle(id) {
-    const f = _DASH_QC.find(x => x.id === id);
-    if (f) f.toggle();
-}
 
-function renderDashQuickControls() {
-    const grid = document.getElementById('dashQcGrid');
-    if (!grid) return;
-    grid.innerHTML = _DASH_QC.map(f => {
-        const on  = f.isOn();
-        const lbl = t(f.labelKey, f.defaultLabel);
-        const sid = jsq(f.id);
-        return `<button class="dash-qc-card${on ? ' dqc-on' : ''}" data-qc="${esc(f.id)}" onclick="dashQcToggle('${sid}')">
-            <span class="msi dash-qc-icon">${esc(f.icon)}</span>
-            <span class="dash-qc-label">${esc(lbl)}</span>
-        </button>`;
-    }).join('');
-}
 
-function updateDashQuickControls() {
-    const grid = document.getElementById('dashQcGrid');
-    if (!grid) return;
-    _DASH_QC.forEach(f => {
-        const card = grid.querySelector(`.dash-qc-card[data-qc="${CSS.escape(f.id)}"]`);
-        if (card) card.classList.toggle('dqc-on', f.isOn());
-    });
-}
 
 function rerenderDashTranslations() {
-    renderDashWorlds();
-    renderDashFriendsFeed();
+    updateDashSub();
+    renderDashHeroWidgets();
     renderDashFriendsLocationSmall();
     renderDashFavWorlds();
     renderDashFavAvatars();
@@ -1638,12 +1857,9 @@ function rerenderDashTranslations() {
     renderDashRecentlyVisited();
     renderDashPopularWorlds();
     renderDashActiveWorlds();
-    renderDashGroupActivity();
-    renderDashGroupActivityInstances();
     renderDashGroupActivityInstancesSmall();
     renderDashMyRecentTimeline();
     renderDashFriendsRecentTimeline();
-    renderDashQuickControls();
     renderDashUpcomingEvents();
     if (_dashModalLayout) _renderDashLayoutList();
 }
@@ -1725,6 +1941,7 @@ function refreshDashUpcomingEvents() {
     _dashUpcomingLoading = true;
     _calDashRawEvents = [];
     _calDashPending = 2;
+    if (typeof myGroupsLoaded !== 'undefined' && !myGroupsLoaded) sendToCS({ action: 'vrcGetMyGroups' });
     renderDashUpcomingEvents();
     const now = new Date();
     const nxt = new Date(now.getFullYear(), now.getMonth() + 1, 1);
@@ -1749,6 +1966,7 @@ function onCalendarEventsForDash(allEvents) {
         .filter(e => new Date(e.startsAt || e.startDate || 0) >= now)
         .sort((a, b) => new Date(a.startsAt || a.startDate || 0) - new Date(b.startsAt || b.startDate || 0));
     renderDashUpcomingEvents();
+    renderDashHeroWidgets();
 }
 
 function renderDashUpcomingEvents() {
@@ -1789,6 +2007,8 @@ function renderDashUpcomingEvents() {
         const dateStr   = hasStart ? startDate.toLocaleDateString(getLanguageLocale(), { day: 'numeric', month: 'short', year: 'numeric' }) : '';
         const timeStr   = hasStart ? fmtTime(startDate) + (hasEnd ? ' – ' + fmtTime(endDate) : '') : '';
         const whenStr   = [dateStr, timeStr].filter(Boolean).join(' · ');
+        const dayNum    = hasStart ? String(startDate.getDate()) : '';
+        const monShort  = hasStart ? startDate.toLocaleDateString(getLanguageLocale(), { month: 'short' }) : '';
 
         const imgSrc = evt.imageUrl || '';
         const desc = esc(evt.description || '');
@@ -1796,11 +2016,16 @@ function renderDashUpcomingEvents() {
         const gid = evt.ownerId || evt.groupId || '';
         const groupData = myGroupsList.find(g => g.id === gid) || {};
         const groupName = evt.group?.name || groupData.name || '';
+        const groupIcon = evt.group?.iconUrl || groupData.iconUrl || '';
 
-        return { groupId, eventId, title, featured, whenStr, imgSrc, desc, groupName };
+        return { groupId, eventId, title, featured, whenStr, timeStr, dayNum, monShort, imgSrc, desc, groupName, groupIcon };
     };
 
-    const events = _dashUpcomingEvents.slice(0, 4);
+    const events = _dashUpcomingEvents.slice(0, 9);
+
+    const dateTile = (f, cls) => f.dayNum
+        ? `<div class="dash-evt-date${cls ? ' ' + cls : ''}"><span class="ded-day">${esc(f.dayNum)}</span><span class="ded-mon">${esc(f.monShort)}</span></div>`
+        : `<div class="dash-evt-date${cls ? ' ' + cls : ''}"><span class="msi ded-icon">event</span></div>`;
 
     const feat = evtFields(events[0]);
     const featImg = feat.imgSrc
@@ -1809,30 +2034,35 @@ function renderDashUpcomingEvents() {
     const featBadge = feat.featured
         ? `<span class="dash-evt-featured"><span class="msi">star</span>${esc(t('dashboard.upcoming.featured', 'Featured'))}</span>`
         : '';
+    const featGroupIcon = feat.groupIcon
+        ? `<img class="deg-icon" src="${imgThumb(feat.groupIcon, 48)}" loading="lazy" onerror="this.outerHTML='<span class=\\'msi\\' style=\\'font-size:11px;\\'>group</span>'">`
+        : `<span class="msi" style="font-size:11px;">group</span>`;
     const featGroup = feat.groupName
-        ? `<div class="dash-evt-group"><span class="msi">group</span>${esc(feat.groupName)}</div>`
+        ? `<span class="vrcn-badge dash-evt-group-badge">${featGroupIcon}${esc(feat.groupName)}</span>`
+        : '';
+    const featTime = feat.timeStr
+        ? `<span class="vrcn-badge dash-evt-time-badge"><span class="msi" style="font-size:11px;">schedule</span>${esc(feat.timeStr)}</span>`
         : '';
     const featureHtml = `<div class="dash-evt-feature${feat.imgSrc ? ' has-img' : ''}" onclick="openEventDetail('${feat.groupId}','${feat.eventId}')">
         ${featImg}
+        ${dateTile(feat, 'ded-overlay')}
         <div class="dash-evt-feature-body">
-            ${featGroup}
             <div class="dash-evt-title">${feat.title}${featBadge}</div>
-            ${feat.whenStr ? `<div class="dash-evt-when"><span class="msi">calendar_today</span>${esc(feat.whenStr)}</div>` : ''}
             ${feat.desc ? `<div class="dash-evt-desc">${feat.desc}</div>` : ''}
-            <button class="vrcn-button active" type="button">${esc(t('dashboard.upcoming.view', 'View Event'))}</button>
+            ${(featGroup || featTime) ? `<div class="dash-evt-badge-row">${featTime}${featGroup}</div>` : ''}
         </div>
     </div>`;
 
     const minis = events.slice(1).map(evt => {
         const f = evtFields(evt);
-        const thumb = f.imgSrc
-            ? `<img class="dash-evt-mini-thumb" src="${imgThumb(f.imgSrc, 128)}" alt="" loading="lazy" onerror="this.outerHTML='<div class=\\'dash-evt-mini-thumb dash-evt-mini-thumb-ph\\'><span class=\\'msi\\'>event</span></div>'">`
-            : `<div class="dash-evt-mini-thumb dash-evt-mini-thumb-ph"><span class="msi">event</span></div>`;
         return `<div class="dash-evt-mini" onclick="openEventDetail('${f.groupId}','${f.eventId}')">
-            ${thumb}
+            ${dateTile(f)}
             <div class="dash-evt-mini-info">
                 <div class="dash-evt-mini-title">${f.title}</div>
-                ${f.whenStr ? `<div class="dash-evt-mini-when"><span class="msi">calendar_today</span>${esc(f.whenStr)}</div>` : ''}
+                <div class="dash-evt-mini-when">
+                    ${f.timeStr ? `<span class="msi">schedule</span>${esc(f.timeStr)}` : ''}
+                    ${f.groupName ? `<span class="dash-evt-mini-grp">${f.groupIcon ? `<img class="dash-evt-mini-gicon" src="${imgThumb(f.groupIcon, 32)}" loading="lazy" onerror="this.style.display='none'">` : ''}<span class="dash-evt-mini-group">${esc(f.groupName)}</span></span>` : ''}
+                </div>
             </div>
         </div>`;
     }).join('');

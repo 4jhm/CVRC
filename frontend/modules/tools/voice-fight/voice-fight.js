@@ -31,7 +31,6 @@ function vfSyncStateUi() {
     if (dot) dot.className = vfRunning ? 'sf-dot online' : 'sf-dot offline';
     if (txt) txt.textContent = vfStatusText();
     if (btn) btn.innerHTML = vfButtonHtml();
-    if (typeof updateDashQuickControls === 'function') updateDashQuickControls();
     const vfBadge = document.getElementById('badgeVoice');
     if (vfBadge) {
         vfBadge.classList.toggle('tb-active', vfRunning);
@@ -57,71 +56,33 @@ function vfConnect() {
     if (vfRunning) {
         sendToCS({ action: 'vfStop' });
     } else {
-        const sel = document.getElementById('vfDeviceSelect');
-        const rawIdx = sel ? parseInt(sel.value, 10) : NaN;
-        const deviceIndex = isNaN(rawIdx) ? 0 : rawIdx;
-        const outSel = document.getElementById('vfOutputDeviceSelect');
-        const rawOutIdx = outSel ? parseInt(outSel.value, 10) : NaN;
-        const outputDeviceIndex = isNaN(rawOutIdx) ? -1 : rawOutIdx;
-        sendToCS({ action: 'vfStart', deviceIndex, outputDeviceIndex });
+        const startMsg = { action: 'vfStart' };
+        const dev = audioDeviceValue('vfDeviceSelect');
+        if (dev) { startMsg.deviceId = dev.id; startMsg.deviceName = dev.name; }
+        const out = audioDeviceValue('vfOutputDeviceSelect');
+        if (out) { startMsg.outputDeviceId = out.id; startMsg.outputDeviceName = out.name; }
+        sendToCS(startMsg);
     }
 }
 
 function populateVfDevices(p) {
     _vfDevicesPayload = p;
 
-    const sel = document.getElementById('vfDeviceSelect');
-    if (sel) {
-        sel.innerHTML = '';
-        const devices = p.devices || [];
-        if (devices.length === 0) {
-            sel.innerHTML = `<option value="0">${t('voicefight.devices.no_microphone', 'No microphone found')}</option>`;
-            if (sel._vnRefresh) sel._vnRefresh();
-        } else {
-            const targetIndex = Math.min(p.savedIndex ?? 0, devices.length - 1);
-            devices.forEach((name, i) => {
-                const opt = document.createElement('option');
-                opt.value = String(i);
-                opt.textContent = name;
-                sel.appendChild(opt);
-            });
-            sel.selectedIndex = targetIndex;
-            if (sel._vnRefresh) sel._vnRefresh();
-        }
-    }
-
-    const outSel = document.getElementById('vfOutputDeviceSelect');
-    if (outSel) {
-        outSel.innerHTML = '';
-        const outputDevices = p.outputDevices || [];
-        const defOpt = document.createElement('option');
-        defOpt.value = '-1';
-        defOpt.textContent = t('voicefight.devices.windows_default', 'Windows Default');
-        outSel.appendChild(defOpt);
-        outputDevices.forEach((name, i) => {
-            const opt = document.createElement('option');
-            opt.value = String(i);
-            opt.textContent = name;
-            outSel.appendChild(opt);
-        });
-        const savedOut = p.savedOutputIndex ?? -1;
-        outSel.value = String(savedOut);
-        if (outSel.value === '') outSel.selectedIndex = 0;
-        if (outSel._vnRefresh) outSel._vnRefresh();
-    }
+    audioFillDeviceSelect(document.getElementById('vfDeviceSelect'), p.inputs, p.input);
+    audioFillDeviceSelect(document.getElementById('vfOutputDeviceSelect'), p.outputs, p.output);
 
     const stopInput = document.getElementById('vfStopWordInput');
     if (stopInput && p.stopWord != null) stopInput.value = p.stopWord;
 }
 
-function vfSetInputDevice(val) {
-    const idx = parseInt(val, 10) || 0;
-    sendToCS({ action: 'vfSetInputDevice', deviceIndex: idx });
+function vfSetInputDevice() {
+    const dev = audioDeviceValue('vfDeviceSelect');
+    if (dev) sendToCS({ action: 'vfSetInputDevice', deviceId: dev.id, deviceName: dev.name });
 }
 
-function vfSetOutputDevice(val) {
-    const idx = parseInt(val, 10);
-    sendToCS({ action: 'vfSetOutputDevice', deviceIndex: isNaN(idx) ? -1 : idx });
+function vfSetOutputDevice() {
+    const dev = audioDeviceValue('vfOutputDeviceSelect');
+    if (dev) sendToCS({ action: 'vfSetOutputDevice', deviceId: dev.id, deviceName: dev.name });
 }
 
 function updateVfMeter(level) {

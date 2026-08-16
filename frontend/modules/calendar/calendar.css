@@ -67,28 +67,11 @@
 .cal-day:hover { background: var(--bg-hover); border-color: color-mix(in srgb,var(--accent) 40%,transparent); }
 .cal-day.cal-today { border-color: color-mix(in srgb,var(--accent) 65%,transparent); background: color-mix(in srgb,var(--accent) 7%,transparent); }
 .cal-day.cal-sel { border: 2px solid var(--accent); background: color-mix(in srgb,var(--accent) 14%,transparent); }
-.cal-day.cal-empty { background: rgba(255,255,255,.015); cursor: default; pointer-events: none; }
 
 .cal-day-num { font-size: calc(12px + var(--fs-off, 0px)); font-weight: 600; color: var(--tx2); padding: 6px 8px 0; line-height: 1; }
 .cal-day.cal-today .cal-day-num,
 .cal-day.cal-sel .cal-day-num { color: var(--accent-lt); }
 
-.cal-chip {
-    display: block;
-    font-size: calc(9.5px + var(--fs-off, 0px));
-    padding: 2px 5px;
-    border-radius: 4px;
-    margin-bottom: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    line-height: 1.4;
-    cursor: pointer;
-}
-.cal-chip:hover { opacity: .8; }
-.cal-chip-f { background: rgba(245,158,11,.2); color: #f6c265; }
-.cal-chip-g { background: color-mix(in srgb,var(--accent) 20%,transparent); color: var(--accent-lt); }
-.cal-chip-more { display: block; font-size: calc(9px + var(--fs-off, 0px)); color: var(--tx3); padding: 1px 2px; }
 
 .cal-more {
     z-index: 1;

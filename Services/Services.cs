@@ -259,6 +259,14 @@ public class AppSettings
     public bool MessageSoundEnabled { get; set; }
     public bool MediaRelaySoundEnabled { get; set; }
     public bool SteamOverlaySoundEnabled { get; set; } = true;
+    public string NotifySoundFile { get; set; } = "";
+    public string MessageSoundFile { get; set; } = "";
+    public string MediaRelaySoundFile { get; set; } = "";
+    public string SteamOverlaySoundFile { get; set; } = "";
+    public int NotifySoundVolume { get; set; } = 50;
+    public int MessageSoundVolume { get; set; } = 50;
+    public int MediaRelaySoundVolume { get; set; } = 50;
+    public int SteamOverlaySoundVolume { get; set; } = 50;
     public bool FriendOnlineToastEnabled { get; set; }
     public bool FriendOnlineToastFavOnly { get; set; }
     public bool FriendsSidebarLocationOnly { get; set; } = true;
@@ -267,7 +275,6 @@ public class AppSettings
     public bool PeopleAlwaysStats { get; set; } = false;
     public bool ModernFolderLayout { get; set; } = true;
     public bool NavSidebarHoverText { get; set; } = true;
-    public bool DirectModalNav { get; set; } = true;
     public bool VrcPlusOptimizeEnabled { get; set; } = true;
     public bool EnableProfileIconFrames { get; set; } = false;
     public bool SquareIconFrames { get; set; } = false;
@@ -279,10 +286,6 @@ public class AppSettings
     public bool ProfileThemeContrast { get; set; } = true;
     public bool TransparentProfileCards { get; set; } = false;
     public bool ShowDecorationsOnDashboard { get; set; } = false;
-    public string ProfileModalStyle { get; set; } = "classic";
-    public string WorldModalStyle { get; set; } = "classic";
-    public string GroupModalStyle { get; set; } = "classic";
-    public string AvatarModalStyle { get; set; } = "classic";
     public bool MinimizeToTray { get; set; }
     public bool TrayNotificationsEnabled { get; set; }
     public string Language { get; set; } = "en";
@@ -489,7 +492,8 @@ public class AppSettings
     public uint   FsLeftButton       { get; set; } = 2;  // EVRButtonId.k_EButton_Grip
     public uint   FsRightButton      { get; set; } = 2;  // EVRButtonId.k_EButton_Grip
     public bool   FsAutoStartVR      { get; set; }
-    public string FsOutputDevice     { get; set; } = ""; // empty = system default
+    public string FsOutputDevice     { get; set; } = "";
+    public string FsOutputDeviceId   { get; set; } = "";
     public int    FsActivationRadius { get; set; } = 15; // cm, 5–30
     public uint   FsLeftRecordButton  { get; set; } = 0; // 0 = none
     public uint   FsRightRecordButton { get; set; } = 0; // 0 = none
@@ -589,6 +593,7 @@ public class AppSettings
     public bool       VroToastTtsJoined     { get; set; } = false;
     public int        VroTtsDevice         { get; set; } = -1;
     public string     VroTtsDeviceName     { get; set; } = "";
+    public string     VroTtsDeviceId       { get; set; } = "";
     public string     VroTtsVoice          { get; set; } = "";
     public string     VroTtsEngine         { get; set; } = "sapi";
     public string     VroTtsLang           { get; set; } = "";
@@ -634,7 +639,7 @@ public class AppSettings
     public bool FfcEnabled { get; set; } = true;
 
     // Memory Trim
-    public bool MemoryTrimEnabled { get; set; } = false;
+    public bool MemoryTrimEnabled { get; set; } = true;
 
     // Instance prints — download prints other players drop in the instance
     public bool   SaveInstancePrints { get; set; } = false;
@@ -722,6 +727,9 @@ public class AppSettings
     // Dashboard layout customization
     public List<string>? DashSectionOrder  { get; set; } = null;
     public List<string>? DashSectionHidden { get; set; } = null;
+    public List<string>? DashRows          { get; set; } = null;
+    public List<string>? DashHero          { get; set; } = null;
+    public int DashLayoutVersion           { get; set; } = 0;
 
     public bool SetupComplete { get; set; }
 
@@ -761,6 +769,16 @@ public class AppSettings
                 if (s.Webhooks == null) s.Webhooks = new();
                 if (s.Webhooks.Count > 4) s.Webhooks = s.Webhooks.Take(4).ToList();
                 while (s.Webhooks.Count < 4) s.Webhooks.Add(new() { Name = $"Channel {s.Webhooks.Count + 1}" });
+
+                // One-time reset so the new dashboard default layout applies to existing users.
+                if (s.DashLayoutVersion < 2)
+                {
+                    s.DashSectionOrder  = null;
+                    s.DashSectionHidden = null;
+                    s.DashRows          = null;
+                    s.DashHero          = null;
+                    s.DashLayoutVersion = 2;
+                }
 
                 // One-time migration of legacy single-account fields into Accounts[0] as primary.
                 if (s.Accounts == null) s.Accounts = new();
@@ -802,7 +820,7 @@ public class AppSettings
             }
         }
         catch { }
-        return new();
+        return new() { DashLayoutVersion = 2 };
     }
 
     public void Save()
@@ -875,8 +893,10 @@ public class VoiceFightSettings
 {
     public int InputDeviceIndex { get; set; }
     public string InputDeviceName { get; set; } = "";
+    public string InputDeviceId { get; set; } = "";
     public int OutputDeviceIndex { get; set; } = -1;
     public string OutputDeviceName { get; set; } = "";
+    public string OutputDeviceId { get; set; } = "";
     public string StopWord { get; set; } = "";
     public List<VfSoundItem> Items { get; set; } = new();
 

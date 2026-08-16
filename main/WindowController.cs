@@ -28,7 +28,6 @@ public class WindowController
     [DllImport("dwmapi.dll")] private static extern int DwmSetWindowAttribute(nint hwnd, int dwAttribute, ref int pvAttribute, int cbAttribute);
     // comctl32 proper subclassing API — safe under nested message loops and window teardown
     [DllImport("comctl32.dll")] private static extern bool SetWindowSubclass(nint hWnd, SUBCLASSPROC pfn, nuint uId, nuint dwRefData);
-    [DllImport("comctl32.dll")] private static extern bool RemoveWindowSubclass(nint hWnd, SUBCLASSPROC pfn, nuint uId);
     [DllImport("comctl32.dll")] private static extern nint DefSubclassProc(nint hWnd, uint uMsg, nint wParam, nint lParam);
     [DllImport("user32.dll")] private static extern bool ShowWindow(nint hWnd, int nCmdShow);
     [DllImport("user32.dll")] private static extern bool SetForegroundWindow(nint hWnd);
@@ -195,26 +194,6 @@ public class WindowController
     /// Called by the Photino WindowClosingHandler. If minimize-to-tray is active,
     /// hides the window and returns true (cancel close). Otherwise returns false (allow close).
     /// </summary>
-    public bool InterceptClose()
-    {
-#if WINDOWS
-        if (!_minimizeToTray) return false;
-        var window = _core.Window;
-        if (window == null) return false;
-        ShowWindow(window.WindowHandle, SW_HIDE);
-        OnMinimized?.Invoke();
-        return true;
-#else
-        return false;
-#endif
-    }
-
-    public bool IsWindowHidden()
-    {
-        var window = _core.Window;
-        return window == null || !IsWindowVisible(window.WindowHandle);
-    }
-
     /// <summary>
     /// Unconditionally hides the window (SW_HIDE). Used on startup to auto-hide to tray.
     /// </summary>
@@ -264,25 +243,6 @@ public class WindowController
     /// Sets the native title bar background color via DWM (Windows 11+).
     /// hex must be in #RRGGBB format. No-op on unsupported OS versions.
     /// </summary>
-    public void ApplyDwmCaptionColor(string hex)
-    {
-#if WINDOWS
-        var window = _core.Window;
-        if (window == null) return;
-        hex = hex.TrimStart('#');
-        if (hex.Length != 6) return;
-        try
-        {
-            int r = Convert.ToInt32(hex[..2], 16);
-            int g = Convert.ToInt32(hex[2..4], 16);
-            int b = Convert.ToInt32(hex[4..6], 16);
-            int colorRef = r | (g << 8) | (b << 16); // COLORREF = 0x00BBGGRR
-            _ = DwmSetWindowAttribute(window.WindowHandle, 35 /*DWMWA_CAPTION_COLOR*/, ref colorRef, 4);
-        }
-        catch { }
-#endif
-    }
-
     // Install Chrome (called from "ready" message)
 
     public void InstallChrome()
@@ -402,7 +362,7 @@ public class WindowController
                     {
                         target,
                         engine,
-                        devices = VRCNext.Services.Helpers.TtsService.GetOutputDevices(),
+                        devices = VRCNext.Services.Helpers.AudioDeviceManager.ListOutputs().Select(d => new { id = d.Id, name = d.Name }).ToArray(),
                         voices,
                     });
                 });
@@ -414,7 +374,7 @@ public class WindowController
                     msg["text"]?.ToString() ?? "VRCNext text to speech is working.",
                     msg["engine"]?.ToString() ?? VRCNext.Services.Helpers.TtsService.EngineSapi,
                     msg["voice"]?.ToString() ?? "",
-                    msg["device"]?.Value<int?>() ?? -1,
+                    VRCNext.Services.Helpers.AudioSelection.From(msg["deviceId"]?.ToString(), msg["deviceName"]?.ToString()),
                     msg["volume"]?.Value<int?>() ?? 100,
                     msg["rate"]?.Value<int?>() ?? 0);
                 break;
@@ -425,7 +385,7 @@ public class WindowController
                     msg["text"]?.ToString() ?? "Hello",
                     msg["engine"]?.ToString() ?? VRCNext.Services.Helpers.TtsService.EngineSapi,
                     msg["voice"]?.ToString() ?? "",
-                    msg["device"]?.Value<int?>() ?? -1,
+                    VRCNext.Services.Helpers.AudioSelection.From(msg["deviceId"]?.ToString(), msg["deviceName"]?.ToString()),
                     msg["rate"]?.Value<int?>() ?? 0);
                 break;
             }

@@ -68,15 +68,3 @@
 }
 
 .as-scale-apply-btn:hover { opacity: .85; }
-
-.as-info-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(100, 149, 237, 0.08);
-    border: 1px solid rgba(100, 149, 237, 0.2);
-    border-radius: 6px;
-    padding: 4px 9px;
-    font-size: calc(11px + var(--fs-off, 0px));
-    color: var(--tx3);
-}

@@ -63,9 +63,6 @@ public class FriendsController
     public bool IsFavorited(string userId) => _favoriteFriends.ContainsKey(userId);
     public string GetFavoriteFriendId(string userId)
         => _favoriteFriends.TryGetValue(userId, out var v) ? v.fvrtId : "";
-    public string GetFavoriteFriendGroup(string userId)
-        => _favoriteFriends.TryGetValue(userId, out var v) ? v.groupName : "group_0";
-
     public List<JObject> GetStoreSnapshot()
     {
         lock (_friendStore) return _friendStore.Values.ToList();
@@ -760,7 +757,6 @@ public class FriendsController
                 if (!string.IsNullOrEmpty(uid))
                 {
                     _core.Timeline?.SetUserMemo(uid, memo);
-                    _core.SendToJS("userMemoUpdated", new { userId = uid, memo });
                 }
                 break;
             }
@@ -1155,28 +1151,6 @@ public class FriendsController
                 break;
             }
 
-            case "vrcGetUser":
-            {
-                var uid = msg["userId"]?.ToString();
-                if (!string.IsNullOrEmpty(uid))
-                {
-                    _ = Task.Run(async () =>
-                    {
-                        var u = await _core.Users.GetUserAsync(uid);
-                        if (u != null) _core.SendToJS("vrcUserDetail", new
-                        {
-                            id = u["id"]?.ToString() ?? "", displayName = u["displayName"]?.ToString() ?? "",
-                            image = ImageCacheHelper.GetUserUrl(u["id"]?.ToString(), VRChatApiService.GetUserImage(u)), status = u["status"]?.ToString() ?? "offline",
-                            statusDescription = u["statusDescription"]?.ToString() ?? "",
-                            bio = u["bio"]?.ToString() ?? "", location = u["location"]?.ToString() ?? "",
-                            isFriend = u["isFriend"]?.Value<bool>() ?? false,
-                            currentAvatarImageUrl = ImageCacheHelper.GetAvatarUrl(u["currentAvatar"]?.ToString(), u["currentAvatarImageUrl"]?.ToString()),
-                        });
-                    });
-                }
-                break;
-            }
-
             case "vrcSetFriendAlert":
             {
                 var uid   = msg["userId"]?.ToString() ?? "";
@@ -1264,24 +1238,6 @@ public class FriendsController
     }
 
     // Set of actions this controller handles
-    private static readonly HashSet<string> _handledActions = new()
-    {
-        "vrcRefreshFriends", "vrcUpdateStatus", "vrcGetFriendDetail", "vrcGetFriendPreview", "vrcJoinFriend",
-        "vrcInviteFriend", "vrcInviteFriendWithPhoto", "vrcGetInviteMessages",
-        "vrcUpdateInviteMessage", "vrcRequestInvite", "vrcUpdateNote", "vrcBatchInvite",
-        "vrcGetFavoriteFriends", "vrcAddFavoriteFriend", "vrcRemoveFavoriteFriend",
-        "vrcAddFavoriteFriendToGroup",
-        "vrcSendFriendRequest", "vrcUnfriend", "vrcGetBlocked", "vrcGetMuted", "vrcGetAllModerations",
-        "vrcBlock", "vrcMute", "vrcUnblock", "vrcUnmute",
-        "vrcHideAvatar", "vrcShowAvatar", "vrcInteractOff", "vrcInteractOn", "vrcMuteChat", "vrcUnmuteChat",
-        "vrcBoop",
-        "vrcSendChatMessage", "vrcGetChatHistory", "vrcGetUser",
-        "vrcGetUserAvatars", "vrcGetUserFavWorlds",
-        "vrcSetFriendAlert", "vrcGetFriendAlert",
-    };
-
-    public static bool HandlesAction(string action) => _handledActions.Contains(action);
-
     // Core Friend Methods
 
     public async Task FetchAndCacheFavFriendsAsync()
@@ -1715,6 +1671,7 @@ public class FriendsController
             instanceType = locInstType,
             tags = f["tags"]?.ToObject<List<string>>() ?? new List<string>(),
             ageVerified = f["ageVerified"]?.Value<bool>() ?? false,
+            isEconomyCreator = f["isEconomyCreator"]?.Value<bool>() ?? false,
             ageVerificationStatus = f["ageVerificationStatus"]?.ToString() ?? "",
             avatarFileId = ExtractAvatarFileId(f),
             bio = f["bio"]?.ToString() ?? "",
@@ -1768,6 +1725,7 @@ public class FriendsController
                 traveling = IsTravelingFriend(f["id"]?.ToString() ?? ""),
                 tags = f["tags"]?.ToObject<List<string>>() ?? new List<string>(),
                 ageVerified = f["ageVerified"]?.Value<bool>() ?? false,
+                isEconomyCreator = f["isEconomyCreator"]?.Value<bool>() ?? false,
                 ageVerificationStatus = f["ageVerificationStatus"]?.ToString() ?? "",
                 avatarFileId = ExtractAvatarFileId(f),
                 bioLinks = f["bioLinks"]?.ToObject<List<string>>() ?? new List<string>(),
@@ -2019,6 +1977,7 @@ public class FriendsController
                 ["pronouns"]              = !string.IsNullOrEmpty(livePronouns) ? livePronouns : cachedEntry.ProfilePronouns,
                 ["ageVerificationStatus"] = !string.IsNullOrEmpty(liveAgeVerifStatus) ? liveAgeVerifStatus : cachedEntry.ProfileAgeVerification,
                 ["ageVerified"]           = liveAgeVerified ?? cachedEntry.ProfileAgeVerified != 0,
+                ["isEconomyCreator"]      = live?["isEconomyCreator"]?.Value<bool>() ?? false,
                 ["representedGroup"]      = (JToken?)cRepGroup ?? JValue.CreateNull(),
                 ["userGroups"]            = JArray.FromObject(cGroups),
                 ["mutuals"]               = JArray.FromObject(cMutuals),
@@ -2497,6 +2456,7 @@ public class FriendsController
             pronouns = user["pronouns"]?.ToString() ?? "",
             ageVerificationStatus = user["ageVerificationStatus"]?.ToString() ?? "",
             ageVerified = user["ageVerified"]?.Value<bool>() ?? false,
+            isEconomyCreator = user["isEconomyCreator"]?.Value<bool>() ?? false,
             allowAvatarCopying = user["allowAvatarCopying"]?.Value<bool>() ?? false,
             representedGroup, userGroups, mutuals = mutualsList, mutualGroups = mutualGroupsList, mutualsOptedOut, userWorlds,
             bioLinks = user["bioLinks"]?.ToObject<List<string>>() ?? new List<string>(),

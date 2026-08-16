@@ -25,14 +25,8 @@ public class CacheHandler
     public static readonly string KeyRecentWorlds     = "Caches/dashboard_recently_visited.json";
     public static readonly string KeyWorldMeta        = "Caches/world_meta_cache.json";
 
-    public static string KeyUserProfile(string userId)    => $"profiles/{userId}.json";
-    public static string KeyUserFavWorlds(string userId)  => $"favworlds/{userId}.json"; // legacy — kept for FFC profile caching
-    public static string KeyUserGroups(string userId)        => $"Caches/Profiles/{userId}/user_groups_cache.json";
-    public static string KeyUserContent(string userId)       => $"Caches/Profiles/{userId}/user_content_cache.json";
+ // legacy — kept for FFC profile caching
     public static string KeyUserFavContent(string userId)    => $"Caches/Profiles/{userId}/user_fav_content_cache.json";
-    public static string KeyUserMutualGroups(string userId)  => $"Caches/Profiles/{userId}/mutual_groups_cache.json";
-    public static string KeyUserMutuals(string userId)       => $"Caches/Profiles/{userId}/user_mutuals_cache.json";
-
     // Keys that are universal and stay shared across all accounts (app-wide theme, world metadata).
     private static readonly HashSet<string> _sharedKeys = new()
     {

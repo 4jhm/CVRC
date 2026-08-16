@@ -2887,7 +2887,8 @@ public class TimelineService : IDisposable
             catch { }
 
             string selfName = "", selfImage = "";
-            int selfMeets = 0;
+            var selfMeets = (!string.IsNullOrEmpty(selfId) && selfId != userId)
+                ? (int)GetMeetAgainCount(userId) : 0;
 
             foreach (var eid in eventIds)
             {
@@ -2901,8 +2902,6 @@ public class TimelineService : IDisposable
                     var wThumb = string.IsNullOrEmpty(w.Thumb) ? ws.Thumb : w.Thumb;
                     worldStats[w.WorldId] = (wName, wThumb, ws.Visits + 1);
                 }
-
-                if (!string.IsNullOrEmpty(selfId) && selfId != userId) selfMeets++;
 
                 foreach (var p in players)
                 {

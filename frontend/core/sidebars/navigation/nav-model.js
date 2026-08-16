@@ -138,10 +138,6 @@ function navSaveLayout(layout, hidden, start = 'dashboard') {
     localStorage.setItem(_NAV_STORAGE_KEY, JSON.stringify({ layout, hidden, start }));
 }
 
-function navGetStartPage() {
-    return navLoadLayout().start;
-}
-
 // Apply the configured start page on app launch. No-op for the default (Dashboard,
 // which is already the active tab) or when the page is hidden / unavailable.
 function navApplyStartPage() {

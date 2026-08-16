@@ -24,10 +24,9 @@ function openGroupDetail(groupId) {
     if (typeof navSetCurrent === 'function') navSetCurrent('group', groupId);
     const _gpMb = document.querySelector('#modalDetail .modal-box');
     if (_gpMb) _gpMb.classList.remove('narrow');
-    const _gpCompact = (typeof settings !== 'undefined' && settings.groupModalStyle === 'compact');
     const _gpMod = document.getElementById('modalDetail');
-    _gpMod.classList.remove('wd-style-compact', 'gd-style-compact', 'tl-style-compact');
-    if (_gpCompact) _gpMod.classList.add('gd-style-compact');
+    _gpMod.classList.remove('wd-style-compact', 'tl-style-compact');
+    _gpMod.classList.add('gd-style-compact');
     _gpMod.style.display = 'flex';
     const cached = _groupDetailCache[groupId];
     if (cached) {
@@ -39,7 +38,7 @@ function openGroupDetail(groupId) {
                 posts: [], groupEvents: [], groupInstances: [], galleryImages: [], groupMembers: [], roles: [],
                 languages: [], links: [], rules: '', ownerId: '', ownerDisplayName: '' });
         } else {
-            document.getElementById('detailModalContent').innerHTML = sk(_gpCompact ? 'content-modal-compact' : 'content-modal');
+            document.getElementById('detailModalContent').innerHTML = sk('content-modal-compact');
         }
     }
     sendToCS({ action: 'vrcGetGroup', groupId });
@@ -104,9 +103,6 @@ function renderGroupDetail(g) {
     const canEdit = g.canEdit === true;
     const gidJs  = jsq(g.id);
     const banner = g.bannerUrl || g.iconUrl || 'fallback_cover.png';
-    const bannerHtml = banner
-        ? `<div class="fd-banner"><img src="${banner}" onerror="this.src='fallback_cover.png'"><div class="fd-banner-fade"></div></div>`
-        : (canEdit ? `<div style="display:flex;justify-content:flex-end;padding:4px 0 2px 0;"><button class="myp-edit-btn" onclick="openImagePicker('group-banner','${gidJs}')" title="${esc(t('groups.images.add_banner', 'Add banner'))}"><span class="msi" style="font-size:13px;">edit</span><span style="font-size:calc(11px + var(--fs-off, 0px));margin-left:3px;">${esc(t('groups.images.banner', 'Banner'))}</span></button></div>` : '');
 
     // Header
     const iconEditBtn = canEdit ? `<button class="myp-edit-btn" style="position:absolute;bottom:-4px;right:-4px;padding:2px;min-width:0;width:18px;height:18px;display:flex;align-items:center;justify-content:center;" onclick="openImagePicker('group-icon','${gidJs}')" title="${esc(t('groups.images.change_icon', 'Change icon'))}"><span class="msi" style="font-size:11px;">edit</span></button>` : '';
@@ -119,15 +115,12 @@ function renderGroupDetail(g) {
     const ownerHtml = (g.ownerId && ownerLabel)
         ? `<div style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx3);margin-top:2px;margin-bottom:4px;">${t('worlds.meta.by', 'by')} <span onclick="navOpenModal('friend','${jsq(g.ownerId)}','${jsq(ownerLabel)}')" style="display:inline-flex;align-items:center;padding:1px 8px;border-radius:20px;background:var(--bg-hover);font-size:calc(11px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);cursor:pointer;line-height:1.8;">${esc(ownerLabel)}</span></div>`
         : '';
-    const headerHtml = `<div class="fd-content${banner ? ' fd-has-banner' : ''}"><div class="fd-header">${iconHtml}<div style="flex:1;min-width:0;"><div class="fd-name">${esc(g.name)}</div>${ownerHtml}<div class="fd-status">${headerMeta}</div></div><span id="ggrpHeaderBadge" style="margin-left:auto;flex-shrink:0;">${g.joinState ? joinStateBadge(g.joinState) : ''}</span></div><div class="fd-badges-row">${idBadge(g.id)}</div>`;
 
     // Header action cluster (top-right) — replaces the old bottom button bar.
     const canPost   = g.canPost === true;
     const canEvent  = g.canEvent === true;
     const canInvite = g.canInvite === true;
-    const _gdCompact = (typeof settings !== 'undefined' && settings.groupModalStyle === 'compact');
     const headerActions = renderModalActions([
-        (canEdit && !_gdCompact) ? { icon: 'edit', title: t('groups.images.change_banner', 'Change banner'), onclick: `openImagePicker('group-banner','${gidJs}')`, header: true } : null,
         g.isJoined
             ? { icon: 'logout', title: t('groups.actions.leave_group', 'Leave Group'), onclick: `confirmLeaveGroup('${gidJs}','${jsq(g.name || '')}')`, danger: true }
             : { icon: 'group_add', title: t('groups.actions.join_group', 'Join Group'), onclick: `sendToCS({action:'vrcJoinGroup',groupId:'${gidJs}'});closeGroupDetail();` },
@@ -484,8 +477,6 @@ function renderGroupDetail(g) {
     const rolesTab   = g.canManageRoles ? _buildRolesTab(g) : '';
     const bannedTab  = g.canBan ? _buildBannedTab() : '';
 
-    const useGdCompact = (typeof settings !== 'undefined' && settings.groupModalStyle === 'compact');
-
     const gdTabsContent = `<div id="gdTabInfo">${infoTab}</div>
         <div id="gdTabPosts" style="display:none;">${postsTab}</div>
         <div id="gdTabEvents" style="display:none;">${eventsTab}</div>
@@ -497,7 +488,7 @@ function renderGroupDetail(g) {
         ${g.canViewAudit ? `<div id="gdTabLogs" style="display:none;">${_buildLogsTab()}</div>` : ''}
         <div id="gdTabJson" style="display:none;"><div class="json-viewer">${jsonHighlight((g.id && _gdRawJsonCache[g.id]) || {})}</div></div>`;
 
-    if (useGdCompact) {
+    {
         const gdLeftHtml = `<div class="fd-left">
             <div class="fd-left-banner">${banner ? `<img src="${banner}" onerror="this.src='fallback_cover.png'"><div class="fd-banner-fade"></div>` : ''}${canEdit ? `<button class="fd-banner-edit" onclick="openImagePicker('group-banner','${gidJs}')" title="${esc(t('groups.images.change_banner', 'Change banner'))}"><span class="msi">edit</span></button>` : ''}</div>
             <div class="fd-left-body">
@@ -505,19 +496,15 @@ function renderGroupDetail(g) {
             </div>
         </div>`;
         el.innerHTML = `${headerActions}<div class="fd-layout">${gdLeftHtml}<div class="fd-right"><div class="fd-right-scroll">${tabsHtml}${gdTabsContent}</div></div></div>`;
-    } else {
-        el.innerHTML = `${headerActions}${bannerHtml}${headerHtml}${tabsHtml}
-        ${gdTabsContent}
-    </div>`;
     }
 
     const _gdModal = document.getElementById('modalDetail');
     if (_gdModal) {
-        _gdModal.classList.remove('wd-style-compact', 'gd-style-compact', 'tl-style-compact');
-        if (useGdCompact) _gdModal.classList.add('gd-style-compact');
+        _gdModal.classList.remove('wd-style-compact', 'tl-style-compact');
+        _gdModal.classList.add('gd-style-compact');
     }
     applyGroupDetailTranslations(g);
-    if (useGdCompact) _gdCompactReflow(g);
+    _gdCompactReflow(g);
 
     if (_gdPrevTab && _gdPrevTab !== 'info' && _gdPrevId === g.id) {
         const _gdRestoreBtn = el.querySelector(`.fd-tab[onclick^="switchGdTab('${_gdPrevTab}'"]`);

@@ -103,7 +103,6 @@
 .rw-title { font-size: calc(19px + var(--fs-off, 0px)); font-weight: 800; color: var(--tx0); line-height: 1.2; }
 .rw-title-lg { font-size: calc(25px + var(--fs-off, 0px)); }
 .rw-sub { font-size: calc(13px + var(--fs-off, 0px)); color: var(--tx2); line-height: 1.45; max-width: 560px; }
-.rw-bignum { font-size: calc(44px + var(--fs-off, 0px)); font-weight: 800; color: var(--accent); line-height: 1; }
 .rw-line { font-size: calc(13px + var(--fs-off, 0px)); color: var(--tx1); line-height: 1.5; max-width: 560px; }
 
 .rw-content { width: 100%; max-width: 640px; }
@@ -185,21 +184,6 @@
     text-overflow: ellipsis;
 }
 
-.rw-world-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
-.rw-world-row { display: flex; align-items: center; gap: 12px; text-align: left; }
-.rw-rank { font-size: calc(18px + var(--fs-off, 0px)); font-weight: 800; color: var(--accent); width: 22px; text-align: center; flex-shrink: 0; }
-.rw-world-thumb {
-    width: 54px;
-    height: 40px;
-    border-radius: 8px;
-    background: var(--bg-hover);
-    background-size: cover;
-    background-position: center;
-    flex-shrink: 0;
-}
-.rw-world-info { min-width: 0; }
-.rw-world-name { font-size: calc(14px + var(--fs-off, 0px)); font-weight: 600; color: var(--tx0); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.rw-world-meta { font-size: calc(12px + var(--fs-off, 0px)); color: var(--tx3); }
 
 .rw-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .rw-chip {

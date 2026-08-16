@@ -137,9 +137,6 @@ function openUserDetail(userId) {
     openFriendDetail(userId);
 }
 
-function renderUserDetail(u) {
-    renderFriendDetail(u);
-}
 
 function rerenderSearchTranslations() {
     if (searchState.worlds.query) {

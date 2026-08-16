@@ -1,19 +1,16 @@
 /* VRCNext Setup Wizard */
 
 var currentPage = 0;
-var totalPages = 12;
+var totalPages = 10;
 var isLoggedIn = false;
 var loggedInName = '';
 var vrc2faType = 'totp';
 var selectedLanguage = 'en';
-var setupModalStyle = 'classic';
 var _setupTr = {};
 
 var PAGE_VRCPLUS   = 6;
 var PAGE_SIDEBAR   = 7;
 var PAGE_PREVIEW   = 8;
-var PAGE_NAVIGATION = 9;
-var PAGE_DIRECTNAV = 10;
 
 function t(key, fallback) {
     return _setupTr[key] || fallback || '';
@@ -99,7 +96,7 @@ function vrcPlusDecoPrefs(on) {
             enableProfileThemes: true,
             profileThemeContrast: true,
             showDecorationsOnDashboard: true,
-            enableProfileEffects: false,
+            enableProfileEffects: true,
             profileThemeVrcnOverride: false,
             transparentProfileCards: false,
         };
@@ -120,13 +117,6 @@ function vrcPlusDecoPrefs(on) {
 function onVrcPlusDecoToggle(on) {
     document.querySelectorAll('#decoPillList .deco-pill').forEach(function(el) {
         el.classList.toggle('on', !!on);
-    });
-}
-
-function setSetupModalStyle(style) {
-    setupModalStyle = (style === 'compact') ? 'compact' : 'classic';
-    document.querySelectorAll('#setupStylePicker .profile-style-option').forEach(function(el) {
-        el.classList.toggle('active', el.getAttribute('data-style') === setupModalStyle);
     });
 }
 
@@ -184,17 +174,6 @@ function nextPage() {
         savePrefs({
             friendsSidebarPreviewCollapsed: document.getElementById('setupSidebarPreviewCollapsed').checked,
         });
-    }
-    if (currentPage === PAGE_NAVIGATION) {
-        savePrefs({
-            profileModalStyle: setupModalStyle,
-            worldModalStyle: setupModalStyle,
-            groupModalStyle: setupModalStyle,
-            avatarModalStyle: setupModalStyle,
-        });
-    }
-    if (currentPage === PAGE_DIRECTNAV) {
-        savePrefs({ directModalNav: document.getElementById('setupDirectModalNav').checked });
     }
     if (currentPage >= totalPages - 1) {
         var startWithWin = document.getElementById('setupStartWithWindows').checked;
@@ -302,8 +281,6 @@ function onBackendMessage(e) {
                 onVrcPlusDecoToggle(decoOn);
                 document.getElementById('setupSidebarLocationOnly').checked = !!pr.friendsSidebarLocationOnly;
                 document.getElementById('setupSidebarPreviewCollapsed').checked = !!pr.friendsSidebarPreviewCollapsed;
-                document.getElementById('setupDirectModalNav').checked = pr.directModalNav !== false;
-                setSetupModalStyle(pr.profileModalStyle);
             }
             if (p && p.startWithSystem) document.getElementById('setupStartWithWindows').checked = true;
             if (p && p.loggedIn && p.displayName) {
@@ -438,7 +415,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     renderSetupLangGrid();
-    setSetupModalStyle(setupModalStyle);
     showPage(0);
     sendToCS({ action: 'setupReady' });
     sendToCS({ action: 'loadTranslation', language: selectedLanguage });

@@ -374,11 +374,6 @@ function _calDayKey(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-function _eventKey(evt) {
-    const date = new Date(evt.startsAt || evt.startDate || '');
-    if (isNaN(date)) return null;
-    return _calDayKey(date);
-}
 
 function _eventDayKeys(evt) {
     const start = new Date(evt.startsAt || evt.startDate || '');

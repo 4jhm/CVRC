@@ -45,11 +45,6 @@ function fsApplyInputMode() {
     fsSendConfig();
 }
 
-function fsBtnSets() {
-    const cur = fsReadBtns();
-    const idx = typeof vrInputMode !== 'undefined' && vrInputMode === 1;
-    return { legacy: idx ? _fsOtherBtns : cur, index: idx ? cur : _fsOtherBtns };
-}
 
 function fsSetMode(mode) {
     if (!FS_MODE_SELECTS[mode]) return;
@@ -165,7 +160,7 @@ function handleFsAudioDevices(payload) {
     const selB = document.getElementById('fsVideoDeviceB');
     const wantA = (selA?.value) || _fsSavedAudioA || '';
     const wantB = (selB?.value) || _fsSavedAudioB || '';
-    for (const sel of [selA, selB]) {
+    for (const [sel, want] of [[selA, wantA], [selB, wantB]]) {
         if (!sel) continue;
         sel.innerHTML = '';
         const def = document.createElement('option');
@@ -178,9 +173,15 @@ function handleFsAudioDevices(payload) {
             o.textContent = d.label;
             sel.appendChild(o);
         }
+        if (want && !list.some(d => d.id === want)) {
+            const o = document.createElement('option');
+            o.value = want;
+            o.textContent = want + ' ' + t('audio.unavailable', '(Unavailable)');
+            sel.appendChild(o);
+        }
+        sel.value = want;
+        if (sel._vnRefresh) sel._vnRefresh();
     }
-    if (selA) { selA.value = wantA; if (selA._vnRefresh) selA._vnRefresh(); }
-    if (selB) { selB.value = wantB; if (selB._vnRefresh) selB._vnRefresh(); }
     _fsSavedAudioA = wantA;
     _fsSavedAudioB = wantB;
     _fsAudioDevicesReady = true;
@@ -193,46 +194,52 @@ function fsUpdateActivationRadius() {
     fsAutoSave();
 }
 
-let _fsSavedDevice = '';
+let _fsSavedDeviceId = '';
+let _fsSavedDeviceName = '';
+let _fsSavedDeviceKnown = false;
 let _fsDevicesReady = false;
 function fsRequestDevices() { sendToCS({ action: 'fsGetDevices' }); }
+
+let _fsDevicesRequested = false;
+function fsEnsureDeviceLists() {
+    if (_fsDevicesRequested) return;
+    _fsDevicesRequested = true;
+    fsRequestAudioDevices();
+    fsRequestDevices();
+}
+
+function fsApplySavedOutputDevice(s) {
+    _fsSavedDeviceId = s.FsOutputDeviceId ?? s.fsOutputDeviceId ?? '';
+    _fsSavedDeviceName = s.FsOutputDevice ?? s.fsOutputDevice ?? '';
+    _fsSavedDeviceKnown = true;
+    if (!_fsDevicesReady) {
+        audioPrefillDeviceSelect(document.getElementById('fsOutputDevice'), audioSelectionFromSaved(_fsSavedDeviceId, _fsSavedDeviceName));
+    }
+}
+
 function fsCurrentOutputDevice() {
-    return _fsDevicesReady ? (document.getElementById('fsOutputDevice')?.value ?? '') : _fsSavedDevice;
+    if (_fsDevicesReady) return audioDeviceValue('fsOutputDevice');
+    return _fsSavedDeviceKnown ? { id: _fsSavedDeviceId, name: _fsSavedDeviceName } : null;
 }
 
 function handleFsDevices(payload) {
     const sel = document.getElementById('fsOutputDevice');
     if (!sel) return;
     const list = Array.isArray(payload?.devices) ? payload.devices : [];
-    if (typeof payload?.savedDevice === 'string' && !_fsSavedDevice) _fsSavedDevice = payload.savedDevice;
-    const want = sel.value || _fsSavedDevice || '';
-    sel.innerHTML = '';
-    const def = document.createElement('option');
-    def.value = '';
-    def.textContent = t('frameshot.audio.default', 'System Default');
-    sel.appendChild(def);
-    for (const name of list) {
-        const o = document.createElement('option');
-        o.value = name; o.textContent = name;
-        sel.appendChild(o);
-    }
-    // Restore selection — winmm truncates long names to 31 chars, so match bidirectionally
-    let matched = '';
-    for (const o of sel.options) {
-        if (!o.value) continue;
-        if (o.value === want || (want && (want.startsWith(o.value) || o.value.startsWith(want)))) { matched = o.value; break; }
-    }
-    sel.value = matched;
-    _fsSavedDevice = matched;
+    let selection;
+    if (_fsDevicesReady) selection = audioSelectionFromSelect(sel);
+    else if (payload?.saved) selection = payload.saved;
+    else selection = audioSelectionFromSaved(_fsSavedDeviceId, _fsSavedDeviceName);
+    audioFillDeviceSelect(sel, list, selection);
     _fsDevicesReady = true;
-    if (sel._vnRefresh) sel._vnRefresh();
 }
 
 function fsOutputDeviceChange() {
-    const sel = document.getElementById('fsOutputDevice');
-    const dev = sel?.value || '';
-    _fsSavedDevice = dev;
-    sendToCS({ action: 'fsSetOutput', deviceName: dev });
+    const dev = audioDeviceValue('fsOutputDevice');
+    if (!dev) return;
+    _fsSavedDeviceId = dev.id;
+    _fsSavedDeviceName = dev.name;
+    sendToCS({ action: 'fsSetOutput', deviceId: dev.id, deviceName: dev.name });
     clearTimeout(_fsAutoTimer);
     _fsAutoTimer = setTimeout(() => saveSettings(), 600);
 }
@@ -247,7 +254,6 @@ function fsAutoSave() {
 function handleFsUpdate(data) {
     _fsLastState = { ...data };
     fsConnected = !!data.connected;
-    if (typeof updateDashQuickControls === 'function') updateDashQuickControls();
 
     const badge = document.getElementById('badgeFrameShot');
     if (badge) badge.classList.toggle('tb-active', !!data.connected);

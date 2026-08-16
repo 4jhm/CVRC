@@ -51,7 +51,6 @@ function renderExtraExeDesktop(l) { _renderExeList('extraExeDesktopList', l, 're
 function renderExtraExeVR(l)      { _renderExeList('extraExeVRList',      l, 'removeExtraExeVR');      }
 
 // legacy — kept so i18n.js re-render calls don't break on old references
-function renderExtraExe(l) {}
 
 function browseExe(t) {
     sendToCS({ action: 'browseExe', target: t });
@@ -114,6 +113,14 @@ function saveSettings() {
             messageSoundEnabled: document.getElementById('setMessageSoundEnabled').checked,
             mediaRelaySoundEnabled: document.getElementById('setMediaRelaySoundEnabled').checked,
             steamOverlaySoundEnabled: document.getElementById('setSteamOverlaySoundEnabled')?.checked ?? true,
+            notifySoundFile: document.getElementById('setNotifySoundFile')?.value ?? '',
+            messageSoundFile: document.getElementById('setMessageSoundFile')?.value ?? '',
+            mediaRelaySoundFile: document.getElementById('setMediaRelaySoundFile')?.value ?? '',
+            steamOverlaySoundFile: document.getElementById('setSteamOverlaySoundFile')?.value ?? '',
+            notifySoundVolume: Number(document.getElementById('setNotifySoundVolume')?.value ?? 50),
+            messageSoundVolume: Number(document.getElementById('setMessageSoundVolume')?.value ?? 50),
+            mediaRelaySoundVolume: Number(document.getElementById('setMediaRelaySoundVolume')?.value ?? 50),
+            steamOverlaySoundVolume: Number(document.getElementById('setSteamOverlaySoundVolume')?.value ?? 50),
             friendOnlineToastEnabled: document.getElementById('setFriendOnlineToastEnabled')?.checked ?? false,
             friendOnlineToastFavOnly: document.getElementById('setFriendOnlineToastFavOnly')?.checked ?? false,
             friendsSidebarLocationOnly: document.getElementById('setFriendsSidebarLocationOnly')?.checked ?? true,
@@ -122,7 +129,6 @@ function saveSettings() {
             peopleAlwaysStats: document.getElementById('setPeopleAlwaysStats')?.checked ?? false,
             modernFolderLayout: document.getElementById('setModernFolderLayout')?.checked ?? true,
             navSidebarHoverText: document.getElementById('setNavSidebarHoverText')?.checked ?? true,
-            directModalNav: document.getElementById('setDirectModalNav')?.checked ?? true,
             enableProfileIconFrames: document.getElementById('setEnableIconFrames')?.checked ?? false,
             squareIconFrames: document.getElementById('setSquareIconFrames')?.checked ?? false,
             enableNameplateDecoration: document.getElementById('setEnableNameplateDeco')?.checked ?? false,
@@ -133,10 +139,6 @@ function saveSettings() {
             profileThemeContrast: document.getElementById('setProfileThemeContrast')?.checked ?? true,
             transparentProfileCards: document.getElementById('setTransparentProfileCards')?.checked ?? false,
             showDecorationsOnDashboard: document.getElementById('setDecoOnDashboard')?.checked ?? false,
-            profileModalStyle: settings.profileModalStyle || 'classic',
-            worldModalStyle: settings.worldModalStyle || 'classic',
-            groupModalStyle: settings.groupModalStyle || 'classic',
-            avatarModalStyle: settings.avatarModalStyle || 'classic',
             language: currentLanguage,
             theme: currentTheme,
             specialTheme: currentSpecialTheme,
@@ -177,7 +179,6 @@ function saveSettings() {
             fsAutoStartVR:            document.getElementById('setFsAutoStartVR')?.checked        ?? false,
             fsLeftButton:             _fsCur.fsLeftButton,
             fsRightButton:            _fsCur.fsRightButton,
-            fsOutputDevice:           (typeof fsCurrentOutputDevice === 'function') ? fsCurrentOutputDevice() : (document.getElementById('fsOutputDevice')?.value ?? ''),
             fsActivationRadius:       parseInt(document.getElementById('fsActivationRadius')?.value ?? '15', 10),
             fsLeftRecordButton:       _fsCur.fsLeftRecord,
             fsRightRecordButton:      _fsCur.fsRightRecord,
@@ -246,7 +247,6 @@ function saveSettings() {
             vroToastTtsGroupInv:     !!document.getElementById('vroToastGroupInvTts')?.checked,
             vroToastTtsJoined:       !!document.getElementById('vroToastJoinedTts')?.checked,
             vroToastJoined:          !!document.getElementById('vroToastJoined')?.checked,
-            vroTtsDevice:       _vroParseDevice(document.getElementById('vroTtsDevice')?.value),
             vroTtsVoice:        document.getElementById('vroTtsVoice')?.value || '',
             vroTtsEngine:       document.getElementById('vroTtsEngine')?.value || 'sapi',
             vroTtsLang:         document.getElementById('vroTtsLang')?.value || '',
@@ -313,7 +313,13 @@ function saveSettings() {
             vrcndbSubmitAvatars: document.getElementById('setVrcndbSubmit').checked,
             vrcndbReportDeleted: document.getElementById('setVrcndbReport').checked,
             dashSectionOrder:  (typeof _dashLayout !== 'undefined') ? _dashLayout.order  : [],
-            dashSectionHidden: (typeof _dashLayout !== 'undefined') ? _dashLayout.hidden : []
+            dashSectionHidden: (typeof _dashLayout !== 'undefined') ? _dashLayout.hidden : [],
+            dashRows: (typeof _dashLayout !== 'undefined' && Array.isArray(_dashLayout.rows))
+                ? _dashLayout.rows.map(r => r.map(id => id || '').join('|'))
+                : [],
+            dashHero: (typeof _dashLayout !== 'undefined' && _dashLayout.hero)
+                ? [_dashLayout.hero.left || '', _dashLayout.hero.right || '']
+                : []
         }
     };
     // Sync in-memory flags immediately so sound functions see the updated value without waiting for round-trip
@@ -321,10 +327,22 @@ function saveSettings() {
     settings.messageSoundEnabled     = payload.data.messageSoundEnabled;
     settings.mediaRelaySoundEnabled  = payload.data.mediaRelaySoundEnabled;
     settings.steamOverlaySoundEnabled = payload.data.steamOverlaySoundEnabled;
+    settings.notifySoundFile         = payload.data.notifySoundFile;
+    settings.messageSoundFile        = payload.data.messageSoundFile;
+    settings.mediaRelaySoundFile     = payload.data.mediaRelaySoundFile;
+    settings.steamOverlaySoundFile   = payload.data.steamOverlaySoundFile;
+    settings.notifySoundVolume       = payload.data.notifySoundVolume;
+    settings.messageSoundVolume      = payload.data.messageSoundVolume;
+    settings.mediaRelaySoundVolume   = payload.data.mediaRelaySoundVolume;
+    settings.steamOverlaySoundVolume = payload.data.steamOverlaySoundVolume;
     settings.friendOnlineToastEnabled = payload.data.friendOnlineToastEnabled;
     settings.friendOnlineToastFavOnly = payload.data.friendOnlineToastFavOnly;
     settings.webhooks = w;
     settings.Webhooks = w;
+    const vroTtsDev = (typeof audioDeviceValue === 'function') ? audioDeviceValue('vroTtsDevice') : null;
+    if (vroTtsDev) { payload.data.vroTtsDeviceId = vroTtsDev.id; payload.data.vroTtsDeviceName = vroTtsDev.name; }
+    const fsOutDev = (typeof fsCurrentOutputDevice === 'function') ? fsCurrentOutputDevice() : null;
+    if (fsOutDev) { payload.data.fsOutputDeviceId = fsOutDev.id; payload.data.fsOutputDeviceName = fsOutDev.name; }
     sendToCS(payload);
 }
 
@@ -352,7 +370,7 @@ function autoSave() {
 function initAutoSave() {
     const ids = ['setBotName','setBotAvatar','setVrcPath','setStartWithWindows','setMinimizeToTray','setTrayNotifications',
         'setNotifySoundEnabled','setMessageSoundEnabled','setMediaRelaySoundEnabled','setSteamOverlaySoundEnabled',
-        'setFriendsSidebarLocationOnly','setFriendsSidebarPreviewCollapsed','setFriendsSidebarPreviewOpen','setPeopleAlwaysStats','setDirectModalNav',
+        'setFriendsSidebarLocationOnly','setFriendsSidebarPreviewCollapsed','setFriendsSidebarPreviewOpen','setPeopleAlwaysStats',
         'setRandomBg','setClockEnabled','setDateEnabled','setShowVrcPlus','setShowVrcCredits',
         'setAutoStartVR','setAutoStartDesktop',
         'setCloseWithVrc','setStartAlwaysWithVrc',
@@ -382,9 +400,43 @@ function updateSquareFrameToggle() {
     if (row) row.style.opacity = el.disabled ? '.45' : '';
 }
 
-function _vroParseDevice(v) {
-    const n = parseInt(v ?? '-1', 10);
-    return Number.isNaN(n) ? -1 : n;
+const SND_SLOT_IDS = {
+    notify:       'setNotifySoundFile',
+    message:      'setMessageSoundFile',
+    mediaRelay:   'setMediaRelaySoundFile',
+    steamOverlay: 'setSteamOverlaySoundFile',
+};
+
+function sndPopulateSelects() {
+    const lib = typeof SOUND_LIBRARY !== 'undefined' ? SOUND_LIBRARY : [];
+    for (const id of Object.values(SND_SLOT_IDS)) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const prev = el.value;
+        el.innerHTML = '';
+        const def = document.createElement('option');
+        def.value = '';
+        def.textContent = t('settings.sounds.default', 'Default');
+        el.appendChild(def);
+        for (const file of lib) {
+            const o = document.createElement('option');
+            o.value = file;
+            o.textContent = file.replace(/\.wav$/i, '');
+            el.appendChild(o);
+        }
+        el.value = prev;
+        el._vnRefresh?.();
+    }
+}
+
+function sndOnVolumeInput(slot, el) {
+    const val = Number(el.value) || 0;
+    const cfg = typeof SOUND_SLOTS !== 'undefined' ? SOUND_SLOTS[slot] : null;
+    if (cfg) settings[cfg.volKey] = val;
+    const base = el.id.replace(/^set/, '');
+    const lbl = document.getElementById(base.charAt(0).toLowerCase() + base.slice(1) + 'Val');
+    if (lbl) lbl.textContent = val + '%';
+    autoSave();
 }
 
 function loadSettingsToUI(s) {
@@ -434,9 +486,6 @@ function loadSettingsToUI(s) {
     const _nshtEl = document.getElementById('setNavSidebarHoverText');
     if (_nshtEl) _nshtEl.checked = settings.navSidebarHoverText;
     if (typeof applyNavFolderMode === 'function') applyNavFolderMode();
-    settings.directModalNav = s.DirectModalNav ?? s.directModalNav ?? true;
-    const _dmnEl = document.getElementById('setDirectModalNav');
-    if (_dmnEl) _dmnEl.checked = settings.directModalNav;
     settings.enableProfileIconFrames = s.EnableProfileIconFrames ?? s.enableProfileIconFrames ?? false;
     const _eifEl = document.getElementById('setEnableIconFrames');
     if (_eifEl) _eifEl.checked = settings.enableProfileIconFrames;
@@ -469,14 +518,6 @@ function loadSettingsToUI(s) {
     const _dodEl = document.getElementById('setDecoOnDashboard');
     if (_dodEl) _dodEl.checked = settings.showDecorationsOnDashboard;
     if (typeof applyDecorationsSetting === 'function') applyDecorationsSetting();
-    settings.profileModalStyle = s.ProfileModalStyle ?? s.profileModalStyle ?? 'classic';
-    if (typeof _applyProfileModalStyleUI === 'function') _applyProfileModalStyleUI(settings.profileModalStyle);
-    settings.worldModalStyle = s.WorldModalStyle ?? s.worldModalStyle ?? 'classic';
-    if (typeof _applyWorldModalStyleUI === 'function') _applyWorldModalStyleUI(settings.worldModalStyle);
-    settings.groupModalStyle = s.GroupModalStyle ?? s.groupModalStyle ?? 'classic';
-    if (typeof _applyGroupModalStyleUI === 'function') _applyGroupModalStyleUI(settings.groupModalStyle);
-    settings.avatarModalStyle = s.AvatarModalStyle ?? s.avatarModalStyle ?? 'classic';
-    if (typeof _applyAvatarModalStyleUI === 'function') _applyAvatarModalStyleUI(settings.avatarModalStyle);
     settings.folders = s.WatchFolders || s.watchFolders || s.folders || [];
     settings.relayEnabledFolders = s.RelayEnabledFolders ?? s.relayEnabledFolders ?? null;
     settings.extraExe = s.ExtraExe || s.extraExe || [];
@@ -496,6 +537,25 @@ function loadSettingsToUI(s) {
     settings.messageSoundEnabled = s.MessageSoundEnabled ?? s.messageSoundEnabled ?? false;
     settings.mediaRelaySoundEnabled = s.MediaRelaySoundEnabled ?? s.mediaRelaySoundEnabled ?? false;
     settings.steamOverlaySoundEnabled = s.SteamOverlaySoundEnabled ?? s.steamOverlaySoundEnabled ?? true;
+
+    sndPopulateSelects();
+    for (const [slot, id] of Object.entries(SND_SLOT_IDS)) {
+        const cfg = SOUND_SLOTS[slot];
+        const key = cfg.fileKey.charAt(0).toUpperCase() + cfg.fileKey.slice(1);
+        const file = s[key] ?? s[cfg.fileKey] ?? '';
+        settings[cfg.fileKey] = file;
+        const el = document.getElementById(id);
+        if (el) { el.value = file; el._vnRefresh?.(); }
+
+        const vKey = cfg.volKey.charAt(0).toUpperCase() + cfg.volKey.slice(1);
+        const vol = s[vKey] ?? s[cfg.volKey] ?? 50;
+        settings[cfg.volKey] = vol;
+        const vEl = document.getElementById(id.replace('File', 'Volume'));
+        if (vEl) vEl.value = vol;
+        const vLbl = document.getElementById(cfg.volKey + 'Val');
+        if (vLbl) vLbl.textContent = vol + '%';
+    }
+    applySoundSettings();
     settings.friendOnlineToastEnabled = s.FriendOnlineToastEnabled ?? s.friendOnlineToastEnabled ?? false;
     settings.friendOnlineToastFavOnly = s.FriendOnlineToastFavOnly ?? s.friendOnlineToastFavOnly ?? false;
     const _sovEl = document.getElementById('setSteamOverlaySoundEnabled');
@@ -505,7 +565,7 @@ function loadSettingsToUI(s) {
     applyGuiZoom(savedZoom / 100);
 
     dashBgPath = s.DashBgPath || s.dashBgPath || '';
-    if (typeof loadDashLayout === 'function') loadDashLayout({ order: s.DashSectionOrder || s.dashSectionOrder, hidden: s.DashSectionHidden || s.dashSectionHidden });
+    if (typeof loadDashLayout === 'function') loadDashLayout({ hero: s.DashHero || s.dashHero, rows: s.DashRows || s.dashRows, order: s.DashSectionOrder || s.dashSectionOrder, hidden: s.DashSectionHidden || s.dashSectionHidden });
 
     const randomBg = s.RandomDashBg || s.randomDashBg || false;
     document.getElementById('setRandomBg').checked = randomBg;
@@ -687,7 +747,6 @@ function loadSettingsToUI(s) {
     if (typeof fsRenderKeybind === 'function') fsRenderKeybind();
     if (typeof _fsSavedAudioA !== 'undefined') _fsSavedAudioA = s.FsVideoDeviceA ?? s.fsVideoDeviceA ?? '';
     if (typeof _fsSavedAudioB !== 'undefined') _fsSavedAudioB = s.FsVideoDeviceB ?? s.fsVideoDeviceB ?? '';
-    if (typeof fsRequestAudioDevices === 'function') fsRequestAudioDevices();
     const _fsVF  = document.getElementById('fsVideoFps');
     const _fsVQ  = document.getElementById('fsVideoQuality');
     const _fsVBQ = document.getElementById('fsVideoBitrateQuality');
@@ -696,8 +755,7 @@ function loadSettingsToUI(s) {
     if (_fsVQ)  _fsVQ.value  = String(s.FsVideoQuality        ?? s.fsVideoQuality        ?? '1080p');
     if (_fsVBQ) _fsVBQ.value = String(s.FsVideoBitrateQuality ?? s.fsVideoBitrateQuality ?? 'medium');
     if (_fsAK)  _fsAK.value  = String(s.FsAudioKbps           ?? s.fsAudioKbps           ?? 256);
-    if (typeof _fsSavedDevice !== 'undefined') _fsSavedDevice = s.FsOutputDevice ?? s.fsOutputDevice ?? '';
-    if (typeof fsRequestDevices === 'function') fsRequestDevices();
+    if (typeof fsApplySavedOutputDevice === 'function') fsApplySavedOutputDevice(s);
     if (typeof fsRequestFfmpegState === 'function') fsRequestFfmpegState();
     const _fsAr = document.getElementById('fsActivationRadius');
     if (_fsAr) {
@@ -779,7 +837,8 @@ function loadSettingsToUI(s) {
         vroToastTtsGroupInv: s.VroToastTtsGroupInv ?? s.vroToastTtsGroupInv ?? false,
         vroToastTtsJoined: s.VroToastTtsJoined ?? s.vroToastTtsJoined ?? false,
         vroToastJoined:     s.VroToastJoined     ?? s.vroToastJoined     ?? true,
-        vroTtsDevice:       s.VroTtsDevice       ?? s.vroTtsDevice       ?? -1,
+        vroTtsDeviceId:     s.VroTtsDeviceId     ?? s.vroTtsDeviceId     ?? '',
+        vroTtsDeviceName:   s.VroTtsDeviceName   ?? s.vroTtsDeviceName   ?? '',
         vroTtsVoice:        s.VroTtsVoice        ?? s.vroTtsVoice        ?? '',
         vroTtsEngine:       s.VroTtsEngine       ?? s.vroTtsEngine       ?? 'sapi',
         vroTtsLang:         s.VroTtsLang         ?? s.vroTtsLang         ?? '',
@@ -836,7 +895,7 @@ function loadSettingsToUI(s) {
     document.getElementById('setVrcndbReport').checked = s.VrcndbReportDeleted ?? s.vrcndbReportDeleted ?? false;
 
     // Memory Trim
-    document.getElementById('setMemoryTrimEnabled').checked = s.MemoryTrimEnabled ?? s.memoryTrimEnabled ?? false;
+    document.getElementById('setMemoryTrimEnabled').checked = s.MemoryTrimEnabled ?? s.memoryTrimEnabled ?? true;
     { const _mfEl = document.getElementById('setMediaFixEnabled'); if (_mfEl) _mfEl.checked = s.MediaFixEnabled ?? s.mediaFixEnabled ?? true; }
 
     // Database optimization
@@ -910,9 +969,6 @@ function loadSettingsToUI(s) {
     setTimeout(initAutoSave, 100);
 }
 
-function updateImgCacheUi() {
-    sendToCS({ action: 'getImgCacheSize' });
-}
 
 function updateImgCacheSizeBar(bytes) {
     const el = document.getElementById('imgCacheSizeBar');
@@ -1869,83 +1925,4 @@ function _fotUpdateFavOnly() {
     if (row) row.classList.toggle('disabled', !enabled);
 }
 
-function _applyProfileModalStyleUI(style) {
-    const picker = document.getElementById('profileStylePicker');
-    if (!picker) return;
-    picker.querySelectorAll('.profile-style-option').forEach(el => {
-        el.classList.toggle('active', el.dataset.style === style);
-    });
-}
-
-function setProfileModalStyle(style) {
-    if (style !== 'classic' && style !== 'compact') style = 'classic';
-    settings.profileModalStyle = style;
-    _applyProfileModalStyleUI(style);
-    if (typeof autoSave === 'function') autoSave();
-    const m = document.getElementById('modalFriendDetail');
-    if (m && m.style.display !== 'none' && typeof currentFriendDetail !== 'undefined' && currentFriendDetail
-        && typeof renderFriendDetail === 'function') {
-        renderFriendDetail(currentFriendDetail);
-    }
-}
-
-function _applyWorldModalStyleUI(style) {
-    const picker = document.getElementById('worldStylePicker');
-    if (!picker) return;
-    picker.querySelectorAll('.profile-style-option').forEach(el => {
-        el.classList.toggle('active', el.dataset.style === style);
-    });
-}
-
-function setWorldModalStyle(style) {
-    if (style !== 'classic' && style !== 'compact') style = 'classic';
-    settings.worldModalStyle = style;
-    _applyWorldModalStyleUI(style);
-    if (typeof autoSave === 'function') autoSave();
-    const m = document.getElementById('modalDetail');
-    if (m && m.style.display !== 'none' && typeof _wdCurrentWorldId !== 'undefined' && _wdCurrentWorldId
-        && typeof worldInfoCache !== 'undefined' && worldInfoCache[_wdCurrentWorldId]
-        && typeof renderWorldSearchDetail === 'function') {
-        renderWorldSearchDetail(worldInfoCache[_wdCurrentWorldId]);
-    }
-}
-
-function _applyGroupModalStyleUI(style) {
-    const picker = document.getElementById('groupStylePicker');
-    if (!picker) return;
-    picker.querySelectorAll('.profile-style-option').forEach(el => {
-        el.classList.toggle('active', el.dataset.style === style);
-    });
-}
-
-function setGroupModalStyle(style) {
-    if (style !== 'classic' && style !== 'compact') style = 'classic';
-    settings.groupModalStyle = style;
-    _applyGroupModalStyleUI(style);
-    if (typeof autoSave === 'function') autoSave();
-    const m = document.getElementById('modalDetail');
-    if (m && m.style.display !== 'none' && typeof window._currentGroupDetailFull !== 'undefined' && window._currentGroupDetailFull
-        && typeof renderGroupDetail === 'function') {
-        renderGroupDetail(window._currentGroupDetailFull);
-    }
-}
-
-function _applyAvatarModalStyleUI(style) {
-    const picker = document.getElementById('avatarStylePicker');
-    if (!picker) return;
-    picker.querySelectorAll('.profile-style-option').forEach(el => {
-        el.classList.toggle('active', el.dataset.style === style);
-    });
-}
-
-function setAvatarModalStyle(style) {
-    if (style !== 'classic' && style !== 'compact') style = 'classic';
-    settings.avatarModalStyle = style;
-    _applyAvatarModalStyleUI(style);
-    if (typeof autoSave === 'function') autoSave();
-    const m = document.getElementById('modalAvatarDetail');
-    if (m && m.style.display !== 'none' && typeof _avDetailData !== 'undefined' && _avDetailData
-        && typeof renderAvatarDetail === 'function') {
-        renderAvatarDetail(_avDetailData);
-    }
-}
+document.documentElement.addEventListener('languagechange', sndPopulateSelects);

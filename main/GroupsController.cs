@@ -184,6 +184,8 @@ public class GroupsController
             {
                 _ = Task.Run(async () =>
                 {
+                    try
+                    {
                     // Fetch group metadata (name/icon) and all instances in parallel — 2 calls total
                     var groupTask     = _core.Groups.GetUserGroupsAsync();
                     var instancesTask = _core.Instances.GetAllGroupInstancesAsync();
@@ -224,6 +226,13 @@ public class GroupsController
 
                     _core.SendToJS("log", new { msg = $"[DASH-GRP-INST] {combined.Count} instances via single call", color = "sec" });
                     _core.SendToJS("vrcDashGroupInstances", combined);
+                    }
+                    catch (Exception ex)
+                    {
+                        CrashHandler.WriteEntry("vrcGetDashGroupInstances", ex);
+                        _core.SendToJS("log", new { msg = "[DASH-GRP-INST] failed: " + ex.Message, color = "err" });
+                        _core.SendToJS("vrcDashGroupInstances", new List<object>());
+                    }
                 });
                 break;
             }

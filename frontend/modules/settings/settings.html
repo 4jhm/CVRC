@@ -9,7 +9,6 @@
                         <button class="settings-nav-item" onclick="switchSettingsSection('appearance',this)"><span class="msi">palette</span><span data-i18n="settings.nav.appearance">Appearance</span></button>
                         <button class="settings-nav-item" onclick="switchSettingsSection('friends',this)"><span class="msi">group</span><span data-i18n="settings.nav.friends">Friends</span></button>
                         <button class="settings-nav-item" onclick="switchSettingsSection('sidebar',this)"><span class="msi">view_sidebar</span><span data-i18n="settings.nav.sidebar">Sidebar</span></button>
-                        <button class="settings-nav-item" onclick="switchSettingsSection('navigation',this)"><span class="msi">alt_route</span><span data-i18n="settings.nav.navigation">Navigation</span></button>
                         <button class="settings-nav-item" onclick="switchSettingsSection('notifications',this)"><span class="msi">notifications</span><span data-i18n="settings.nav.notifications">Notifications</span></button>
                         <button class="settings-nav-item" onclick="switchSettingsSection('vrchat',this)"><span class="msi">sports_esports</span><span data-i18n="settings.nav.vrchat">VRChat</span></button>
                         <button class="settings-nav-item" onclick="switchSettingsSection('data',this)"><span class="msi">folder_open</span><span data-i18n="settings.nav.data">Data</span></button>
@@ -451,286 +450,61 @@
                         <div class="sf-toggle-row" style="margin-top:8px;"><span data-i18n="settings.design.date_enabled">Enable Date</span><label class="toggle"><input type="checkbox" id="setDateEnabled" onchange="applyClockSettings();autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
                     </div>
 
-                    <!-- MODAL NAVIGATION -->
-                    <div class="vrcn-panel-card" data-section="navigation" style="display:none;">
-                        <div class="vrcn-panel-card-header"><span class="msi">alt_route</span> <span data-i18n="settings.navigation.title">Modal Navigation</span></div>
-                        <div class="sf-toggle-row"><span data-i18n="settings.navigation.direct">Use Direct Modal Navigation</span><label class="toggle"><input type="checkbox" id="setDirectModalNav" onchange="settings.directModalNav=this.checked;autoSave();"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
-                        <div class="set-desc" data-i18n="settings.navigation.direct_desc">When enabled, the breadcrumb history and all modal actions are shown in a bar at the top of the modal instead of in the taskbar. This makes navigating easier in fullscreen or on larger screens. It's recommended to leave this off when not running VRCNext in fullscreen.</div>
-                    </div>
-
-                    <!-- PROFILE / WORLD MODAL STYLE -->
-                    <div class="vrcn-panel-card-pair" data-section="navigation" style="display:none;">
-                    <div class="vrcn-panel-card">
-                        <div class="vrcn-panel-card-header"><span class="msi">badge</span> <span data-i18n="settings.navigation.profile_style.title">Profile Modal Style</span></div>
-                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.navigation.profile_style.desc">Choose how user profiles are laid out. Classic shows a wide top banner with a single column below. Compact splits identity onto a left sidebar with the content area on the right.</div>
-                        <div class="profile-style-picker" id="profileStylePicker">
-                            <button type="button" class="profile-style-option" data-style="classic" onclick="setProfileModalStyle('classic')">
-                                <div class="profile-style-skeleton sk-classic">
-                                    <div class="sk-banner"></div>
-                                    <div class="sk-row sk-row-header">
-                                        <div class="sk-avatar"></div>
-                                        <div class="sk-name-block">
-                                            <div class="sk-name"></div>
-                                            <div class="sk-line short"></div>
-                                        </div>
-                                    </div>
-                                    <div class="sk-badges">
-                                        <div class="sk-chip"></div>
-                                        <div class="sk-chip"></div>
-                                        <div class="sk-chip"></div>
-                                    </div>
-                                    <div class="sk-tabs">
-                                        <div class="sk-tab"></div>
-                                        <div class="sk-tab"></div>
-                                        <div class="sk-tab"></div>
-                                    </div>
-                                    <div class="sk-content">
-                                        <div class="sk-block"></div>
-                                        <div class="sk-block short"></div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.classic">Classic</div>
-                            </button>
-                            <button type="button" class="profile-style-option" data-style="compact" onclick="setProfileModalStyle('compact')">
-                                <div class="profile-style-skeleton sk-compact">
-                                    <div class="sk-left">
-                                        <div class="sk-banner sk-banner-left"></div>
-                                        <div class="sk-row sk-row-tight">
-                                            <div class="sk-avatar small"></div>
-                                            <div class="sk-name-block">
-                                                <div class="sk-name short"></div>
-                                                <div class="sk-line tiny"></div>
-                                            </div>
-                                        </div>
-                                        <div class="sk-mini-card"></div>
-                                        <div class="sk-mini-card short"></div>
-                                        <div class="sk-mini-card"></div>
-                                    </div>
-                                    <div class="sk-right">
-                                        <div class="sk-tabs">
-                                            <div class="sk-tab"></div>
-                                            <div class="sk-tab"></div>
-                                            <div class="sk-tab"></div>
-                                        </div>
-                                        <div class="sk-content">
-                                            <div class="sk-block"></div>
-                                            <div class="sk-block short"></div>
-                                            <div class="sk-block"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.compact">Compact</div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="vrcn-panel-card">
-                        <div class="vrcn-panel-card-header"><span class="msi">travel_explore</span> <span data-i18n="settings.navigation.world_style.title">World Modal Style</span></div>
-                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.navigation.world_style.desc">Choose how world details are laid out. Classic shows a wide top banner with a single column below. Compact splits the world image and key info onto a left column with description, history and stats next to it.</div>
-                        <div class="profile-style-picker" id="worldStylePicker">
-                            <button type="button" class="profile-style-option" data-style="classic" onclick="setWorldModalStyle('classic')">
-                                <div class="profile-style-skeleton sk-classic">
-                                    <div class="sk-banner"></div>
-                                    <div class="sk-row sk-row-header">
-                                        <div class="sk-avatar"></div>
-                                        <div class="sk-name-block">
-                                            <div class="sk-name"></div>
-                                            <div class="sk-line short"></div>
-                                        </div>
-                                    </div>
-                                    <div class="sk-badges">
-                                        <div class="sk-chip"></div>
-                                        <div class="sk-chip"></div>
-                                        <div class="sk-chip"></div>
-                                    </div>
-                                    <div class="sk-tabs">
-                                        <div class="sk-tab"></div>
-                                        <div class="sk-tab"></div>
-                                        <div class="sk-tab"></div>
-                                    </div>
-                                    <div class="sk-content">
-                                        <div class="sk-block"></div>
-                                        <div class="sk-block short"></div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.classic">Classic</div>
-                            </button>
-                            <button type="button" class="profile-style-option" data-style="compact" onclick="setWorldModalStyle('compact')">
-                                <div class="profile-style-skeleton sk-compact">
-                                    <div class="sk-left">
-                                        <div class="sk-banner sk-banner-left"></div>
-                                        <div class="sk-row sk-row-tight">
-                                            <div class="sk-avatar small"></div>
-                                            <div class="sk-name-block">
-                                                <div class="sk-name short"></div>
-                                                <div class="sk-line tiny"></div>
-                                            </div>
-                                        </div>
-                                        <div class="sk-mini-card"></div>
-                                        <div class="sk-mini-card short"></div>
-                                        <div class="sk-mini-card"></div>
-                                    </div>
-                                    <div class="sk-right">
-                                        <div class="sk-tabs">
-                                            <div class="sk-tab"></div>
-                                            <div class="sk-tab"></div>
-                                            <div class="sk-tab"></div>
-                                        </div>
-                                        <div class="sk-content">
-                                            <div class="sk-block"></div>
-                                            <div class="sk-block short"></div>
-                                            <div class="sk-block"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.compact">Compact</div>
-                            </button>
-                        </div>
-                    </div>
-                    </div>
-
-                    <!-- GROUP / AVATAR MODAL STYLE -->
-                    <div class="vrcn-panel-card-pair" data-section="navigation" style="display:none;">
-                    <div class="vrcn-panel-card">
-                        <div class="vrcn-panel-card-header"><span class="msi">groups</span> <span data-i18n="settings.navigation.group_style.title">Group Modal Style</span></div>
-                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.navigation.group_style.desc">Choose how group details are laid out. Classic shows a wide top banner with a single column below. Compact splits the group identity onto a left column with the tabs and content next to it.</div>
-                        <div class="profile-style-picker" id="groupStylePicker">
-                            <button type="button" class="profile-style-option" data-style="classic" onclick="setGroupModalStyle('classic')">
-                                <div class="profile-style-skeleton sk-classic">
-                                    <div class="sk-banner"></div>
-                                    <div class="sk-row sk-row-header">
-                                        <div class="sk-avatar"></div>
-                                        <div class="sk-name-block">
-                                            <div class="sk-name"></div>
-                                            <div class="sk-line short"></div>
-                                        </div>
-                                    </div>
-                                    <div class="sk-badges">
-                                        <div class="sk-chip"></div>
-                                        <div class="sk-chip"></div>
-                                        <div class="sk-chip"></div>
-                                    </div>
-                                    <div class="sk-tabs">
-                                        <div class="sk-tab"></div>
-                                        <div class="sk-tab"></div>
-                                        <div class="sk-tab"></div>
-                                    </div>
-                                    <div class="sk-content">
-                                        <div class="sk-block"></div>
-                                        <div class="sk-block short"></div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.classic">Classic</div>
-                            </button>
-                            <button type="button" class="profile-style-option" data-style="compact" onclick="setGroupModalStyle('compact')">
-                                <div class="profile-style-skeleton sk-compact">
-                                    <div class="sk-left">
-                                        <div class="sk-banner sk-banner-left"></div>
-                                        <div class="sk-row sk-row-tight">
-                                            <div class="sk-avatar small"></div>
-                                            <div class="sk-name-block">
-                                                <div class="sk-name short"></div>
-                                                <div class="sk-line tiny"></div>
-                                            </div>
-                                        </div>
-                                        <div class="sk-mini-card"></div>
-                                        <div class="sk-mini-card short"></div>
-                                        <div class="sk-mini-card"></div>
-                                    </div>
-                                    <div class="sk-right">
-                                        <div class="sk-tabs">
-                                            <div class="sk-tab"></div>
-                                            <div class="sk-tab"></div>
-                                            <div class="sk-tab"></div>
-                                        </div>
-                                        <div class="sk-content">
-                                            <div class="sk-block"></div>
-                                            <div class="sk-block short"></div>
-                                            <div class="sk-block"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.compact">Compact</div>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="vrcn-panel-card">
-                        <div class="vrcn-panel-card-header"><span class="msi">checkroom</span> <span data-i18n="settings.navigation.avatar_style.title">Avatar Modal Style</span></div>
-                        <div class="set-desc" style="margin-bottom:14px;" data-i18n="settings.navigation.avatar_style.desc">Choose how avatar details are laid out. Classic shows a wide top banner with a single column below. Compact splits the avatar image and the Infos/Visibility card onto a left column, with description and tags next to it.</div>
-                        <div class="profile-style-picker" id="avatarStylePicker">
-                            <button type="button" class="profile-style-option" data-style="classic" onclick="setAvatarModalStyle('classic')">
-                                <div class="profile-style-skeleton sk-classic">
-                                    <div class="sk-banner"></div>
-                                    <div class="sk-row sk-row-header">
-                                        <div class="sk-avatar"></div>
-                                        <div class="sk-name-block">
-                                            <div class="sk-name"></div>
-                                            <div class="sk-line short"></div>
-                                        </div>
-                                    </div>
-                                    <div class="sk-badges">
-                                        <div class="sk-chip"></div>
-                                        <div class="sk-chip"></div>
-                                        <div class="sk-chip"></div>
-                                    </div>
-                                    <div class="sk-tabs">
-                                        <div class="sk-tab"></div>
-                                        <div class="sk-tab"></div>
-                                        <div class="sk-tab"></div>
-                                    </div>
-                                    <div class="sk-content">
-                                        <div class="sk-block"></div>
-                                        <div class="sk-block short"></div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.classic">Classic</div>
-                            </button>
-                            <button type="button" class="profile-style-option" data-style="compact" onclick="setAvatarModalStyle('compact')">
-                                <div class="profile-style-skeleton sk-compact">
-                                    <div class="sk-left">
-                                        <div class="sk-banner sk-banner-left"></div>
-                                        <div class="sk-row sk-row-tight">
-                                            <div class="sk-avatar small"></div>
-                                            <div class="sk-name-block">
-                                                <div class="sk-name short"></div>
-                                                <div class="sk-line tiny"></div>
-                                            </div>
-                                        </div>
-                                        <div class="sk-mini-card"></div>
-                                        <div class="sk-mini-card short"></div>
-                                        <div class="sk-mini-card"></div>
-                                    </div>
-                                    <div class="sk-right">
-                                        <div class="sk-tabs">
-                                            <div class="sk-tab"></div>
-                                            <div class="sk-tab"></div>
-                                            <div class="sk-tab"></div>
-                                        </div>
-                                        <div class="sk-content">
-                                            <div class="sk-block"></div>
-                                            <div class="sk-block short"></div>
-                                            <div class="sk-block"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="profile-style-label" data-i18n="settings.navigation.profile_style.compact">Compact</div>
-                            </button>
-                        </div>
-                    </div>
-                    </div>
-
                     <!-- SOUNDS -->
                     <div class="vrcn-panel-card" data-section="notifications" style="display:none;">
                         <div class="vrcn-panel-card-header"><span class="msi">volume_up</span> <span data-i18n="settings.sounds.title">Sounds</span></div>
                         <div class="sf-toggle-row"><span data-i18n="settings.sounds.notifications">Notification Sounds</span><label class="toggle"><input type="checkbox" id="setNotifySoundEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
-                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.sounds.notifications_desc">Plays a sound when you receive a new notification such as friend requests, invites and more.</div>
+                        <div class="set-desc" data-i18n="settings.sounds.notifications_desc">Plays a sound when you receive a new notification such as friend requests, invites and more.</div>
+                        <div class="snd-picker">
+                            <div class="snd-row">
+                                <label class="snd-label" data-i18n="settings.sounds.sound">Sound</label>
+                                <select id="setNotifySoundFile" class="vrcn-dropdown snd-select" data-vn-hover="sndPreviewNotify" onchange="applySoundSettings();autoSave()"></select>
+                            </div>
+                            <div class="snd-row">
+                                <label class="snd-label" data-i18n="settings.sounds.volume">Volume</label>
+                                <input type="range" id="setNotifySoundVolume" min="0" max="100" step="1" value="50" class="snd-slider" oninput="sndOnVolumeInput('notify',this)">
+                                <span id="notifySoundVolumeVal" class="snd-val">50%</span>
+                            </div>
+                        </div>
                         <div class="sf-toggle-row"><span data-i18n="settings.sounds.messages">Message Sounds</span><label class="toggle"><input type="checkbox" id="setMessageSoundEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
-                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.sounds.messages_desc">Plays a sound when you get a boop or when someone sends you a message through the VRCN Messenger.</div>
+                        <div class="set-desc" data-i18n="settings.sounds.messages_desc">Plays a sound when you get a boop or when someone sends you a message through the VRCN Messenger.</div>
+                        <div class="snd-picker">
+                            <div class="snd-row">
+                                <label class="snd-label" data-i18n="settings.sounds.sound">Sound</label>
+                                <select id="setMessageSoundFile" class="vrcn-dropdown snd-select" data-vn-hover="sndPreviewMessage" onchange="applySoundSettings();autoSave()"></select>
+                            </div>
+                            <div class="snd-row">
+                                <label class="snd-label" data-i18n="settings.sounds.volume">Volume</label>
+                                <input type="range" id="setMessageSoundVolume" min="0" max="100" step="1" value="50" class="snd-slider" oninput="sndOnVolumeInput('message',this)">
+                                <span id="messageSoundVolumeVal" class="snd-val">50%</span>
+                            </div>
+                        </div>
                         <div class="sf-toggle-row" data-windows-only><span data-i18n="settings.sounds.media_relay">Media Relay Success Sounds</span><label class="toggle"><input type="checkbox" id="setMediaRelaySoundEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
-                        <div class="set-desc" data-windows-only style="margin-bottom:10px;" data-i18n="settings.sounds.media_relay_desc">Plays a sound when Media Relay successfully sends an image to one of your Discord channels.</div>
+                        <div class="set-desc" data-windows-only data-i18n="settings.sounds.media_relay_desc">Plays a sound when Media Relay successfully sends an image to one of your Discord channels.</div>
+                        <div class="snd-picker" data-windows-only>
+                            <div class="snd-row">
+                                <label class="snd-label" data-i18n="settings.sounds.sound">Sound</label>
+                                <select id="setMediaRelaySoundFile" class="vrcn-dropdown snd-select" data-vn-hover="sndPreviewMediaRelay" onchange="applySoundSettings();autoSave()"></select>
+                            </div>
+                            <div class="snd-row">
+                                <label class="snd-label" data-i18n="settings.sounds.volume">Volume</label>
+                                <input type="range" id="setMediaRelaySoundVolume" min="0" max="100" step="1" value="50" class="snd-slider" oninput="sndOnVolumeInput('mediaRelay',this)">
+                                <span id="mediaRelaySoundVolumeVal" class="snd-val">50%</span>
+                            </div>
+                        </div>
                         <div class="sf-toggle-row" data-windows-only><span data-i18n="settings.sounds.overlay">VR Overlay Notification Sounds</span><label class="toggle"><input type="checkbox" id="setSteamOverlaySoundEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
-                        <div class="set-desc" data-windows-only style="margin-bottom:10px;" data-i18n="settings.sounds.overlay_desc">Plays a sound when a notification toast appears in the SteamVR overlay.</div>
+                        <div class="set-desc" data-windows-only data-i18n="settings.sounds.overlay_desc">Plays a sound when a notification toast appears in the SteamVR overlay.</div>
+                        <div class="snd-picker" data-windows-only>
+                            <div class="snd-row">
+                                <label class="snd-label" data-i18n="settings.sounds.sound">Sound</label>
+                                <select id="setSteamOverlaySoundFile" class="vrcn-dropdown snd-select" data-vn-hover="sndPreviewSteamOverlay" onchange="applySoundSettings();autoSave()"></select>
+                            </div>
+                            <div class="snd-row">
+                                <label class="snd-label" data-i18n="settings.sounds.volume">Volume</label>
+                                <input type="range" id="setSteamOverlaySoundVolume" min="0" max="100" step="1" value="50" class="snd-slider" oninput="sndOnVolumeInput('steamOverlay',this)">
+                                <span id="steamOverlaySoundVolumeVal" class="snd-val">50%</span>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- FRIENDS NOTIFICATION TOASTS -->
@@ -840,9 +614,9 @@
                         </div>
                         <div class="sf-toggle-row" style="margin-top:14px;">
                             <span data-i18n="settings.debug.memory_trim">Enable Memory Trim</span>
-                            <label class="toggle"><input type="checkbox" id="setMemoryTrimEnabled" onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                            <label class="toggle"><input type="checkbox" id="setMemoryTrimEnabled" checked onchange="autoSave()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
                         </div>
-                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.debug.memory_trim_desc">Memory Trim periodically frees unused memory from VRCNext. While the app already cleans up automatically during normal use, enabling this triggers a more frequent garbage collection pass every 10 minutes.</div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.debug.memory_trim_desc">Memory Trim periodically frees unused memory from VRCNext. While the app already cleans up automatically during normal use, enabling this triggers a more frequent garbage collection pass every 15 minutes.</div>
                         <button class="vrcn-button" onclick="sendToCS({action:'forceTrim'})"><span class="msi" style="font-size:16px;">memory</span> <span data-i18n="settings.debug.force_memory_trim">Force Memory Trim</span></button>
                         <div id="ffcProgressWrap" style="display:none;margin-top:12px;">
                             <div style="font-size:calc(12px + var(--fs-off, 0px));color:var(--tx2);margin-bottom:6px;" id="ffcProgressLabel" data-i18n="settings.debug.ffc_progress.caching">Caching...</div>

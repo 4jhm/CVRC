@@ -80,18 +80,6 @@
 .cb-chat-send:active { transform: scale(.9); }
 .cb-chat-send .msi   { font-size: 17px; }
 
-.cb-pause-bar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-top: 6px;
-    padding: 6px 10px;
-    font-size: calc(11px + var(--fs-off, 0px));
-    color: #FFA726;
-    background: rgba(255,167,38,.09);
-    border-radius: 8px;
-}
-
 .cb-preview-box {
     background: linear-gradient(135deg, rgba(0,0,0,.7), rgba(0,0,0,.5));
     border: none;

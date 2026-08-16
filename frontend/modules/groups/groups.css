@@ -13,18 +13,7 @@
     overflow: hidden;
 }
 
-.gp-modal-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 16px 20px 14px;
-    font-size: calc(15px + var(--fs-off, 0px));
-    font-weight: 700;
-    color: var(--tx0);
-    flex-shrink: 0;
-}
 
-.gp-modal-header > span:last-of-type { flex: 1; }
 .gp-modal-body {
     padding: 16px 20px;
     overflow-y: auto;

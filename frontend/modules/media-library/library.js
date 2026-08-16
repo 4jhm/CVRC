@@ -976,28 +976,6 @@ async function setLibItemAsDashBg(path, url) {
 }
 
 // Video thumbnail.
-function cacheVidThumb(v, fp) {
-    try {
-        v.currentTime = 1;
-        v.addEventListener('seeked', function () {
-            const c = document.createElement('canvas');
-            const vw = v.videoWidth  || 320;
-            const vh = v.videoHeight || 240;
-            const scale = Math.min(1, 480 / vw);
-            c.width  = Math.max(1, Math.round(vw * scale));
-            c.height = Math.max(1, Math.round(vh * scale));
-            c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
-            const data = c.toDataURL('image/jpeg', 0.7);
-            const img = document.createElement('img');
-            img.className = 'lib-thumb';
-            img.src = data;
-            v.replaceWith(img);
-            try { v.pause(); } catch (e) {}
-            v.removeAttribute('src');
-            try { v.load(); } catch (e) {}
-        }, { once: true });
-    } catch (e) {}
-}
 
 // Photo detail modal — image on the left, info card on the right.
 // Accepts: number (libraryFiles index), string (file path → looked up in libraryFiles), or item object.
@@ -1458,22 +1436,6 @@ function photoDownload() {
     sendToCS({ action: 'invDownload', url: it.url, fileName });
 }
 
-function _photoBlobToPng(blob) {
-    return new Promise((resolve, reject) => {
-        const objUrl = URL.createObjectURL(blob);
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width  = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            canvas.getContext('2d').drawImage(img, 0, 0);
-            URL.revokeObjectURL(objUrl);
-            canvas.toBlob(b => b ? resolve(b) : reject(new Error('encode failed')), 'image/png');
-        };
-        img.onerror = () => { URL.revokeObjectURL(objUrl); reject(new Error('load failed')); };
-        img.src = objUrl;
-    });
-}
 
 function photoCopyImage() {
     const it = _photoState.item;

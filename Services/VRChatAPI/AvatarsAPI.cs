@@ -82,28 +82,6 @@ public class AvatarsAPI(VRChatApiService ctx)
         return all;
     }
 
-    public async Task<List<JObject>> GetFavoriteAvatarsAsync()
-    {
-        if (!ctx.IsLoggedIn) return new();
-        var all = new List<JObject>();
-        try
-        {
-            for (int offset = 0; offset < 500; offset += 50)
-            {
-                var resp = await ctx._http.GetAsync($"{VRChatApiService.BASE}/avatars/favorites?n=50&offset={offset}");
-                if (!resp.IsSuccessStatusCode) break;
-                var arr = JArray.Parse(await resp.Content.ReadAsStringAsync());
-                if (arr.Count == 0) break;
-                all.AddRange(arr.Cast<JObject>());
-                if (arr.Count < 50) break;
-                await Task.Delay(300);
-            }
-            ctx.Log($"GetFavoriteAvatars: found {all.Count}");
-        }
-        catch (Exception ex) { ctx.Log($"GetFavoriteAvatars exception: {ex.Message}"); }
-        return all;
-    }
-
     public async Task<List<JObject>> GetFavoriteAvatarsByGroupAsync(string groupTag, int max = 100)
     {
         var all = new List<JObject>();
@@ -302,12 +280,14 @@ public class AvatarsAPI(VRChatApiService ctx)
         client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UA);
         client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
 
-        // avtrdb caps the page size, so paginate until a short/empty page is hit.
+        // kubectl db ignores the requested limit and answers with has more thus the pagesize.
+        // the comparison should be only fallback for the array response shape. might check later to change.
         int pageSize = -1;
         for (int page = 0; page < 25; page++)
         {
             var url = $"https://api.avtrdb.com/v2/avatar/search?query={Uri.EscapeDataString(authorId)}&limit={n}&page={page}";
             JArray? arr = null;
+            bool? hasMore = null;
             try
             {
                 ctx.Log("[AVTRDB] GET author-search");
@@ -317,12 +297,13 @@ public class AvatarsAPI(VRChatApiService ctx)
                 ctx.Log($"SearchAvatarsByAuthor [{(int)resp.StatusCode}] len={body.Length}");
                 if (!resp.IsSuccessStatusCode || string.IsNullOrWhiteSpace(body)) break;
                 var parsed = JToken.Parse(body);
-                arr = (parsed as JObject)?["avatars"] as JArray ?? parsed as JArray;
+                var obj = parsed as JObject;
+                arr = obj?["avatars"] as JArray ?? parsed as JArray;
+                if (obj?["has_more"] is JValue hm && hm.Type != JTokenType.Null) hasMore = hm.Value<bool>();
             }
             catch (Exception ex) { ctx.Log($"SearchAvatarsByAuthor exception: {ex.Message}"); break; }
 
             if (arr == null || arr.Count == 0) break;
-            if (pageSize < 0) pageSize = arr.Count;
 
             foreach (var item in arr)
             {
@@ -331,7 +312,16 @@ public class AvatarsAPI(VRChatApiService ctx)
                 all.Add(item);
             }
 
-            if (arr.Count < pageSize) break;
+            if (hasMore.HasValue)
+            {
+                if (!hasMore.Value) break;
+            }
+            else
+            {
+                if (pageSize >= 0 && arr.Count < pageSize) break;
+                if (arr.Count > pageSize) pageSize = arr.Count;
+            }
+
             await Task.Delay(200);
         }
         return all;
@@ -384,19 +374,6 @@ public class AvatarsAPI(VRChatApiService ctx)
         }
         catch (Exception ex) { ctx.Log($"GetAvatarIdsByFileIds exception: {ex.Message}"); }
         return result;
-    }
-
-    public async Task<bool> CheckAvatarExistsAvtrIcuAsync(string avatarId)
-    {
-        var results = await SearchAvatarsAvtrIcuAsync(avatarId, 5, 0);
-        return results.Any(a => a["id"]?.ToString() == avatarId);
-    }
-
-    public async Task<bool> CheckAvatarExistsAvtrdbAsync(string avatarId)
-    {
-        var results = await SearchAvatarsAsync(avatarId, 1);
-        return results.Count > 0 && results.Any(a =>
-            (a["vrc_id"]?.ToString() ?? a["id"]?.ToString() ?? "") == avatarId);
     }
 
     public async Task<JArray> GetAvatarGalleryAsync(string avatarId)

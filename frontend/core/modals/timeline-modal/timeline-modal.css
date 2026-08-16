@@ -14,14 +14,6 @@
     color: var(--tx2);
 }
 
-.tl-detail-sect {
-    font-size: calc(10px + var(--fs-off, 0px));
-    font-weight: 700;
-    letter-spacing: .08em;
-    color: var(--tx3);
-    text-transform: uppercase;
-    margin: 16px 0 8px;
-}
 
 .tl-player-card {
     display: flex;
@@ -92,11 +84,6 @@
     margin-top: 8px;
 }
 
-.tl-players-card {
-    margin-top: 14px;
-    overflow-y: auto;
-    max-height: 420px;
-}
 
 .tl-player-bar-wrap {
     height: 4px;

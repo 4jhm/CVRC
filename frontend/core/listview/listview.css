@@ -57,7 +57,6 @@
     padding: 12px 0 4px;
 }
 .lv-perf { white-space: nowrap; }
-.lv-perf .av-perf-icon { width: 20px; height: 20px; }
 
 /* Tab layout: toolbar + paginator fixed, only the grid scrolls */
 #tab1.active,
@@ -72,7 +71,7 @@
 #tab4.active > .tab-toolbar { flex-shrink: 0; }
 
 #worldFavArea, #worldMineArea, #worldRecentArea, #worldSearchArea,
-#groupMineArea, #groupSearchArea,
+#groupMineArea, #groupSearchArea, #groupInstancesArea,
 #avatarOwnArea, #avatarFavArea, #avatarRecentArea, #avatarRoseArea, #avatarSearchArea {
     flex: 1;
     min-height: 0;
@@ -81,12 +80,13 @@
 }
 #worldFavArea > .tab-toolbar-body, #worldSearchArea > .tab-toolbar-body,
 #groupMineArea > .tab-toolbar-body, #groupSearchArea > .tab-toolbar-body,
+#groupInstancesArea > .tab-toolbar-body,
 #avatarOwnArea > .tab-toolbar-body, #avatarFavArea > .tab-toolbar-body,
 #avatarRecentArea > .tab-toolbar-body, #avatarRoseArea > .tab-toolbar-body,
 #avatarSearchArea > .tab-toolbar-body { flex-shrink: 0; }
 
 #favWorldsGrid, #worldMineGrid, #worldRecentGrid, #searchWorldsResults,
-#myGroupsGrid, #searchGroupsResults {
+#myGroupsGrid, #searchGroupsResults, #groupInstancesGrid {
     flex: 1;
     overflow-y: auto;
     min-height: 0;
@@ -101,7 +101,7 @@
 
 #favWorldsGrid:has(.lv-scroll), #worldMineGrid:has(.lv-scroll),
 #worldRecentGrid:has(.lv-scroll), #searchWorldsResults:has(.lv-scroll),
-#myGroupsGrid:has(.lv-scroll), #searchGroupsResults:has(.lv-scroll),
+#myGroupsGrid:has(.lv-scroll), #searchGroupsResults:has(.lv-scroll), #groupInstancesGrid:has(.lv-scroll),
 .lv-tab-scroll:has(.lv-scroll) {
     overflow-x: auto;
     position: relative;
@@ -140,12 +140,12 @@
 
 #favWorldsGrid:has(.lv-scroll), #worldMineGrid:has(.lv-scroll),
 #worldRecentGrid:has(.lv-scroll), #searchWorldsResults:has(.lv-scroll),
-#myGroupsGrid:has(.lv-scroll), #searchGroupsResults:has(.lv-scroll),
+#myGroupsGrid:has(.lv-scroll), #searchGroupsResults:has(.lv-scroll), #groupInstancesGrid:has(.lv-scroll),
 .lv-tab-scroll:has(.lv-scroll) { margin-bottom: 8px; }
 
 /* === v2 content panel — matches the Calendar card === */
 #favWorldsGrid, #worldMineGrid, #worldRecentGrid, #searchWorldsResults,
-#myGroupsGrid, #searchGroupsResults,
+#myGroupsGrid, #searchGroupsResults, #groupInstancesGrid,
 #allFriendsGrid, #favFriendsGrid, #recentSeenGrid,
 #blockedList, #mutedList, #searchPeopleResults, #instancePlayersGrid,
 .lv-tab-scroll,
@@ -165,6 +165,7 @@
 #favWorldsGrid:has(.tl-list-wrap), #worldMineGrid:has(.tl-list-wrap),
 #worldRecentGrid:has(.tl-list-wrap), #searchWorldsResults:has(.tl-list-wrap),
 #myGroupsGrid:has(.tl-list-wrap), #searchGroupsResults:has(.tl-list-wrap),
+#groupInstancesGrid:has(.tl-list-wrap),
 #allFriendsGrid:has(.tl-list-wrap), #favFriendsGrid:has(.tl-list-wrap),
 #recentSeenGrid:has(.tl-list-wrap), #blockedList:has(.tl-list-wrap),
 #mutedList:has(.tl-list-wrap), #searchPeopleResults:has(.tl-list-wrap),
@@ -192,6 +193,7 @@
 #favWorldsGrid .tl-list-wrap, #worldMineGrid .tl-list-wrap,
 #worldRecentGrid .tl-list-wrap, #searchWorldsResults .tl-list-wrap,
 #myGroupsGrid .tl-list-wrap, #searchGroupsResults .tl-list-wrap,
+#groupInstancesGrid .tl-list-wrap,
 #favFriendsGrid .tl-list-wrap, #allFriendsGrid .tl-list-wrap,
 #recentSeenGrid .tl-list-wrap, #searchPeopleResults .tl-list-wrap,
 #blockedList .tl-list-wrap, #mutedList .tl-list-wrap,

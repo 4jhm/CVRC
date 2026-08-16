@@ -17,9 +17,7 @@
     --tx3: var(--pt-tx3) !important;
 }
 
-.has-profile-theme .msi,
-.has-profile-theme .fd-info-icon,
-.has-profile-theme .vrcn-panel-card-header .msi {
+.has-profile-theme .msi, .has-profile-theme .vrcn-panel-card-header .msi {
     color: var(--pt-icon, var(--accent));
 }
 

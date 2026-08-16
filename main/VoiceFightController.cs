@@ -1,6 +1,7 @@
 using NativeFileDialogSharp;
 using Newtonsoft.Json.Linq;
 using VRCNext.Services;
+using VRCNext.Services.Helpers;
 
 namespace VRCNext;
 
@@ -24,7 +25,65 @@ public class VoiceFightController : IDisposable
         _core = core;
         _vroCtrl = vroCtrl;
         _vfSettings = VoiceFightSettings.Load();
+        MigrateDeviceSelections();
     }
+
+    private AudioSelection InputSelection  => AudioSelection.From(_vfSettings.InputDeviceId, _vfSettings.InputDeviceName);
+    private AudioSelection OutputSelection => AudioSelection.From(_vfSettings.OutputDeviceId, _vfSettings.OutputDeviceName);
+
+    private void MigrateDeviceSelections()
+    {
+        var changed = false;
+        var inSel = AudioDeviceManager.TryMigrateLegacy(true, InputSelection);
+        if (inSel.Mode == AudioSelectionMode.Endpoint && _vfSettings.InputDeviceId.Length == 0)
+        {
+            _vfSettings.InputDeviceId = inSel.EndpointId;
+            _vfSettings.InputDeviceName = inSel.DisplayName;
+            changed = true;
+        }
+        var outSel = AudioDeviceManager.TryMigrateLegacy(false, OutputSelection);
+        if (outSel.Mode == AudioSelectionMode.Endpoint && _vfSettings.OutputDeviceId.Length == 0)
+        {
+            _vfSettings.OutputDeviceId = outSel.EndpointId;
+            _vfSettings.OutputDeviceName = outSel.DisplayName;
+            changed = true;
+        }
+        if (changed) _vfSettings.Save();
+    }
+
+    private void ApplyDeviceSelection(JObject msg, string idKey, string nameKey, bool input)
+    {
+        if (input)
+        {
+            if (AudioDeviceManager.TryReadSelectionFromMessage(msg[idKey], msg[nameKey]?.ToString(), true, _vfSettings.InputDeviceName, out var id, out var name))
+            {
+                _vfSettings.InputDeviceId = id;
+                _vfSettings.InputDeviceName = name;
+            }
+        }
+        else if (AudioDeviceManager.TryReadSelectionFromMessage(msg[idKey], msg[nameKey]?.ToString(), false, _vfSettings.OutputDeviceName, out var id, out var name))
+        {
+            _vfSettings.OutputDeviceId = id;
+            _vfSettings.OutputDeviceName = name;
+        }
+    }
+
+    private object BuildDevicesPayload() => new
+    {
+        inputs  = AudioDeviceManager.ListInputs().Select(d => new { id = d.Id, name = d.Name }).ToArray(),
+        outputs = AudioDeviceManager.ListOutputs().Select(d => new { id = d.Id, name = d.Name }).ToArray(),
+        input   = SelectionPayload(true, InputSelection),
+        output  = SelectionPayload(false, OutputSelection),
+        stopWord = _vfSettings.StopWord,
+    };
+
+    private static object SelectionPayload(bool input, AudioSelection sel) => new
+    {
+        mode = sel.ModeString,
+        id = sel.EndpointId,
+        name = sel.DisplayName,
+        available = AudioDeviceManager.IsAvailable(input, sel),
+    };
 
     // Message Handler
 
@@ -34,9 +93,7 @@ public class VoiceFightController : IDisposable
         {
             case "vfGetDevices":
                 {
-                    var devices = VoiceFightService.GetInputDevices();
-                    var outputDevices = VoiceFightService.GetOutputDevices();
-                    _core.SendToJS("vfDevices", new { devices, savedIndex = _vfSettings.InputDeviceIndex, outputDevices, savedOutputIndex = _vfSettings.OutputDeviceIndex, stopWord = _vfSettings.StopWord });
+                    _core.SendToJS("vfDevices", BuildDevicesPayload());
                 }
                 break;
 
@@ -46,13 +103,23 @@ public class VoiceFightController : IDisposable
 
             case "vfStart":
                 {
-                    int devIdx = msg["deviceIndex"]?.Value<int?>() ?? 0;
-                    int outIdx = msg["outputDeviceIndex"]?.Value<int?>() ?? _vfSettings.OutputDeviceIndex;
-                    _vfSettings.InputDeviceIndex = devIdx;
-                    _vfSettings.InputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.InputNameAt(devIdx);
-                    _vfSettings.OutputDeviceIndex = outIdx;
-                    _vfSettings.OutputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(outIdx);
+                    ApplyDeviceSelection(msg, "deviceId", "deviceName", true);
+                    ApplyDeviceSelection(msg, "outputDeviceId", "outputDeviceName", false);
                     _vfSettings.Save();
+
+                    var inSel  = InputSelection;
+                    var outSel = OutputSelection;
+                    var inIdx  = AudioDeviceManager.ResolveInputIndex(inSel);
+                    var outIdx = AudioDeviceManager.ResolveOutputIndex(outSel);
+                    if (inIdx == null || outIdx == null)
+                    {
+                        var missing = inIdx == null ? inSel : outSel;
+                        var what = inIdx == null ? "Microphone" : "Output device";
+                        _core.SendToJS("toast", new { ok = false, msg = $"{what} '{missing.DisplayName}' is not available." });
+                        _core.SendToJS("log", new { msg = $"Voice Fight: {what} '{missing.DisplayName}' unavailable, not starting (selection kept).", color = "err" });
+                        _core.SendToJS("vfState", new { running = false });
+                        break;
+                    }
 
                     _voiceFight?.Dispose();
                     _voiceFight = new VoiceFightService();
@@ -62,7 +129,7 @@ public class VoiceFightController : IDisposable
                         Invoke(() => _core.SendToJS("vfRecognized", new { text = displayHtml, isPartial }));
                     _voiceFight.SetKeywords(_vfSettings.Items);
                     _voiceFight.SetStopWord(_vfSettings.StopWord);
-                    _voiceFight.Start(devIdx, outIdx);
+                    _voiceFight.Start(inIdx.Value, outIdx.Value);
                     _core.SendToJS("vfState", new { running = true });
                     _vroCtrl.UpdateToolStates();
                 }
@@ -256,31 +323,26 @@ public class VoiceFightController : IDisposable
                 break;
 
             case "vfSetInputDevice":
-                {
-                    int devIdx = msg["deviceIndex"]?.Value<int?>() ?? 0;
-                    _vfSettings.InputDeviceIndex = devIdx;
-                    _vfSettings.InputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.InputNameAt(devIdx);
-                    _vfSettings.Save();
-                    _core.SendToJS("toast", new { ok = true, msg = "Saved" });
-                    if (_voiceFight?.IsRunning == true)
-                    {
-                        _voiceFight.Stop();
-                        _voiceFight.Start(devIdx, _vfSettings.OutputDeviceIndex);
-                    }
-                }
-                break;
-
             case "vfSetOutputDevice":
                 {
-                    int outIdx = msg["deviceIndex"]?.Value<int?>() ?? -1;
-                    _vfSettings.OutputDeviceIndex = outIdx;
-                    _vfSettings.OutputDeviceName = VRCNext.Services.Helpers.AudioDeviceHelper.OutputNameAt(outIdx);
+                    ApplyDeviceSelection(msg, "deviceId", "deviceName", action == "vfSetInputDevice");
                     _vfSettings.Save();
                     _core.SendToJS("toast", new { ok = true, msg = "Saved" });
                     if (_voiceFight?.IsRunning == true)
                     {
                         _voiceFight.Stop();
-                        _voiceFight.Start(_vfSettings.InputDeviceIndex, outIdx);
+                        var inIdx  = AudioDeviceManager.ResolveInputIndex(InputSelection);
+                        var outIdx = AudioDeviceManager.ResolveOutputIndex(OutputSelection);
+                        if (inIdx != null && outIdx != null)
+                        {
+                            _voiceFight.Start(inIdx.Value, outIdx.Value);
+                        }
+                        else
+                        {
+                            _core.SendToJS("log", new { msg = "Voice Fight: selected device unavailable, stopped (selection kept).", color = "err" });
+                            _core.SendToJS("vfState", new { running = false });
+                            _vroCtrl.UpdateToolStates();
+                        }
                     }
                 }
                 break;
@@ -305,10 +367,17 @@ public class VoiceFightController : IDisposable
             _voiceFight.OnKeywordTriggered += word => Invoke(() => _core.SendToJS("vfKeyword", new { word }));
             _voiceFight.OnRecognized += (displayHtml, cleanText, isPartial) =>
                 Invoke(() => _core.SendToJS("vfRecognized", new { text = displayHtml, isPartial }));
+            var togIn  = AudioDeviceManager.ResolveInputIndex(InputSelection);
+            var togOut = AudioDeviceManager.ResolveOutputIndex(OutputSelection);
+            if (togIn == null || togOut == null)
+            {
+                _core.SendToJS("log", new { msg = "Voice Fight: selected device unavailable, not starting (selection kept).", color = "err" });
+                _core.SendToJS("vfState", new { running = false });
+                return;
+            }
             _voiceFight.SetKeywords(_vfSettings.Items);
             _voiceFight.SetStopWord(_vfSettings.StopWord);
-            _voiceFight.Start(VRCNext.Services.Helpers.AudioDeviceHelper.ResolveInput(_vfSettings.InputDeviceIndex, _vfSettings.InputDeviceName),
-                              VRCNext.Services.Helpers.AudioDeviceHelper.ResolveOutput(_vfSettings.OutputDeviceIndex, _vfSettings.OutputDeviceName));
+            _voiceFight.Start(togIn.Value, togOut.Value);
             _core.SendToJS("vfState", new { running = true });
         }
     }
@@ -329,31 +398,6 @@ public class VoiceFightController : IDisposable
                 volumePercent = f.VolumePercent
             }).ToList()
         }).ToList();
-
-    private static void VfSendChatbox(string text)
-    {
-        try
-        {
-            using var udp = new System.Net.Sockets.UdpClient();
-            udp.Connect("127.0.0.1", 9000);
-            var buf = new List<byte>();
-            VfOscString(buf, "/chatbox/input");
-            VfOscString(buf, ",sTF"); // string, sendImmediate=true, notifySound=false
-            VfOscString(buf, text.Length > 144 ? text[..144] : text);
-            var pkt = buf.ToArray();
-            udp.Send(pkt, pkt.Length);
-        }
-        catch { }
-    }
-
-    private static void VfOscString(List<byte> buf, string s)
-    {
-        var b = System.Text.Encoding.UTF8.GetBytes(s);
-        buf.AddRange(b);
-        int pad = 4 - (b.Length % 4);
-        if (pad == 0) pad = 4;
-        buf.AddRange(new byte[pad]);
-    }
 
     // Disposal
 

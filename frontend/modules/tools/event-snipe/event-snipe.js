@@ -59,13 +59,6 @@ function snipeSelectGroup(id, name, iconUrl) {
     snipePopulateGroups(document.querySelector('#snipeGroupList')?.previousElementSibling?.querySelector('input')?.value || '');
 }
 
-function openSnipeForGroup(groupId) {
-    showTab(23);
-    if (!groupId) return;
-    const g = (typeof myGroups !== 'undefined' ? myGroups : []).find(x => x.id === groupId);
-    if (g) snipeSelectGroup(g.id, g.name || '', g.iconUrl || '');
-    else   _snipeSelectedGroupId = groupId;
-}
 
 // Start / Stop
 

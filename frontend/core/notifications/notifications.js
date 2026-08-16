@@ -66,6 +66,7 @@ function getNotificationTypeMeta(type) {
         case 'boop': return { icon: 'waving_hand', label: t('notifications.types.boop', 'Boop') };
         case 'message': return { icon: 'chat', label: t('notifications.types.message', 'Message') };
         case 'group.announcement': return { icon: 'campaign', label: t('notifications.types.group_announcement', 'Group Announcement') };
+        case 'instance.announcement': return { icon: 'campaign', label: t('notifications.types.instance_announcement', 'Instance Announcement') };
         case 'group.invite': return { icon: 'group_add', label: t('notifications.types.group_invite', 'Group Invite') };
         case 'group.joinRequest': return { icon: 'group', label: t('notifications.types.group_join_request', 'Group Join Request') };
         case 'group.informationRequest': return { icon: 'info', label: t('notifications.types.group_info_request', 'Group Info Request') };

@@ -65,7 +65,6 @@ function dpToggle() {
 function dpOnState(p) {
     _dpRunning = !!p.running;
     dpSyncUi();
-    if (typeof updateDashQuickControls === 'function') updateDashQuickControls();
     const bdDp = document.getElementById('badgeDp');
     if (bdDp) bdDp.classList.toggle('tb-active', _dpRunning);
     if (_dpRunning) {

@@ -11,6 +11,7 @@ let _tsPersonQuery = '';
 let _tsSearchTimer = null;
 let _tsWorldPage = 0;
 let _tsPersonPage = 0;
+let _tsReqId = 0;
 let _tsTotalWorlds = 0;
 let _tsTotalPersons = 0;
 let _tsAllUniqueWorlds = 0;
@@ -80,7 +81,6 @@ function tsFilterSearch(value) {
     _tsSearchTimer = setTimeout(() => {
         if (_tsView === 'worlds') { _tsWorldQuery = search; _tsWorldPage = 0; }
         else                      { _tsPersonQuery = search; _tsPersonPage = 0; }
-        _tsLoading = false;
         _tsLoad();
     }, 300);
 }
@@ -104,7 +104,6 @@ function tsLoad() {
 }
 
 function _tsLoad() {
-    if (_tsLoading) return;
     _tsLoading = true;
 
     const icon = document.getElementById('tsRefreshIcon');
@@ -116,18 +115,16 @@ function _tsLoad() {
     }
 
     const summary = document.getElementById('tsSummary');
-    if (summary) summary.innerHTML = '';
+    if (summary && !summary.querySelector('.ts-stat'))
+        summary.innerHTML = `<div class="ts-stat-row">${'<div class="ts-sk-stat"></div>'.repeat(4)}</div>`;
 
     const query = _tsView === 'worlds' ? _tsWorldQuery : _tsPersonQuery;
     const page  = _tsView === 'worlds' ? _tsWorldPage  : _tsPersonPage;
-    sendToCS({ action: 'vrcGetTimeSpent', view: _tsView, query: query.trim(), page });
+    sendToCS({ action: 'vrcGetTimeSpent', view: _tsView, query: query.trim(), page, reqId: ++_tsReqId });
 }
 
 function tsOnData(payload) {
-    const currentQuery = _tsView === 'worlds'
-        ? (document.getElementById('tsWorldSearchInput')?.value ?? '').trim()
-        : (document.getElementById('tsPersonSearchInput')?.value ?? '').trim();
-    if (currentQuery !== (_tsView === 'worlds' ? _tsWorldQuery : _tsPersonQuery)) return;
+    if ((payload.reqId ?? 0) !== _tsReqId) return;
     _tsLoading = false;
     _tsData = payload;
     _tsTotalWorlds       = payload.totalWorlds   ?? 0;
@@ -171,8 +168,6 @@ function tsSetView(view) {
 }
 
 function _tsShowSearch() {
-    const wrap = document.getElementById('tsSearchWrap');
-    if (wrap) wrap.style.display = '';
     document.getElementById('tsSearchWorlds')?.style.setProperty('display', _tsView === 'worlds' ? '' : 'none');
     document.getElementById('tsSearchPersons')?.style.setProperty('display', _tsView === 'persons' ? '' : 'none');
 }
@@ -238,10 +233,10 @@ function tsRenderWorldItems() {
     }
 
     const totalPages = Math.ceil(_tsTotalWorlds / TS_PAGE_SIZE) || 1;
-    const maxSec = worlds[0].seconds || 1;
+    const maxSec = _tsData.maxWorldSeconds || worlds[0].seconds || 1;
     const rows = worlds.map((world, i) => {
-        const pct = Math.round((world.seconds / maxSec) * 100);
-        const rank = _tsWorldPage * TS_PAGE_SIZE + i + 1;
+        const pct = ((world.seconds / maxSec) * 100).toFixed(2);
+        const rank = world.rank ?? (_tsWorldPage * TS_PAGE_SIZE + i + 1);
         const thumb = world.worldThumb
             ? `<img class="ts-item-thumb" src="${esc(imgThumb(world.worldThumb, 96))}" onerror="this.style.display='none'">`
             : `<div class="ts-item-thumb ts-thumb-placeholder"><span class="msi" style="font-size:18px;color:var(--tx3);">travel_explore</span></div>`;
@@ -339,10 +334,10 @@ function tsRenderPersonItems() {
     }
 
     const totalPages = Math.ceil(_tsTotalPersons / TS_PAGE_SIZE) || 1;
-    const maxSec = persons[0].seconds || 1;
+    const maxSec = _tsData.maxPersonSeconds || persons[0].seconds || 1;
     const rows = persons.map((person, i) => {
-        const pct = Math.round((person.seconds / maxSec) * 100);
-        const rank = _tsPersonPage * TS_PAGE_SIZE + i + 1;
+        const pct = ((person.seconds / maxSec) * 100).toFixed(2);
+        const rank = person.rank ?? (_tsPersonPage * TS_PAGE_SIZE + i + 1);
         const isFriend = person.isFriend;
         const avatar = person.image
             ? `<img class="ts-item-avatar" src="${esc(imgThumb(person.image, 96))}" onerror="this.style.display='none'">`

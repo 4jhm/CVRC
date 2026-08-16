@@ -401,6 +401,7 @@
 
 .wi-stat {
     background: var(--bg-card);
+    border: 1px solid var(--brd);
     border-radius: 10px;
     padding: 8px 6px;
     display: flex;
@@ -429,6 +430,7 @@
 
 .wi-chart-card {
     background: var(--bg-card);
+    border: 1px solid var(--brd);
     border-radius: 10px;
     padding: 10px;
     margin-bottom: 8px;

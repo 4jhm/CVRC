@@ -434,33 +434,7 @@ function msgrRegisterBoopSent(userId, emojiId) {
     _pendingBoopEmojiId = emojiId || '';
 }
 
-function handleBoopSent() {
-    const uid = _pendingBoopUserId;
-    const emo = _pendingBoopEmojiId;
-    _pendingBoopUserId = null;
-    _pendingBoopEmojiId = '';
-    if (!document.getElementById('messengerPanel')) return;
-    if (!uid || uid === _messengerUserId) {
-        const msg = { type: 'boop', from: 'me', time: new Date().toISOString(), emoji: emo };
-        _messengerHistory.push(msg);
-        appendChatMessage(msg, true);
-    }
-}
 
-function handleBoopReceived(senderUserId, senderUsername) {
-    if (!document.getElementById('messengerPanel')) return;
-    const idMatch = senderUserId && senderUserId === _messengerUserId;
-    const nameMatch = senderUsername && senderUsername === _messengerName;
-    if (!idMatch && !nameMatch) return;
-
-    const msg = {
-        type: 'boop',
-        from: senderUserId || _messengerUserId,
-        time: new Date().toISOString(),
-    };
-    _messengerHistory.push(msg);
-    appendChatMessage(msg, true);
-}
 
 function renderMessengerHistory(scrollToBottom) {
     const container = document.getElementById('msgrMessages');

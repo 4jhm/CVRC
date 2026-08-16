@@ -177,6 +177,7 @@ const TL_NOTIF_TYPE_META = {
     message: { key: 'timeline.notif.message', fallback: 'Message' },
     halted: { key: 'timeline.notif.instance_closed', fallback: 'Instance Closed' },
     'group.announcement': { key: 'timeline.notif.group_announcement', fallback: 'Group Announcement' },
+    'instance.announcement': { key: 'timeline.notif.instance_announcement', fallback: 'Instance Announcement' },
     'group.invite': { key: 'timeline.notif.group_invite', fallback: 'Group Invite' },
     'group.joinRequest': { key: 'timeline.notif.group_join_request', fallback: 'Group Join Request' },
     'group.informationRequest': { key: 'timeline.notif.group_info_request', fallback: 'Group Info Request' },
@@ -440,6 +441,7 @@ function handleFriendTimelineEventDeleted(payload) {
     const before = friendTimelineEvents.length;
     friendTimelineEvents = friendTimelineEvents.filter(e => e.id !== payload.id);
     if (friendTimelineEvents.length !== before && tlMode === 'friends') filterFriendTimeline();
+    if (friendTimelineEvents.length !== before && typeof renderDashFriendsRecentTimeline === 'function') renderDashFriendsRecentTimeline();
 }
 
 function handleTimelineReload(payload) {
@@ -524,7 +526,10 @@ function handleTimelineEventDeleted(payload) {
     if (!payload?.id) return;
     const before = timelineEvents.length;
     timelineEvents = timelineEvents.filter(e => e.id !== payload.id);
-    if (timelineEvents.length !== before) filterTimeline();
+    if (timelineEvents.length !== before) {
+        filterTimeline();
+        if (typeof renderDashMyRecentTimeline === 'function') renderDashMyRecentTimeline();
+    }
 }
 
 function handleTimelineEvent(ev) {
@@ -539,6 +544,7 @@ function handleTimelineEvent(ev) {
     filterTimeline();
     // Update friend-detail preview if it's currently open
     if (typeof updateFdTlPreview === 'function') updateFdTlPreview();
+    if (typeof renderDashMyRecentTimeline === 'function') renderDashMyRecentTimeline();
 }
 
 function setTlFilter(f) {
@@ -700,21 +706,6 @@ function buildSearchPagination(page, totalPages, onPageFn, total = 0) {
 }
 
 // Personal Timeline pagination helpers
-
-function loadMoreTimeline() {
-    if (tlLoading) return;
-    // Drain already-loaded pool first (timeline/card view)
-    if (timelineEvents.length > tlRenderedCount) {
-        tlRenderedCount += 100;
-        filterTimeline();
-        return;
-    }
-    if (!tlHasMore) return;
-    tlLoading = true;
-    const btn = document.getElementById('tlLoadMoreBtn');
-    if (btn) { btn.disabled = true; btn.innerHTML = `<span class="msi" style="font-size:16px;">hourglass_empty</span> ${esc(t('timeline.load_more.loading', 'Loading...'))}`; }
-    sendToCS({ action: 'getTimelinePage', offset: tlOffset, type: tlFilter === 'all' ? '' : tlFilter, ...tlSortParams('personal'), limit: tlPageSize });
-}
 
 function buildTlPagination(page, totalPages, hasMore) {
     const countHtml = tlTotal > 0 ? `<span style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);padding:0 8px;">${esc(tlTotalSummary(tlTotal))}</span>` : '';
@@ -994,15 +985,6 @@ function clearTlDateFilter() {
 
 // Rendering helpers
 
-function tlSearchable(e) {
-    return [
-        e.worldName, e.userName, e.senderName, e.notifType,
-        tlNotifTypeLabel(e.notifType),
-        e.message,
-        e.photoPath ? e.photoPath.split(/[\\/]/).pop() : '',
-        ...(e.players || []).map(p => p.displayName),
-    ].filter(Boolean).join(' ').toLowerCase();
-}
 
 function buildTimelineHtml(events) {
     // Group by local date
@@ -1399,6 +1381,7 @@ function handleFriendTimelineEvent(ev) {
     else friendTimelineEvents.unshift(ev);
     friendTimelineEvents.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
     if (tlMode === 'friends') filterFriendTimeline();
+    if (typeof renderDashFriendsRecentTimeline === 'function') renderDashFriendsRecentTimeline();
 }
 
 function setFtFilter(f) {
@@ -1530,27 +1513,8 @@ function ftlGoSearchPage(page) {
     sendToCS({ action: 'searchFriendTimeline', query: _ftlSearchQuery, date: _ftlSearchDate, offset: page * tlPageSize, type: ftFilter === 'all' ? '' : ftFilter, limit: tlPageSize });
 }
 
-function ftSearchable(e) {
-    return [e.friendName, e.worldName, e.newValue, e.oldValue, e.location]
-        .filter(Boolean).join(' ').toLowerCase();
-}
 
 // Friends Timeline pagination helpers
-
-function loadMoreFriendTimeline() {
-    if (ftlLoading) return;
-    // Drain already-loaded pool first (timeline/card view)
-    if (friendTimelineEvents.length > ftlRenderedCount) {
-        ftlRenderedCount += 100;
-        filterFriendTimeline();
-        return;
-    }
-    if (!ftlHasMore) return;
-    ftlLoading = true;
-    const btn = document.getElementById('ftlLoadMoreBtn');
-    if (btn) { btn.disabled = true; btn.innerHTML = `<span class="msi" style="font-size:16px;">hourglass_empty</span> ${esc(t('timeline.load_more.loading', 'Loading...'))}`; }
-    sendToCS({ action: 'getFriendTimelinePage', offset: ftlOffset, type: ftFilter === 'all' ? '' : ftFilter, ...tlSortParams('friends'), limit: tlPageSize });
-}
 
 function ftlGoPage(page) {
     if (page < 0) return;

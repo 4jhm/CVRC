@@ -38,11 +38,6 @@ function lvReady() {
     return typeof tlTableHtml === 'function' && typeof tlTableRow === 'function';
 }
 
-function lvSyncViewButtons(key, gridBtnId, listBtnId) {
-    const isList = lvViewMode(key) === 'list';
-    document.getElementById(gridBtnId)?.classList.toggle('active', !isList);
-    document.getElementById(listBtnId)?.classList.toggle('active', isList);
-}
 
 function lvKeepScroll(startEl, render) {
     const saved = [];
@@ -51,8 +46,31 @@ function lvKeepScroll(startEl, render) {
         if (n.scrollTop > 0 || n.scrollLeft > 0) saved.push([n, n.scrollTop, n.scrollLeft]);
         n = n.parentElement;
     }
+    const inner = [];
+    if (startEl instanceof Element) {
+        const seen = {};
+        startEl.querySelectorAll('*').forEach(d => {
+            const cls = typeof d.className === 'string' ? d.className : '';
+            const idx = seen[cls] = (seen[cls] ?? -1) + 1;
+            if (cls && (d.scrollTop > 0 || d.scrollLeft > 0))
+                inner.push([cls, idx, d.scrollTop, d.scrollLeft]);
+        });
+    }
     render();
     saved.forEach(([el, top, left]) => { el.scrollTop = top; el.scrollLeft = left; });
+    if (startEl instanceof Element && inner.length) {
+        const seen = {};
+        const byKey = {};
+        startEl.querySelectorAll('*').forEach(d => {
+            const cls = typeof d.className === 'string' ? d.className : '';
+            const idx = seen[cls] = (seen[cls] ?? -1) + 1;
+            if (cls) byKey[cls + '|' + idx] = d;
+        });
+        inner.forEach(([cls, idx, top, left]) => {
+            const d = byKey[cls + '|' + idx];
+            if (d) { d.scrollTop = top; d.scrollLeft = left; }
+        });
+    }
 }
 
 function lvSort(list, listId, valueFn) {
@@ -80,11 +98,6 @@ function lvDuration(seconds) {
     return parts.length ? parts.join(' ') : '';
 }
 
-function lvDate(v) {
-    if (!v) return '';
-    const d = new Date(v);
-    return isNaN(d) ? '' : fmtShortDate(d);
-}
 
 function lvDateTime(v) {
     if (!v) return '';

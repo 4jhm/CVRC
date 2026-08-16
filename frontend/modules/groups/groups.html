@@ -1,6 +1,7 @@
                 <div class="tab-toolbar tt-split" style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;">
                     <div style="display:flex;gap:8px;align-items:center;">
                         <button class="vrcn-button sub-tab-btn active" id="groupFilterJoined" onclick="setGroupFilter('joined')"><span class="msi" style="font-size:16px;">groups</span> <span data-i18n="groups.filters.joined">Joined Groups</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="groupFilterInstances" onclick="setGroupFilter('instances')"><span class="msi" style="font-size:16px;">public</span> <span data-i18n="groups.filters.instances">Group Instances</span></button>
                         <button class="vrcn-button sub-tab-btn" id="groupFilterMine" onclick="setGroupFilter('mine')"><span class="msi" style="font-size:16px;">workspace_premium</span> <span data-i18n="groups.filters.mine">My Groups</span></button>
                         <button class="vrcn-button sub-tab-btn" id="groupFilterMod" onclick="setGroupFilter('mod')"><span class="msi" style="font-size:16px;">shield_person</span> <span data-i18n="groups.filters.moderate">Moderate Groups</span></button>
                         <button class="vrcn-button sub-tab-btn" id="groupFilterSearch" onclick="setGroupFilter('search')"><span class="msi" style="font-size:16px;">search</span> <span data-i18n="common.search">Search</span></button>
@@ -20,6 +21,15 @@
                     </div>
                     <div id="myGroupsGrid" class="search-grid"></div>
                     <div id="groupsPaginatorBar" class="tl-paginator-bar"></div>
+                </div>
+                <div id="groupInstancesArea" style="display:none;">
+                    <div class="tab-toolbar-body">
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+                        <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:140px;"><span class="msi search-ico">search</span><input type="text" id="filterGroupInstancesInput" class="vrcn-input" placeholder="Filter instances..." data-i18n-placeholder="groups.instances.filter_placeholder" oninput="renderGroupInstancesView()"></div>
+                    </div>
+                    </div>
+                    <div id="groupInstancesGrid" class="search-grid"></div>
+                    <div id="groupInstancesPaginatorBar" class="tl-paginator-bar"></div>
                 </div>
                 <div id="groupSearchArea" style="display:none;">
                     <div class="tab-toolbar-body"><div class="search-bar-row"><span class="msi search-ico">search</span><input type="text" id="searchGroupsInput" class="vrcn-input" placeholder="Search groups..." data-i18n-placeholder="groups.search.placeholder" onkeydown="if(event.key==='Enter')doSearch('groups')"><button class="vrcn-button" onclick="doSearch('groups')" data-i18n="common.search">Search</button></div></div>

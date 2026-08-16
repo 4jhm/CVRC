@@ -11,7 +11,6 @@
 
 .win-btn .msi { font-size: 15px; }
 .win-btn:hover { background: rgba(255,255,255,.1); color: var(--tx0); }
-.win-close:hover { background: rgba(232,17,35,.18) !important; color: #e81123 !important; }
 
 .vrcn-button, .vrcn-button-round {
     border: none;

@@ -117,11 +117,7 @@ div.vn-select {
 
 .wd-create-select.vn-select .vn-select-trigger { height: 32px; box-sizing: border-box; }
 
-.search-bar-row .search-input,
-.search-bar-row .vrcn-input,
-.tl-topbar .search-input,
-.inv-filter-row .search-input,
-.ts-search-bar .search-input {
+.search-bar-row .search-input, .search-bar-row .vrcn-input, .inv-filter-row .search-input, .ts-search-bar .search-input {
     height: 32px;
     min-height: 32px;
     max-height: 32px;
@@ -133,29 +129,12 @@ div.vn-select {
     line-height: 32px;
 }
 
-.search-bar-row,
-.tl-topbar,
-.tl-filter-row,
-.inv-filter-row,
-.inv-topbar,
-.ts-header,
-
-.search-bar-row .vn-select .vn-select-trigger,
-.tl-topbar .vn-select .vn-select-trigger,
-.tl-filter-row .vn-select .vn-select-trigger,
-.inv-filter-row .vn-select .vn-select-trigger,
-
-.search-bar-row .vrcn-button .msi,
-.tl-topbar .vrcn-button .msi,
-.tl-filter-row .vrcn-button .msi {
+.search-bar-row, .tl-filter-row, .inv-filter-row, .inv-topbar, .ts-header, .search-bar-row .vn-select .vn-select-trigger, .tl-filter-row .vn-select .vn-select-trigger, .inv-filter-row .vn-select .vn-select-trigger, .search-bar-row .vrcn-button .msi, .tl-filter-row .vrcn-button .msi {
     font-size: 18px;
     line-height: 1;
 }
 
-.search-bar-row .vn-select .vn-select-trigger .vn-select-label,
-.tl-topbar .vn-select .vn-select-trigger .vn-select-label,
-.tl-filter-row .vn-select .vn-select-trigger .vn-select-label,
-.inv-filter-row .vn-select .vn-select-trigger .vn-select-label {
+.search-bar-row .vn-select .vn-select-trigger .vn-select-label, .tl-filter-row .vn-select .vn-select-trigger .vn-select-label, .inv-filter-row .vn-select .vn-select-trigger .vn-select-label {
     font-size: calc(12px + var(--fs-off, 0px));
 }
 

@@ -44,7 +44,15 @@ public class FrameShotController : IDisposable
 
             h.OnFsUpdate += d => _core.SendToJS("fsUpdate", d);
 
-            h.OnFsDevices += devices => _core.SendToJS("fsDevices", new { devices, savedDevice = _core.Settings.FsOutputDevice });
+            h.OnFsDevices += devices =>
+            {
+                var sel = VRCNext.Services.Helpers.AudioSelection.From(_core.Settings.FsOutputDeviceId, _core.Settings.FsOutputDevice);
+                _core.SendToJS("fsDevices", new
+                {
+                    devices,
+                    saved = new { mode = sel.ModeString, id = sel.EndpointId, name = sel.DisplayName, available = VRCNext.Services.Helpers.AudioDeviceManager.IsAvailable(false, sel) },
+                });
+            };
 
             h.OnFsAudioDevices += list =>
             {
@@ -89,7 +97,7 @@ public class FrameShotController : IDisposable
                 var (auth, tfa) = _core.VrcApi.GetCookies();
                 host.InputMode = _core.Settings.VrInputMode;
                 host.EnsureRunning("", _core.HttpPort, auth, tfa);
-                host.FsConnect(FsBtn(_core.Settings.FsLeftButton, _core.Settings.FsIdxLeftButton), FsBtn(_core.Settings.FsRightButton, _core.Settings.FsIdxRightButton), _core.Settings.FsOutputDevice, _core.Settings.FsActivationRadius, FsBtn(_core.Settings.FsLeftRecordButton, _core.Settings.FsIdxLeftRecordButton), FsBtn(_core.Settings.FsRightRecordButton, _core.Settings.FsIdxRightRecordButton), _core.Settings.FsGifMaxResolution, _core.Settings.FsGifMaxFps, _core.Settings.FsUseHmdRotations, FsBtn(_core.Settings.FsLeftVideoButton, _core.Settings.FsIdxLeftVideoButton), FsBtn(_core.Settings.FsRightVideoButton, _core.Settings.FsIdxRightVideoButton), _core.Settings.FsVideoDeviceA, _core.Settings.FsVideoDeviceB, _core.Settings.FsVideoFps, _core.Settings.FsVideoQuality, _core.Settings.FsVideoBitrateQuality, _core.Settings.FsAudioKbps);
+                host.FsConnect(FsBtn(_core.Settings.FsLeftButton, _core.Settings.FsIdxLeftButton), FsBtn(_core.Settings.FsRightButton, _core.Settings.FsIdxRightButton), _core.Settings.FsOutputDeviceId, _core.Settings.FsOutputDevice, _core.Settings.FsActivationRadius, FsBtn(_core.Settings.FsLeftRecordButton, _core.Settings.FsIdxLeftRecordButton), FsBtn(_core.Settings.FsRightRecordButton, _core.Settings.FsIdxRightRecordButton), _core.Settings.FsGifMaxResolution, _core.Settings.FsGifMaxFps, _core.Settings.FsUseHmdRotations, FsBtn(_core.Settings.FsLeftVideoButton, _core.Settings.FsIdxLeftVideoButton), FsBtn(_core.Settings.FsRightVideoButton, _core.Settings.FsIdxRightVideoButton), _core.Settings.FsVideoDeviceA, _core.Settings.FsVideoDeviceB, _core.Settings.FsVideoFps, _core.Settings.FsVideoQuality, _core.Settings.FsVideoBitrateQuality, _core.Settings.FsAudioKbps);
                 _vroCtrl.UpdateToolStates();
                 break;
             }
@@ -103,10 +111,13 @@ public class FrameShotController : IDisposable
                 break;
 
             case "fsSetOutput":
-                var dev = msg["deviceName"]?.Value<string>() ?? "";
-                _core.Settings.FsOutputDevice = dev;
-                _core.Settings.Save();
-                _core.VrOverlay?.FsSetOutput(dev);
+                if (VRCNext.Services.Helpers.AudioDeviceManager.TryReadSelectionFromMessage(msg["deviceId"], msg["deviceName"]?.ToString(), false, _core.Settings.FsOutputDevice, out var fsDevId, out var fsDevName))
+                {
+                    _core.Settings.FsOutputDeviceId = fsDevId;
+                    _core.Settings.FsOutputDevice = fsDevName;
+                    _core.Settings.Save();
+                    _core.VrOverlay?.FsSetOutput(fsDevId, fsDevName);
+                }
                 break;
 
             case "fsDisconnect":
@@ -276,7 +287,7 @@ public class FrameShotController : IDisposable
             var (auth, tfa) = _core.VrcApi.GetCookies();
             host.InputMode = _core.Settings.VrInputMode;
             host.EnsureRunning("", _core.HttpPort, auth, tfa);
-            host.FsConnect(FsBtn(_core.Settings.FsLeftButton, _core.Settings.FsIdxLeftButton), FsBtn(_core.Settings.FsRightButton, _core.Settings.FsIdxRightButton), _core.Settings.FsOutputDevice, _core.Settings.FsActivationRadius, FsBtn(_core.Settings.FsLeftRecordButton, _core.Settings.FsIdxLeftRecordButton), FsBtn(_core.Settings.FsRightRecordButton, _core.Settings.FsIdxRightRecordButton), _core.Settings.FsGifMaxResolution, _core.Settings.FsGifMaxFps, _core.Settings.FsUseHmdRotations, FsBtn(_core.Settings.FsLeftVideoButton, _core.Settings.FsIdxLeftVideoButton), FsBtn(_core.Settings.FsRightVideoButton, _core.Settings.FsIdxRightVideoButton), _core.Settings.FsVideoDeviceA, _core.Settings.FsVideoDeviceB, _core.Settings.FsVideoFps, _core.Settings.FsVideoQuality, _core.Settings.FsVideoBitrateQuality, _core.Settings.FsAudioKbps);
+            host.FsConnect(FsBtn(_core.Settings.FsLeftButton, _core.Settings.FsIdxLeftButton), FsBtn(_core.Settings.FsRightButton, _core.Settings.FsIdxRightButton), _core.Settings.FsOutputDeviceId, _core.Settings.FsOutputDevice, _core.Settings.FsActivationRadius, FsBtn(_core.Settings.FsLeftRecordButton, _core.Settings.FsIdxLeftRecordButton), FsBtn(_core.Settings.FsRightRecordButton, _core.Settings.FsIdxRightRecordButton), _core.Settings.FsGifMaxResolution, _core.Settings.FsGifMaxFps, _core.Settings.FsUseHmdRotations, FsBtn(_core.Settings.FsLeftVideoButton, _core.Settings.FsIdxLeftVideoButton), FsBtn(_core.Settings.FsRightVideoButton, _core.Settings.FsIdxRightVideoButton), _core.Settings.FsVideoDeviceA, _core.Settings.FsVideoDeviceB, _core.Settings.FsVideoFps, _core.Settings.FsVideoQuality, _core.Settings.FsVideoBitrateQuality, _core.Settings.FsAudioKbps);
         }
         _vroCtrl.UpdateToolStates();
 #endif

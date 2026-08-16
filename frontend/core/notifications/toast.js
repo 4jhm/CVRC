@@ -14,6 +14,7 @@ const NOTIF_TOAST_TYPE_META = {
     boop: { key: 'notifications.types.boop', fallback: 'Boop' },
     message: { key: 'notifications.types.message', fallback: 'Message' },
     'group.announcement': { key: 'notifications.types.group_announcement', fallback: 'Group Announcement' },
+    'instance.announcement': { key: 'notifications.types.instance_announcement', fallback: 'Instance Announcement' },
     'group.invite': { key: 'notifications.types.group_invite', fallback: 'Group Invite' },
     'group.joinRequest': { key: 'notifications.types.group_join_request', fallback: 'Group Join Request' },
     'group.informationRequest': { key: 'notifications.types.group_info_request', fallback: 'Group Info Request' },

@@ -151,28 +151,23 @@ namespace VRCNext.Services
         private static readonly string SoundDir = Path.Combine(
             AppDomain.CurrentDomain.BaseDirectory, "frameshot");
 
-        // Output device — -1 means "system default". Each Play() creates a NEW
-        // WaveOutEvent so a device change applies immediately without restart.
-        private int _outputDeviceIndex = -1;
+        private VRCNext.Services.Helpers.AudioSelection _outputSelection = VRCNext.Services.Helpers.AudioSelection.From("", "");
 
-        public void SetOutputDevice(int idx) => _outputDeviceIndex = idx;
-
-        public static string[] GetOutputDevices()
-            => VRCNext.Services.Helpers.AudioDeviceHelper.GetOutputNames();
+        public void SetOutputDevice(VRCNext.Services.Helpers.AudioSelection sel) => _outputSelection = sel;
 
         private void PlaySoundAsync(string fileName)
         {
             var path = Path.Combine(SoundDir, fileName);
             if (!File.Exists(path)) return;
-            int devIdx = _outputDeviceIndex; // snapshot at trigger time
+            var sel = _outputSelection;
             _ = Task.Run(() =>
             {
                 try
                 {
+                    var devIdx = VRCNext.Services.Helpers.AudioDeviceManager.ResolveOutputIndex(sel);
+                    if (devIdx == null) { _log($"[FrameShot] Output '{sel.DisplayName}' unavailable, sound skipped (selection kept)."); return; }
                     var reader  = new WaveFileReader(path);
-                    // Fresh WaveOutEvent per play, so the device chosen NOW takes effect
-                    // immediately — no app restart needed when the user switches output.
-                    var waveOut = new WaveOutEvent { DeviceNumber = devIdx };
+                    var waveOut = new WaveOut { DeviceNumber = devIdx.Value };
                     waveOut.PlaybackStopped += (_, __) =>
                     {
                         try { waveOut.Dispose(); } catch { }
@@ -187,7 +182,7 @@ namespace VRCNext.Services
 
         // Looping playback used for the recording sound — runs from record start
         // until StopRecordSoundLoop() is called.
-        private WaveOutEvent? _recordWaveOut;
+        private WaveOut? _recordWaveOut;
         private WaveStream?   _recordWaveReader;
 
         private sealed class LoopWaveStream : WaveStream
@@ -224,15 +219,17 @@ namespace VRCNext.Services
         {
             var path = Path.Combine(SoundDir, fileName);
             if (!File.Exists(path)) return;
-            int devIdx = _outputDeviceIndex;
+            var sel = _outputSelection;
             // Run on thread pool so file IO + device init doesn't stall the poll loop.
             _ = Task.Run(() =>
             {
                 try
                 {
                     StopRecordSoundLoop(); // safety: kill any previous loop
+                    var devIdx = VRCNext.Services.Helpers.AudioDeviceManager.ResolveOutputIndex(sel);
+                    if (devIdx == null) { _log($"[FrameShot] Output '{sel.DisplayName}' unavailable, record sound skipped (selection kept)."); return; }
                     _recordWaveReader = new LoopWaveStream(new WaveFileReader(path));
-                    _recordWaveOut    = new WaveOutEvent { DeviceNumber = devIdx };
+                    _recordWaveOut    = new WaveOut { DeviceNumber = devIdx.Value };
                     _recordWaveOut.Init(_recordWaveReader);
                     _recordWaveOut.Play();
                 }
@@ -848,7 +845,7 @@ namespace VRCNext.Services
         // Video recording
 
         public static (string id, string label)[] GetAudioDevices()
-            => VRCNext.Services.Helpers.AudioDeviceHelper.GetWasapiEndpoints();
+            => VRCNext.Services.Helpers.AudioDeviceManager.ListCaptureWithLoopback();
 
         private NAudio.Wave.IWaveIn? StartAudioCapture(string deviceId, string wavPath, out NAudio.Wave.WaveFileWriter? writer)
         {
@@ -856,7 +853,7 @@ namespace VRCNext.Services
             if (string.IsNullOrEmpty(deviceId)) return null;
             try
             {
-                var dev = VRCNext.Services.Helpers.AudioDeviceHelper.GetWasapiDevice(deviceId, out var isLoopback);
+                var dev = VRCNext.Services.Helpers.AudioDeviceManager.GetWasapiDevice(deviceId, out var isLoopback);
                 if (dev == null) return null;
                 NAudio.Wave.IWaveIn cap = isLoopback
                     ? new NAudio.Wave.WasapiLoopbackCapture(dev)

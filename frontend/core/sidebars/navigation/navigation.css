@@ -160,35 +160,6 @@ body:has(#tab0.active) .rsidebar.collapsed .sidebar-sep {
     padding: 0 5px;
 }
 
-.sb-toggle, .rs-toggle {
-    flex-shrink: 0;
-    color: var(--tx3);
-    padding: 10px;
-    border-radius: 8px;
-    justify-content: center;
-    font-size: calc(13px + var(--fs-off, 0px));
-    font-family: inherit;
-    transition: color .15s, background .15s;
-}
-
-.sb-toggle, .rs-toggle { margin-left: auto; }
-.rs-toggle { margin-left: 0; }
-
-.sb-toggle .msi, .rs-toggle .msi {
-    font-size: 20px;
-}
-
-.sb-toggle:hover, .rs-toggle:hover {
-    color: var(--tx1);
-    background: rgba(255,255,255,.04);
-}
-
-.sidebar.collapsed .sb-toggle,
-.rsidebar.collapsed .rs-toggle {
-    margin-left: 0;
-    padding: 10px;
-}
-
 .nav {
     padding: 4px 0;
     flex: 1;

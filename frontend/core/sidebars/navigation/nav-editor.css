@@ -148,11 +148,6 @@
     transition: border-color .15s, background .15s;
 }
 
-.ne-folder-empty.ne-drop-active {
-    border-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-    color: var(--accent-lt);
-}
 
 /* Hidden section separator */
 
@@ -178,32 +173,9 @@
 
 /* Drag drop indicators */
 
-.ne-row.ne-drop-above::before,
-.ne-row.ne-drop-below::after {
-    content: '';
-    position: absolute;
-    left: 8px;
-    right: 8px;
-    height: 2px;
-    background: var(--accent);
-    border-radius: 2px;
-    pointer-events: none;
-    z-index: 1;
-}
 
-.ne-row.ne-drop-above::before {
-    top: -1px;
-}
 
-.ne-row.ne-drop-below::after {
-    bottom: -1px;
-}
 
-.ne-row.ne-drop-into {
-    outline: 2px solid var(--accent);
-    outline-offset: -2px;
-    background: color-mix(in srgb, var(--accent) 7%, transparent);
-}
 
 .ne-dragging {
     opacity: 0.3;

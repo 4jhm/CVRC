@@ -142,23 +142,6 @@ public class AvatarScalingController : IDisposable
                 break;
             }
 
-            case "asRecordKey":
-            {
-                var slot    = msg["slot"]?.ToString() ?? "";
-                var keyCode = msg["keyCode"]?.Value<int>() ?? 0;
-                if (slot == "up")
-                {
-                    _keyUp = keyCode;
-                    _core.Settings.AsKeyUp = keyCode;
-                }
-                else if (slot == "down")
-                {
-                    _keyDown = keyCode;
-                    _core.Settings.AsKeyDown = keyCode;
-                }
-                _core.Settings.Save();
-                break;
-            }
         }
     }
 

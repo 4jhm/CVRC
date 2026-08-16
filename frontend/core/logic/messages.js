@@ -259,7 +259,6 @@ window.external.receiveMessage(rawMsg => {
                     if (fsl) fsl.innerHTML = `<div class="vrc-section-label">${t('profiles.friends.sections.loading', 'IN-GAME - ...')}</div>` + sk('friend', 10);
                 }
                 renderDashboard();
-                fetchWorldTabs();
                 loadMyInstances();
                 requestInstanceInfo();
                 refreshNotifications();
@@ -946,9 +945,6 @@ case 'vrcNews':
             case 'vrcHiddenNotifications':
                 renderNotifications(payload || [], true);
                 break;
-            case 'vrcAllNotifications':
-                renderNotifications(payload || []);
-                break;
             case 'vrcNotificationPrepend':
                 // Single notification arrived via WebSocket — prepend to existing list
                 notifications = [payload, ...(notifications || []).filter(n => n.id !== payload.id)];
@@ -1008,13 +1004,6 @@ case 'vrcNews':
             case 'dbMigrationProgress':  onDbMigrationProgress(payload); break;
             case 'gameLogEvent':         addGameLogEntry(payload);        break;
             case 'gameLogHistory':       if (typeof setGameLogHistory === 'function') setGameLogHistory(payload.entries || []); break;
-            case 'vrcRefreshNotifs':
-                refreshNotifications();
-                break;
-            case 'vrcUserDetail':
-                // Unified: redirect to friend detail modal
-                renderFriendDetail(payload);
-                break;
             case 'vrcCurrentInstance':
                 renderCurrentInstance(payload);
                 break;
@@ -1033,9 +1022,6 @@ case 'vrcNews':
                 break;
             case 'worldInstancesDetail':
                 if (typeof handleWorldInstancesDetail === 'function') handleWorldInstancesDetail(payload);
-                break;
-            case 'refreshMyInstances':
-                if (typeof loadMyInstances === 'function') loadMyInstances();
                 break;
             case 'dashBgSelected':
                 dashBgPath = payload.path || '';

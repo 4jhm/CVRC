@@ -37,6 +37,7 @@ function _showNotifCard(n) {
         case 'requestInviteResponse':  icon = 'reply_all';        accentColor = 'var(--accent)'; break;
         case 'votetokick':             icon = 'gavel';            accentColor = 'var(--err)';    break;
         case 'group.announcement':     icon = 'campaign';         accentColor = 'var(--accent)'; break;
+        case 'instance.announcement':  icon = 'campaign';         accentColor = 'var(--accent)'; break;
         case 'group.invite':           icon = 'group_add';        accentColor = 'var(--ok)';     break;
         case 'group.joinRequest':      icon = 'group';            accentColor = 'var(--accent)'; break;
         default:
@@ -72,6 +73,9 @@ function _showNotifCard(n) {
         subText = det.responseMessage || det.requestMessage || n.message || '';
     } else if (n.type === 'group.announcement') {
         titleHtml = `<span>${esc(t('notifications.title.group_announcement', 'Group announcement'))}</span>`;
+        subText = n.message || '';
+    } else if (n.type === 'instance.announcement') {
+        titleHtml = `<span>${esc(t('notifications.title.instance_announcement', 'Instance announcement'))}</span>`;
         subText = n.message || '';
     } else {
         titleHtml = `<strong>${sender}</strong>`;
@@ -131,6 +135,8 @@ function _showNotifCard(n) {
             plainTitle = `${n.senderUsername || '?'} ${t('notifications.title.group_join_request', 'wants to join your group')}`;
         } else if (n.type === 'group.announcement') {
             plainTitle = t('notifications.title.group_announcement', 'Group announcement');
+        } else if (n.type === 'instance.announcement') {
+            plainTitle = t('notifications.title.instance_announcement', 'Instance announcement');
         } else {
             plainTitle = n.senderUsername || notifToastLabel(n.type);
         }

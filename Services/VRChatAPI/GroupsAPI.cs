@@ -361,19 +361,6 @@ public class GroupsAPI(VRChatApiService ctx)
         return null;
     }
 
-    public async Task<JArray> GetGroupAuditLogTypesAsync(string groupId)
-    {
-        if (!ctx.IsLoggedIn) return new JArray();
-        try
-        {
-            var resp = await ctx._http.GetAsync($"{VRChatApiService.BASE}/groups/{groupId}/auditLogTypes");
-            if (resp.IsSuccessStatusCode) return JArray.Parse(await resp.Content.ReadAsStringAsync());
-            ctx.Log($"GetGroupAuditLogTypes({groupId}): {(int)resp.StatusCode}");
-        }
-        catch (Exception ex) { ctx.Log($"GetGroupAuditLogTypes exception: {ex.Message}"); }
-        return new JArray();
-    }
-
     public async Task<JArray> GetGroupBansAsync(string groupId)
     {
         if (!ctx.IsLoggedIn) return new JArray();

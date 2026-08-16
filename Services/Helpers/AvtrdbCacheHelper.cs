@@ -74,19 +74,6 @@ public static class AvtrdbCacheHelper
         }
     }
 
-    public static void MarkDeleted(string avatarId, string dbSource)
-    {
-        lock (_lock)
-        {
-            using var cmd = Conn().CreateCommand();
-            cmd.CommandText = "INSERT OR REPLACE INTO Avatar_Deletion (Avtr_ID, Submit_Date, DB_Source) VALUES (@id, @ts, @src)";
-            cmd.Parameters.AddWithValue("@id",  avatarId);
-            cmd.Parameters.AddWithValue("@ts",  Now());
-            cmd.Parameters.AddWithValue("@src", dbSource);
-            cmd.ExecuteNonQuery();
-        }
-    }
-
     public static void MarkDeletedBatch(IEnumerable<string> avatarIds, string dbSource)
     {
         lock (_lock)

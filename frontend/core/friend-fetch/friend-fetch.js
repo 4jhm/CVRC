@@ -12,9 +12,6 @@ function friendFetchStart() {
     friendFetchRequestState();
 }
 
-function friendFetchCancel() {
-    sendToCS({ action: 'vrcFriendFetchCancel' });
-}
 
 function friendFetchRequestState() {
     sendToCS({ action: 'vrcFriendFetchState' });
@@ -25,10 +22,6 @@ function ffCooldownText(ms) {
     const m = Math.floor(total / 60);
     const s = total % 60;
     return m > 0 ? `${m}m` : `${s}s`;
-}
-
-function ffProgressText(done, total) {
-    return tf('friend_fetch.progress', { done, total }, `Fetching profiles: ${done} / ${total}`);
 }
 
 function onFriendFetchProgress(payload) {

@@ -389,33 +389,10 @@ body:has(#rsidebar:not(.collapsed)) #taskbar::before {
 
 #tbNormalLeft { display: flex; align-items: stretch; min-width: 0; }
 #tbAppControls { display: flex; align-items: stretch; flex-shrink: 0; }
-#tbModalCrumbs { display: none; align-items: center; gap: 4px; min-width: 0; overflow: hidden; padding: 0 6px; }
-#tbModalActions { display: none; align-items: stretch; }
-
-#taskbar.tb-modal-mode #tbNormalLeft,
-#taskbar.tb-modal-mode #tbAppControls { display: none; }
-#taskbar.tb-modal-mode #tbModalCrumbs,
-#taskbar.tb-modal-mode #tbModalActions { display: flex; }
-#taskbar:not(.tb-modal-mode) #tbModalActionsSep { display: none; }
-
-@keyframes tbFadeInLeft { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes tbFadeInRight { from { opacity: 0; transform: translateX(6px); } to { opacity: 1; transform: translateX(0); } }
-
-#taskbar.tb-modal-mode #tbModalCrumbs,
-#taskbar:not(.tb-modal-mode) #tbNormalLeft { animation: tbFadeInLeft 0.18s ease; }
-#taskbar.tb-modal-mode #tbModalActions,
-#taskbar:not(.tb-modal-mode) #tbAppControls { animation: tbFadeInRight 0.18s ease; }
-
-html.no-animations #tbModalCrumbs,
-html.no-animations #tbModalActions,
-html.no-animations #tbNormalLeft,
-html.no-animations #tbAppControls { animation: none !important; }
 
 @keyframes tbTitleFade { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
 .tb-title-anim { animation: tbTitleFade 0.18s ease; }
 html.no-animations .tb-title-anim { animation: none !important; }
-
-#taskbar.tb-modal-mode #tb-left { flex-shrink: 1; min-width: 0; }
 
 .tb-crumb, .tb-crumb-current {
     font-size: calc(13px + var(--fs-off, 0px));

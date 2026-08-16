@@ -37,7 +37,7 @@ public sealed class GeminiLiveService : IKikitanSpeechService
     public event Action<string>? OnLog;
     public event Action? OnChatboxSent;
 
-    private WaveInEvent? _waveIn;
+    private WaveIn? _waveIn;
     private ClientWebSocket? _ws;
     private CancellationTokenSource? _cts;
     private Task? _receiveTask;
@@ -101,7 +101,7 @@ public sealed class GeminiLiveService : IKikitanSpeechService
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
 
-        _waveIn = new WaveInEvent
+        _waveIn = new WaveIn
         {
             DeviceNumber = deviceIndex,
             WaveFormat = new WaveFormat(SampleRate, BitsPerSample, Channels),

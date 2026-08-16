@@ -746,16 +746,6 @@ function updateFavAvatarGroupHeader() {
     header.style.display = anyVisible ? 'flex' : 'none';
 }
 
-function startEditAvatarGroupName() {
-    const g = favAvatarGroups.find(x => x.name === favAvatarGroupFilter);
-    if (!g) return;
-    const input = document.getElementById('favAvatarGroupNameInput');
-    if (input) input.value = g.displayName || g.name;
-    document.getElementById('favAvatarGroupHeader').style.display = 'none';
-    const row = document.getElementById('favAvatarGroupRenameRow');
-    if (row) row.style.display = 'flex';
-    if (input) input.focus();
-}
 
 function cancelEditAvatarGroupName() {
     updateFavAvatarGroupHeader();

@@ -106,25 +106,8 @@
     display: none;
 }
 
-.mi-world-stats {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
 
-.mi-world-stat {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: calc(11px + var(--fs-off, 0px));
-    color: var(--tx2);
-}
 
-.mi-world-stat .msi {
-    font-size: 14px;
-    color: var(--tx3);
-    flex-shrink: 0;
-}
 
 .mi-left-actions {
     padding: 10px 14px 14px;

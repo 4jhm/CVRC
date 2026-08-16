@@ -101,8 +101,7 @@ function kxdConnect() {
         return;
     }
 
-    const devSel = document.getElementById('kxdDeviceSelect');
-    const deviceIndex = devSel ? (parseInt(devSel.value, 10) || 0) : (_kxdDevicesPayload.savedIndex ?? 0);
+    const dev = audioDeviceValue('kxdDeviceSelect');
     const apiKey = (document.getElementById('kxdApiKey')?.value || _kxdDevicesPayload.apiKey || '').trim();
     const srcSel = document.getElementById('kxdSourceLang');
     const tgtSel = document.getElementById('kxdTargetLang');
@@ -125,7 +124,9 @@ function kxdConnect() {
     }
 
     const personality = document.getElementById('kxdPersonality')?.value || _kxdDevicesPayload.personality || 'raw';
-    sendToCS({ action: 'kxdStart', deviceIndex, apiKey, googleApiKey, model, sourceLang, targetLang, translateEnabled, oscEnabled, partialOsc, noiseGatePct: kxdNoiseGatePct, personality, blockWords: _kxdBlockWords, blockSentences: _kxdBlockSentences });
+    const startMsg = { action: 'kxdStart', apiKey, googleApiKey, model, sourceLang, targetLang, translateEnabled, oscEnabled, partialOsc, noiseGatePct: kxdNoiseGatePct, personality, blockWords: _kxdBlockWords, blockSentences: _kxdBlockSentences };
+    if (dev) { startMsg.deviceId = dev.id; startMsg.deviceName = dev.name; }
+    sendToCS(startMsg);
 }
 
 function ttsBuildCascade(prefix, voices, savedVoice, defaultLabel) {
@@ -185,7 +186,7 @@ function ttsBuildCascade(prefix, voices, savedVoice, defaultLabel) {
 
 function kxdTtsHandleDevices(p) {
     if (p.target !== 'kxd') return;
-    if (p.devices) kxdTtsFillDevices(p.devices, audioDeviceIndex('kxdTtsDevice'));
+    if (p.devices) kxdTtsFillDevices(p.devices, audioSelectionFromSelect(document.getElementById('kxdTtsDevice')));
     kxdTtsFillVoices(p.voices, _kxdSavedTtsVoice);
 }
 
@@ -202,12 +203,14 @@ function kxdTtsEngineChanged() {
 
 function kxdTtsPreviewVoice(voice) {
     if (!voice) return;
+    const dev = audioDeviceValue('kxdTtsDevice') || { id: '', name: '' };
     sendToCS({
         action: 'ttsPreview',
         text: t('tts.preview_line', 'This is how this voice sounds.'),
         engine: document.getElementById('kxdTtsEngine')?.value || 'sapi',
         voice,
-        device: audioDeviceIndex('kxdTtsDevice'),
+        deviceId: dev.id,
+        deviceName: dev.name,
         rate: parseInt(document.getElementById('kxdTtsRate')?.value ?? '0', 10),
     });
 }
@@ -228,24 +231,19 @@ function kxdTtsFilterChanged() {
     kxdSaveSettings();
 }
 
-function kxdTtsFillDevices(devices, saved) {
-    const sel = document.getElementById('kxdTtsDevice');
-    if (!sel) return;
-    let html = `<option value="-1">${esc(t('kikitan.tts.device_default', 'System default'))}</option>`;
-    (devices || []).forEach((name, i) => { html += `<option value="${i}">${esc(name)}</option>`; });
-    sel.innerHTML = html;
-    sel.value = String(saved ?? -1);
-    if (sel.selectedIndex < 0) sel.value = '-1';
-    if (sel._vnRefresh) sel._vnRefresh();
+function kxdTtsFillDevices(devices, selection) {
+    audioFillDeviceSelect(document.getElementById('kxdTtsDevice'), devices, selection);
 }
 
 function kxdTtsTest() {
+    const dev = audioDeviceValue('kxdTtsDevice') || { id: '', name: '' };
     sendToCS({
         action: 'ttsTest',
         text: t('kikitan.tts.test_line', 'VRCNext text to speech is working.'),
         engine: document.getElementById('kxdTtsEngine')?.value || 'sapi',
         voice: document.getElementById('kxdTtsVoice')?.value || '',
-        device: audioDeviceIndex('kxdTtsDevice'),
+        deviceId: dev.id,
+        deviceName: dev.name,
         rate: parseInt(document.getElementById('kxdTtsRate')?.value ?? '0', 10),
         volume: 100,
     });
@@ -259,24 +257,7 @@ function populateKxdDevices(p) {
         return;
     }
 
-    const sel = document.getElementById('kxdDeviceSelect');
-    if (sel) {
-        sel.innerHTML = '';
-        const devices = p.devices || [];
-        if (devices.length === 0) {
-            sel.innerHTML = `<option value="0">${t('kikitan.devices.no_microphone', 'No microphone found')}</option>`;
-        } else {
-            const savedIdx = Math.min(p.savedIndex ?? 0, devices.length - 1);
-            devices.forEach((name, i) => {
-                const opt = document.createElement('option');
-                opt.value = String(i);
-                opt.textContent = name;
-                sel.appendChild(opt);
-            });
-            sel.selectedIndex = savedIdx;
-        }
-        if (sel._vnRefresh) sel._vnRefresh();
-    }
+    audioFillDeviceSelect(document.getElementById('kxdDeviceSelect'), p.devices, p.input);
 
     const ttsToggle = document.getElementById('kxdTtsToggle');
     if (ttsToggle) ttsToggle.checked = !!p.ttsEnabled;
@@ -287,7 +268,7 @@ function populateKxdDevices(p) {
         ttsEngSel.value = p.ttsEngine || 'sapi';
         if (ttsEngSel._vnRefresh) ttsEngSel._vnRefresh();
     }
-    kxdTtsFillDevices(p.ttsDevices, p.ttsDevice);
+    kxdTtsFillDevices(p.ttsDevices, p.tts);
     kxdTtsFillVoices((p.ttsVoices || []).map(v => ({ id: v, label: v })), _kxdSavedTtsVoice);
     if ((p.ttsEngine || 'sapi') === 'edge') {
         sendToCS({ action: 'getTtsDevices', target: 'kxd', engine: 'edge' });
@@ -441,16 +422,15 @@ function kxdSaveSettings() {
     window._kxdProfileTargetLang = profileTargetLang;
     window._kxdApiKeyPresent = !!apiKey;
     const personality = document.getElementById('kxdPersonality')?.value || 'raw';
-    const devSel = document.getElementById('kxdDeviceSelect');
     const ttsEnabled = !!(document.getElementById('kxdTtsToggle')?.checked);
-    const ttsDevice = audioDeviceIndex('kxdTtsDevice');
     const ttsVoice = document.getElementById('kxdTtsVoice')?.value || '';
     const ttsEngine = document.getElementById('kxdTtsEngine')?.value || 'sapi';
     const ttsRate = parseInt(document.getElementById('kxdTtsRate')?.value ?? '0', 10);
-    const payload = { action: 'kxdSaveSettings', apiKey, googleApiKey, model, sourceLang, targetLang, translateEnabled, oscEnabled, partialOsc, noiseGatePct: kxdNoiseGatePct, profileTranslationEnabled, profileTargetLang, personality, blockWords: _kxdBlockWords, blockSentences: _kxdBlockSentences, ttsEnabled, ttsDevice: isNaN(ttsDevice) ? -1 : ttsDevice, ttsVoice, ttsEngine, ttsRate: isNaN(ttsRate) ? 0 : ttsRate };
-    if (devSel && devSel.value !== '' && !isNaN(parseInt(devSel.value, 10))) {
-        payload.deviceIndex = parseInt(devSel.value, 10);
-    }
+    const payload = { action: 'kxdSaveSettings', apiKey, googleApiKey, model, sourceLang, targetLang, translateEnabled, oscEnabled, partialOsc, noiseGatePct: kxdNoiseGatePct, profileTranslationEnabled, profileTargetLang, personality, blockWords: _kxdBlockWords, blockSentences: _kxdBlockSentences, ttsEnabled, ttsVoice, ttsEngine, ttsRate: isNaN(ttsRate) ? 0 : ttsRate };
+    const dev = audioDeviceValue('kxdDeviceSelect');
+    if (dev) { payload.deviceId = dev.id; payload.deviceName = dev.name; }
+    const ttsDev = audioDeviceValue('kxdTtsDevice');
+    if (ttsDev) { payload.ttsDeviceId = ttsDev.id; payload.ttsDeviceName = ttsDev.name; }
     sendToCS(payload);
 }
 

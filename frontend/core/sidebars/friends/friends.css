@@ -116,34 +116,8 @@
     transition: max-height .15s ease-in, opacity .15s;
 }
 
-.win-dots {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    margin-left: auto;
-}
 
-.win-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-    transition: filter .15s;
-    flex-shrink: 0;
-}
-.win-dot:hover { filter: brightness(1.15); }
-.win-dot-close { background: #FF5F57; }
-.win-dot-min   { background: #FEBC2E; }
-.win-dot-max   { background: #28C840; }
 
-.rsidebar-title {
-    font-size: calc(13px + var(--fs-off, 0px));
-    font-weight: 700;
-    color: var(--tx0);
-    letter-spacing: 1px;
-}
 
 .rsidebar-content {
     flex: 1;

@@ -83,6 +83,7 @@ let afAutoSaveSuppressed = false;
 let afTriggerState = {};
 let afWatchState = {
     lastInstanceUserIds: null,
+    lastInstanceUsers:   null,
     lastStatus:          null,
 };
 let afTaskHistory = [];   /* timestamps (ms) of dispatched API-calling actions, last TASK_WINDOW_MS only */
@@ -195,6 +196,7 @@ function afDefineBlocks() {
     }
 
     makeTriggerHat('af_trigger_interval_30s',         b => b.appendDummyInput().appendField(aft('trigger.every_30s', 'every 30 seconds')));
+    makeTriggerHat('af_trigger_interval_seconds',     b => b.appendDummyInput().appendField(aft('trigger.every', 'every')).appendField(new B.FieldNumber(30, 5, 3600, 1), 'SEC').appendField(aft('trigger.seconds', 'seconds')));
     makeTriggerHat('af_trigger_interval_minutes',     b => b.appendDummyInput().appendField(aft('trigger.every', 'every')).appendField(new B.FieldNumber(5, 1, 1440, 1), 'MIN').appendField(aft('trigger.minutes', 'minutes')));
     makeTriggerHat('af_trigger_world_change',         b => b.appendDummyInput().appendField(aft('trigger.world_change', 'when I switch world (15s delay)')));
     makeUserPresenceTriggerHat('af_trigger_user_joins',           aft('trigger.user_joins',           'when someone joins my instance'));
@@ -722,6 +724,25 @@ function afDefineBlocks() {
         this.setTooltip(aft('control.wait_tooltip', 'Pauses this flow for the given number of seconds, then continues to the next block. While waiting, other flows are held back too — flows run one at a time.'));
     } };
 
+    B.Blocks['af_repeat'] = { init() {
+        this.appendDummyInput()
+            .appendField(aft('control.repeat', 'repeat'))
+            .appendField(new B.FieldNumber(10, 1, 1000, 1), 'TIMES')
+            .appendField(aft('control.repeat_times', 'times'));
+        this.appendStatementInput('DO').appendField(DO);
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(COLOR_CONTROL);
+        this.setTooltip(aft('control.repeat_tooltip', 'Runs the contained blocks the given number of times in a row before continuing.'));
+    } };
+
+    B.Blocks['af_stop_flow'] = { init() {
+        this.appendDummyInput().appendField(aft('control.stop_flow', 'stop this flow'));
+        this.setPreviousStatement(true, null);
+        this.setColour(COLOR_CONTROL);
+        this.setTooltip(aft('control.stop_flow_tooltip', 'Immediately stops running the rest of this flow, including anything after this block in an outer if/repeat. Other flows are unaffected.'));
+    } };
+
     B.Blocks['af_send_notification_value'] = { init() {
         this.appendValueInput('VALUE').appendField(aft('action.send_notification', 'send notification'));
         this.setInputsInline(true);
@@ -753,6 +774,7 @@ function afDefineBlocks() {
         ['af_get_ingame_friends', 'info.ingame_friends', 'friends in game',        'info.ingame_friends_tooltip', 'Names of your friends that are currently in VRChat, separated by commas.'],
         ['af_get_time',           'info.time',           'current time',           'info.time_tooltip',           'Your current local time.'],
         ['af_get_joined_player_name', 'info.joined_player_name', 'joined player name', 'info.joined_player_name_tooltip', 'Name of the player from the trigger, for example the one who just joined your instance.'],
+        ['af_get_left_player_name', 'info.left_player_name', 'left player name', 'info.left_player_name_tooltip', 'Name of the player who just left your instance. Empty when the trigger was not a leave.'],
         ['af_get_instance_type_label', 'info.instance_type', 'current instance type', 'info.instance_type_tooltip', 'Instance type you are currently in as readable text, for example Friends+ or Group Public.'],
     ];
     for (const [type, labelKey, labelFb, tipKey, tipFb] of INFO_BLOCKS) {
@@ -771,6 +793,7 @@ function afToolbox() {
         contents: [
             { kind: 'category', name: aft('toolbox.triggers', 'Triggers'), colour: COLOR_TRIGGER, contents: [
                 { kind: 'block', type: 'af_trigger_interval_30s' },
+                { kind: 'block', type: 'af_trigger_interval_seconds' },
                 { kind: 'block', type: 'af_trigger_interval_minutes' },
                 { kind: 'block', type: 'af_trigger_time' },
                 { kind: 'block', type: 'af_trigger_world_change' },
@@ -801,6 +824,8 @@ function afToolbox() {
             ]},
             { kind: 'category', name: aft('toolbox.control', 'Control'), colour: COLOR_CONTROL, contents: [
                 { kind: 'block', type: 'af_wait' },
+                { kind: 'block', type: 'af_repeat' },
+                { kind: 'block', type: 'af_stop_flow' },
             ]},
             { kind: 'category', name: aft('toolbox.time', 'Time'), colour: COLOR_TIME, contents: [
                 { kind: 'block', type: 'af_is_date' },
@@ -822,6 +847,7 @@ function afToolbox() {
                 { kind: 'block', type: 'af_get_ingame_friends' },
                 { kind: 'block', type: 'af_get_time' },
                 { kind: 'block', type: 'af_get_joined_player_name' },
+                { kind: 'block', type: 'af_get_left_player_name' },
                 { kind: 'block', type: 'af_get_instance_type_label' },
             ]},
             { kind: 'category', name: aft('toolbox.friends', 'Friends'), colour: COLOR_PARAM, contents: [
@@ -877,6 +903,89 @@ function afToolbox() {
             ]},
         ],
     };
+}
+
+// Block search — built from each block's own tooltip text (already a plain-language
+// description of what it does) rather than a hand-maintained duplicate list, so new blocks are
+// searchable automatically with no extra bookkeeping. Built lazily and cached since it has to
+// spin up a headless instance of every block type to read its rendered label/tooltip.
+let _afBlockIndexCache = null;
+
+function afBuildBlockIndex() {
+    if (_afBlockIndexCache) return _afBlockIndexCache;
+    if (!afWorkspace || !window.Blockly) return [];
+    const index = [];
+    /* Creating/disposing ~85 headless probe blocks fires real BLOCK_CREATE/DELETE events —
+       reuse the same suppression flag afOnWorkspaceChange already respects elsewhere so this
+       doesn't spam pointless autosaves of the actual flow being edited. */
+    const wasSuppressed = afAutoSaveSuppressed;
+    afAutoSaveSuppressed = true;
+    try {
+        for (const type of Object.keys(window.Blockly.Blocks)) {
+            if (!type.startsWith('af_')) continue;
+            try {
+                const tmp = afWorkspace.newBlock(type);
+                let label = '';
+                for (const input of tmp.inputList) {
+                    for (const field of input.fieldRow) {
+                        if (typeof field.getText === 'function') {
+                            const txt = field.getText();
+                            if (txt) label += (label ? ' ' : '') + txt;
+                        }
+                    }
+                }
+                const tooltip = typeof tmp.tooltip === 'string' ? tmp.tooltip : '';
+                tmp.dispose();
+                index.push({ type, label: label.trim() || type, tooltip });
+            } catch (e) { /* a handful of blocks need context (dropdowns fed by live data) to init cleanly — skip those, they still work fine from their toolbox category */ }
+        }
+    } finally {
+        afAutoSaveSuppressed = wasSuppressed;
+    }
+    _afBlockIndexCache = index;
+    return index;
+}
+
+function afSearchBlocks(query) {
+    const wrap = document.querySelector('.af-block-search-wrap');
+    const resultsEl = document.getElementById('afBlockSearchResults');
+    if (!resultsEl) return;
+    const q = (query || '').trim().toLowerCase();
+    if (!q) { resultsEl.style.display = 'none'; resultsEl.innerHTML = ''; return; }
+
+    const index = afBuildBlockIndex();
+    const matches = index.filter(b =>
+        b.label.toLowerCase().includes(q) ||
+        b.tooltip.toLowerCase().includes(q) ||
+        b.type.toLowerCase().includes(q)
+    ).slice(0, 30);
+
+    resultsEl.style.display = '';
+    resultsEl.innerHTML = matches.length
+        ? matches.map(m => `
+            <div class="af-search-result" data-type="${esc(m.type)}">
+                <div class="af-search-result-label">${esc(m.label)}</div>
+                ${m.tooltip ? `<div class="af-search-result-desc">${esc(m.tooltip)}</div>` : ''}
+            </div>`).join('')
+        : `<div class="af-search-empty">${esc(t('action_flow.search.no_results', 'No matching blocks.'))}</div>`;
+
+    resultsEl.querySelectorAll('.af-search-result').forEach(el => {
+        el.onclick = () => afShowBlockInFlyout(el.dataset.type);
+    });
+
+    if (wrap && !wrap._afOutsideBound) {
+        wrap._afOutsideBound = true;
+        document.addEventListener('mousedown', e => {
+            if (!wrap.contains(e.target)) resultsEl.style.display = 'none';
+        });
+    }
+}
+
+function afShowBlockInFlyout(type) {
+    if (!afWorkspace) return;
+    const flyout = afWorkspace.getFlyout && afWorkspace.getFlyout();
+    if (!flyout) return;
+    flyout.show([{ kind: 'block', type }]);
 }
 
 async function afInitWorkspace() {
@@ -1407,6 +1516,7 @@ function afStartTicker() {
 
 const TRIGGER_TYPES = new Set([
     'af_trigger_interval_30s',
+    'af_trigger_interval_seconds',
     'af_trigger_interval_minutes',
     'af_trigger_world_change',
     'af_trigger_user_joins',
@@ -1433,6 +1543,7 @@ function afTick() {
         mm:        today.getMinutes(),
         dayKey:    today.toISOString().slice(0, 10),
         userIds:   afObservedInstanceUserIds(),
+        users:     afObservedInstanceUsers(),
         myStatus:  (typeof currentVrcUser !== 'undefined' && currentVrcUser?.status) || null,
     };
 
@@ -1447,6 +1558,7 @@ function afTick() {
     }
 
     if (obs.userIds)  afWatchState.lastInstanceUserIds = obs.userIds;
+    if (obs.users)    afWatchState.lastInstanceUsers   = obs.users;
     if (obs.myStatus) afWatchState.lastStatus          = obs.myStatus;
 
     afUpdateRunIndicator();
@@ -1463,6 +1575,15 @@ function afObservedInstanceUserIds() {
     if (currentInstanceData.empty || currentInstanceData.error) return null;
     const arr = Array.isArray(currentInstanceData.users) ? currentInstanceData.users : [];
     return new Set(arr.map(u => u && u.id).filter(Boolean));
+}
+
+function afObservedInstanceUsers() {
+    if (typeof currentInstanceData === 'undefined' || !currentInstanceData) return null;
+    if (currentInstanceData.empty || currentInstanceData.error) return null;
+    const arr = Array.isArray(currentInstanceData.users) ? currentInstanceData.users : [];
+    const map = new Map();
+    for (const u of arr) if (u && u.id) map.set(u.id, u);
+    return map;
 }
 
 function afUpdateRunIndicator() {
@@ -1501,6 +1622,15 @@ function afEvalTrigger(flow, block, obs) {
             }
             return;
         }
+        case 'af_trigger_interval_seconds': {
+            const sec = Math.max(5, Number(f.SEC || 30));
+            const ms  = sec * 1000;
+            if (!ts.lastFiredMs || (obs.now - ts.lastFiredMs) >= ms) {
+                ts.lastFiredMs = obs.now;
+                afFireTrigger(flow, block, 'every ' + sec + 's');
+            }
+            return;
+        }
         case 'af_trigger_interval_minutes': {
             const min = Math.max(1, Number(f.MIN || 1));
             const ms  = min * 60 * 1000;
@@ -1535,14 +1665,14 @@ function afEvalTrigger(flow, block, obs) {
             if (fireJoins) {
                 for (const id of obs.userIds) {
                     if (!afWatchState.lastInstanceUserIds.has(id) && matches(id)) {
-                        afFireTrigger(flow, block, 'user joined: ' + id, afLookupUser(id));
+                        afFireTrigger(flow, block, 'user joined: ' + id, afLookupUser(id), null, 'join');
                     }
                 }
             }
             if (fireLeaves) {
                 for (const id of afWatchState.lastInstanceUserIds) {
                     if (!obs.userIds.has(id) && matches(id)) {
-                        afFireTrigger(flow, block, 'user left: ' + id, afLookupUser(id));
+                        afFireTrigger(flow, block, 'user left: ' + id, afLookupUser(id), null, 'leave');
                     }
                 }
             }
@@ -1565,7 +1695,7 @@ function afEvalTrigger(flow, block, obs) {
     }
 }
 
-function afFireTrigger(flow, block, reason, triggeringUser, notificationId) {
+function afFireTrigger(flow, block, reason, triggeringUser, notificationId, triggerAction) {
     const actionCount = afCountActionsInWorkspace(flow.workspace);
     if (actionCount > FLOW_ACTION_LIMIT) {
         afLog('err', '[' + flow.name + '] ' + aftf('log.over_action_limit', { count: actionCount, limit: FLOW_ACTION_LIMIT }, 'over action limit (' + actionCount + '/' + FLOW_ACTION_LIMIT + '). Flow disabled until trimmed.'));
@@ -1582,7 +1712,12 @@ function afFireTrigger(flow, block, reason, triggeringUser, notificationId) {
     afLog('info', '[' + flow.name + '] ' + aftf('log.trigger_fired', { reason }, 'trigger fired (' + reason + ')'));
     afEnqueueRun(async () => {
         const prevCtx = afContext;
-        afContext = { triggeringUser: triggeringUser || null, triggerKind, notificationId: notificationId || null };
+        afContext = {
+            triggeringUser: triggeringUser || null,
+            triggerKind,
+            notificationId: notificationId || null,
+            triggerAction: triggerAction || null,
+        };
         try {
             await afExecStatements(flow, afInputStatement(block, 'DO'));
         } finally {
@@ -1591,10 +1726,21 @@ function afFireTrigger(flow, block, reason, triggeringUser, notificationId) {
     });
 }
 
+function afInstanceUserName(id) {
+    if (!id) return '';
+    const u = afObservedInstanceUsers()?.get(id) || afWatchState.lastInstanceUsers?.get(id);
+    return u?.displayName || '';
+}
+
 function afLookupUser(id) {
     if (!id) return null;
     const live = typeof vrcFriendsData !== 'undefined' && vrcFriendsData.find(x => x.id === id);
-    return live || { id };
+    if (live) return live;
+
+    const inst = afObservedInstanceUsers()?.get(id) || afWatchState.lastInstanceUsers?.get(id);
+    if (inst && inst.displayName) return inst;
+
+    return { id };
 }
 
 let _afFriendJoinDebounce = {};
@@ -1709,12 +1855,16 @@ function afExtractUserId(payload) {
     return payload.userId || payload.id || payload.senderUserId || (payload.user && payload.user.id) || null;
 }
 
+// Returns true if a af_stop_flow block was hit anywhere in this chain (including nested inside
+// if/if-else/repeat), so the caller can unwind without running anything after it.
 async function afExecStatements(flow, block) {
     let cur = block;
     while (cur) {
-        await afExecAction(flow, cur);
+        const stop = await afExecAction(flow, cur);
+        if (stop) return true;
         cur = cur.next?.block;
     }
+    return false;
 }
 
 function afInstanceTypeLabel(internalType) {
@@ -1762,13 +1912,24 @@ async function afExecAction(flow, block) {
     const f = block.fields || {};
     switch (block.type) {
         case 'af_if': {
-            if (afEvalValue(afInput(block, 'IF0'))) await afExecStatements(flow, afInputStatement(block, 'DO0'));
+            if (afEvalValue(afInput(block, 'IF0'))) return await afExecStatements(flow, afInputStatement(block, 'DO0'));
             return;
         }
         case 'af_if_else': {
             const branch = afEvalValue(afInput(block, 'IF0')) ? 'DO0' : 'ELSE';
-            await afExecStatements(flow, afInputStatement(block, branch));
+            return await afExecStatements(flow, afInputStatement(block, branch));
+        }
+        case 'af_repeat': {
+            const times = Math.max(1, Math.min(1000, Math.round(Number(f.TIMES) || 1)));
+            for (let i = 0; i < times; i++) {
+                const stop = await afExecStatements(flow, afInputStatement(block, 'DO'));
+                if (stop) return true;
+            }
             return;
+        }
+        case 'af_stop_flow': {
+            afLog('info', '[' + flow.name + '] ' + aft('log.stop_flow', 'flow stopped'));
+            return true;
         }
         case 'af_wait': {
             const seconds = Math.max(0, Math.min(300, Number(f.SECONDS) || 0));
@@ -2162,7 +2323,12 @@ function afEvalValue(block) {
         }
         case 'af_get_joined_player_name': {
             const tu = afContext.triggeringUser;
-            return tu ? String(tu.displayName || tu.id || '') : '';
+            return tu ? String(tu.displayName || afInstanceUserName(tu.id) || tu.id || '') : '';
+        }
+        case 'af_get_left_player_name': {
+            if (afContext.triggerAction !== 'leave') return '';
+            const tu = afContext.triggeringUser;
+            return tu ? String(tu.displayName || afInstanceUserName(tu.id) || tu.id || '') : '';
         }
         case 'af_get_instance_type_label': {
             const ci = afCurInst();
@@ -2200,17 +2366,10 @@ function afEvalUser(block) {
     if (!block) return null;
     const f = block.fields || {};
     switch (block.type) {
-        case 'af_friend_obj': {
-            const id = f.FRIEND_ID;
-            if (!id) return null;
-            const live = typeof vrcFriendsData !== 'undefined' && vrcFriendsData.find(x => x.id === id);
-            return live || { id };
-        }
-        case 'af_user_obj': {
-            const id = f.USER_ID;
-            const live = typeof vrcFriendsData !== 'undefined' && vrcFriendsData.find(x => x.id === id);
-            return live || { id };
-        }
+        case 'af_friend_obj':
+            return afLookupUser(f.FRIEND_ID);
+        case 'af_user_obj':
+            return afLookupUser(f.USER_ID);
         case 'af_own_user': {
             return (typeof currentVrcUser !== 'undefined' && currentVrcUser) || null;
         }

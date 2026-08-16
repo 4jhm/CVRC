@@ -126,17 +126,6 @@ public class ChatboxController : IDisposable
                 }
                 break;
 
-            case "chatboxStop":
-                if (_typingIndicatorOn)
-                {
-                    (_chatbox ?? new ChatboxService(_ => { })).SendTypingIndicator(false);
-                    _typingIndicatorOn = false;
-                }
-                _chatbox?.Stop();
-                _chatbox = null;
-                _vroCtrl.UpdateToolStates();
-                break;
-
             case "chatboxDirectSend":
                 {
                     var text = msg["text"]?.ToString() ?? "";
@@ -314,6 +303,11 @@ public class ChatboxController : IDisposable
     {
         if (_chatbox != null)
         {
+            if (_typingIndicatorOn)
+            {
+                _chatbox.SendTypingIndicator(false);
+                _typingIndicatorOn = false;
+            }
             _chatbox.Stop();
             _chatbox = null;
             _core.SendToJS("chatboxUpdate", new { enabled = false });

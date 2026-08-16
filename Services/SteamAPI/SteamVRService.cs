@@ -587,11 +587,6 @@ namespace VRCNext.Services
             _log("[SteamVR] Reset");
         }
 
-        public void SetOffset(float x, float y, float z)
-        {
-            ApplyOffset(new Vector3(x, y, z), true);
-        }
-
         private Vector3 GetRawPos(uint i)
         {
             if (i < _rawPoses.Length && _rawPoses[i].bPoseIsValid)

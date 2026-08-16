@@ -87,10 +87,6 @@ public class FriendFetchController
                 Start(msg["force"]?.Value<bool>() ?? false);
                 break;
 
-            case "vrcFriendFetchCancel":
-                _cts?.Cancel();
-                PushState();
-                break;
         }
         await Task.CompletedTask;
     }

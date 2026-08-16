@@ -265,11 +265,6 @@ function updateFavWorldGroupHeader() {
     header.style.display = anyVisible ? 'flex' : 'none';
 }
 
-function _favGroupVisLabel(vis) {
-    if (vis === 'public')  return t('worlds.favorites.visibility.public',  'Visible for everyone');
-    if (vis === 'friends') return t('worlds.favorites.visibility.friends', 'Visible for friends');
-    return t('worlds.favorites.visibility.private', 'Visible only to you');
-}
 
 function _favGroupVisDropdown(groupName, groupType, currentVis) {
     const opts = [

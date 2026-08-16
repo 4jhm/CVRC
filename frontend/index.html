@@ -133,7 +133,7 @@
     <div class="sidebar" id="sidebarEl">
         <div class="sidebar-resizer" id="sidebarResizer" data-side="left"></div>
         <div class="sidebar-sep"></div>
-        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.15</div></div></div>
+        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.16</div></div></div>
         <div class="nav vrcn-scrollbar" id="navEl"></div>
         <div class="play-area"><button class="btn-play" onclick="playVRChat()" data-i18n-title="sidebar.play_vrchat" title="Play VRChat"><span class="play-icon-wrap"><span class="msi play-icon">play_arrow</span></span><span class="play-copy pl"><strong class="play-title" data-i18n="sidebar.play_vrchat">Play VRChat</strong><span class="play-sub" id="playSubText"></span></span><span class="msi play-arrow pl">chevron_right</span></button></div>
     </div>
@@ -273,7 +273,6 @@
                     <div class="tb-clock" id="tbClock" style="display:none;"><span class="tb-clock-time" id="clock">00:00</span><span class="tb-clock-date" id="clockDate"></span></div>
                 </div>
                 </div>
-                <div id="tbModalCrumbs"></div>
             </div>
             <div id="tb-drag">
                 <div id="dbMigrationIndicator" style="display:none;flex:0 0 auto;align-items:center;gap:8px;margin:0 8px;min-width:140px;max-width:200px;">
@@ -327,8 +326,6 @@
                     </svg>
                 </button>
                 </div>
-                <div id="tbModalActions"></div>
-                <div class="tb-sep" id="tbModalActionsSep" data-windows-only></div>
                 <button class="tb-win-btn" data-windows-only title="Minimize" data-i18n-title="tb.win.minimize" onclick="sendToCS({action:'windowMinimize'})">
                     <svg width="12" height="2" viewBox="0 0 12 2"><rect width="12" height="1.5" y="0.25" fill="currentColor"/></svg>
                 </button>
@@ -863,6 +860,7 @@
             'modules/tools/osc-tool/osc-tool.js',
             'modules/timeline/list-table.js',
             'modules/timeline/timeline.js',
+            'modules/timeline/timeline-search.js',
             'modules/timeline/game-log.js',
             'modules/timeline/instance-chart.js',
             'modules/rewind/rewind.js',
@@ -944,6 +942,7 @@
             if (typeof sendToCS === 'function') {
                 sendToCS({ action: 'ready' });
                 sendToCS({ action: 'kxdGetDevices' });
+                sendToCS({ action: 'vfGetDevices' });
             }
             if (typeof navApplyStartPage === 'function') navApplyStartPage();
             const _splashBar = document.getElementById('vrcnSplashBar');

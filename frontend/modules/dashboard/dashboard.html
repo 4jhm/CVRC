@@ -19,52 +19,34 @@
                             </div>
                         </div>
                         <div class="dash-welcome" id="dashWelcome" data-i18n="dashboard.welcome.default">Welcome!</div>
-                        <div class="dash-sub" id="dashSub" data-i18n="dashboard.sub.connect_world">Connect to VRChat to see your world</div>
+                        <div class="dash-sub" id="dashSub">Connect to VRChat to see your world</div>
+                        <div class="dash-hero-widgets">
+                            <div class="dash-hero-slot" id="dashHeroLeft" data-side="left"></div>
+                            <div class="dash-hero-slot" id="dashHeroRight" data-side="right"></div>
+                        </div>
+                        <button class="dash-hero-arrow" id="dashHeroArrow" onclick="dashHeroScrollDown()"><span class="msi">expand_more</span></button>
                     </div>
                 </div>
                 <div id="dashSectionsContainer">
-                    <div class="dash-section-wrap" data-section="vrchat_news">
-                        <div class="dash-section-label">
-                            <span data-i18n="dashboard.section.vrchat_news">VRCHAT NEWS</span>
-                            <button class="mi-refresh-btn" id="dashVrcNewsRefreshBtn" onclick="refreshDashVrcNews()" title="Refresh">&#8635;</button>
-                        </div>
-                        <div class="dash-news-grid" id="dashVrcNewsGrid"></div>
-                    </div>
                     <div class="dash-section-wrap" data-section="my_instances">
-                        <div class="dash-section-label" id="dashMyInstancesLabel" style="display:none;"><span data-i18n="dashboard.section.my_instances">YOUR INSTANCES</span><button class="mi-refresh-btn" id="miRefreshBtn" onclick="refreshMyInstances()" title="Refresh instances" data-i18n-title="dashboard.section.refresh_instances">&#8635;</button></div>
+                        <div class="dash-section-label" id="dashMyInstancesLabel" style="display:none;"><span data-i18n="dashboard.section.my_instances">YOUR INSTANCES</span><button class="mi-refresh-btn" id="miRefreshBtn" onclick="refreshMyInstances()" title="Refresh instances" data-i18n-title="dashboard.section.refresh_instances"><span class="msi">refresh</span></button></div>
                         <div class="dash-worlds-grid" id="dashMyInstances" style="display:none;"></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="friend_locations">
-                        <div class="dash-section-label"><span data-i18n="dashboard.section.friend_locations">FRIENDS LOCATIONS</span></div>
-                        <div class="dash-worlds-grid" id="dashFavWorlds"><div class="empty-msg" data-i18n="dashboard.section.friend_locations_empty">Login to VRChat to see where friends are</div></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="discovery">
-                        <div class="disc-tab-row">
-                            <button class="vrcn-dashboard-button disc-tab active" data-tab="popular" onclick="setDiscoveryTab('popular')" data-i18n="dashboard.discovery.popular">POPULAR WORLDS</button>
-                            <span class="disc-tab-sep">|</span>
-                            <button class="vrcn-dashboard-button disc-tab" data-tab="active" onclick="setDiscoveryTab('active')" data-i18n="dashboard.discovery.active">VERY ACTIVE</button>
-                            <span class="disc-tab-sep">|</span>
-                            <button class="vrcn-dashboard-button disc-tab" data-tab="recent" onclick="setDiscoveryTab('recent')" data-i18n="dashboard.discovery.recent">RECENTLY VISITED</button>
-                            <span class="disc-pagination" id="discPagination" style="display:none;">
-                                <button class="disc-page-btn" id="discPrevBtn" onclick="discPageChange(-1)"><span class="msi">chevron_left</span></button>
-                                <span class="disc-page-label" id="discPageLabel">1 / 4</span>
-                                <button class="disc-page-btn" id="discNextBtn" onclick="discPageChange(1)"><span class="msi">chevron_right</span></button>
-                            </span>
-                        </div>
-                        <div class="dash-worlds-grid" id="dashDiscoveryGrid"></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="friend_activity">
-                        <div class="dash-section-label"><span data-i18n="dashboard.section.friend_activity">FRIENDS ACTIVITY</span></div>
-                        <div class="dash-friends-feed" id="dashFriendsFeed"><div class="empty-msg" data-i18n="dashboard.section.friend_activity_empty">Login to VRChat to see friends</div></div>
                     </div>
                     <div class="dash-section-wrap" data-section="friend_locations_small">
                         <div class="dash-section-label"><span data-i18n="dashboard.section.friend_locations">FRIENDS LOCATIONS</span></div>
                         <div class="dash-friends-feed" id="dashFriendLocSmallShelf"></div>
                     </div>
+                    <div class="dash-section-wrap" data-section="recently_visited">
+                        <div class="dash-section-label">
+                            <span data-i18n="dashboard.section.recently_visited">RECENTLY VISITED</span>
+                            <button class="mi-refresh-btn" id="dashRecentlyVisitedRefreshBtn" onclick="refreshDashRecentlyVisited()" title="Refresh"><span class="msi">refresh</span></button>
+                        </div>
+                        <div class="vrcn-dash-fav-shelf" id="dashRecentlyVisitedShelf"></div>
+                    </div>
                     <div class="dash-section-wrap" data-section="fav_worlds">
                         <div class="dash-section-label">
                             <span data-i18n="dashboard.section.fav_worlds">FAVORITE WORLDS</span>
-                            <button class="mi-refresh-btn" id="dashFavWorldsRefreshBtn" onclick="refreshDashFavWorlds()" title="Refresh">&#8635;</button>
+                            <button class="mi-refresh-btn" id="dashFavWorldsRefreshBtn" onclick="refreshDashFavWorlds()" title="Refresh"><span class="msi">refresh</span></button>
                             <button class="dash-section-seeall" onclick="showTab(1)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
                         </div>
                         <div class="vrcn-dash-fav-shelf" id="dashFavWorldsShelf"></div>
@@ -72,7 +54,7 @@
                     <div class="dash-section-wrap" data-section="fav_avatars">
                         <div class="dash-section-label">
                             <span data-i18n="dashboard.section.fav_avatars">FAVORITE AVATARS</span>
-                            <button class="mi-refresh-btn" id="dashFavAvatarsRefreshBtn" onclick="refreshDashFavAvatars()" title="Refresh">&#8635;</button>
+                            <button class="mi-refresh-btn" id="dashFavAvatarsRefreshBtn" onclick="refreshDashFavAvatars()" title="Refresh"><span class="msi">refresh</span></button>
                             <button class="dash-section-seeall" onclick="showTab(4);setTimeout(()=>setAvatarFilter('favorites'),80)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
                         </div>
                         <div class="vrcn-dash-fav-shelf" id="dashFavAvatarsShelf"></div>
@@ -80,64 +62,42 @@
                     <div class="dash-section-wrap" data-section="own_avatars">
                         <div class="dash-section-label">
                             <span data-i18n="dashboard.section.own_avatars">MY AVATARS</span>
-                            <button class="mi-refresh-btn" id="dashOwnAvatarsRefreshBtn" onclick="refreshDashOwnAvatars()" title="Refresh">&#8635;</button>
+                            <button class="mi-refresh-btn" id="dashOwnAvatarsRefreshBtn" onclick="refreshDashOwnAvatars()" title="Refresh"><span class="msi">refresh</span></button>
                             <button class="dash-section-seeall" onclick="showTab(4);setTimeout(()=>setAvatarFilter('own'),80)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
                         </div>
                         <div class="vrcn-dash-fav-shelf" id="dashOwnAvatarsShelf"></div>
+                    </div>
+                    <div class="dash-section-wrap" data-section="popular_worlds">
+                        <div class="dash-section-label">
+                            <span data-i18n="dashboard.section.popular_worlds">POPULAR WORLDS</span>
+                        </div>
+                        <div class="dash-rank-grid" id="dashPopularWorldsShelf"></div>
+                    </div>
+                    <div class="dash-section-wrap" data-section="active_worlds">
+                        <div class="dash-section-label">
+                            <span data-i18n="dashboard.section.active_worlds">VERY ACTIVE WORLDS</span>
+                        </div>
+                        <div class="dash-rank-grid" id="dashActiveWorldsShelf"></div>
                     </div>
                     <div class="dash-section-wrap" data-section="recent_photos">
                         <div class="dash-section-label">
                             <span data-i18n="dashboard.section.recent_photos">RECENT PHOTOS</span>
                             <button class="dash-section-seeall" onclick="showTab(7)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
                         </div>
-                        <div class="dash-photo-grid" id="dashRecentPhotosShelf"></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="recently_visited">
-                        <div class="dash-section-label">
-                            <span data-i18n="dashboard.section.recently_visited">RECENTLY VISITED</span>
-                            <button class="mi-refresh-btn" id="dashRecentlyVisitedRefreshBtn" onclick="refreshDashRecentlyVisited()" title="Refresh">&#8635;</button>
-                        </div>
-                        <div class="vrcn-dash-fav-shelf" id="dashRecentlyVisitedShelf"></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="popular_worlds">
-                        <div class="dash-section-label">
-                            <span data-i18n="dashboard.section.popular_worlds">POPULAR WORLDS</span>
-                        </div>
-                        <div class="vrcn-dash-fav-shelf" id="dashPopularWorldsShelf"></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="active_worlds">
-                        <div class="dash-section-label">
-                            <span data-i18n="dashboard.section.active_worlds">VERY ACTIVE WORLDS</span>
-                        </div>
-                        <div class="vrcn-dash-fav-shelf" id="dashActiveWorldsShelf"></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="groups">
-                        <div class="dash-section-label">
-                            <span data-i18n="dashboard.section.your_groups">YOUR GROUPS</span>
-                            <button class="dash-section-seeall" onclick="showTab(2)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
-                        </div>
-                        <div class="vrcn-dash-group-activity" id="dashGroupActivityGrid"></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="group_activity">
-                        <div class="dash-section-label">
-                            <span data-i18n="dashboard.section.group_activity">GROUP ACTIVITY</span>
-                            <button class="mi-refresh-btn" id="dashGroupActivityRefreshBtn" onclick="refreshDashGroupInstances()" title="Refresh">&#8635;</button>
-                            <button class="dash-section-seeall" onclick="showTab(2)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
-                        </div>
-                        <div class="dash-worlds-grid" id="dashGroupActivityCards"></div>
+                        <div class="dash-photo-grid vrcn-dash-fav-shelf" id="dashRecentPhotosShelf"></div>
                     </div>
                     <div class="dash-section-wrap" data-section="group_activity_small">
                         <div class="dash-section-label">
                             <span data-i18n="dashboard.section.group_activity">GROUP ACTIVITY</span>
-                            <button class="mi-refresh-btn" id="dashGroupActivitySmallRefreshBtn" onclick="refreshDashGroupInstances()" title="Refresh">&#8635;</button>
-                            <button class="dash-section-seeall" onclick="showTab(2)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
+                            <button class="mi-refresh-btn" id="dashGroupActivitySmallRefreshBtn" onclick="refreshDashGroupInstances()" title="Refresh"><span class="msi">refresh</span></button>
+                            <button class="dash-section-seeall" onclick="showTab(2);setTimeout(()=>{if(typeof setGroupFilter==='function')setGroupFilter('instances');},80)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
                         </div>
                         <div class="dash-friends-feed" id="dashGroupActivityShelf"></div>
                     </div>
                     <div class="dash-section-wrap" data-section="upcoming_events">
                         <div class="dash-section-label">
                             <span data-i18n="dashboard.section.upcoming_events">UPCOMING EVENTS</span>
-                            <button class="mi-refresh-btn" id="dashUpcomingEventsRefreshBtn" onclick="refreshDashUpcomingEventsManual()" title="Refresh">&#8635;</button>
+                            <button class="mi-refresh-btn" id="dashUpcomingEventsRefreshBtn" onclick="refreshDashUpcomingEventsManual()" title="Refresh"><span class="msi">refresh</span></button>
                             <button class="dash-section-seeall" onclick="showTab(17)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
                         </div>
                         <div id="dashUpcomingEventsGrid"></div>
@@ -152,12 +112,8 @@
                     <div class="dash-section-wrap" data-section="friends_recent_activity">
                         <div class="dash-section-label">
                             <span data-i18n="dashboard.section.friends_recent_activity">FRIENDS RECENT ACTIVITY</span>
-                            <button class="dash-section-seeall" onclick="showTab(12);setTimeout(()=>{if(typeof setTlModeFriends==='function')setTlModeFriends();},80)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
+                            <button class="dash-section-seeall" onclick="showTab(12);setTimeout(()=>{if(typeof setTlMode==='function')setTlMode('friends');},80)" data-i18n="dashboard.section.see_all">SEE ALL →</button>
                         </div>
                         <div id="dashFriendsRecentTl"></div>
-                    </div>
-                    <div class="dash-section-wrap" data-section="quick_controls">
-                        <div class="dash-section-label" data-i18n="dashboard.section.quick_controls">QUICK CONTROLS</div>
-                        <div class="dash-qc-grid" id="dashQcGrid"></div>
                     </div>
                 </div>

@@ -130,24 +130,6 @@ public class VRCNPlusController
                 return;
             }
 
-            case "vrcnPlusDeleteTheme": {
-                var userId = msg["userId"]?.ToString() ?? "";
-                if (!Database.IsValidVrcUserId(userId))
-                {
-                    _core.SendToJS("log", new { msg = "[VRCN+] Delete rejected: invalid userId", color = "err" });
-                    _core.SendToJS("vrcnPlusSaveResult", new { ok = false, error = "Invalid userId." });
-                    return;
-                }
-                var (ok, error) = await _service.DeleteRemoteThemeAsync(userId);
-                if (ok)
-                    _core.SendToJS("log", new { msg = "[VRCN+] Profile theme deleted", color = "ok" });
-                else
-                    _core.SendToJS("log", new { msg = $"[VRCN+] Delete failed: {error}", color = "err" });
-                _core.SendToJS("vrcnPlusSaveResult", new { ok, error, userId, theme = (object?)null });
-                if (ok)
-                    _core.SendToJS("vrcnPlusTheme", new { userId, theme = (object?)null, source = "self" });
-                return;
-            }
         }
     }
 }

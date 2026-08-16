@@ -839,12 +839,6 @@ namespace VRCNext.Services
         // Theme colors
         private OverlayTheme _theme = OverlayTheme.FromName("vrcn");
 
-        public void SetTheme(string name)
-        {
-            _theme = OverlayTheme.FromName(name);
-            _dirty = true;
-        }
-
         // called from JS applyColors, handles both named themes and auto color
         public void SetThemeColors(Dictionary<string, string> colors)
         {
@@ -988,7 +982,7 @@ namespace VRCNext.Services
                     var overlayDesc = new Texture2DDescription
                     {
                         Width = W * RenderScale, Height = TexH * RenderScale, MipLevels = 1, ArraySize = 1,
-                        Format = Format.R8G8B8A8_UNorm,   // RGBA — safest for SteamVR
+                        Format = Format.B8G8R8A8_UNorm,
                         SampleDescription = new SampleDescription(1, 0),
                         Usage = ResourceUsage.Default,
                         BindFlags = BindFlags.ShaderResource,
@@ -999,7 +993,7 @@ namespace VRCNext.Services
                     var stagingDesc = new Texture2DDescription
                     {
                         Width = W * RenderScale, Height = TexH * RenderScale, MipLevels = 1, ArraySize = 1,
-                        Format = Format.R8G8B8A8_UNorm,
+                        Format = Format.B8G8R8A8_UNorm,
                         SampleDescription = new SampleDescription(1, 0),
                         Usage = ResourceUsage.Staging,
                         CPUAccessFlags = CpuAccessFlags.Write,
@@ -1032,7 +1026,7 @@ namespace VRCNext.Services
                             _toastOverlayTex = _d3dDevice.CreateTexture2D(new Texture2DDescription
                             {
                                 Width = TW, Height = TH_FULL, MipLevels = 1, ArraySize = 1,
-                                Format = Format.R8G8B8A8_UNorm,
+                                Format = Format.B8G8R8A8_UNorm,
                                 SampleDescription = new SampleDescription(1, 0),
                                 Usage = ResourceUsage.Default,
                                 BindFlags = BindFlags.ShaderResource,
@@ -1040,7 +1034,7 @@ namespace VRCNext.Services
                             _toastStagingTex = _d3dDevice.CreateTexture2D(new Texture2DDescription
                             {
                                 Width = TW, Height = TH_FULL, MipLevels = 1, ArraySize = 1,
-                                Format = Format.R8G8B8A8_UNorm,
+                                Format = Format.B8G8R8A8_UNorm,
                                 SampleDescription = new SampleDescription(1, 0),
                                 Usage = ResourceUsage.Staging,
                                 CPUAccessFlags = CpuAccessFlags.Write,
@@ -1234,12 +1228,6 @@ namespace VRCNext.Services
         public void Toggle()
         {
             if (IsVisible) Hide(); else Show();
-        }
-
-        public void SetActiveTab(int tab)
-        {
-            _activeTab = tab < 1 ? 1 : tab;
-            _dirty = true;
         }
 
         public void ApplyConfig(bool attachLeft, bool attachHand,
@@ -3155,8 +3143,17 @@ namespace VRCNext.Services
             g.SetClip(avPath, System.Drawing.Drawing2D.CombineMode.Intersect);
             if (avatar != null)
             {
+                var avDest = new Rectangle(avX, avY, avSize, avSize);
+                var avSrc  = avatar;
+                var scaled = GetCoverVariant(g, avatar, avDest, new Rectangle(0, 0, avatar.Width, avatar.Height),
+                    System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic, false);
+                if (scaled != null) avSrc = scaled;
+
                 if (fade >= 0.99f)
-                    g.DrawImage(avatar, new Rectangle(avX, avY, avSize, avSize));
+                {
+                    if (!ReferenceEquals(avSrc, avatar)) DrawCoverVariant(g, avSrc, avDest);
+                    else g.DrawImage(avatar, avDest);
+                }
                 else
                 {
                     using var ia = new System.Drawing.Imaging.ImageAttributes();
@@ -3166,8 +3163,7 @@ namespace VRCNext.Services
                         new float[] { 0,0,0,0,1 }
                     };
                     ia.SetColorMatrix(new System.Drawing.Imaging.ColorMatrix(cm));
-                    g.DrawImage(avatar, new Rectangle(avX, avY, avSize, avSize),
-                        0, 0, avatar.Width, avatar.Height, GraphicsUnit.Pixel, ia);
+                    g.DrawImage(avSrc, avDest, 0, 0, avSrc.Width, avSrc.Height, GraphicsUnit.Pixel, ia);
                 }
             }
             else
@@ -3242,19 +3238,24 @@ namespace VRCNext.Services
             if (_toastBitmap == null || OpenVR.Overlay == null || _toastHandle == 0) return;
 
             var bmpRect = new Rectangle(0, 0, TW, TH_FULL);
+            bool useD3D = _d3dContext != null && _toastStagingTex != null && _toastOverlayTex != null;
             var bmpData = _toastBitmap.LockBits(bmpRect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
             try
             {
-                int bytes = TW * TH_FULL * 4;
-                Marshal.Copy(bmpData.Scan0, _toastUploadBuf, 0, bytes);
-                for (int i = 0; i < bytes; i += 4)
-                    (_toastUploadBuf[i], _toastUploadBuf[i + 2]) = (_toastUploadBuf[i + 2], _toastUploadBuf[i]);
+                Marshal.Copy(bmpData.Scan0, _toastUploadBuf, 0, TW * TH_FULL * 4);
             }
             finally { _toastBitmap.UnlockBits(bmpData); }
 
-            if (_d3dContext != null && _toastStagingTex != null && _toastOverlayTex != null)
+            if (!useD3D)
             {
-                var mapped = _d3dContext.Map(_toastStagingTex, 0, MapMode.Write,
+                int bytes = TW * TH_FULL * 4;
+                for (int i = 0; i < bytes; i += 4)
+                    (_toastUploadBuf[i], _toastUploadBuf[i + 2]) = (_toastUploadBuf[i + 2], _toastUploadBuf[i]);
+            }
+
+            if (useD3D)
+            {
+                var mapped = _d3dContext!.Map(_toastStagingTex!, 0, MapMode.Write,
                     Vortice.Direct3D11.MapFlags.None);
                 try
                 {
@@ -3263,13 +3264,13 @@ namespace VRCNext.Services
                         Marshal.Copy(_toastUploadBuf, y * rowBytes,
                             IntPtr.Add(mapped.DataPointer, (int)(y * mapped.RowPitch)), rowBytes);
                 }
-                finally { _d3dContext.Unmap(_toastStagingTex, 0); }
+                finally { _d3dContext.Unmap(_toastStagingTex!, 0); }
 
-                _d3dContext.CopyResource(_toastOverlayTex, _toastStagingTex);
+                _d3dContext.CopyResource(_toastOverlayTex!, _toastStagingTex!);
 
                 var tex = new Valve.VR.Texture_t
                 {
-                    handle      = _toastOverlayTex.NativePointer,
+                    handle      = _toastOverlayTex!.NativePointer,
                     eType       = ETextureType.DirectX,
                     eColorSpace = EColorSpace.Auto,
                 };
@@ -3348,12 +3349,8 @@ namespace VRCNext.Services
                 g.SetClip(cardClip, System.Drawing.Drawing2D.CombineMode.Intersect);
 
                 // Downscale → upscale = cheap blur
-                using var tiny = new Bitmap(64, 48);
-                using (var tg = Graphics.FromImage(tiny))
-                {
-                    tg.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
-                    tg.DrawImage(_albumArt!, 0, 0, 64, 48);
-                }
+                var tiny = GetCoverVariantAt(_albumArt!, new Rectangle(0, 0, _albumArt!.Width, _albumArt.Height),
+                    64, 48, System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear, false)!;
                 var prevMode = g.InterpolationMode;
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
                 g.DrawImage(tiny, new Rectangle(0, HeaderH, W, H));
@@ -3672,25 +3669,34 @@ namespace VRCNext.Services
             using (var ringBr = new SolidBrush(ring))
                 g.FillEllipse(ringBr, cx - 2, cy - 2, size + 4, size + 4);
 
+            var dest = new Rectangle(cx, cy, size, size);
+            if (img != null)
+            {
+                var srcRect = CoverSrcRect(img, dest);
+                var round = GetCoverVariant(g, img, dest, srcRect,
+                    System.Drawing.Drawing2D.InterpolationMode.Bilinear, true);
+                if (round != null) { DrawCoverVariant(g, round, dest); return; }
+            }
+
             var oldClip = g.Clip;
-            using var path = new System.Drawing.Drawing2D.GraphicsPath();
+            using var path = new GraphicsPath();
             path.AddEllipse(cx, cy, size, size);
-            g.SetClip(path, System.Drawing.Drawing2D.CombineMode.Intersect);
+            g.SetClip(path, CombineMode.Intersect);
             if (img != null)
             {
                 var prevMode = g.InterpolationMode;
                 g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bilinear;
-                DrawImageCover(g, img, new Rectangle(cx, cy, size, size));
+                DrawImageCover(g, img, dest);
                 g.InterpolationMode = prevMode;
-                g.SetClip(oldClip, System.Drawing.Drawing2D.CombineMode.Replace);
+                g.SetClip(oldClip, CombineMode.Replace);
             }
             else
             {
                 using var bg = new SolidBrush(_theme.BgHover);
                 g.FillPath(bg, path);
-                g.SetClip(oldClip, System.Drawing.Drawing2D.CombineMode.Replace);
+                g.SetClip(oldClip, CombineMode.Replace);
                 string init = name.Length > 0 ? name[0].ToString().ToUpper() : "?";
-                using var f = new Font("Segoe UI", size * 0.46f, FontStyle.Bold, GraphicsUnit.Pixel);
+                var f = GetCachedFont("Segoe UI", size * 0.46f, FontStyle.Bold, GraphicsUnit.Pixel);
                 using var b = new SolidBrush(_theme.Tx2);
                 var fmt = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
                 g.DrawString(init, f, b, new RectangleF(cx, cy, size, size), fmt);
@@ -3793,8 +3799,8 @@ namespace VRCNext.Services
             var ellip = new StringFormat { Trimming = StringTrimming.EllipsisCharacter, FormatFlags = StringFormatFlags.NoWrap };
 
             string chip = wg.Instances.Count + " Inst.";
-            using (var chipFont = new Font("Segoe UI", 7.5f, FontStyle.Bold, GraphicsUnit.Point))
             {
+                var chipFont = GetCachedFont("Segoe UI", 7.5f, FontStyle.Bold, GraphicsUnit.Point);
                 var chipSz = g.MeasureString(chip, chipFont);
                 float chipW = chipSz.Width + 10f, chipH = 14f;
                 float chipX = tr - chipW, chipY = y + 9f;
@@ -3806,15 +3812,13 @@ namespace VRCNext.Services
                 tr = (int)chipX - 6;
             }
 
-            using (var nameFont = new Font("Segoe UI", 9.5f, FontStyle.Bold, GraphicsUnit.Point))
             using (var nameBr = new SolidBrush(th.Tx1))
-                g.DrawString(wg.WorldName, nameFont, nameBr,
+                g.DrawString(wg.WorldName, GetCachedFont("Segoe UI", 9.5f, FontStyle.Bold, GraphicsUnit.Point), nameBr,
                     new RectangleF(tx, y + 8f, Math.Max(tr - tx, 10f), 16f), ellip);
 
             var names = string.Join(", ", wg.All.Take(3).Select(e => e.FriendName));
-            using (var nmFont = new Font("Segoe UI", 8f, FontStyle.Regular, GraphicsUnit.Point))
             using (var nmBr = new SolidBrush(th.Tx3))
-                g.DrawString(names, nmFont, nmBr,
+                g.DrawString(names, GetCachedFont("Segoe UI", 8f, FontStyle.Regular, GraphicsUnit.Point), nmBr,
                     new RectangleF(tx, y + 26f, Math.Max(x + w - 8 - tx, 10f), 14f), ellip);
 
             const int avSz = 20;
@@ -3829,9 +3833,9 @@ namespace VRCNext.Services
             int more = wg.All.Count - shown;
             if (more > 0)
             {
-                using var mf = new Font("Segoe UI", 8f, FontStyle.Bold, GraphicsUnit.Point);
                 using var mb = new SolidBrush(th.Accent);
-                g.DrawString("+" + more, mf, mb, new RectangleF(avX + 11f, avY + 3f, 40f, 14f));
+                g.DrawString("+" + more, GetCachedFont("Segoe UI", 8f, FontStyle.Bold, GraphicsUnit.Point), mb,
+                    new RectangleF(avX + 11f, avY + 3f, 40f, 14f));
             }
         }
 
@@ -4775,38 +4779,6 @@ namespace VRCNext.Services
             _                    => _theme.Tx2,
         };
 
-        private static string EventTypeLabel(string evType) => evType switch
-        {
-            "friend_online"      => "Online",
-            "friend_offline"     => "Offline",
-            "friend_gps"         => "Location",
-            "friend_status"      => "Status",
-            "friend_statusdesc"  => "Status Text",
-            "friend_bio"         => "Bio",
-            "friend_added"       => "Added",
-            "friend_removed"     => "Removed",
-            "notif_friendreq"    => "Friend Req",
-            "notif_invite"       => "Invite",
-            "notif_groupinvite"  => "Group Inv",
-            _                    => "",
-        };
-
-        private static string EventBadgeLabel(string evType, string evText) => evType switch
-        {
-            "friend_online"      => "Online",
-            "friend_offline"     => "Offline",
-            "friend_gps"         => evText,
-            "friend_status"      => evText,
-            "friend_statusdesc"  => evText,
-            "friend_bio"         => evText,
-            "friend_added"       => "Friend added",
-            "friend_removed"     => "Removed",
-            "notif_friendreq"    => "Friend Request",
-            "notif_invite"       => evText,
-            "notif_groupinvite"  => evText,
-            _                    => evText,
-        };
-
         private void DrawMusicPlayer(Graphics g)
         {
             var th        = _theme;
@@ -4839,7 +4811,11 @@ namespace VRCNext.Services
                 using var artPath = RoundedRectPath(artX, artY, artSize, artSize, 14);
                 var oldClip = g.Clip;
                 g.SetClip(artPath, System.Drawing.Drawing2D.CombineMode.Intersect);
-                g.DrawImage(_albumArt, artRect);
+                var artScaled = GetCoverVariant(g, _albumArt, artRect,
+                    new Rectangle(0, 0, _albumArt.Width, _albumArt.Height),
+                    System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic, false);
+                if (artScaled != null) DrawCoverVariant(g, artScaled, artRect);
+                else g.DrawImage(_albumArt, artRect);
                 g.SetClip(oldClip, System.Drawing.Drawing2D.CombineMode.Replace);
             }
             else
@@ -5008,37 +4984,42 @@ namespace VRCNext.Services
         {
             if (_bitmap == null || OpenVR.Overlay == null || _overlayHandle == 0) return;
 
-            // 1. Copy GDI+ bitmap (BGRA) → _uploadBuf with R↔B swap for R8G8B8A8_UNorm
             int RW = W * RenderScale, RH = TexH * RenderScale;
             var bmpRect = new Rectangle(0, 0, RW, RH);
+            bool useD3D = _d3dContext != null && _stagingTex != null && _overlayTex != null;
             var bmpData = _bitmap.LockBits(bmpRect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
             try
             {
-                int bytes = RW * RH * 4;
-                Marshal.Copy(bmpData.Scan0, _uploadBuf, 0, bytes);
-                for (int i = 0; i < bytes; i += 4)
-                    (_uploadBuf[i], _uploadBuf[i + 2]) = (_uploadBuf[i + 2], _uploadBuf[i]);
+                Marshal.Copy(bmpData.Scan0, _uploadBuf, 0, RW * RH * 4);
             }
             finally { _bitmap.UnlockBits(bmpData); }
 
-            if (_d3dContext != null && _stagingTex != null && _overlayTex != null)
+            int rowBytes = RW * 4;
+            if (useD3D)
             {
-                // 2. Map staging texture (CPU write), copy RGBA pixels row by row
-                var mapped = _d3dContext.Map(_stagingTex, 0, MapMode.Write,
+                var mapped = _d3dContext!.Map(_stagingTex!, 0, MapMode.Write,
                     Vortice.Direct3D11.MapFlags.None);
                 try
                 {
-                    int rowBytes = RW * 4;
                     for (int y = 0; y < RH; y++)
                         Marshal.Copy(_uploadBuf, y * rowBytes,
                             IntPtr.Add(mapped.DataPointer, (int)(y * mapped.RowPitch)), rowBytes);
                 }
-                finally { _d3dContext.Unmap(_stagingTex, 0); }
+                finally { _d3dContext.Unmap(_stagingTex!, 0); }
+            }
+            else
+            {
+                int bytes = RW * RH * 4;
+                for (int i = 0; i < bytes; i += 4)
+                    (_uploadBuf[i], _uploadBuf[i + 2]) = (_uploadBuf[i + 2], _uploadBuf[i]);
+            }
 
-                _d3dContext.CopyResource(_overlayTex, _stagingTex);
+            if (useD3D)
+            {
+                _d3dContext!.CopyResource(_overlayTex!, _stagingTex!);
                 var tex = new Valve.VR.Texture_t
                 {
-                    handle      = _overlayTex.NativePointer,
+                    handle      = _overlayTex!.NativePointer,
                     eType       = ETextureType.DirectX,
                     eColorSpace = EColorSpace.Auto,
                 };
@@ -5054,23 +5035,99 @@ namespace VRCNext.Services
         }
 
         // GDI+ helpers
-        private static void DrawImageCover(Graphics g, Bitmap img, Rectangle dest)
+        private static readonly Dictionary<(string, float, FontStyle, GraphicsUnit), Font> _fontCache = new();
+
+        private static Font GetCachedFont(string family, float size, FontStyle style, GraphicsUnit unit = GraphicsUnit.Point)
+        {
+            var key = (family, size, style, unit);
+            lock (_fontCache)
+            {
+                if (!_fontCache.TryGetValue(key, out var f))
+                {
+                    f = new Font(family, size, style, unit);
+                    _fontCache[key] = f;
+                }
+                return f;
+            }
+        }
+
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<Bitmap, Dictionary<long, Bitmap>> _coverVariants = new();
+
+        private static Rectangle CoverSrcRect(Bitmap img, Rectangle dest)
         {
             float srcAspect = (float)img.Width / img.Height;
             float dstAspect = (float)dest.Width / dest.Height;
-            Rectangle srcRect;
             if (srcAspect > dstAspect)
             {
                 // Source wider → crop left/right
                 int srcW = (int)(img.Height * dstAspect);
-                srcRect = new Rectangle((img.Width - srcW) / 2, 0, srcW, img.Height);
+                return new Rectangle((img.Width - srcW) / 2, 0, srcW, img.Height);
             }
-            else
+            // Source taller → crop top/bottom
+            int srcH = (int)(img.Width / dstAspect);
+            return new Rectangle(0, (img.Height - srcH) / 2, img.Width, srcH);
+        }
+
+        private static Bitmap? GetCoverVariant(Graphics g, Bitmap img, Rectangle dest, Rectangle srcRect,
+                                               System.Drawing.Drawing2D.InterpolationMode mode, bool circular)
+        {
+            int dw, dh;
+            using (var m = g.Transform)
             {
-                // Source taller → crop top/bottom
-                int srcH = (int)(img.Width / dstAspect);
-                srcRect = new Rectangle(0, (img.Height - srcH) / 2, img.Width, srcH);
+                var el = m.Elements;
+                dw = (int)Math.Round(dest.Width  * Math.Abs(el[0]));
+                dh = (int)Math.Round(dest.Height * Math.Abs(el[3]));
             }
+            if (!circular && (long)srcRect.Width * srcRect.Height < 2L * dw * dh) return null;
+            return GetCoverVariantAt(img, srcRect, dw, dh, mode, circular);
+        }
+
+        private static Bitmap? GetCoverVariantAt(Bitmap img, Rectangle srcRect, int dw, int dh,
+                                                 System.Drawing.Drawing2D.InterpolationMode mode, bool circular)
+        {
+            if (dw <= 0 || dh <= 0 || dw > 4096 || dh > 4096) return null;
+
+            var variants = _coverVariants.GetOrCreateValue(img);
+            long key = ((long)dw << 34) | ((long)dh << 4) | ((circular ? 1L : 0L) << 3) | ((long)mode & 7L);
+            lock (variants)
+            {
+                if (variants.TryGetValue(key, out var hit)) return hit;
+
+                var made = new Bitmap(dw, dh, PixelFormat.Format32bppArgb);
+                using (var bg = Graphics.FromImage(made))
+                {
+                    if (circular)
+                    {
+                        using var p = new GraphicsPath();
+                        p.AddEllipse(0, 0, dw, dh);
+                        bg.SetClip(p, CombineMode.Intersect);
+                    }
+                    bg.InterpolationMode = mode;
+                    bg.PixelOffsetMode   = PixelOffsetMode.HighQuality;
+                    bg.DrawImage(img, new Rectangle(0, 0, dw, dh), srcRect, GraphicsUnit.Pixel);
+                }
+                variants[key] = made;
+                return made;
+            }
+        }
+
+        private static void DrawCoverVariant(Graphics g, Bitmap variant, Rectangle dest)
+        {
+            var pi = g.InterpolationMode;
+            var pp = g.PixelOffsetMode;
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+            g.PixelOffsetMode   = PixelOffsetMode.Half;
+            g.DrawImage(variant, dest);
+            g.InterpolationMode = pi;
+            g.PixelOffsetMode   = pp;
+        }
+
+        private static void DrawImageCover(Graphics g, Bitmap img, Rectangle dest)
+        {
+            var srcRect = CoverSrcRect(img, dest);
+            var variant = GetCoverVariant(g, img, dest, srcRect,
+                System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic, false);
+            if (variant != null) { DrawCoverVariant(g, variant, dest); return; }
             g.DrawImage(img, dest, srcRect, GraphicsUnit.Pixel);
         }
 

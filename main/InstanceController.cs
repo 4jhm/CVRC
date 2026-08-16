@@ -639,26 +639,7 @@ public class InstanceController
                 var psMyId = _core.VrcApi.CurrentUserId ?? "";
                 _ = Task.Run(() =>
                 {
-                    var stats = _core.Timeline.GetTimeSpentStats(psMyId);
-                    var tlPersons = stats.Persons.ToDictionary(p => p.UserId);
-
-                    var vrcRunning = _core.IsVrcRunning?.Invoke() ?? false;
-                    var logPlayerIds = vrcRunning
-                        ? new HashSet<string>(_core.LogWatcher.GetCurrentPlayers()
-                            .Where(p => !string.IsNullOrEmpty(p.UserId)).Select(p => p.UserId))
-                        : new HashSet<string>();
-
-                    var psList = _core.TimeEngine.Users
-                        .Where(kv => kv.Key != psMyId)
-                        .Select(kv =>
-                        {
-                            var isCoPresent = logPlayerIds.Contains(kv.Key);
-                            var (sec, _) = _core.TimeEngine.GetUserStats(kv.Key, isCoPresent);
-                            tlPersons.TryGetValue(kv.Key, out var tl);
-                            return (UserId: kv.Key, Seconds: sec, Meets: tl?.Meets ?? 0);
-                        })
-                        .Where(p => p.Seconds > 0)
-                        .ToList();
+                    var psList = _core.TimeEngine.GetAllTimeSpentPersonStats(psMyId);
 
                     Invoke(() => _core.SendToJS("vrcPeopleStatsData", new
                     {
@@ -674,112 +655,63 @@ public class InstanceController
                 var tsView    = msg["view"]?.ToString() ?? "worlds";
                 var tsQuery   = (msg["query"]?.ToString() ?? "").Trim().ToLowerInvariant();
                 var tsPage    = msg["page"]?.ToObject<int>() ?? 0;
+                var tsReqId   = msg["reqId"]?.ToObject<long>() ?? 0;
                 const int tsPageSize = 100;
 
                 _ = Task.Run(async () =>
                 {
-                    var stats = _core.Timeline.GetTimeSpentStats(tsMyId);
+                    var worldData  = _core.TimeEngine.GetTimeSpentWorldPage(
+                        tsView == "worlds" ? tsQuery : "", tsView == "worlds" ? tsPage : 0, tsPageSize);
+                    var personData = _core.TimeEngine.GetTimeSpentPersonPage(
+                        tsMyId, tsView == "persons" ? tsQuery : "", tsView == "persons" ? tsPage : 0, tsPageSize);
 
-                    // Build name/image/meets lookup from timeline (covers historical data)
-                    var tlPersons = stats.Persons.ToDictionary(p => p.UserId);
-                    var tlWorlds  = stats.Worlds.ToDictionary(w => w.WorldId);
+                    var worldPage  = worldData.Rows;
+                    var personPage = personData.Rows;
+                    var friendIds = new HashSet<string>();
+                    foreach (var fj in _friends.GetStoreSnapshot())
+                    {
+                        var fid = fj["id"]?.ToString();
+                        if (!string.IsNullOrEmpty(fid) && fid != tsMyId) friendIds.Add(fid);
+                    }
 
-                    // PERSONS: start from ALL engine users so nobody is missed.
-                    var vrcRunning = _core.IsVrcRunning?.Invoke() ?? false;
-                    var logPlayerIds = vrcRunning
-                        ? new HashSet<string>(_core.LogWatcher.GetCurrentPlayers()
-                            .Where(p => !string.IsNullOrEmpty(p.UserId)).Select(p => p.UserId))
-                        : new HashSet<string>();
-
-                    var allPersons = _core.TimeEngine.Users
-                        .Where(kv => kv.Key != tsMyId)
-                        .Select(kv =>
+                    var globalFriendCount   = _core.TimeEngine.CountTimeSpentPersons(tsMyId, friendIds);
+                    var globalStrangerCount = personData.TotalAll - globalFriendCount;
+                    var (globalTopFriend, globalTopStranger) =
+                        _core.TimeEngine.GetTopTimeSpentPersons(tsMyId, friendIds);
+                    foreach (var p in personPage)
+                    {
+                        var image = ImageCacheHelper.GetUserCached(p.UserId) is { } diskImg
+                            ? ImageCacheHelper.ToLocalUrl(diskImg)
+                            : _friends.ResolvePlayerImage(p.UserId, null);
+                        if (string.IsNullOrEmpty(image)) image = p.Image;
+                        if (string.IsNullOrEmpty(image))
                         {
-                            var isCoPresent = logPlayerIds.Contains(kv.Key);
-                            var (effectiveSec, _) = _core.TimeEngine.GetUserStats(kv.Key, isCoPresent);
-                            if (effectiveSec <= 0) return default;
-
-                            tlPersons.TryGetValue(kv.Key, out var tl);
-                            var name  = !string.IsNullOrEmpty(kv.Value.DisplayName) ? kv.Value.DisplayName
-                                      : tl?.DisplayName ?? "";
-                            var image = ImageCacheHelper.GetUserCached(kv.Key) is { } diskImg
-                                ? ImageCacheHelper.ToLocalUrl(diskImg)
-                                : _friends.ResolvePlayerImage(kv.Key, null);
-                            if (string.IsNullOrEmpty(image))
-                                image = !string.IsNullOrEmpty(kv.Value.Image) ? kv.Value.Image : tl?.Image ?? "";
-                            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(image))
-                            {
-                                var fj = _friends.GetStoreValue(kv.Key);
-                                if (fj != null)
-                                {
-                                    if (string.IsNullOrEmpty(name))  name  = fj["displayName"]?.ToString() ?? "";
-                                    if (string.IsNullOrEmpty(image)) image = VRChatApiService.GetUserImage(fj);
-                                }
-                            }
-                            if (string.IsNullOrEmpty(name)) return default;
-                            return (UserId: kv.Key, DisplayName: name, Image: image,
-                                    Seconds: effectiveSec, Meets: tl?.Meets ?? 0);
-                        })
-                        .Where(p => p.UserId != null)
-                        .OrderByDescending(p => p.Seconds)
-                        .ToList();
-
-                    var allWorlds = _core.TimeEngine.Worlds
-                        .Select(kv =>
-                        {
-                            tlWorlds.TryGetValue(kv.Key, out var tl);
-                            var (wSec, wVisits, _) = _core.TimeEngine.GetWorldStats(kv.Key);
-                            var name  = !string.IsNullOrEmpty(kv.Value.WorldName)  ? kv.Value.WorldName  : (tl?.WorldName  ?? "");
-                            var thumb = !string.IsNullOrEmpty(kv.Value.WorldThumb) ? kv.Value.WorldThumb : (tl?.WorldThumb ?? "");
-                            var visits = wVisits > 0 ? wVisits : (tl?.Visits ?? 0);
-                            return (WorldId: kv.Key, WorldName: name, WorldThumb: thumb,
-                                    Seconds: wSec, Visits: visits);
-                        })
-                        .Where(w => !string.IsNullOrEmpty(w.WorldName) && w.Seconds > 0)
-                        .OrderByDescending(w => w.Seconds)
-                        .ToList();
-
-                    // Global stats from full dataset (before any filter/pagination)
-                    var globalFriendIds = new HashSet<string>(
-                        allPersons.Where(p => _friends.GetStoreValue(p.UserId) != null).Select(p => p.UserId));
-                    var globalFriendCount   = globalFriendIds.Count;
-                    var globalStrangerCount = allPersons.Count - globalFriendCount;
-                    var globalTopFriend     = allPersons.FirstOrDefault(p => globalFriendIds.Contains(p.UserId));
-                    var globalTopStranger   = allPersons.FirstOrDefault(p => !globalFriendIds.Contains(p.UserId));
-                    var globalTotalWithOthers = allPersons.Sum(p => (long)p.Seconds);
-                    var globalTopWorld      = allWorlds.FirstOrDefault();
-                    var globalTotalVisits   = allWorlds.Sum(w => (long)w.Visits);
-
-                    // Filter by search query
-                    var filteredPersons = string.IsNullOrEmpty(tsQuery)
-                        ? allPersons
-                        : allPersons.Where(p => (p.DisplayName ?? "").ToLowerInvariant().Contains(tsQuery)).ToList();
-
-                    var filteredWorlds = string.IsNullOrEmpty(tsQuery)
-                        ? allWorlds
-                        : allWorlds.Where(w => (w.WorldName ?? "").ToLowerInvariant().Contains(tsQuery)).ToList();
-
-                    // Paginate
-                    var personPage = filteredPersons.Skip(tsPage * tsPageSize).Take(tsPageSize).ToList();
-                    var worldPage  = filteredWorlds.Skip(tsPage * tsPageSize).Take(tsPageSize).ToList();
+                            var fj = _friends.GetStoreValue(p.UserId);
+                            if (fj != null) image = VRChatApiService.GetUserImage(fj);
+                        }
+                        p.Image = image;
+                    }
 
                     void SendPage() => Invoke(() => _core.SendToJS("vrcTimeSpentData", new
                     {
-                        totalSeconds  = stats.TotalSeconds,
+                        totalSeconds  = worldData.TotalSeconds,
                         page          = tsPage,
-                        totalWorlds   = filteredWorlds.Count,
-                        totalPersons  = filteredPersons.Count,
-                        allUniqueWorlds   = allWorlds.Count,
-                        allUniquePersons  = allPersons.Count,
+                        reqId         = tsReqId,
+                        totalWorlds   = worldData.TotalFiltered,
+                        totalPersons  = personData.TotalFiltered,
+                        allUniqueWorlds   = worldData.TotalAll,
+                        allUniquePersons  = personData.TotalAll,
                         globalFriendCount,
                         globalStrangerCount,
-                        globalTopFriendName    = globalTopFriend.UserId != null ? (globalTopFriend.DisplayName ?? "") : "",
-                        globalTopFriendSeconds = globalTopFriend.UserId != null ? globalTopFriend.Seconds : 0,
-                        globalTopStrangerName    = globalTopStranger.UserId != null ? (globalTopStranger.DisplayName ?? "") : "",
-                        globalTopStrangerSeconds = globalTopStranger.UserId != null ? globalTopStranger.Seconds : 0,
-                        globalTotalWithOthers,
-                        globalTopWorldName  = globalTopWorld.WorldId != null ? (globalTopWorld.WorldName ?? "") : "",
-                        globalTotalVisits,
+                        globalTopFriendName    = globalTopFriend?.DisplayName ?? "",
+                        globalTopFriendSeconds = globalTopFriend?.Seconds ?? 0,
+                        globalTopStrangerName    = globalTopStranger?.DisplayName ?? "",
+                        globalTopStrangerSeconds = globalTopStranger?.Seconds ?? 0,
+                        globalTotalWithOthers = personData.TotalSeconds,
+                        globalTopWorldName    = worldData.TopWorldName,
+                        globalTotalVisits     = worldData.TotalVisits,
+                        maxWorldSeconds       = worldData.MaxSeconds,
+                        maxPersonSeconds      = personData.MaxSeconds,
                         worlds = worldPage.Select(w => new
                         {
                             worldId    = w.WorldId,
@@ -787,6 +719,7 @@ public class InstanceController
                             worldThumb = ImageCacheHelper.GetWorldUrl(w.WorldId, w.WorldThumb),
                             seconds    = w.Seconds,
                             visits     = w.Visits,
+                            rank       = w.Rank,
                         }),
                         persons = personPage.Select(p => new
                         {
@@ -795,6 +728,7 @@ public class InstanceController
                             image       = ImageCacheHelper.GetUserUrl(p.UserId, p.Image),
                             seconds     = p.Seconds,
                             meets       = p.Meets,
+                            rank        = p.Rank,
                         }),
                     }));
 
@@ -825,13 +759,11 @@ public class InstanceController
                                 var wThumb = wResult.result["imageUrl"]?.ToString() ?? "";
                                 ImageCacheHelper.CacheWorldBackground(wid, wThumb);
                                 _core.TimeEngine.UpdateWorldInfo(wid, wName, wThumb);
-                                var idx = worldPage.FindIndex(x => x.WorldId == wid);
-                                if (idx >= 0)
+                                var e = worldPage.FirstOrDefault(x => x.WorldId == wid);
+                                if (e != null)
                                 {
-                                    var e = worldPage[idx];
-                                    worldPage[idx] = (e.WorldId,
-                                        string.IsNullOrEmpty(e.WorldName) ? wName : e.WorldName,
-                                        wThumb, e.Seconds, e.Visits);
+                                    if (string.IsNullOrEmpty(e.WorldName)) e.WorldName = wName;
+                                    e.WorldThumb = wThumb;
                                     anyResolved = true;
                                 }
                             }
@@ -882,11 +814,10 @@ public class InstanceController
                                 }
                                 if (!string.IsNullOrEmpty(resolved))
                                 {
-                                    var idx = personPage.FindIndex(p => p.UserId == uid);
-                                    if (idx >= 0)
+                                    var p = personPage.FirstOrDefault(x => x.UserId == uid);
+                                    if (p != null)
                                     {
-                                        var p = personPage[idx];
-                                        personPage[idx] = (p.UserId, p.DisplayName, resolved, p.Seconds, p.Meets);
+                                        p.Image = resolved;
                                         anyResolved = true;
                                     }
                                 }

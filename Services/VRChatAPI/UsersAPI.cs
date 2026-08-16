@@ -127,19 +127,6 @@ public class UsersAPI(VRChatApiService ctx)
         return new JArray();
     }
 
-    public async Task<JArray> GetUserBadgesAsync(string userId)
-    {
-        if (!ctx.IsLoggedIn || string.IsNullOrEmpty(userId)) return new JArray();
-        try
-        {
-            var resp = await ctx._http.GetAsync($"{VRChatApiService.BASE}/users/{Uri.EscapeDataString(userId)}/badges");
-            if (resp.IsSuccessStatusCode) return JArray.Parse(await resp.Content.ReadAsStringAsync());
-            ctx.Log($"GetUserBadges({userId}) failed: {(int)resp.StatusCode}");
-        }
-        catch (Exception ex) { ctx.Log($"GetUserBadges({userId}) exception: {ex.Message}"); }
-        return new JArray();
-    }
-
     public async Task<bool> UpdateBadgeAsync(string badgeId, bool showcased)
     {
         if (!ctx.IsLoggedIn || ctx.CurrentUserId == null || string.IsNullOrEmpty(badgeId)) return false;
@@ -285,23 +272,6 @@ public class UsersAPI(VRChatApiService ctx)
             return resp.IsSuccessStatusCode;
         }
         catch (Exception ex) { ctx.Log($"SendBoop({userId}) exception: {ex.Message}"); return false; }
-    }
-
-    public async Task<JObject?> GetUserNoteAsync(string targetUserId)
-    {
-        if (!ctx.IsLoggedIn) return null;
-        try
-        {
-            var resp = await ctx._http.GetAsync($"{VRChatApiService.BASE}/userNotes?n=100");
-            if (!resp.IsSuccessStatusCode) { ctx.Log($"GetUserNotes: HTTP {(int)resp.StatusCode}"); return null; }
-            var body = await resp.Content.ReadAsStringAsync();
-            var arr = JArray.Parse(body);
-            foreach (var note in arr)
-                if (note["targetUserId"]?.ToString() == targetUserId)
-                    return note as JObject;
-            return null;
-        }
-        catch (Exception ex) { ctx.Log($"GetUserNote exception: {ex.Message}"); return null; }
     }
 
     public async Task<bool> UpdateUserNoteAsync(string targetUserId, string noteText)

@@ -33,11 +33,6 @@
     color: var(--tx0);
 }
 
-.ss-badge.ss-badge-hidden {
-    opacity: 0;
-    transform: scale(0.78);
-    pointer-events: none;
-}
 
 .ss-badge .ss-icon {
     font-size: calc(18px + var(--fs-off, 0px));
@@ -45,54 +40,10 @@
 }
 
 /* Expanded input row — animates via max-width + opacity */
-.ss-input-wrap {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 0;
-    border-radius: 14px;
-    border: 1px solid var(--accent);
-    background: var(--bg-input);
-    overflow: hidden;
-    /* collapsed */
-    max-width: 0;
-    opacity: 0;
-    border-width: 0;
-    pointer-events: none;
-    transition: max-width .25s ease, opacity .2s ease, padding .22s ease, border-width .1s ease;
-}
 
-.ss-input-wrap.ss-visible {
-    max-width: 234px;
-    opacity: 1;
-    padding: 3px 10px;
-    border-width: 1px;
-    pointer-events: all;
-}
 
-.ss-input-wrap .ss-icon {
-    font-size: calc(13px + var(--fs-off, 0px));
-    color: var(--accent);
-    flex-shrink: 0;
-    line-height: normal;
-}
 
-.ss-input-wrap input {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: calc(11px + var(--fs-off, 0px));
-    font-weight: 500;
-    color: var(--tx0);
-    font-family: inherit;
-    min-width: 0;
-    width: 160px;
-}
 
-.ss-input-wrap input::placeholder {
-    color: var(--tx3);
-}
 
 /* Close button inside input-wrap */
 .ss-close-btn {
@@ -185,9 +136,15 @@
 .ss-search-in-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     flex-wrap: wrap;
     min-width: 0;
+}
+.ss-search-in-actions .vrcn-button {
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-size: calc(10px + var(--fs-off, 0px));
 }
 
 /* Result item */
@@ -361,7 +318,7 @@
 }
 
 .ss-modal-box {
-    width: 520px;
+    width: 540px;
     max-width: calc(100vw - 48px);
     background: var(--bg-card);
     border: 1px solid var(--brd-lt);

@@ -215,9 +215,6 @@
     box-shadow: 0 6px 20px rgba(0,0,0,.25);
 }
 
-.s-card-body {
-    padding: 10px 12px 12px;
-}
 
 .s-card-sub {
     font-size: calc(11px + var(--fs-off, 0px));
@@ -228,8 +225,6 @@
     gap: 3px;
 }
 
-.s-card-avatar { border-radius: 50%; background-size: cover; background-position: center; flex-shrink: 0; }
-.s-card-avatar { width: 44px; height: 44px; background-color: var(--bg-input); }
 
 .fav-group-header {
     grid-column: 1 / -1;
@@ -347,30 +342,3 @@
     min-width: 0;
 }
 
-.play-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-.play-card {
-    background: var(--bg-hover);
-    border: 1px solid var(--brd);
-    border-radius: 14px;
-    padding: 20px 12px;
-    cursor: pointer;
-    transition: all .25s cubic-bezier(.22,1,.36,1);
-    text-align: center;
-}
-.play-card:hover {
-    background: rgba(56,132,255,.08);
-    border-color: var(--accent);
-    box-shadow: 0 0 14px rgba(56,132,255,.18);
-    transform: translateY(-2px);
-}
-.play-card.selected {
-    background: rgba(56,132,255,.1);
-    border-color: var(--accent);
-    box-shadow: 0 0 14px rgba(56,132,255,.22);
-}
-.play-card .msi { font-size: 36px !important; color: var(--tx2); display: block; margin-bottom: 8px; transition: color .2s; font-variation-settings: 'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 48 !important; }
-.play-card:hover .msi { color: var(--accent-lt); }
-.play-card.selected .msi { color: var(--accent-lt); }
-.play-card-label { font-size: calc(13px + var(--fs-off, 0px)); font-weight: 600; color: var(--tx0); }
-.play-card-sub { font-size: calc(10px + var(--fs-off, 0px)); color: var(--tx3); margin-top: 2px; }
-.play-modal-btns { display: flex; gap: 8px; justify-content: center; }

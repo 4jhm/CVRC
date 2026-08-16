@@ -32,7 +32,6 @@ function syncChatboxToggleUi() {
     if (btn) btn.innerHTML = chatboxButtonHtml();
     if (dot) dot.className = chatboxEnabled ? 'sf-dot online' : 'sf-dot offline';
     if (txt) txt.textContent = chatboxStatusText();
-    if (typeof updateDashQuickControls === 'function') updateDashQuickControls();
 }
 
 function rerenderChatboxTranslations() {

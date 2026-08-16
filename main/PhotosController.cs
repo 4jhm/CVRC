@@ -496,19 +496,6 @@ public class PhotosController
                 if (filePath != null) await PostFile(filePath, true);
                 break;
 
-            case "dropFiles":
-                var files = msg["files"]?.ToObject<string[]>();
-                if (files != null)
-                {
-                    foreach (var f in files)
-                    {
-                        var ext = Path.GetExtension(f).ToLower();
-                        if (FileWatcherService.ImgExt.Contains(ext) || FileWatcherService.VidExt.Contains(ext))
-                            await PostFile(f, true);
-                    }
-                }
-                break;
-
             case "deletePost":
                 var msgId = msg["messageId"]?.ToString();
                 var whUrl = msg["webhookUrl"]?.ToString();

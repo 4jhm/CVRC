@@ -269,11 +269,6 @@ public class StatusScheduleController : IDisposable
                 break;
             }
 
-            case "ssEvaluateNow":
-                await EvaluateAsync();
-                _lastPushedRuleId = _activeRuleId;
-                SendState();
-                break;
         }
     }
 

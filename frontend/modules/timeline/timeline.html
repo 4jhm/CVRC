@@ -3,9 +3,11 @@
                     <button class="vrcn-button sub-tab-btn" id="tlModeFriends" onclick="setTlMode('friends')" title="Friends" data-i18n-title="timeline.mode.friends"><span class="msi" style="font-size:16px;">group</span></button>
                     <button class="vrcn-button sub-tab-btn" id="tlModeInstanceChart" onclick="setTlMode('instancechart')" title="Instance Chart" data-i18n-title="timeline.mode.instance_chart"><span class="msi" style="font-size:16px;">stacks</span></button>
                     <button class="vrcn-button sub-tab-btn" id="tlModeGameLog" onclick="setTlMode('gamelog')" title="Game Log" data-i18n-title="timeline.mode.gamelog"><span class="msi" style="font-size:16px;">terminal</span></button>
-                    <div class="search-bar-row" style="flex:1;margin-bottom:0;">
+                    <div class="search-bar-row" id="tlSearchWrap" style="flex:1;margin-bottom:0;position:relative;">
                         <span class="msi search-ico">search</span>
-                        <input type="text" id="tlSearchInput" class="vrcn-input" placeholder="Search timeline..." data-i18n-placeholder="timeline.search.placeholder" oninput="tlMode==='gamelog'?renderGameLog():tlMode==='friends'?filterFriendTimeline():filterTimeline()">
+                        <span id="tlSearchChip" class="tl-search-chip" style="display:none;"></span>
+                        <input type="text" id="tlSearchInput" class="vrcn-input" placeholder="Search timeline..." data-i18n-placeholder="timeline.search.placeholder" autocomplete="off" oninput="tlSearchInputChanged()" onkeydown="tlSearchKeydown(event)">
+                        <div class="ss-dropdown" id="tlSearchDropdown"></div>
                     </div>
                     <div id="tlIcSpacer" style="flex:1;display:none;"></div>
                     <button class="vrcn-button tl-datebtn" id="tlIcPrev" onclick="icNavDay(-1)" title="Previous day" data-i18n-title="timeline.instance_chart.prev_day" style="display:none;"><span class="msi" style="font-size:16px;">chevron_left</span></button>

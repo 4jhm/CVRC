@@ -222,7 +222,8 @@ public class TimelineController
         string bfId = "";
         using (var cmd = db.CreateCommand())
         {
-            cmd.CommandText = @"SELECT user_id, display_name, image, total_seconds, meet_again_count
+            cmd.CommandText = @"SELECT user_id, display_name, image, total_seconds,
+                       meet_again_count + CASE WHEN first_meet_date <> '' THEN 1 ELSE 0 END
                 FROM user_tracking WHERE profile_is_friend=1 AND user_id<>$self AND display_name<>'' AND total_seconds>0
                 ORDER BY total_seconds DESC LIMIT 1";
             cmd.Parameters.AddWithValue("$self", selfId);
@@ -322,7 +323,8 @@ public class TimelineController
         var secrets = new List<object>();
         using (var cmd = db.CreateCommand())
         {
-            cmd.CommandText = @"SELECT user_id, display_name, image, meet_again_count, total_seconds
+            cmd.CommandText = @"SELECT user_id, display_name, image,
+                       meet_again_count + CASE WHEN first_meet_date <> '' THEN 1 ELSE 0 END, total_seconds
                 FROM user_tracking
                 WHERE (profile_is_friend IS NULL OR profile_is_friend!=1) AND user_id<>$self AND display_name<>'' AND total_seconds>3600
                 ORDER BY total_seconds DESC LIMIT 3";
@@ -398,7 +400,8 @@ public class TimelineController
         var topFriends = new List<object>();
         using (var cmd = db.CreateCommand())
         {
-            cmd.CommandText = @"SELECT user_id, display_name, image, total_seconds, meet_again_count
+            cmd.CommandText = @"SELECT user_id, display_name, image, total_seconds,
+                       meet_again_count + CASE WHEN first_meet_date <> '' THEN 1 ELSE 0 END
                 FROM user_tracking WHERE profile_is_friend=1 AND user_id<>$self AND display_name<>'' AND total_seconds>0
                 ORDER BY total_seconds DESC LIMIT 10";
             cmd.Parameters.AddWithValue("$self", selfId);

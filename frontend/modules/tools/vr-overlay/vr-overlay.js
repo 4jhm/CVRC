@@ -432,36 +432,39 @@ function vroTtsEngineChanged() {
     }
     const devSel = document.getElementById('vroTtsDevice');
     _vroTtsWanted = {
-        device: devSel ? parseInt(devSel.value ?? '-1', 10) : -1,
+        device: audioSelectionFromSelect(devSel),
         engine: eng,
         voice: '',
         lang: '',
         gender: '',
     };
-    if (Number.isNaN(_vroTtsWanted.device)) _vroTtsWanted.device = -1;
     sendToCS({ action: 'getTtsDevices', target: 'vro', engine: eng });
     vroToastAutoSave();
 }
 
 function vroTtsPreviewVoice(voice) {
     if (!voice) return;
+    const dev = audioDeviceValue('vroTtsDevice') || { id: '', name: '' };
     sendToCS({
         action: 'ttsPreview',
         text: t('tts.preview_line', 'This is how this voice sounds.'),
         engine: document.getElementById('vroTtsEngine')?.value || 'sapi',
         voice,
-        device: audioDeviceIndex('vroTtsDevice'),
+        deviceId: dev.id,
+        deviceName: dev.name,
         rate: 0,
     });
 }
 
 function vroTtsTest() {
+    const dev = audioDeviceValue('vroTtsDevice') || { id: '', name: '' };
     sendToCS({
         action: 'ttsTest',
         text: t('vro.notifications.tts_test_line', 'VRCNext text to speech is working.'),
         engine: document.getElementById('vroTtsEngine')?.value || 'sapi',
         voice: document.getElementById('vroTtsVoice')?.value || '',
-        device: audioDeviceIndex('vroTtsDevice'),
+        deviceId: dev.id,
+        deviceName: dev.name,
         rate: 0,
         volume: 100,
     });
@@ -476,20 +479,18 @@ function vroPopulateTtsDevices(p) {
     // Snapshot taken when the request was sent — the reply is async and the global
     // settings object may not be populated yet on a cold start.
     const want = _vroTtsWanted || {};
-    const wantDevice = want.device ?? settings?.vroTtsDevice ?? -1;
+    const devSel = document.getElementById('vroTtsDevice');
+    const wantDevice = want.device
+        ?? (devSel?.dataset.audioReady === '1'
+            ? audioSelectionFromSelect(devSel)
+            : audioSelectionFromSaved(settings?.VroTtsDeviceId ?? settings?.vroTtsDeviceId ?? '', settings?.VroTtsDeviceName ?? settings?.vroTtsDeviceName ?? ''));
     const wantVoice  = want.voice  ?? settings?.vroTtsVoice  ?? '';
     const wantEngine = want.engine ?? settings?.vroTtsEngine ?? 'sapi';
     const wantLang   = want.lang   ?? settings?.vroTtsLang   ?? '';
     const wantGender = want.gender ?? settings?.vroTtsGender ?? '';
 
-    const devSel = document.getElementById('vroTtsDevice');
     if (devSel && p.devices) {
-        let html = `<option value="-1">${esc(t('vro.notifications.tts_device_default', 'System default'))}</option>`;
-        p.devices.forEach((name, i) => { html += `<option value="${i}">${esc(name)}</option>`; });
-        devSel.innerHTML = html;
-        devSel.value = String(wantDevice);
-        if (devSel.selectedIndex < 0) devSel.value = '-1';
-        if (devSel._vnRefresh) devSel._vnRefresh();
+        audioFillDeviceSelect(devSel, p.devices, wantDevice);
     }
     const engSel = document.getElementById('vroTtsEngine');
     if (engSel && !p.engine) {
@@ -525,7 +526,7 @@ function vroToastAutoSave() {
 }
 
 function vroToastSendConfig() {
-    sendToCS({
+    const cfg = {
         action:      'vroToastConfig',
         enabled:     !!document.getElementById('vroToastEnabled')?.checked,
         favOnly:     !!document.getElementById('vroToastFavOnly')?.checked,
@@ -554,10 +555,12 @@ function vroToastSendConfig() {
         ttsFriendReq: !!document.getElementById('vroToastFriendReqTts')?.checked,
         ttsInvite: !!document.getElementById('vroToastInviteTts')?.checked,
         ttsGroupInv: !!document.getElementById('vroToastGroupInvTts')?.checked,
-        ttsDevice:   audioDeviceIndex('vroTtsDevice'),
         ttsVoice:    document.getElementById('vroTtsVoice')?.value || '',
         ttsEngine:   document.getElementById('vroTtsEngine')?.value || 'sapi',
-    });
+    };
+    const ttsDev = audioDeviceValue('vroTtsDevice');
+    if (ttsDev) { cfg.ttsDeviceId = ttsDev.id; cfg.ttsDeviceName = ttsDev.name; }
+    sendToCS(cfg);
 }
 
 // Water reminder settings.
@@ -966,8 +969,10 @@ function vroLoadSettings(s) {
 
     const vroEngEl = document.getElementById('vroTtsEngine');
     if (vroEngEl) { vroEngEl.value = s.vroTtsEngine || 'sapi'; if (vroEngEl._vnRefresh) vroEngEl._vnRefresh(); }
+    const vroTtsSaved = audioSelectionFromSaved(s.vroTtsDeviceId || '', s.vroTtsDeviceName || '');
+    audioPrefillDeviceSelect(document.getElementById('vroTtsDevice'), vroTtsSaved);
     _vroTtsWanted = {
-        device: Number.isNaN(parseInt(s.vroTtsDevice, 10)) ? -1 : parseInt(s.vroTtsDevice, 10),
+        device: vroTtsSaved,
         engine: s.vroTtsEngine || 'sapi',
         voice: s.vroTtsVoice || '',
         lang: s.vroTtsLang || '',

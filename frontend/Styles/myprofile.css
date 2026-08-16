@@ -35,43 +35,6 @@
     background: var(--accent-a10, rgba(255,255,255,.06));
 }
 
-.myp-header {
-    display: flex;
-    align-items: flex-end;
-    gap: 14px;
-    margin-bottom: 14px;
-}
-.myp-avatar {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    border: 3px solid var(--bg-card);
-    object-fit: cover;
-    display: block;
-}
-.myp-avatar-fb {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    border: 3px solid var(--bg-card);
-    background: var(--bg-input);
-    font-size: calc(22px + var(--fs-off, 0px));
-    font-weight: 700;
-    color: var(--tx3);
-}
-.myp-header-info {
-    flex: 1;
-    min-width: 0;
-    padding-bottom: 4px;
-}
-.myp-name {
-    font-size: calc(18px + var(--fs-off, 0px));
-    font-weight: 700;
-    color: var(--tx0);
-    margin-bottom: 5px;
-}
 .myp-status-row {
     display: inline-flex;
     align-items: center;

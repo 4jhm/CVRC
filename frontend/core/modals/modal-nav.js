@@ -4,8 +4,6 @@ let _navCurrentEntry = null;
 let _navBackdropEl   = null;
 let _mnActions       = [];
 
-function _directNav() { return typeof settings !== 'undefined' && settings.directModalNav === true; }
-
 function _mnActionHtml(a, asText) {
     if (a.dropdown) {
         const items = a.dropdown.filter(Boolean).map(_tbDropdownItem).join('');
@@ -33,12 +31,7 @@ function _mnActiveBar() {
 function renderModalActions(actions) {
     actions = (actions || []).filter(Boolean);
     _mnActions = actions;
-    if (_directNav()) {
-        return `<div class="fd-modal-bar"><div class="fd-modal-bar-crumbs">${_mnCrumbsHtml()}</div><div class="fd-modal-bar-actions">${_mnActionsHtml(actions, false)}</div></div>`;
-    }
-    setTaskbarModalActions(actions.filter(a => !a.header));
-    const header = actions.filter(a => a.header);
-    return header.length ? `<div class="fd-modal-actions">${_mnActionsHtml(header, false)}</div>` : '';
+    return `<div class="fd-modal-bar"><div class="fd-modal-bar-crumbs">${_mnCrumbsHtml()}</div><div class="fd-modal-bar-actions">${_mnActionsHtml(actions, false)}</div></div>`;
 }
 
 function renderModalBar(title, actions, opts) {
@@ -56,26 +49,10 @@ function modalCloseAction(onclick) {
 function refreshModalActions(actions) {
     actions = (actions || []).filter(Boolean);
     _mnActions = actions;
-    if (_directNav()) {
-        const el = _mnActiveBar()?.querySelector('.fd-modal-bar-actions');
-        if (el) el.innerHTML = _mnActionsHtml(actions, false);
-    } else {
-        const el = document.getElementById('tbModalActions');
-        if (el) el.innerHTML = _mnActionsHtml(actions.filter(a => !a.header), true);
-    }
+    const el = _mnActiveBar()?.querySelector('.fd-modal-bar-actions');
+    if (el) el.innerHTML = _mnActionsHtml(actions, false);
 }
 
-function setTaskbarModalActions(actions) {
-    actions = (actions || []).filter(Boolean);
-    if (_directNav()) {
-        _mnActions = actions;
-        const el = _mnActiveBar()?.querySelector('.fd-modal-bar-actions');
-        if (el) el.innerHTML = _mnActionsHtml(actions, false);
-        return;
-    }
-    const el = document.getElementById('tbModalActions');
-    if (el) el.innerHTML = _mnActionsHtml(actions, true);
-}
 
 let _modalRefreshTimer = null;
 function triggerModalRefresh(action) {
@@ -156,29 +133,9 @@ function _tbDropdownOutside(e) {
     if (!e.target.closest('.tb-modal-action-wrap')) _tbCloseDropdowns();
 }
 
-function _tbModalActive() {
-    return (_navIdx >= 0 && _navStack.length > 0) || !!(_navCurrentEntry && _navCurrentEntry.id);
-}
-
 function _navSyncTaskbar() {
-    const tb = document.getElementById('taskbar');
-    if (_directNav()) {
-        if (tb) tb.classList.remove('tb-modal-mode');
-        const c0 = document.getElementById('tbModalCrumbs'); if (c0) c0.innerHTML = '';
-        const a0 = document.getElementById('tbModalActions'); if (a0) a0.innerHTML = '';
-        const bc = _mnActiveBar()?.querySelector('.fd-modal-bar-crumbs');
-        if (bc) bc.innerHTML = _mnCrumbsHtml();
-        return;
-    }
-    if (!tb) return;
-    if (_tbModalActive()) {
-        tb.classList.add('tb-modal-mode');
-        renderTaskbarCrumbs();
-    } else {
-        tb.classList.remove('tb-modal-mode');
-        const c = document.getElementById('tbModalCrumbs'); if (c) c.innerHTML = '';
-        const a = document.getElementById('tbModalActions'); if (a) a.innerHTML = '';
-    }
+    const bc = _mnActiveBar()?.querySelector('.fd-modal-bar-crumbs');
+    if (bc) bc.innerHTML = _mnCrumbsHtml();
 }
 
 function _mnCrumbsHtml() {
@@ -197,11 +154,6 @@ function _mnCrumbsHtml() {
         return `<button class="tb-crumb" title="${_esc(name)}" onclick="navGoTo(${idx})">${_esc(short)}</button>`;
     }).join('<span class="tb-crumb-sep">›</span>');
     return html;
-}
-
-function renderTaskbarCrumbs() {
-    const el = document.getElementById('tbModalCrumbs');
-    if (el) el.innerHTML = _mnCrumbsHtml();
 }
 
 function navSetCurrent(type, id, id2) {
@@ -464,10 +416,6 @@ function _navHideBackdrop() {
     if (_navBackdropEl) _navBackdropEl.style.display = 'none';
 }
 
-function _navCloseCurrentSilent() {
-    const entry = (_navIdx >= 0 && _navStack[_navIdx]) ? _navStack[_navIdx] : _navCurrentEntry;
-    _navCloseForEntry(entry);
-}
 
 function _navCloseForEntry(entry) {
     if (!entry) return;

@@ -206,30 +206,6 @@
     flex-direction: column;
     gap: 4px;
 }
-.inst-item-owner {
-    font-size: calc(11px + var(--fs-off, 0px));
-    font-weight: 600;
-    color: var(--tx1);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-.inst-item-owner-sep {
-    color: var(--tx3);
-    font-weight: 400;
-    flex-shrink: 0;
-}
-.inst-item-owner-tag {
-    font-size: calc(10px + var(--fs-off, 0px));
-    font-weight: 600;
-    color: var(--tx2);
-    flex-shrink: 0;
-}
-.inst-item-owner-num {
-    font-size: calc(10px + var(--fs-off, 0px));
-    font-weight: 400;
-    color: var(--tx3);
-}
 .inst-owner-group-badge {
     display: inline-flex;
     align-items: center;
@@ -250,11 +226,6 @@
     opacity: .5;
     font-weight: 400;
 }
-.inst-item-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
 .inst-item-right {
     display: flex;
     align-items: center;
@@ -268,18 +239,6 @@
     gap: 6px;
     flex-wrap: wrap;
 }
-.inst-item-region {
-    font-size: calc(11px + var(--fs-off, 0px));
-    color: var(--tx2);
-}
-.inst-item-count {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    font-size: calc(11px + var(--fs-off, 0px));
-    color: var(--tx3);
-}
-.inst-item-join { height: 24px !important; padding: 0 10px !important; font-size: calc(11px + var(--fs-off, 0px)) !important; }
 
 /* Instance Card (Layout A — world modal, matches instance modal style) */
 .inst-item-card {
@@ -316,36 +275,10 @@
 }
 
 /* Instance Friend Strip */
-.inst-friends-strip {
-    display: flex;
-    align-items: center;
-    gap: 0;
-}
 
-.inst-av-sm {
-    width: 22px;
-    height: 22px;
-    border-radius: 50%;
-    border: 2px solid var(--bg-input);
-    object-fit: cover;
-    margin-left: -6px;
-    background: var(--bg-hover);
-}
 
-.inst-av-sm:first-child { margin-left: 0; }
 
-.inst-av-sm-letter {
-    font-size: calc(9px + var(--fs-off, 0px));
-    font-weight: 700;
-    color: var(--tx3);
-}
 
-.inst-av-extra {
-    font-size: calc(10px + var(--fs-off, 0px));
-    color: var(--tx3);
-    font-weight: 600;
-    margin-left: 4px;
-}
 
 /* Mini Content Item (profile Content tab — Worlds & Avatars) */
 .vrcn-mini-content-grid {

@@ -22,6 +22,11 @@
                     </div>
 
                     <div class="vrcn-panel-card af-editor-card">
+                        <div class="af-block-search-wrap">
+                            <span class="msi af-block-search-icon">search</span>
+                            <input type="text" id="afBlockSearchInput" class="vrcn-edit-field af-block-search-input" placeholder="Search blocks by what they do..." data-i18n-placeholder="action_flow.search.placeholder" oninput="afSearchBlocks(this.value)" onfocus="afSearchBlocks(this.value)">
+                            <div class="af-block-search-results" id="afBlockSearchResults" style="display:none;"></div>
+                        </div>
                         <div id="afBlocklyHost" class="af-blockly-host"></div>
                         <div class="af-cond-panel" id="afConditionsPanel">
                             <div class="af-cond-header">

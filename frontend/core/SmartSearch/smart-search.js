@@ -295,6 +295,8 @@ const SmartSearch = (() => {
         { key: 'groups', labelKey: 'search.remote.groups', label: 'Groups' },
         { key: 'users', labelKey: 'search.remote.users', label: 'Users' },
         { key: 'avatars', labelKey: 'search.remote.avatars', label: 'Avatars' },
+        { key: 'timeline_personal', labelKey: 'search.remote.timeline_personal', label: 'Personal Timeline' },
+        { key: 'timeline_friends', labelKey: 'search.remote.timeline_friends', label: 'Friends Timeline' },
     ];
 
     function _setSearchInputValue(id, query) {
@@ -330,6 +332,13 @@ const SmartSearch = (() => {
             if (typeof setAvatarFilter === 'function') setAvatarFilter('search');
             const input = _setSearchInputValue('avatarSearchInput', q);
             if (typeof doAvatarSearch === 'function') doAvatarSearch();
+            setTimeout(() => input?.focus(), 80);
+        } else if (key === 'timeline_personal' || key === 'timeline_friends') {
+            if (typeof showTab === 'function') showTab(12);
+            if (typeof setTlMode === 'function') setTlMode(key === 'timeline_friends' ? 'friends' : 'personal');
+            if (typeof tlSearchClearChip === 'function') tlSearchClearChip();
+            const input = _setSearchInputValue('tlSearchInput', q);
+            if (typeof tlRunSearchFilter === 'function') tlRunSearchFilter();
             setTimeout(() => input?.focus(), 80);
         }
 
@@ -592,7 +601,6 @@ const SmartSearch = (() => {
         imagePickerOverlay: () => typeof closeImagePicker === 'function' && closeImagePicker(),
         groupPostOverlay: () => typeof closeGroupPostModal === 'function' && closeGroupPostModal(),
         groupEventOverlay: () => typeof closeGroupEventModal === 'function' && closeGroupEventModal(),
-        accountSwitcherOverlay: () => typeof closeAccountSwitcher === 'function' && closeAccountSwitcher(),
     };
 
     function _isVisibleOverlay(el) {
@@ -628,7 +636,7 @@ const SmartSearch = (() => {
     function _closeOpenModalsBeforeOpen() {
         const overlays = [
             ...document.querySelectorAll('.modal-overlay'),
-            ...document.querySelectorAll('#imagePickerOverlay, #groupPostOverlay, #groupEventOverlay, #accountSwitcherOverlay'),
+            ...document.querySelectorAll('#imagePickerOverlay, #groupPostOverlay, #groupEventOverlay'),
         ];
         let closedAny = false;
 

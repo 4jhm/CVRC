@@ -70,6 +70,13 @@ const TL_TABLE_DEFS = {
         { id: 'time',     key: 'people.list.header.time_spent',   fallback: 'Time Spent',   width: '120px', sort: 'time' },
         { id: 'lastseen', key: 'worlds.list.header.last_visited', fallback: 'Last Visited', width: '160px', sort: 'lastseen' },
     ],
+    groupInstList: [
+        { id: 'icon',    key: 'groups.list.header.group',        fallback: 'Group',   width: '64px',  sort: 'group' },
+        { id: 'group',   key: 'groups.list.header.name',         fallback: 'Name',    width: '220px', sort: 'group' },
+        { id: 'world',   key: 'groups.instances.header.world',   fallback: 'World',   width: '',      sort: 'world' },
+        { id: 'type',    key: 'timeline.list.header.type',       fallback: 'Type',    width: '130px', sort: 'type' },
+        { id: 'players', key: 'groups.instances.header.players', fallback: 'Players', width: '110px', sort: 'players' },
+    ],
     groupsList: [
         { id: 'icon',    key: 'groups.list.header.group',        fallback: 'Group',        width: '64px',  sort: 'icon' },
         { id: 'name',    key: 'groups.list.header.name',         fallback: 'Name',         width: '',      sort: 'name' },
@@ -152,6 +159,7 @@ function _tlTableRerender(list) {
     else if (list === 'instanceList' && typeof renderInstancePlayers === 'function') renderInstancePlayers();
     else if (list === 'worldsList'  && typeof renderWorldsListView === 'function') renderWorldsListView();
     else if (list === 'groupsList'  && typeof renderGroupsListView === 'function') renderGroupsListView();
+    else if (list === 'groupInstList' && typeof renderGroupInstancesView === 'function') renderGroupInstancesView();
     else if (list === 'avatarsList' && typeof renderAvatarsListView === 'function') renderAvatarsListView();
 }
 
@@ -305,7 +313,7 @@ function _tlDragUp() {
 
 document.addEventListener('pointerdown', _tlDragDown, true);
 
-const TL_TABLE_SCROLL_LISTS = new Set(['friendsList', 'modList', 'instanceList', 'worldsList', 'groupsList', 'avatarsList']);
+const TL_TABLE_SCROLL_LISTS = new Set(['friendsList', 'modList', 'instanceList', 'worldsList', 'groupsList', 'groupInstList', 'avatarsList']);
 const TL_TABLE_FLEX_WIDTH = 240;
 
 function _tlTableMinWidth(cols) {

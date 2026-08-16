@@ -271,7 +271,6 @@ public partial class AppShell
                 case "setupDone":
                 case "forceTrim":
                 case "resetSetup":
-                case "clearImgCache":
                 case "getImgCacheSize":
                 case "optimizeImgCache":
                 case "clearFfcCache":
@@ -325,7 +324,6 @@ public partial class AppShell
                 case "vrcnPlusCheckEntitlement":
                 case "vrcnPlusGetTheme":
                 case "vrcnPlusSaveTheme":
-                case "vrcnPlusDeleteTheme":
                     await _vrcnPlusCtrl.HandleMessage(action, msg);
                     break;
 
@@ -358,7 +356,6 @@ public partial class AppShell
                 // Photo/Library actions delegated to PhotosController
                 case "deletePost":
                 case "manualPost":
-                case "dropFiles":
                 case "scanLibrary":
                 case "scanLibraryForce":
                 case "loadLibraryPage":
@@ -545,7 +542,6 @@ public partial class AppShell
 
                 case "vrcFriendFetchState":
                 case "vrcFriendFetchStart":
-                case "vrcFriendFetchCancel":
                     await _friendFetch.HandleMessage(action, msg);
                     break;
 
@@ -2048,7 +2044,6 @@ public partial class AppShell
                         {
                             System.IO.File.WriteAllText(path, csvText);
                             SendToJS("log", new { msg = $"Saved: {path}", color = "ok" });
-                            SendToJS("exportSaved", new { ok = true, path });
                         }
                         catch (Exception ex)
                         {
@@ -2514,7 +2509,6 @@ public partial class AppShell
 
                 // Custom Chatbox OSC
                 case "chatboxConfig":
-                case "chatboxStop":
                 case "chatboxDirectSend":
                     _chatboxCtrl.HandleMessage(action, msg);
                     break;
@@ -2595,7 +2589,6 @@ public partial class AppShell
                 case "ssLoadRules":
                 case "ssSaveRules":
                 case "ssSetEnabled":
-                case "ssEvaluateNow":
                     await _ssCtrl.HandleMessage(action, msg);
                     break;
 
@@ -2604,7 +2597,6 @@ public partial class AppShell
                 case "asDisconnect":
                 case "asSaveSettings":
                 case "asSetScale":
-                case "asRecordKey":
                     _asCtrl.HandleMessage(action, msg);
                     break;
 
@@ -2622,7 +2614,6 @@ public partial class AppShell
                 case "vcInstall":
                 case "vcStart":
                 case "vcStop":
-                case "vcSend":
                     _relayCtrl.HandleMessage(action, msg);
                     break;
 
@@ -2732,9 +2723,7 @@ public partial class AppShell
                 // Notifications delegated to NotificationsController
                 case "vrcGetNotifications":
                 case "vrcGetHiddenNotifications":
-                case "vrcGetAllNotifications":
                 case "vrcAcceptNotification":
-                case "vrcMarkNotifRead":
                 case "vrcHideNotification":
                 case "vrcGetRespondMessages":
                 case "vrcUpdateRespondMessage":
@@ -2782,47 +2771,6 @@ public partial class AppShell
                 // Current instance
                 case "vrcGetCurrentInstance":
                     await _instance.HandleMessage(action, msg);
-                    break;
-
-                // User detail (for non-friend profile viewing)
-                case "vrcGetUser":
-                    var guId = msg["userId"]?.ToString();
-                    if (!string.IsNullOrEmpty(guId))
-                    {
-                        var guCached = _core.TimeEngine.GetUserDetail(guId);
-                        if (guCached != null)
-                            Invoke(() => SendToJS("vrcUserDetail", new {
-                                id = guId, displayName = guCached.DisplayName, image = guCached.Image,
-                                status = guCached.Status, statusDescription = guCached.StatusDescription,
-                                bio = guCached.Bio, location = guCached.Location, isFriend = guCached.IsFriend,
-                                currentAvatarImageUrl = ImageCacheHelper.GetAvatarUrl(null, guCached.CurrentAvatarImg),
-                            }));
-                        _ = Task.Run(async () => {
-                            var u = await _core.Users.GetUserAsync(guId);
-                            if (u != null)
-                            {
-                                var guImg = VRChatApiService.GetUserImage(u);
-                                _core.TimeEngine.SaveUserDetail(
-                                    u["id"]?.ToString() ?? guId,
-                                    u["displayName"]?.ToString() ?? "",
-                                    guImg,
-                                    u["status"]?.ToString() ?? "offline",
-                                    u["statusDescription"]?.ToString() ?? "",
-                                    u["bio"]?.ToString() ?? "",
-                                    u["location"]?.ToString() ?? "",
-                                    u["isFriend"]?.Value<bool>() ?? false,
-                                    u["currentAvatarImageUrl"]?.ToString() ?? "");
-                                Invoke(() => SendToJS("vrcUserDetail", new {
-                                    id = u["id"]?.ToString() ?? "", displayName = u["displayName"]?.ToString() ?? "",
-                                    image = ImageCacheHelper.GetUserUrl(u["id"]?.ToString() ?? guId, guImg), status = u["status"]?.ToString() ?? "offline",
-                                    statusDescription = u["statusDescription"]?.ToString() ?? "",
-                                    bio = u["bio"]?.ToString() ?? "", location = u["location"]?.ToString() ?? "",
-                                    isFriend = u["isFriend"]?.Value<bool>() ?? false,
-                                    currentAvatarImageUrl = ImageCacheHelper.GetAvatarUrl(u["currentAvatar"]?.ToString(), u["currentAvatarImageUrl"]?.ToString()),
-                                }));
-                            }
-                        });
-                    }
                     break;
 
                 // Timeline — all timeline + import message cases delegated to TimelineController
@@ -3387,7 +3335,6 @@ public partial class AppShell
                 // Discord Rich Presence
                 case "dpStart":
                 case "dpStop":
-                case "dpRefresh":
                     _discordCtrl.HandleMessage(action, msg);
                     break;
 
@@ -3457,14 +3404,12 @@ public partial class AppShell
                 case "vroDisconnect":
                 case "vroShow":
                 case "vroHide":
-                case "vroToggle":
                 case "vroConfig":
                 case "vroAutoSave":
                 case "vroToastConfig":
                 case "vroWaterConfig":
                 case "vroRecordKeybind":
                 case "vroCancelRecording":
-                case "vroSetTab":
                 case "vroScaleConfig":
                 case "vroRecordScaleKeybind":
                 case "vroCancelScaleRecording":
@@ -3482,7 +3427,7 @@ public partial class AppShell
                             var json = await http.GetStringAsync("https://ask.vrchat.com/c/official/31.json");
                             var data = JObject.Parse(json);
                             var topics = data["topic_list"]?["topics"] as JArray ?? new JArray();
-                            var items = topics.Take(3).Select(t => new
+                            var items = topics.Take(6).Select(t => new
                             {
                                 id      = t["id"]?.ToString() ?? "",
                                 title   = t["title"]?.ToString() ?? "",

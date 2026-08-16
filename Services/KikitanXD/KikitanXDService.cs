@@ -23,7 +23,6 @@ public sealed class KikitanXDService : IKikitanSpeechService
     public event Action? OnChatboxSent;
     public bool IsRunning => false;
     public float MeterLevel => 0f;
-    public static string[] GetInputDevices() => [];
     public void Start(int deviceIndex, KikitanXDSettings settings) { }
     public void UpdateSettings(KikitanXDSettings settings) { }
     public void Stop() { }
@@ -40,7 +39,7 @@ public sealed class KikitanXDService : IKikitanSpeechService
     public event Action<string>? OnLog;
     public event Action? OnChatboxSent;
 
-    private WaveInEvent? _waveIn;
+    private WaveIn? _waveIn;
     private volatile float _meterLevel;
     public float MeterLevel => _meterLevel;
     public bool IsRunning => _waveIn != null;
@@ -155,11 +154,6 @@ public sealed class KikitanXDService : IKikitanSpeechService
             : TranslateSystemPromptRaw;
     }
 
-    public static string[] GetInputDevices()
-    {
-        return VRCNext.Services.Helpers.AudioDeviceHelper.GetInputNames();
-    }
-
     public void Start(int deviceIndex, KikitanXDSettings s)
     {
         Stop();
@@ -173,7 +167,7 @@ public sealed class KikitanXDService : IKikitanSpeechService
         _blockedWords = NormalizeList(s.BlockedWords);
         _blockedSentences = NormalizeList(s.BlockedSentences);
 
-        _waveIn = new WaveInEvent
+        _waveIn = new WaveIn
         {
             DeviceNumber = deviceIndex,
             WaveFormat = new WaveFormat(SampleRate, BitsPerSample, Channels),

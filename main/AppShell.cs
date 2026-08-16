@@ -73,6 +73,28 @@ public partial class AppShell
     // DB services live in CoreLibrary and are accessed via _core.TimeEngine, _core.PhotoPlayersStore and _core.Timeline.
     private readonly UpdateService _updateService = new();
     private readonly MemoryTrimService _memTrim = new();
+
+    private void MigrateAudioDeviceSelections()
+    {
+        var changed = false;
+        var tts = VRCNext.Services.Helpers.AudioDeviceManager.TryMigrateLegacy(false,
+            VRCNext.Services.Helpers.AudioSelection.From(_settings.VroTtsDeviceId, _settings.VroTtsDeviceName));
+        if (tts.Mode == VRCNext.Services.Helpers.AudioSelectionMode.Endpoint && _settings.VroTtsDeviceId.Length == 0)
+        {
+            _settings.VroTtsDeviceId = tts.EndpointId;
+            _settings.VroTtsDeviceName = tts.DisplayName;
+            changed = true;
+        }
+        var fsOut = VRCNext.Services.Helpers.AudioDeviceManager.TryMigrateLegacy(false,
+            VRCNext.Services.Helpers.AudioSelection.From(_settings.FsOutputDeviceId, _settings.FsOutputDevice));
+        if (fsOut.Mode == VRCNext.Services.Helpers.AudioSelectionMode.Endpoint && _settings.FsOutputDeviceId.Length == 0)
+        {
+            _settings.FsOutputDeviceId = fsOut.EndpointId;
+            _settings.FsOutputDevice = fsOut.DisplayName;
+            changed = true;
+        }
+        if (changed) _settings.Save();
+    }
     private readonly Channel<string> _jsQueue = Channel.CreateUnbounded<string>(new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = false });
 #if WINDOWS
     private SystemTrayService? _trayService;
@@ -162,6 +184,7 @@ public partial class AppShell
         MigrationHelper.MigrateBuiltInDashboardTheme(_settings); // removes AppData copy; now hardcoded in index.html
         MigrationHelper.MigrateAutoStartShortcuts(_settings);
         if (_settings.MemoryTrimEnabled) _memTrim.SetEnabled(true);
+        MigrateAudioDeviceSelections();
         WindowsFixes.Log = s => SendToJS("log", new { msg = s, color = "sec" });
         VRCNext.Services.AvtrdbResolver.Log = s => SendToJS("log", new { msg = s, color = "sec" });
         VRCNext.Services.Helpers.AvtrdbSpamGuard.Log = s => SendToJS("log", new { msg = s, color = "warn" });
@@ -169,7 +192,7 @@ public partial class AppShell
         WindowsFixes.SetEnabled(_settings.MediaFixEnabled);
         VRCNext.Services.Helpers.TtsService.Log         = s => SendToJS("log", new { msg = s, color = "sec" });
         VRCNext.Services.Helpers.EdgeTtsService.Log     = s => SendToJS("log", new { msg = s, color = "sec" });
-        VRCNext.Services.Helpers.AudioDeviceHelper.Log  = s => SendToJS("log", new { msg = s, color = "sec" });
+        VRCNext.Services.Helpers.AudioDeviceManager.Log = s => SendToJS("log", new { msg = s, color = "sec" });
 
         // Ensure at least one primary account exists for fresh installs or corrupted settings.
         if (_settings.Accounts.Count == 0) _settings.EnsurePrimaryAccount();
@@ -1076,11 +1099,6 @@ public partial class AppShell
         _ = Task.Run(ServeHttpAsync);
     }
 
-    private void UpdateVirtualHostMappings()
-    {
-        // No-op with Photino — watch folders served via /media{i}/ routes in HttpListener
-    }
-
 #if !WINDOWS
     private string FrontendHttpUrl(string filePath)
     {
@@ -1282,8 +1300,6 @@ public partial class AppShell
         ctx.Response.ContentLength64 = bytes.Length;
         await ctx.Response.OutputStream.WriteAsync(bytes);
     }
-
-    public string GetCustomThemesDir() => _customThemesDir;
 
     private void SeedBuiltInThemes()
     {

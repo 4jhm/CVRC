@@ -140,13 +140,6 @@
     display: block;
 }
 
-.lib-vid-thumb-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    pointer-events: none;
-}
 
 .lib-vid-overlay {
     position: absolute;
@@ -264,10 +257,6 @@
     background: var(--bg-hover);
 }
 
-.photo-players-list {
-    max-height: 200px;
-    overflow-y: auto;
-}
 
 .lib-vid-thumb-fallback {
     width: 100%;
@@ -311,9 +300,7 @@
 .vrcn-lib-button.del:hover { background: rgba(255,75,85,.35); color: var(--err); }
 .vrcn-lib-button.hide.active { color: var(--accent); opacity: 1; }
 
-.lib-thumb-wrap.lib-blurred .lib-thumb,
-.lib-thumb-wrap.lib-blurred .lib-vid-thumb-video,
-.lib-thumb-wrap.lib-blurred img {
+.lib-thumb-wrap.lib-blurred .lib-thumb, .lib-thumb-wrap.lib-blurred img {
     filter: blur(20px);
     transform: scale(1.08);
     transition: filter .2s, transform .2s;
@@ -381,22 +368,7 @@
     margin-bottom: 4px;
 }
 
-.lib-lightbox {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,.88);
-    z-index: 10016;
-    cursor: pointer;
-    animation: fadeIn .15s ease;
-}
 
-.lib-lightbox img,
-.lib-lightbox video {
-    max-width: 90%;
-    max-height: 90%;
-    border-radius: 8px;
-    box-shadow: 0 12px 60px rgba(0,0,0,.5);
-}
 
 /* === Photo Detail Modal (image left, info right) === */
 /* Compound selector beats single-class .modal-overlay rule defined later in modals.css */
@@ -713,17 +685,7 @@
     padding-left: 10px;
 }
 
-.lib-rating-option .lib-rating-hearts {
-    display: flex;
-    gap: 1px;
-    flex: 0 0 auto;
-    color: var(--accent-lt);
-    opacity: .7;
-}
 
-.lib-rating-option.vn-active .lib-rating-hearts {
-    opacity: 1;
-}
 
 .photo-detail-players-card {
     flex: 1;
@@ -746,29 +708,7 @@
     padding-right: 4px;
 }
 
-.photo-detail-close {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: none;
-    background: rgba(0,0,0,.5);
-    color: var(--tx1);
-    cursor: pointer;
-    z-index: 3;
-    backdrop-filter: blur(6px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all .15s;
-}
 
-.photo-detail-close:hover {
-    background: rgba(0,0,0,.75);
-    color: var(--tx0);
-}
 
 @media (max-width: 900px) {
     .photo-detail-panes {

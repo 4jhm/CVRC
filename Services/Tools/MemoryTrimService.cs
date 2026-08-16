@@ -7,7 +7,7 @@ namespace VRCNext.Services;
 public class MemoryTrimService : IDisposable
 {
     private System.Threading.Timer? _timer;
-    private const int IntervalMs = 10 * 60 * 1000; // 10 minutes
+    private const int IntervalMs = 15 * 60 * 1000; // 15 minutes
 
     public void SetEnabled(bool enabled)
     {

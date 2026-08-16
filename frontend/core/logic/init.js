@@ -7,7 +7,7 @@ function setGridSize(tab, size) {
     const compact = size === 'compact';
     const gridIds = {
         worlds:  ['favWorldsGrid', 'worldMineGrid', 'worldRecentGrid', 'searchWorldsResults'],
-        groups:  ['myGroupsGrid', 'searchGroupsResults'],
+        groups:  ['myGroupsGrid', 'searchGroupsResults', 'groupInstancesGrid'],
         avatars: ['avatarGrid', 'favAvatarsGrid', 'avatarRecentGrid', 'roseDbGrid', 'avatarSearchGrid'],
     };
     (gridIds[tab] || []).forEach(id => {

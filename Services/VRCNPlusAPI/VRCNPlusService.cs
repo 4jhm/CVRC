@@ -62,17 +62,6 @@ public class VRCNPlusService : IDisposable
         catch { return null; }
     }
 
-    public bool IsCacheFresh(string userId)
-    {
-        using var cmd = _db.CreateCommand();
-        cmd.CommandText = "SELECT fetched_at FROM profile_themes WHERE user_id = $id";
-        cmd.Parameters.AddWithValue("$id", userId);
-        var s = cmd.ExecuteScalar() as string;
-        if (string.IsNullOrEmpty(s)) return false;
-        if (!DateTime.TryParse(s, out var t)) return false;
-        return (DateTime.UtcNow - t.ToUniversalTime()) < CacheFreshness;
-    }
-
     private void UpsertLocalTheme(string userId, JObject colors, string updatedAt)
     {
         using var cmd = _db.CreateCommand();

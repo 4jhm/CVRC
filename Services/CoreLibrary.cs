@@ -233,11 +233,6 @@ public class CoreLibrary
         if (StopAccountScopedTasks != null) await StopAccountScopedTasks();
     }
 
-    public async Task StartAccountScopedTasksAsync()
-    {
-        if (StartAccountScopedTasks != null) await StartAccountScopedTasks();
-    }
-
     // Disposes the three DB services, which afterwards are unusable due to readonly connection fields.
     public void DisposeDatabaseServices()
     {

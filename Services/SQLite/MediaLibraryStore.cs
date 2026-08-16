@@ -283,9 +283,6 @@ public class MediaLibraryStore : IDisposable
         }
     }
 
-    public void SetPlayers(string path, string worldId, string playersJson)
-        => UpdateRow(path, "world_id=$a, players_json=$b", worldId, playersJson);
-
     public void SetAuthor(string path, string authorName, string authorId)
         => UpdateRow(path, "author_name=$a, author_id=$b", authorName, authorId);
 

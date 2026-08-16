@@ -20,8 +20,6 @@ public static class TtsService
     private static CancellationTokenSource? _previewCts;
     private static IDisposable? _previewOut;
 
-    public static string[] GetOutputDevices() => AudioDeviceHelper.GetOutputNames();
-
     public static string[] GetSapiVoices()
     {
 #if WINDOWS
@@ -84,7 +82,7 @@ public static class TtsService
     /// Speaks a line. Calls are serialized so overlapping messages queue up
     /// instead of cutting each other off.
     /// </summary>
-    public static void Speak(string text, string engine, string voice, int deviceIndex, int volume, int rate)
+    public static void Speak(string text, string engine, string voice, AudioSelection device, int volume, int rate)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
 #if WINDOWS
@@ -95,7 +93,7 @@ public static class TtsService
                 Log?.Invoke("[TTS] Still busy with the previous line, skipping this one.");
                 return;
             }
-            try { await SpeakOnceAsync(text, engine, voice, deviceIndex, volume, rate, CancellationToken.None); }
+            try { await SpeakOnceAsync(text, engine, voice, device, volume, rate, CancellationToken.None); }
             catch (Exception ex) { Log?.Invoke($"[TTS] {ex.Message}"); }
             finally { _gate.Release(); }
         });
@@ -106,7 +104,7 @@ public static class TtsService
     /// Plays a short sample. Unlike Speak this never queues: a new preview
     /// replaces the running one, so hovering down a voice list stays responsive.
     /// </summary>
-    public static void Preview(string text, string engine, string voice, int deviceIndex, int rate)
+    public static void Preview(string text, string engine, string voice, AudioSelection device, int rate)
     {
         if (string.IsNullOrWhiteSpace(text)) return;
 #if WINDOWS
@@ -120,7 +118,7 @@ public static class TtsService
         }
         _ = Task.Run(async () =>
         {
-            try { await SpeakOnceAsync(text, engine, voice, deviceIndex, 100, rate, cts.Token, isPreview: true); }
+            try { await SpeakOnceAsync(text, engine, voice, device, 100, rate, cts.Token, isPreview: true); }
             catch (OperationCanceledException) { }
             catch (Exception ex) { Log?.Invoke($"[TTS] Preview: {ex.Message}"); }
         });
@@ -128,7 +126,7 @@ public static class TtsService
     }
 
 #if WINDOWS
-    private static async Task SpeakOnceAsync(string text, string engine, string voice, int deviceIndex,
+    private static async Task SpeakOnceAsync(string text, string engine, string voice, AudioSelection device,
                                              int volume, int rate, CancellationToken ct, bool isPreview = false)
     {
         if (string.Equals(engine, EngineEdge, StringComparison.OrdinalIgnoreCase))
@@ -138,25 +136,25 @@ public static class TtsService
             catch (Exception ex)
             {
                 Log?.Invoke($"[TTS] Edge synthesis failed ({ex.Message}), falling back to SAPI.");
-                SpeakSapi(text, "", deviceIndex, volume, rate, ct, isPreview);
+                SpeakSapi(text, "", device, volume, rate, ct, isPreview);
                 return;
             }
             if (mp3.Length == 0)
             {
                 Log?.Invoke("[TTS] Edge returned no audio, falling back to SAPI.");
-                SpeakSapi(text, "", deviceIndex, volume, rate, ct, isPreview);
+                SpeakSapi(text, "", device, volume, rate, ct, isPreview);
                 return;
             }
             using var src = new MemoryStream(mp3);
             using var reader = new NAudio.Wave.Mp3FileReader(src);
-            Play(reader, deviceIndex, ct, isPreview);
+            Play(reader, device, ct, isPreview);
             return;
         }
 
-        SpeakSapi(text, voice, deviceIndex, volume, rate, ct, isPreview);
+        SpeakSapi(text, voice, device, volume, rate, ct, isPreview);
     }
 
-    private static void SpeakSapi(string text, string voice, int deviceIndex, int volume, int rate,
+    private static void SpeakSapi(string text, string voice, AudioSelection device, int volume, int rate,
                                   CancellationToken ct, bool isPreview)
     {
         using var ms = new MemoryStream();
@@ -179,12 +177,18 @@ public static class TtsService
         }
         ms.Position = 0;
         using var reader = new NAudio.Wave.WaveFileReader(ms);
-        Play(reader, deviceIndex, ct, isPreview);
+        Play(reader, device, ct, isPreview);
     }
 
-    private static void Play(NAudio.Wave.WaveStream reader, int deviceIndex, CancellationToken ct, bool isPreview)
+    private static void Play(NAudio.Wave.WaveStream reader, AudioSelection device, CancellationToken ct, bool isPreview)
     {
-        var waveOut = new NAudio.Wave.WaveOutEvent { DeviceNumber = AudioDeviceHelper.ResolveOutput(deviceIndex, null) };
+        var devIdx = AudioDeviceManager.ResolveOutputIndex(device);
+        if (devIdx == null)
+        {
+            Log?.Invoke($"[TTS] Output '{device.DisplayName}' unavailable, staying silent (selection kept).");
+            return;
+        }
+        var waveOut = new NAudio.Wave.WaveOut { DeviceNumber = devIdx.Value };
         using var done = new ManualResetEventSlim(false);
         waveOut.PlaybackStopped += (_, __) => done.Set();
         waveOut.Init(reader);

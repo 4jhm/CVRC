@@ -203,8 +203,10 @@
                         ${statsHtml}
                     </div>
                 </div>
-                <div class="fd-badges-row">${rankBadge}${friendBadge}${ageBadge}${platBadge}</div>
-                ${instanceHtml}${bioHtml}${langsHtml}
+                <div class="fp-section">
+                    <div class="fd-badges-row">${rankBadge}${friendBadge}${ageBadge}${platBadge}</div>
+                    ${instanceHtml}${bioHtml}${langsHtml}
+                </div>
             </div>`;
 
         // The background fields ride along on the preview payload, so the hover card

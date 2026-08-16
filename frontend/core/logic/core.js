@@ -92,7 +92,6 @@ function applyDecorationsSetting() {
     document.documentElement.classList.toggle('deco-dashboard-on', onDash);
     document.documentElement.classList.toggle('profile-cards-transparent', glassCards);
 }
-function applyIconFramesSetting() { applyDecorationsSetting(); }
 function iconFrameHtml(frameUrl, animated) {
     if (!frameUrl) return '';
     const src = (animated || !vrcPlusOptimizeEnabled) ? frameUrl : _thumbUrl(frameUrl, 96);
@@ -328,6 +327,183 @@ function getPlatformBadgeHtml(platform) {
     if (platform === 'web')               return `<span class="vrcn-badge platform-web" title="${t('instance.platform.web', 'Web')}"><span class="msi" style="font-size:11px;">language</span>${t('instance.platform.web', 'Web')}</span>`;
     return '';
 }
+
+const VRC_CREATOR_BADGE_ID = 'bdg_98b3f9e6-ab5e-4133-96c1-70cb06c07500';
+
+function isEconomyCreator(u) {
+    if (!u) return false;
+    if (u.isEconomyCreator === true) return true;
+    return Array.isArray(u.badges)
+        && u.badges.some(b => b && (b.id === VRC_CREATOR_BADGE_ID || b.badgeId === VRC_CREATOR_BADGE_ID));
+}
+
+function getCreatorBadgeHtml(u) {
+    if (!isEconomyCreator(u)) return '';
+    const label = t('profiles.badges.creator', 'Creator');
+    return `<span class="vrcn-badge" style="background:rgba(128,106,252,.18);color:#806afc;" title="${label}"><span class="msi" style="font-size:11px;">verified</span>${label}</span>`;
+}
+
+const TRUST_RANK_MAX = 4;
+const TRUST_BADGE_TARGET = 4;
+const TRUST_YEAR_TARGET = 3;
+const TRUST_YEAR_WEIGHT = 3;
+const TRUST_GROUP_TARGET = 20;
+const TRUST_GROUP_JOIN_WEIGHT = 0.8;
+
+function getTrustRankLevel(tags) {
+    if (!Array.isArray(tags)) return 0;
+    if (tags.includes('system_trust_legend') || tags.includes('system_trust_veteran')) return 4;
+    if (tags.includes('system_trust_trusted')) return 3;
+    if (tags.includes('system_trust_known')) return 2;
+    if (tags.includes('system_trust_basic')) return 1;
+    return 0;
+}
+
+function getTrustCriteria(u, avatarCount) {
+    const tags = Array.isArray(u?.tags) ? u.tags : [];
+    const worlds = Array.isArray(u?.userWorlds) ? u.userWorlds.length : 0;
+    const avatars = Number(avatarCount) > 0 ? Number(avatarCount) : 0;
+    const raw = u?.dateJoined || u?.date_joined || '';
+    const joined = raw ? new Date(raw.length === 10 ? raw + 'T00:00:00' : raw) : null;
+    const years = (joined && !isNaN(joined.getTime()))
+        ? (Date.now() - joined.getTime()) / (365.25 * 24 * 60 * 60 * 1000) : 0;
+    const rankLevel = getTrustRankLevel(tags);
+    const rankInfo = (typeof getTrustRank === 'function' && tags.length) ? getTrustRank(tags) : null;
+    const badgeCount = Array.isArray(u?.badges) ? u.badges.length : 0;
+    const groupCount = Array.isArray(u?.userGroups) ? u.userGroups.length : 0;
+    const rep = u?.representedGroup;
+    const representing = !!(rep && (rep.id || rep.groupId || rep.name));
+    return [
+        { score: rankLevel / TRUST_RANK_MAX,
+          label: t('profiles.trust.criteria.trusted', 'Trusted User'),
+          detail: rankInfo ? rankInfo.label : t('profiles.trust.visitor', 'Visitor') },
+        { score: (u?.ageVerified === true || u?.ageVerificationStatus === '18+') ? 1 : 0,
+          label: t('profiles.meta.age_verified', 'Age Verified') },
+        { score: Math.max(Math.min(years / TRUST_YEAR_TARGET, 1), 0),
+          weight: TRUST_YEAR_WEIGHT,
+          label: t('profiles.trust.criteria.years', '3+ years on VRChat'),
+          detail: Math.min(Math.max(Math.floor(years), 0), TRUST_YEAR_TARGET) + ' / ' + TRUST_YEAR_TARGET },
+        { score: tags.includes('system_supporter') ? 1 : 0,
+          label: t('profiles.trust.criteria.supporter', 'VRC+ Supporter') },
+        { score: Math.min(badgeCount / TRUST_BADGE_TARGET, 1),
+          label: t('profiles.trust.criteria.badges', '4+ badges'),
+          detail: Math.min(badgeCount, TRUST_BADGE_TARGET) + ' / ' + TRUST_BADGE_TARGET },
+        { score: (u?.bio && String(u.bio).trim()) ? 1 : 0,
+          label: t('profiles.trust.criteria.bio', 'Has a bio') },
+        { score: (worlds + avatars >= 1) ? 1 : 0,
+          label: t('profiles.trust.criteria.content', 'Uploaded content') },
+        { score: Math.min(groupCount / TRUST_GROUP_TARGET, 1) * TRUST_GROUP_JOIN_WEIGHT
+               + (representing ? 1 - TRUST_GROUP_JOIN_WEIGHT : 0),
+          label: t('profiles.trust.criteria.groups', 'Joined a few groups') },
+    ];
+}
+
+function getTrustScorePct(crit) {
+    const total = crit.reduce((s, c) => s + (c.weight || 1), 0);
+    if (!total) return 0;
+    return Math.round(crit.reduce((s, c) => s + c.score * (c.weight || 1), 0) / total * 100);
+}
+
+function _trustPctColor() {
+    return 'var(--bdg-rank-trusted)';
+}
+
+function _trustDescription(pct) {
+    if (pct >= 100) return t('profiles.trust.description', 'This user has a trusted user standing within the community.');
+    if (pct >= 80)  return t('profiles.trust.desc.high', 'This user has a highly trusted standing within the community.');
+    if (pct >= 60)  return t('profiles.trust.desc.good', 'This user has a good standing within the community.');
+    if (pct >= 40)  return t('profiles.trust.desc.some', 'This user has some established trust within the community.');
+    if (pct >= 20)  return t('profiles.trust.desc.low',  'This user has a low level of established trust within the community.');
+    return t('profiles.trust.desc.none', 'This user has no established trust within the community yet.');
+}
+
+function _trustCritRows(crit) {
+    return crit.map(c => {
+        const full = c.score >= 1;
+        const partial = !full && c.score > 0;
+        const icon = full ? 'check_circle' : partial ? 'radio_button_checked' : 'radio_button_unchecked';
+        const cls = full ? ' met' : partial ? ' partial' : '';
+        const detail = c.detail ? `<span class="fd-trust-crit-detail">${esc(c.detail)}</span>` : '';
+        return `<div class="fd-trust-crit${cls}">
+            <span class="msi">${icon}</span>${esc(c.label)}${detail}
+        </div>`;
+    }).join('');
+}
+
+function _animateTrustPct(el, target) {
+    if (!el) return;
+    const from = parseInt(el.textContent, 10) || 0;
+    if (from === target) { el.textContent = target + '%'; return; }
+    if (el._trustRaf) cancelAnimationFrame(el._trustRaf);
+    const start = performance.now();
+    const step = now => {
+        const k = Math.min((now - start) / 420, 1);
+        const eased = 1 - Math.pow(1 - k, 3);
+        el.textContent = Math.round(from + (target - from) * eased) + '%';
+        if (k < 1) el._trustRaf = requestAnimationFrame(step);
+        else el._trustRaf = 0;
+    };
+    el._trustRaf = requestAnimationFrame(step);
+}
+
+let _trustBarSeq = 0;
+const _trustBarTimers = {};
+
+function _fillTrustBar(id, pct, color, tries) {
+    requestAnimationFrame(() => {
+        const wrap = document.getElementById(id);
+        if (!wrap) {
+            if ((tries || 0) < 40) _fillTrustBar(id, pct, color, (tries || 0) + 1);
+            return;
+        }
+        _paintTrustBar(wrap, pct, color);
+    });
+}
+
+function _paintTrustBar(wrap, pct, color) {
+    wrap.classList.remove('fd-trust-pending');
+    const fill = wrap.querySelector('.fd-trust-bar-fill');
+    if (fill) { fill.style.background = color; fill.style.width = pct + '%'; }
+    const pctEl = wrap.querySelector('.fd-trust-pct');
+    if (pctEl) { pctEl.style.color = color; _animateTrustPct(pctEl, pct); }
+    const descEl = wrap.querySelector('.fd-trust-desc');
+    if (descEl) descEl.textContent = _trustDescription(pct);
+}
+
+function getTrustBarHtml(u, avatarCount, ready) {
+    const crit = getTrustCriteria(u, avatarCount);
+    const pct = getTrustScorePct(crit);
+    const color = _trustPctColor(pct);
+    const id = 'trustBar' + (++_trustBarSeq);
+    if (ready) _fillTrustBar(id, pct, color);
+    else _trustBarTimers[id] = setTimeout(() => { delete _trustBarTimers[id]; _fillTrustBar(id, pct, color); }, 6000);
+    return `<div class="fd-trust-bar-wrap${ready ? '' : ' fd-trust-pending'}" id="${id}">
+        <button type="button" class="fd-trust-bar-head" onclick="toggleTrustCrits(this)">
+            <span>${esc(t('profiles.trust.score', 'Trust Score'))}</span>
+            <span class="fd-trust-pct" style="color:${color};">0%</span>
+            <span class="msi fd-trust-chevron">expand_more</span>
+        </button>
+        <div class="fd-trust-bar"><div class="fd-trust-bar-fill" style="width:0%;background:${color};"></div></div>
+        <p class="fd-trust-desc">${esc(_trustDescription(pct))}</p>
+        <div class="fd-trust-crits">${_trustCritRows(crit)}</div>
+    </div>`;
+}
+
+function toggleTrustCrits(el) {
+    el.closest('.fd-trust-bar-wrap')?.classList.toggle('open');
+}
+
+function updateTrustBar(slotId, u, avatarCount) {
+    const slot = document.getElementById(slotId);
+    if (!slot) return;
+    const wrap = slot.querySelector('.fd-trust-bar-wrap');
+    if (!wrap) { slot.innerHTML = getTrustBarHtml(u, avatarCount, true); return; }
+    if (_trustBarTimers[wrap.id]) { clearTimeout(_trustBarTimers[wrap.id]); delete _trustBarTimers[wrap.id]; }
+    const crit = getTrustCriteria(u, avatarCount);
+    const crits = wrap.querySelector('.fd-trust-crits');
+    if (crits) crits.innerHTML = _trustCritRows(crit);
+    _paintTrustBar(wrap, getTrustScorePct(crit), _trustPctColor(getTrustScorePct(crit)));
+}
 // Space Flight
 let sfConnected = false;
 // FrameShot
@@ -360,7 +536,6 @@ function sk(type, n = 1) {
         detail:  () => `<div style="padding:4px 0"><div class="sk-block" style="height:180px;border-radius:10px;margin-bottom:20px;"></div><div class="sk-block" style="height:20px;width:60%;border-radius:6px;margin-bottom:10px;"></div><div class="sk-block" style="height:13px;width:40%;border-radius:4px;margin-bottom:20px;"></div><div class="sk-block" style="height:11px;border-radius:4px;margin-bottom:8px;"></div><div class="sk-block" style="height:11px;width:85%;border-radius:4px;margin-bottom:8px;"></div><div class="sk-block" style="height:11px;width:65%;border-radius:4px;"></div></div>`,
         'timeline': () => { const tlRow = (side) => side === 'left' ? `<div class="tl-row"><div class="tl-card-side tl-side-left"><div class="sk-block" style="width:100%;max-width:340px;height:85px;border-radius:10px;"></div></div><div class="tl-center-col"><div class="sk-block" style="width:12px;height:12px;border-radius:50%;flex-shrink:0;"></div></div><div class="tl-card-side tl-side-right"></div></div>` : `<div class="tl-row"><div class="tl-card-side tl-side-left"></div><div class="tl-center-col"><div class="sk-block" style="width:12px;height:12px;border-radius:50%;flex-shrink:0;"></div></div><div class="tl-card-side tl-side-right"><div class="sk-block" style="width:100%;max-width:340px;height:85px;border-radius:10px;"></div></div></div>`; return `<div class="tl-wrap"><div class="tl-date-sep"><div class="sk-block" style="height:10px;width:80px;border-radius:20px;"></div></div>${tlRow('left')}${tlRow('right')}${tlRow('left')}${tlRow('right')}${tlRow('left')}</div>`; },
         'timeline-list': () => { const tlSkRow = (ws) => `<tr class="tl-list-row"><td><div class="sk-block" style="height:11px;width:${ws[0]}%;border-radius:3px;"></div></td><td><div class="sk-block" style="height:11px;width:${ws[1]}%;border-radius:3px;"></div></td><td><div class="sk-block" style="height:20px;width:20px;border-radius:50%;"></div></td><td><div class="sk-block" style="height:11px;width:${ws[2]}%;border-radius:3px;"></div></td><td><div class="sk-block" style="height:11px;width:${ws[3]}%;border-radius:3px;"></div></td></tr>`; return `<div class="tl-list-wrap"><table class="tl-list-table"><colgroup><col style="width:155px"><col style="width:185px"><col style="width:42px"><col style="width:156px"><col></colgroup><thead><tr><th><div class="sk-block" style="height:8px;width:65px;border-radius:3px;"></div></th><th><div class="sk-block" style="height:8px;width:38px;border-radius:3px;"></div></th><th></th><th><div class="sk-block" style="height:8px;width:42px;border-radius:3px;"></div></th><th><div class="sk-block" style="height:8px;width:50px;border-radius:3px;"></div></th></tr></thead><tbody>${tlSkRow([70,65,80,55])}${tlSkRow([80,75,60,70])}${tlSkRow([65,80,75,45])}${tlSkRow([75,60,85,60])}${tlSkRow([85,70,55,75])}${tlSkRow([60,85,70,50])}${tlSkRow([78,65,80,65])}${tlSkRow([68,75,65,40])}</tbody></table></div>`; },
-        'content-modal': () => `<div style="padding:4px 0;min-height:calc(100vh - 90px);"><div style="display:flex;gap:16px;align-items:center;margin-bottom:20px;"><div class="sk-block" style="width:72px;height:72px;border-radius:14px;flex-shrink:0;"></div><div style="flex:1;min-width:0;"><div class="sk-block" style="height:18px;width:60%;border-radius:5px;margin-bottom:8px;"></div><div class="sk-block" style="height:12px;width:40%;border-radius:4px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:55%;border-radius:4px;"></div></div></div><div class="sk-block" style="height:34px;border-radius:8px;margin-bottom:18px;"></div><div class="sk-block" style="height:11px;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:80%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:92%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:67%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:85%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:73%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:95%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:58%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:60%;border-radius:4px;margin-bottom:24px;"></div><div class="sk-block" style="height:9px;width:28%;border-radius:3px;margin-bottom:12px;"></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 8px;margin-bottom:24px;"><div><div class="sk-block" style="height:9px;width:70%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:85%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:55%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:65%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:65%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:30%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:60%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:25%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:45%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:30%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:75%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:70%;border-radius:4px;"></div></div></div><div class="sk-block" style="height:9px;width:22%;border-radius:3px;margin-bottom:12px;"></div><div class="sk-block" style="height:11px;width:55%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:40%;border-radius:4px;"></div></div>`,
         'content-modal-compact': () => `<div style="display:flex;height:100%;"><div style="width:302px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--brd);overflow:hidden;"><div class="sk-block" style="width:100%;height:165px;flex-shrink:0;border-radius:0;"></div><div style="padding:0 16px 16px;margin-top:-58px;display:flex;flex-direction:column;gap:10px;"><div style="display:flex;gap:12px;align-items:flex-start;"><div class="sk-block" style="width:61px;height:61px;border-radius:14px;flex-shrink:0;"></div><div style="flex:1;min-width:0;padding-top:26px;"><div class="sk-block" style="height:14px;width:75%;border-radius:4px;margin-bottom:6px;"></div><div class="sk-block" style="height:10px;width:50%;border-radius:3px;"></div></div></div><div class="sk-block" style="height:10px;width:40%;border-radius:3px;"></div><div class="sk-block" style="height:32px;border-radius:7px;"></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;"><div class="sk-block" style="height:28px;border-radius:6px;"></div><div class="sk-block" style="height:28px;border-radius:6px;"></div><div class="sk-block" style="height:28px;border-radius:6px;"></div></div></div></div><div style="flex:1;min-width:0;padding:18px;overflow:hidden;"><div class="sk-block" style="height:32px;border-radius:7px;margin-bottom:18px;"></div><div class="sk-block" style="height:11px;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:85%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:70%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:90%;border-radius:4px;margin-bottom:7px;"></div><div class="sk-block" style="height:11px;width:60%;border-radius:4px;margin-bottom:20px;"></div><div class="sk-block" style="height:9px;width:28%;border-radius:3px;margin-bottom:12px;"></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px 8px;margin-bottom:20px;"><div><div class="sk-block" style="height:9px;width:70%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:85%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:55%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:65%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:65%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:30%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:60%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:25%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:45%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:30%;border-radius:4px;"></div></div><div><div class="sk-block" style="height:9px;width:75%;border-radius:3px;margin-bottom:6px;"></div><div class="sk-block" style="height:12px;width:70%;border-radius:4px;"></div></div></div></div></div>`
     };
     const fn = t[type]; return fn ? Array.from({length: n}, fn).join('') : '';
@@ -1445,9 +1620,33 @@ function tryLoadLogo() {
     i.src = 'logo.png';
 }
 
-function _initAudio(path) {
+const SOUND_LIBRARY = [
+    'Amogus.wav', 'Bing.wav', 'Clicker.wav', 'Cryo.wav', 'Food Finished.wav',
+    'Fooley.wav', 'Insert Disk.wav', 'Kalimba Bell.wav', 'Karambola.wav', 'Ladida.wav',
+    'Plug.wav', 'Soft Lace.wav', 'Solana.wav', 'Sweep.wav', 'Waum.wav',
+];
+
+const SOUND_SLOTS = {
+    notify:       { def: 'Notification.wav', fileKey: 'notifySoundFile',       volKey: 'notifySoundVolume' },
+    message:      { def: 'Message.wav',      fileKey: 'messageSoundFile',      volKey: 'messageSoundVolume' },
+    mediaRelay:   { def: 'MediaRelay.wav',   fileKey: 'mediaRelaySoundFile',   volKey: 'mediaRelaySoundVolume' },
+    steamOverlay: { def: 'SteamOverlay.wav', fileKey: 'steamOverlaySoundFile', volKey: 'steamOverlaySoundVolume' },
+};
+
+function soundFileUrl(file, defaultFile) {
+    if (!file) return 'sounds/notifications/' + encodeURIComponent(defaultFile);
+    return 'sounds/notifications/Notificationsv2/' + encodeURIComponent(file);
+}
+
+function soundSlotVolume(slot) {
+    const raw = settings?.[SOUND_SLOTS[slot].volKey];
+    const n = Number.isFinite(raw) ? raw : 50;
+    return Math.min(100, Math.max(0, n)) / 100;
+}
+
+function _initAudio(path, volume) {
     const a = new Audio(path);
-    a.volume = 0.5;
+    a.volume = typeof volume === 'number' ? volume : 0.5;
     a._ready = false;
     a.addEventListener('canplaythrough', () => { a._ready = true; }, { once: true });
     a.addEventListener('error', () => { a._ready = false; });
@@ -1455,16 +1654,40 @@ function _initAudio(path) {
     return a;
 }
 
+function _initSlotAudio(slot) {
+    const cfg = SOUND_SLOTS[slot];
+    return _initAudio(soundFileUrl(settings?.[cfg.fileKey], cfg.def), soundSlotVolume(slot));
+}
+
 function tryInitNotifySound() {
-    notifyAudio = _initAudio('sounds/notifications/Notification.wav');
-    messageAudio = _initAudio('sounds/notifications/Message.wav');
-    mediaRelayAudio = _initAudio('sounds/notifications/MediaRelay.wav');
-    steamOverlayAudio = _initAudio('sounds/notifications/SteamOverlay.wav');
+    notifyAudio = _initSlotAudio('notify');
+    messageAudio = _initSlotAudio('message');
+    mediaRelayAudio = _initSlotAudio('mediaRelay');
+    steamOverlayAudio = _initSlotAudio('steamOverlay');
     waterAudio = _initAudio('sounds/notifications/water.wav');
+}
+
+function applySoundSettings() {
+    notifyAudio = _initSlotAudio('notify');
+    messageAudio = _initSlotAudio('message');
+    mediaRelayAudio = _initSlotAudio('mediaRelay');
+    steamOverlayAudio = _initSlotAudio('steamOverlay');
+}
+
+let _sndPreviewAudio = null;
+
+function previewSound(slot, file) {
+    const cfg = SOUND_SLOTS[slot];
+    if (!cfg) return;
+    if (_sndPreviewAudio) { try { _sndPreviewAudio.pause(); } catch {} }
+    _sndPreviewAudio = new Audio(soundFileUrl(file, cfg.def));
+    _sndPreviewAudio.volume = soundSlotVolume(slot);
+    _sndPreviewAudio.play().catch(() => {});
 }
 
 function playNotificationSound() {
     if (notifyAudio?._ready && settings.notifySoundEnabled) {
+        notifyAudio.volume = soundSlotVolume('notify');
         notifyAudio.currentTime = 0;
         notifyAudio.play().catch(() => {});
     }
@@ -1472,6 +1695,7 @@ function playNotificationSound() {
 
 function playMessageSound() {
     if (messageAudio?._ready && settings.messageSoundEnabled) {
+        messageAudio.volume = soundSlotVolume('message');
         messageAudio.currentTime = 0;
         messageAudio.play().catch(() => {});
     }
@@ -1479,6 +1703,7 @@ function playMessageSound() {
 
 function playMediaRelaySound() {
     if (mediaRelayAudio?._ready && settings.mediaRelaySoundEnabled) {
+        mediaRelayAudio.volume = soundSlotVolume('mediaRelay');
         mediaRelayAudio.currentTime = 0;
         mediaRelayAudio.play().catch(() => {});
     }
@@ -1486,17 +1711,17 @@ function playMediaRelaySound() {
 
 function playSteamOverlaySound() {
     if (steamOverlayAudio?._ready && settings.steamOverlaySoundEnabled) {
+        steamOverlayAudio.volume = soundSlotVolume('steamOverlay');
         steamOverlayAudio.currentTime = 0;
         steamOverlayAudio.play().catch(() => {});
     }
 }
 
-function playWaterAlarmSound() {
-    if (waterAudio?._ready) {
-        waterAudio.currentTime = 0;
-        waterAudio.play().catch(() => {});
-    }
-}
+function sndPreviewNotify(file)       { previewSound('notify', file); }
+function sndPreviewMessage(file)      { previewSound('message', file); }
+function sndPreviewMediaRelay(file)   { previewSound('mediaRelay', file); }
+function sndPreviewSteamOverlay(file) { previewSound('steamOverlay', file); }
+
 
 let _clockEnabled = false;
 let _dateEnabled = false;
@@ -1633,10 +1858,11 @@ function showTab(i) {
         }
     });
     updateCurrentPageTitle();
-    if (i === 0) renderDashboard();
+    if (i === 0) { if (typeof _dashRollGreeting === 'function') _dashRollGreeting(); renderDashboard(); }
     if (i === 1 && favWorldsData.length === 0) sendToCS({ action: 'vrcGetFavoriteWorlds' });
     if (i === 2 && !myGroupsLoaded) loadMyGroups();
     if (i === 2 && typeof _myGroupsDirty !== 'undefined' && _myGroupsDirty && myGroupsLoaded) filterMyGroups();
+    if (i === 2 && typeof _groupInstDirty !== 'undefined' && _groupInstDirty && typeof _dashGroupInstances !== 'undefined' && _dashGroupInstances !== null) renderGroupInstancesView();
     if (i === 23) { if (!myGroupsLoaded) loadMyGroups(); if (typeof onSnipeTabOpen === 'function') onSnipeTabOpen(); }
     if (i === 3 && favFriendsData.length === 0) sendToCS({ action: 'vrcGetFavoriteFriends' });
     if (i === 3 && typeof _favFriendsDirty !== 'undefined' && _favFriendsDirty && favFriendsData.length > 0) filterFavFriends();
@@ -1657,6 +1883,7 @@ function showTab(i) {
     if (i === 22) { kxdInitLangSelects(); kxdOnTabOpen(); }
     if (i === 25) { if (typeof afOnTabOpen === 'function') afOnTabOpen(); }
     if (i === 27) { if (typeof onStatusScheduleTabOpen === 'function') onStatusScheduleTabOpen(); }
+    if (i === 26) { if (typeof fsEnsureDeviceLists === 'function') fsEnsureDeviceLists(); }
 
     if (_prevTabEl) {
         if (_lazyUnloadDelay === 0) {
@@ -1687,7 +1914,6 @@ function relayStatusLabel(running) {
 
 function setRelayState(r, s) {
     relayOn = r;
-    if (typeof updateDashQuickControls === 'function') updateDashQuickControls();
     const b = document.getElementById('btnRelay');
     const dot = document.getElementById('relayDot');
     const txt = document.getElementById('relayStatusText');
@@ -1814,9 +2040,9 @@ function addLog(m, c) {
     if (/\[REST\] (GET|POST|PUT|DELETE|PATCH) /.test(m) && !/→/.test(m)) return;
 
     // Track avtrdb requests
-    if (m.startsWith('[AVTRDB] GET')) { _avtrdbGetCount++; _updateAvtrdbStats(); }
-    else if (m.startsWith('[AVTRDB] QRY')) { _avtrdbQryCount++; _updateAvtrdbStats(); }
-    else if (m.startsWith('[AVTRDB] SUB')) { _avtrdbSubCount++; _updateAvtrdbStats(); }
+    if (/\[AVTRDB\] GET/.test(m)) { _avtrdbGetCount++; _updateAvtrdbStats(); }
+    else if (/\[AVTRDB\] QRY/.test(m)) { _avtrdbQryCount++; _updateAvtrdbStats(); }
+    else if (/\[AVTRDB\] SUB/.test(m)) { _avtrdbSubCount++; _updateAvtrdbStats(); }
 
     // Track CDN image downloads
     if (m.startsWith('CDN ') || m.startsWith('CDN -')) {
@@ -1890,7 +2116,6 @@ function vcInstall() {
 }
 function handleVcState(d) {
     _vcLastState = d;
-    if (typeof updateDashQuickControls === 'function') updateDashQuickControls();
     const bdYt = document.getElementById('badgeYt');
     if (bdYt) bdYt.classList.toggle('tb-active', !!d.running);
     const running    = !!d.running;
@@ -2031,9 +2256,65 @@ function execConsoleCommand(cmd) {
     sendToCS({ action: 'consoleCommand', cmd });
 }
 
-function audioDeviceIndex(id) {
-    const n = parseInt(document.getElementById(id)?.value, 10);
-    return Number.isNaN(n) ? -1 : n;
+function audioSelectionFromSaved(id, name) {
+    if (id) return { mode: 'endpoint', id, name: name || '' };
+    if (name) return { mode: 'legacy', id: '', name };
+    return { mode: 'default', id: '', name: '' };
+}
+
+function audioSelectionFromSelect(sel) {
+    if (!sel || sel.options.length === 0) return { mode: 'default', id: '', name: '' };
+    const v = sel.value || '';
+    if (!v) return { mode: 'default', id: '', name: '' };
+    if (v.startsWith('legacy:')) return { mode: 'legacy', id: '', name: v.slice(7) };
+    const opt = sel.options[sel.selectedIndex];
+    return { mode: 'endpoint', id: v, name: opt?.dataset.name || '' };
+}
+
+function audioFillDeviceSelect(sel, devices, selection) {
+    if (!sel) return;
+    const list = Array.isArray(devices) ? devices : [];
+    const s = selection || {};
+    let html = `<option value="">${esc(t('audio.system_default', 'System default'))}</option>`;
+    for (const d of list) html += `<option value="${esc(d.id)}" data-name="${esc(d.name)}">${esc(d.name)}</option>`;
+    let wanted = '';
+    if (s.mode === 'endpoint' && s.id) {
+        wanted = s.id;
+        if (!list.some(d => d.id === s.id)) {
+            html += `<option value="${esc(s.id)}" data-name="${esc(s.name || '')}">${esc((s.name || s.id) + ' ' + t('audio.unavailable', '(Unavailable)'))}</option>`;
+        }
+    } else if (s.mode === 'legacy' && s.name) {
+        wanted = 'legacy:' + s.name;
+        html += `<option value="${esc(wanted)}" data-name="${esc(s.name)}">${esc(s.name + ' ' + t('audio.unresolved', '(Unresolved)'))}</option>`;
+    }
+    sel.innerHTML = html;
+    sel.value = wanted;
+    sel.dataset.audioReady = '1';
+    if (sel._vnRefresh) sel._vnRefresh();
+}
+
+function audioPrefillDeviceSelect(sel, selection) {
+    if (!sel || sel.dataset.audioReady === '1') return;
+    const s = selection || {};
+    let html = `<option value="">${esc(t('audio.system_default', 'System default'))}</option>`;
+    let wanted = '';
+    if (s.mode === 'endpoint' && s.id) {
+        wanted = s.id;
+        html += `<option value="${esc(s.id)}" data-name="${esc(s.name || '')}">${esc(s.name || s.id)}</option>`;
+    } else if (s.mode === 'legacy' && s.name) {
+        wanted = 'legacy:' + s.name;
+        html += `<option value="${esc(wanted)}" data-name="${esc(s.name)}">${esc(s.name)}</option>`;
+    }
+    sel.innerHTML = html;
+    sel.value = wanted;
+    if (sel._vnRefresh) sel._vnRefresh();
+}
+
+function audioDeviceValue(selId) {
+    const sel = document.getElementById(selId);
+    if (!sel || sel.options.length === 0) return null;
+    const opt = sel.options[sel.selectedIndex];
+    return { id: sel.value || '', name: opt?.dataset.name || '' };
 }
 
 const _escMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
