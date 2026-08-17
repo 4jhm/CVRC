@@ -2564,7 +2564,7 @@ window.afBuildBlockContextMenu = function (target) {
                 if (dup && dup.select) dup.select();
             } catch (e) { afLog('err', aftf('log.duplicate_failed', { error: e.message || e }, 'Duplicate failed: ' + (e.message || e))); }
         }});
-        items.push({ icon: 'backpack', label: aft('ctx.add_to_backpack', 'Add to Backpack'), action: () => afAddBlockToBackpack(block) });
+        items.push({ icon: 'inventory_2', label: aft('ctx.add_to_backpack', 'Add to Backpack'), action: () => afAddBlockToBackpack(block) });
     }
     if (typeof block.setCommentText === 'function') {
         const hasComment = !!block.getCommentText?.();
