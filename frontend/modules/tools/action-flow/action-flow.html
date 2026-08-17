@@ -13,7 +13,7 @@
                             <div class="af-toolbar-group">
                                 <div class="af-badge" id="afTriggerCounter" title="Trigger blocks used / max across all flows" data-i18n-title="action_flow.triggers_tooltip"><span class="msi" style="font-size:13px;">play_circle</span><span id="afTriggerCounterValue">0/16</span></div>
                                 <div class="af-badge" id="afTaskCounter" title="API-calling actions dispatched in the last 10 minutes / max" data-i18n-title="action_flow.tasks_tooltip"><span class="msi" style="font-size:13px;">schedule</span><span id="afTaskCounterValue">0/20</span></div>
-                                <div class="af-badge" id="afActionCounter" title="Action blocks used / max per flow" data-i18n-title="action_flow.actions_tooltip"><span class="msi" style="font-size:13px;">bolt</span><span id="afActionCounterValue">0/10</span></div>
+                                <div class="af-badge" id="afActionCounter" title="Action blocks used / max per flow" data-i18n-title="action_flow.actions_tooltip"><span class="msi" style="font-size:13px;">bolt</span><span id="afActionCounterValue">0/40</span></div>
                                 <span class="af-toggle-label" data-i18n="action_flow.enabled">Enabled</span>
                                 <label class="toggle af-inline-toggle"><input type="checkbox" id="afFlowEnabled" onchange="afToggleEnabled(this.checked)"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
                                 <button class="vrcn-button vrcn-btn-primary" onclick="afSaveCurrentFlow()" data-i18n-title="action_flow.save"><span class="msi" style="font-size:16px;">save</span><span data-i18n="common.save">Save</span></button>
@@ -34,6 +34,12 @@
                                 <button class="vrcn-button af-icon-btn" onclick="afAddConditionPrompt()" title="Add condition" data-i18n-title="action_flow.condition.add_button"><span class="msi" style="font-size:16px;">add</span></button>
                             </div>
                             <div class="af-cond-list" id="afConditionsList"></div>
+                        </div>
+                        <div class="af-backpack-panel" id="afBackpackPanel">
+                            <div class="af-cond-header">
+                                <span class="af-cond-title"><span class="msi" style="font-size:14px;">backpack</span> <span data-i18n="action_flow.backpack.title">Backpack</span></span>
+                            </div>
+                            <div class="af-cond-list" id="afBackpackList"></div>
                         </div>
                         <div class="af-zoom-controls">
                             <button class="af-zoom-btn" onclick="afZoom(1)" title="Zoom in"><span class="msi">add</span></button>

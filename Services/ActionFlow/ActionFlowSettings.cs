@@ -14,6 +14,9 @@ public class ActionFlowSettings
     // Initial value captured the first time each condition was written. Shown in
     // the toolbox sidebar so the user can see "default vs current" at a glance.
     public Dictionary<string, bool> ConditionDefaults { get; set; } = new();
+    // Reusable block stacks saved via the "Add to Backpack" block context-menu item,
+    // and re-insertable into any flow — same idea as Scratch's backpack.
+    public List<BackpackItem> Backpack { get; set; } = new();
 
     public class ActionFlow
     {
@@ -24,6 +27,16 @@ public class ActionFlowSettings
         public JToken? Workspace  { get; set; }
         public long   CreatedAt   { get; set; }
         public long   UpdatedAt   { get; set; }
+    }
+
+    public class BackpackItem
+    {
+        public string Id        { get; set; } = "";
+        public string Name      { get; set; } = "";
+        // Serialized Blockly block state (Blockly.serialization.blocks.save output),
+        // covers the block plus everything snapped below/inside it.
+        public JToken? Block    { get; set; }
+        public long   CreatedAt { get; set; }
     }
 
     private static string SavePath => Path.Combine(

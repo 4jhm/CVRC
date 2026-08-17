@@ -259,3 +259,5 @@ This includes searches and avatar lookups.
 * Background music with a custom track picker
 * Chatbox "Now Playing" media-source pinning and native typing indicator
 * People → Instance tab now shows a live **Avatar** column — the name and creator of the avatar each nearby player is wearing, filled in the moment VRChat finishes loading it. Once resolved you can **Wear** it yourself (VRChat's own avatar-select API, same as pedestal avatars) or **Favorite** it, straight from the row
+* Action Flow: raised the per-flow action-block limit from 20 to 40
+* Action Flow: added a **Backpack** — right-click any block and choose "Add to Backpack" to save it (with everything snapped below/inside it) for reuse in any flow. Click a saved item in the new Backpack panel to drop it into the flow you're currently editing

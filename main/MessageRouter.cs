@@ -2578,6 +2578,7 @@ public partial class AppShell
                 case "afLoadFlows":
                 case "afSaveFlows":
                 case "afSaveConditions":
+                case "afSaveBackpack":
                 case "afTrayNotify":
                 case "afGetGameRunning":
                 case "afSendChatMessage":

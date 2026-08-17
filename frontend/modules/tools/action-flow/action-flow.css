@@ -343,3 +343,37 @@
 }
 .af-cond-remove { padding: 2px 4px !important; }
 .af-cond-remove:hover { color: var(--err) !important; border-color: var(--err) !important; }
+
+.af-backpack-panel {
+    position: absolute;
+    right: 0;
+    top: 380px;               /* clears the block-search bar and its results dropdown */
+    bottom: 0;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border-top: 1px solid var(--brd-lt);
+    border-left: 1px solid var(--brd-lt);
+    z-index: 100;             /* must beat Blockly's toolbox (~70) */
+}
+.af-backpack-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 4px 4px 6px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background .1s;
+}
+.af-backpack-row:hover { background: var(--bg-input); }
+.af-backpack-row-icon { font-size: 15px !important; color: var(--tx3); flex-shrink: 0; }
+.af-backpack-row-name {
+    flex: 1;
+    min-width: 0;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

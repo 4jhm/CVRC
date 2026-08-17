@@ -18,7 +18,7 @@ const COLOR_CONTROL = '#ffab19';
 
 const WORLD_CHANGE_DELAY_MS = 15 * 1000;
 const EVENT_TICK_MS = 5 * 1000;
-const FLOW_ACTION_LIMIT = 20;
+const FLOW_ACTION_LIMIT = 40;
 const FLOW_LIMIT = 4;
 const TRIGGER_LIMIT = 16;
 const TASK_WINDOW_MS = 10 * 60 * 1000;
@@ -70,6 +70,7 @@ const AMPM_DROPDOWN_FACTORY = () => [
 ];
 
 let afFlows           = [];
+let afBackpack        = [];
 let afCurrentFlowId   = null;
 let afWorkspace       = null;
 let afBlocklyLoading  = false;
@@ -1141,6 +1142,95 @@ window.afAddConditionPrompt        = afAddConditionPrompt;
 window.afRemoveCondition           = afRemoveCondition;
 window.afToggleConditionValue      = afToggleConditionValue;
 window.afRenameConditionFromInput  = afRenameConditionFromInput;
+
+/* ===========================================================================
+   Backpack — reusable block stacks, saved via the block right-click menu and
+   reinsertable into any flow. Same idea as Scratch's backpack: it's not tied
+   to any one flow, so a stack built once can be dropped into others later.
+   =========================================================================== */
+function afRenderBackpackPanel() {
+    const list = document.getElementById('afBackpackList');
+    if (!list) return;
+    if (!afBackpack.length) {
+        list.innerHTML = '<div class="af-cond-empty">' + afEsc(aft('backpack.empty', 'No saved blocks yet. Right-click a block and choose "Add to Backpack".')) + '</div>';
+        return;
+    }
+    list.innerHTML = afBackpack.map(item => {
+        const safe = afEsc(item.name || 'Untitled');
+        return ''
+            + '<div class="af-backpack-row" onclick="afInsertBackpackItem(\'' + jsq(item.id) + '\')" title="' + afEsc(aft('backpack.click_hint', 'Click to add to the current flow')) + '">'
+                + '<span class="msi af-backpack-row-icon">extension</span>'
+                + '<span class="af-backpack-row-name">' + safe + '</span>'
+                + '<button class="vrcn-button af-icon-btn" onclick="afRenameBackpackItem(\'' + jsq(item.id) + '\', event)" title="' + afEsc(aft('common.rename', 'Rename')) + '"><span class="msi" style="font-size:14px;">edit</span></button>'
+                + '<button class="vrcn-button af-icon-btn af-cond-remove" onclick="afRemoveBackpackItem(\'' + jsq(item.id) + '\', event)" title="' + afEsc(aft('common.remove', 'Remove')) + '"><span class="msi" style="font-size:14px;">close</span></button>'
+            + '</div>';
+    }).join('');
+}
+
+function afAddBlockToBackpack(block) {
+    if (!block) return;
+    try {
+        const json = window.Blockly.serialization.blocks.save(block);
+        const defaultName = String(block.type || 'block').replace(/^af_/, '').replace(/_/g, ' ');
+        const raw = prompt(aft('backpack.prompt.name', 'Name for this backpack item:'), defaultName);
+        if (raw === null) return;
+        const name = String(raw).trim() || defaultName;
+        afBackpack.push({ id: 'bp_' + Math.random().toString(36).slice(2, 10), name, block: json, createdAt: Date.now() });
+        afSaveBackpack();
+        afRenderBackpackPanel();
+    } catch (e) { afLog('err', aftf('log.backpack_add_failed', { error: e.message || e }, 'Add to backpack failed: ' + (e.message || e))); }
+}
+
+function afInsertBackpackItem(id) {
+    if (!afWorkspace) return;
+    if (!afCurrentFlowId) {
+        afLog('err', aft('backpack.no_flow_selected', 'Select or create a flow first.'));
+        return;
+    }
+    const item = afBackpack.find(b => b.id === id);
+    if (!item || !item.block) return;
+    try {
+        const block = window.Blockly.serialization.blocks.append(item.block, afWorkspace);
+        if (block) {
+            if (block.moveBy) block.moveBy(30, 30);
+            if (block.select) block.select();
+            if (afWorkspace.scrollBoundsIntoView && block.getBoundingRectangle) {
+                try { afWorkspace.scrollBoundsIntoView(block.getBoundingRectangle(), 40); } catch {}
+            }
+        }
+    } catch (e) { afLog('err', aftf('log.backpack_insert_failed', { error: e.message || e }, 'Insert from backpack failed: ' + (e.message || e))); }
+}
+
+function afRemoveBackpackItem(id, ev) {
+    if (ev) ev.stopPropagation();
+    const item = afBackpack.find(b => b.id === id);
+    if (!item) return;
+    if (!confirm(aftf('backpack.confirm.remove', { name: item.name }, 'Remove "' + item.name + '" from the backpack?'))) return;
+    afBackpack = afBackpack.filter(b => b.id !== id);
+    afSaveBackpack();
+    afRenderBackpackPanel();
+}
+
+function afRenameBackpackItem(id, ev) {
+    if (ev) ev.stopPropagation();
+    const item = afBackpack.find(b => b.id === id);
+    if (!item) return;
+    const raw = prompt(aft('backpack.prompt.rename', 'Rename backpack item:'), item.name);
+    if (raw === null) return;
+    const name = String(raw).trim();
+    if (!name) return;
+    item.name = name;
+    afSaveBackpack();
+    afRenderBackpackPanel();
+}
+
+function afSaveBackpack() {
+    if (typeof sendToCS === 'function') sendToCS({ action: 'afSaveBackpack', backpack: afBackpack });
+}
+
+window.afInsertBackpackItem = afInsertBackpackItem;
+window.afRemoveBackpackItem = afRemoveBackpackItem;
+window.afRenameBackpackItem = afRenameBackpackItem;
 
 function afOnThemeChange() {
     if (!afWorkspace || !window.Blockly) return;
@@ -2396,6 +2486,7 @@ window.afOnTabOpen = async function afOnTabOpen() {
         return;
     }
     afRenderConditionsPanel();
+    afRenderBackpackPanel();
     if (typeof sendToCS === 'function') sendToCS({ action: 'afLoadFlows' });
 };
 
@@ -2473,6 +2564,7 @@ window.afBuildBlockContextMenu = function (target) {
                 if (dup && dup.select) dup.select();
             } catch (e) { afLog('err', aftf('log.duplicate_failed', { error: e.message || e }, 'Duplicate failed: ' + (e.message || e))); }
         }});
+        items.push({ icon: 'backpack', label: aft('ctx.add_to_backpack', 'Add to Backpack'), action: () => afAddBlockToBackpack(block) });
     }
     if (typeof block.setCommentText === 'function') {
         const hasComment = !!block.getCommentText?.();
@@ -2519,6 +2611,8 @@ window.__afHandleMessage = function (action, payload) {
                 if (typeof f.enabled !== 'boolean') f.enabled = false;
             }
             afConditions = (payload && payload.conditions && typeof payload.conditions === 'object') ? payload.conditions : {};
+            afBackpack = Array.isArray(payload?.backpack) ? payload.backpack : [];
+            afRenderBackpackPanel();
             afRenderFlowSelect();
             if (afFlows.length && !afCurrentFlowId) afCurrentFlowId = afFlows[0].id;
             if (afWorkspace) afLoadFlowIntoWorkspace(afCurrentFlowId);

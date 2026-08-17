@@ -38,11 +38,43 @@ public class ActionFlowController : IDisposable
                         ["updatedAt"] = f.UpdatedAt,
                     });
                 }
+                var backpackArr = new JArray();
+                foreach (var b in _settings.Backpack)
+                {
+                    backpackArr.Add(new JObject {
+                        ["id"]        = b.Id,
+                        ["name"]      = b.Name,
+                        ["block"]     = b.Block,
+                        ["createdAt"] = b.CreatedAt,
+                    });
+                }
                 _core.SendToJS("afFlows", new {
                     flows             = arr,
                     conditions        = _settings.Conditions,
                     conditionDefaults = _settings.ConditionDefaults,
+                    backpack          = backpackArr,
                 });
+                break;
+            }
+
+            case "afSaveBackpack":
+            {
+                var arr = msg["backpack"] as JArray;
+                if (arr == null) break;
+
+                try
+                {
+                    _settings.Backpack = arr.ToObject<List<ActionFlowSettings.BackpackItem>>() ?? new();
+                }
+                catch (Exception ex)
+                {
+                    _core.SendToJS("log", new { msg = "[ActionFlow] backpack save parse error: " + ex.Message, color = "err" });
+                    break;
+                }
+
+                _settings.Save();
+                if (_settings.LastSaveError != null)
+                    _core.SendToJS("log", new { msg = "[ActionFlow] backpack save failed: " + _settings.LastSaveError, color = "err" });
                 break;
             }
 
