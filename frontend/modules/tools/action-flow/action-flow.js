@@ -19,8 +19,9 @@ const COLOR_CONTROL = '#ffab19';
 const WORLD_CHANGE_DELAY_MS = 15 * 1000;
 const EVENT_TICK_MS = 5 * 1000;
 const FLOW_ACTION_LIMIT = 40;
-const FLOW_LIMIT = 4;
-const TRIGGER_LIMIT = 16;
+// No cap on flow count or total triggers — those are just organizational, not tied to
+// any real external limit. TASK_SOFT_LIMIT/TASK_HARD_LIMIT below are the actual backstop
+// against VRChat API abuse and stay in place regardless of how many flows/triggers exist.
 const TASK_WINDOW_MS = 10 * 60 * 1000;
 const TASK_SOFT_LIMIT = 20;
 const TASK_HARD_LIMIT = 25;
@@ -1280,7 +1281,6 @@ function afOnWorkspaceChange(ev) {
 function afApplyActionLockState() {
     if (!afWorkspace) return;
     const overAction  = afCountActions() > FLOW_ACTION_LIMIT;
-    const overTrigger = afCountGlobalTriggers() > TRIGGER_LIMIT;
     /* Task rate visual lock turns EVERY block (action + trigger) red across the
        displayed flow as a global "back off" indicator. */
     const overTaskRate = afTaskCount() >= TASK_SOFT_LIMIT;
@@ -1291,15 +1291,13 @@ function afApplyActionLockState() {
         if (!isAction && !isTrigger) continue;
         const svg = b.getSvgRoot();
         if (!svg) continue;
-        const locked = overTaskRate || (isAction && overAction) || (isTrigger && overTrigger);
+        const locked = overTaskRate || (isAction && overAction);
         svg.classList.toggle('af-action-locked', locked);
         try {
             if (locked) {
                 const msg = overTaskRate
                     ? aftf('warning.task_rate', { count: afTaskCount(), limit: TASK_SOFT_LIMIT }, 'API rate cap hit: ' + afTaskCount() + ' tasks in last 10min. All flows paused until the count drops below ' + TASK_SOFT_LIMIT + '.')
-                    : isAction
-                        ? aftf('warning.action_limit',  { limit: FLOW_ACTION_LIMIT }, 'Flow is over the ' + FLOW_ACTION_LIMIT + '-action limit. Disabled until you delete blocks.')
-                        : aftf('warning.trigger_limit', { limit: TRIGGER_LIMIT },     'Over the global trigger limit (' + TRIGGER_LIMIT + '). Disabled until you delete blocks across flows.');
+                    : aftf('warning.action_limit',  { limit: FLOW_ACTION_LIMIT }, 'Flow is over the ' + FLOW_ACTION_LIMIT + '-action limit. Disabled until you delete blocks.');
                 b.setWarningText(msg);
             } else {
                 b.setWarningText(null);
@@ -1380,12 +1378,7 @@ function afUpdateActionCounter() {
         wrap.classList.toggle('at-limit', n >= FLOW_ACTION_LIMIT);
     }
     const tEl  = document.getElementById('afTriggerCounterValue');
-    const tWrap = document.getElementById('afTriggerCounter');
-    if (tEl && tWrap) {
-        const g = afCountGlobalTriggers();
-        tEl.textContent = g + '/' + TRIGGER_LIMIT;
-        tWrap.classList.toggle('at-limit', g >= TRIGGER_LIMIT);
-    }
+    if (tEl) tEl.textContent = String(afCountGlobalTriggers());
     const kEl  = document.getElementById('afTaskCounterValue');
     const kWrap = document.getElementById('afTaskCounter');
     if (kEl && kWrap) {
@@ -1407,10 +1400,6 @@ function afScheduleAutoSave() {
 function afNewId() { return 'flow_' + Math.random().toString(36).slice(2, 10); }
 
 function afNewFlow() {
-    if (afFlows.length >= FLOW_LIMIT) {
-        if (typeof showToast === 'function') showToast(false, aftf('toast.flow_limit_reached', { limit: FLOW_LIMIT }, 'Flow limit reached (' + FLOW_LIMIT + ' max). Delete one to create another.'));
-        return;
-    }
     const name = prompt(aft('prompt.flow_name', 'Flow name:'), aft('prompt.flow_name_default', 'New Flow'));
     if (!name) return;
     const id = afNewId();
@@ -1789,11 +1778,6 @@ function afFireTrigger(flow, block, reason, triggeringUser, notificationId, trig
     const actionCount = afCountActionsInWorkspace(flow.workspace);
     if (actionCount > FLOW_ACTION_LIMIT) {
         afLog('err', '[' + flow.name + '] ' + aftf('log.over_action_limit', { count: actionCount, limit: FLOW_ACTION_LIMIT }, 'over action limit (' + actionCount + '/' + FLOW_ACTION_LIMIT + '). Flow disabled until trimmed.'));
-        return;
-    }
-    const triggerCount = afCountGlobalTriggers();
-    if (triggerCount > TRIGGER_LIMIT) {
-        afLog('err', '[' + flow.name + '] ' + aftf('log.over_trigger_limit', { count: triggerCount, limit: TRIGGER_LIMIT }, 'over global trigger limit (' + triggerCount + '/' + TRIGGER_LIMIT + '). All triggers disabled until trimmed.'));
         return;
     }
     const triggerKind =

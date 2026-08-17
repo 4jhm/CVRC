@@ -264,3 +264,4 @@ This includes searches and avatar lookups.
 * Action Flow: raised the per-flow action-block limit from 20 to 40
 * Action Flow: added a **Backpack** — right-click any block and choose "Add to Backpack" to save it (with everything snapped below/inside it) for reuse in any flow. Click a saved item in the new Backpack panel to drop it into the flow you're currently editing
 * Fixed the Backpack panel/menu icon rendering as literal text instead of an icon (the icon font is subsetted to only the icons already in use, and "backpack" wasn't in it)
+* Action Flow: removed the 4-flow and 16-trigger caps — create as many flows as you want. The 20/25-per-10-minutes API rate limiter is unchanged, since that one reflects VRChat's own server-side limits rather than an app-side restriction
