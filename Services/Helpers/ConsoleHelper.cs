@@ -39,16 +39,6 @@ public static class ConsoleHelper
                 }
                 return new("Usage: /msg invite | /msg request", "err");
 
-            case "/vrcn-get":
-            case "/vrcn-set":
-            case "/vrcn-del":
-                if (parts.Length < 2)
-                    return new($"Usage: {parts[0]} <usr_xxxxxxxx-...>", "err");
-                return new("", "info", "vrcnPlusAdmin", new {
-                    sub      = parts[0].Substring(6),
-                    targetId = parts[1],
-                });
-
             case "/debug":
                 if (parts.Length >= 4
                     && parts[1].Equals("img",   StringComparison.OrdinalIgnoreCase)

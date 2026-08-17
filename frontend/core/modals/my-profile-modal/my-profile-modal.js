@@ -160,14 +160,7 @@ function renderMyProfileContent() {
     const mypHeaderActions = renderModalActions([
         { icon: 'edit', title: changeBannerTitle, onclick: `openImagePicker('profile-banner')` },
         { icon: 'filter_frames', title: t('profiles.deco.title', 'Customize Profile'), onclick: `openProfileDecoPicker()` },
-        {
-            label: 'VRCN+',
-            title: t('vrcnplus.dropdown.title', 'VRCN+'),
-            icon: 'auto_awesome',
-            dropdown: [
-                { icon: 'palette', label: t('vrcnplus.dropdown.customize_profile', 'Customize Profile'), onclick: 'openVrcnPlusEditor()' },
-            ],
-        },
+        { icon: 'palette', title: t('vrcnplus.dropdown.title', 'Profile Colors'), onclick: 'openVrcnPlusEditor()' },
         { icon: 'link_2', title: t('common.share', 'Share'), onclick: `navigator.clipboard.writeText('https://vrchat.com/home/user/${esc(u.id)}').then(()=>showToast(true,t('common.link_copied','Link copied!')))` },
         { icon: 'close', title: t('common.close', 'Close'), onclick: `closeMyProfile()` },
     ]);
@@ -186,6 +179,7 @@ function renderMyProfileContent() {
     const platBadge = getPlatformBadgeHtml(u.platform || u.lastPlatform || '');
     const creatorBadge = getCreatorBadgeHtml(u);
     let badgesRowHtml = '<div class="fd-badges-row">';
+    if (typeof getCvrcOwnerBadgeHtml === 'function') badgesRowHtml += getCvrcOwnerBadgeHtml(u.id);
     if (platBadge) badgesRowHtml += platBadge;
     if (creatorBadge) badgesRowHtml += creatorBadge;
     if (u.ageVerified) badgesRowHtml += `<span class="vrcn-badge ok"><span class="msi" style="font-size:11px;">verified</span>${t('profiles.meta.age_verified', 'Age Verified')}</span>`;
@@ -212,18 +206,15 @@ function renderMyProfileContent() {
     }
 
     const badges = u.badges || [];
-    const _isVrcnPlus = (typeof vrcnPlusIsKnownPlus === 'function') && vrcnPlusIsKnownPlus(u.id);
     let _badgesCard = '';
-    if (badges.length > 0 || _isVrcnPlus) {
-        const vrcnPlusBadgeHtml = _isVrcnPlus && typeof window.vrcnPlusBadgeHtml === 'function'
-            ? window.vrcnPlusBadgeHtml('myp-badge-item') : '';
+    if (badges.length > 0) {
         const iconsHtml = badges.map(b => {
             const hidden = !b.showcased;
             return `<div class="myp-badge-item fd-vrc-badge-wrap${hidden ? ' myp-badge-hidden' : ''}${_myBadgesEditing ? ' myp-badge-editing' : ''}" data-badge-id="${esc(b.id)}" data-badge-img="${esc(b.imageUrl)}" data-badge-name="${encodeURIComponent(b.name)}" data-badge-desc="${encodeURIComponent(b.description || '')}" onclick="${_myBadgesEditing ? `toggleMyBadge('${esc(b.id)}')` : ''}"><img class="fd-vrc-badge-icon" src="${esc(imgThumb(b.imageUrl, 64))}" alt="${esc(b.name)}" onerror="this.closest('.myp-badge-item').style.display='none'"></div>`;
         }).join('');
         _badgesCard = `<div class="fd-info-card">
             <div class="fd-group-rep-label" style="display:flex;align-items:center;justify-content:space-between;">${t('profiles.my_profile.sections.badges', 'Badges')}<button class="myp-edit-btn" onclick="toggleBadgeEditMode()"><span class="msi" style="font-size:14px;">${_myBadgesEditing ? 'check' : 'edit'}</span></button></div>
-            <div class="myp-badges-row">${vrcnPlusBadgeHtml}${iconsHtml}</div>
+            <div class="myp-badges-row">${iconsHtml}</div>
         </div>`;
     }
 

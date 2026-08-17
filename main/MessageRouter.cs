@@ -321,7 +321,6 @@ public partial class AppShell
                     await _authCtrl.HandleMessage(action, msg);
                     break;
 
-                case "vrcnPlusCheckEntitlement":
                 case "vrcnPlusGetTheme":
                 case "vrcnPlusSaveTheme":
                     await _vrcnPlusCtrl.HandleMessage(action, msg);
@@ -756,23 +755,6 @@ public partial class AppShell
                                 lines.Add($"  Slot {slot}: \"{text}\"{cdNote}");
                             }
                             SendToJS("consoleOutput", new { text = string.Join("\n", lines), color = "info" });
-                        });
-                    }
-                    else if (result.Extra == "vrcnPlusAdmin" && result.ExtraPayload != null)
-                    {
-                        var payload  = JObject.FromObject(result.ExtraPayload);
-                        var sub      = payload["sub"]?.ToString() ?? "";
-                        var targetId = payload["targetId"]?.ToString() ?? "";
-                        _ = Task.Run(async () =>
-                        {
-                            var caller = _core.VrcApi.CurrentUserId;
-                            if (string.IsNullOrEmpty(caller))
-                            {
-                                SendToJS("consoleOutput", new { text = "[VRCN+] not logged in", color = "err" });
-                                return;
-                            }
-                            var (cmdOk, text) = await _vrcnPlusCtrl.RunAdminCommandAsync(sub, caller, targetId);
-                            SendToJS("consoleOutput", new { text, color = cmdOk ? "ok" : "err" });
                         });
                     }
                     else if (result.Extra != null && result.ExtraPayload != null)

@@ -49,7 +49,34 @@
 .vrcn-badge.err  { background: rgba(239,83,80,.15);   color: var(--err); }
 .vrcn-badge.cyan { background: color-mix(in srgb, var(--cyan) 18%, transparent); color: var(--cyan); }
 .vrcn-supporter-badge { display: inline-flex; align-items: center; gap: 2px; font-size: calc(7px + var(--fs-off, 0px)); font-weight: 600; padding: 2px 5px; border-radius: 4px; background: #000; color: #FFD700; border: 1px solid #FFD700; box-shadow: 0 0 6px #FFD70066; letter-spacing: .4px; }
+.cvrc-owner-badge {
+    font-size: calc(13px + var(--fs-off, 0px)) !important;
+    font-weight: 800 !important;
+    padding: 5px 12px !important;
+    border-radius: 6px !important;
+    background: #c0152f !important;
+    color: #fff !important;
+    border: 1px solid #ff3b52;
+    box-shadow: 0 0 12px rgba(192,21,47,.65);
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+    letter-spacing: .5px !important;
+}
 .vrcn-local-badge { display: inline-flex; align-items: center; gap: 2px; font-size: calc(7px + var(--fs-off, 0px)); font-weight: 600; padding: 2px 5px; border-radius: 4px; background: #2a0a1f; color: #ff5fbf; border: 1px solid #ff5fbf; box-shadow: 0 0 7px #ff5fbf88; text-shadow: 0 0 5px #ff5fbf99; letter-spacing: .4px; }
+.cvrc-owner-name {
+    background: linear-gradient(90deg, #ff1f3d 0%, #17000a 20%, #ff1f3d 40%, #17000a 60%, #ff1f3d 80%, #17000a 100%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    font-weight: 800 !important;
+    animation: cvrc-owner-wave 3.5s linear infinite;
+    filter: drop-shadow(0 0 4px rgba(255,31,61,.55));
+}
+@keyframes cvrc-owner-wave {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 300% 50%; }
+}
 .vrcn-badge.db-avtrdb  { background: var(--accent); color: #fff; }
 .vrcn-badge.db-avtricu { background: #e879f9; color: #fff; }
 .vrcn-badge.db-vrcndb  { background: #2DD48C; color: #fff; }

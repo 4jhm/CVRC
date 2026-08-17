@@ -277,7 +277,6 @@ public partial class AppShell
         _relayCtrl.OnOwnUserUpdated = user =>
         {
             _authCtrl.SendVrcUserData(user);
-            _vrcnPlusCtrl.OnOwnUserKnown(user?["id"]?.ToString() ?? "");
         };
         _core.PushDiscordPresence = () => _discordCtrl.PushPresence();
 #if WINDOWS

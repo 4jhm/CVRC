@@ -1283,9 +1283,6 @@ case 'vrcNews':
         case 'vrcnPlusTheme':
             if (typeof window.vrcnPlusTheme === 'function') window.vrcnPlusTheme(payload);
             break;
-        case 'vrcnPlusEntitlement':
-            if (typeof window.vrcnPlusEntitlement === 'function') window.vrcnPlusEntitlement(payload);
-            break;
         case 'vrcnPlusSaveResult':
             if (typeof window.vrcnPlusSaveResult === 'function') window.vrcnPlusSaveResult(payload);
             break;

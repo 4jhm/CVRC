@@ -64,8 +64,7 @@ rm -rf "$STAGE"
 "$DOTNET" publish "$SRC/VRCNext.csproj" \
     -c Release -r linux-x64 --self-contained true \
     -o "$STAGE" \
-    -p:VRCNextWhKey="${VRCNEXT_WH_KEY:-}" \
-    -p:VRCNextVrcnPlusAdminToken="${VRCNEXT_VRCN_PLUS_ADMIN_TOKEN:-}"
+    -p:VRCNextWhKey="${VRCNEXT_WH_KEY:-}"
 
 [ -f "$STAGE/CVRC" ] || { echo "[ERROR] Publish output missing CVRC binary"; exit 1; }
 [ -d "$STAGE/frontend" ] || { echo "[ERROR] Publish output missing frontend/"; exit 1; }

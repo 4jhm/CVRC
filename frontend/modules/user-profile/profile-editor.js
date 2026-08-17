@@ -36,36 +36,9 @@
     const ROW_BY_ID      = Object.fromEntries(EDITOR_ROWS.map(r => [r.id, r]));
 
     const _themeCache    = {};
-    const _plusCache     = {};
     const _pendingFetches = new Set();
     let _editingUserId = null;
     let _editorColors  = {};
-    let _editorIsPlus  = false;
-
-    window.vrcnPlusIsKnownPlus = function (userId) { return !!_plusCache[userId]; };
-
-    window.vrcnPlusBadgeHtml = function (extraWrapperClass) {
-        const cls   = 'fd-vrc-badge-wrap vrcn-plus-badge' + (extraWrapperClass ? ' ' + extraWrapperClass : '');
-        const name  = encodeURIComponent('VRCN+ Subscriber');
-        const desc  = encodeURIComponent('Awarded for subscribing to VRCN+');
-        const img   = 'assets/Badges/VRCNPlus.png';
-        return `<div class="${cls}" data-badge-img="${img}" data-badge-name="${name}" data-badge-desc="${desc}">`
-             + `<img class="fd-vrc-badge-icon" src="${img}" alt="VRCN+ Subscriber" onerror="this.closest('.fd-vrc-badge-wrap').style.display='none'">`
-             + `</div>`;
-    };
-
-    function _maybeReRenderProfile(userId) {
-        const myp = document.getElementById('modalMyProfile');
-        if (typeof currentVrcUser !== 'undefined' && currentVrcUser && currentVrcUser.id === userId
-            && myp && myp.style.display !== 'none' && typeof renderMyProfileContent === 'function') {
-            try { renderMyProfileContent(); } catch (e) { console.error('[VRCN+] re-render my-profile', e); }
-        }
-        const fd = document.getElementById('modalFriendDetail');
-        if (typeof currentFriendDetail !== 'undefined' && currentFriendDetail && currentFriendDetail.id === userId
-            && fd && fd.style.display !== 'none' && typeof renderFriendDetail === 'function') {
-            try { renderFriendDetail(currentFriendDetail); } catch (e) { console.error('[VRCN+] re-render friend', e); }
-        }
-    }
 
     function _isHex(s) { return typeof s === 'string' && /^#[0-9a-fA-F]{6}$/.test(s); }
     function _esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -146,18 +119,6 @@
         }
     };
 
-    window.vrcnPlusEntitlement = function (payload) {
-        if (!payload || !payload.userId) return;
-        const wasPlus = _plusCache[payload.userId];
-        const isPlus  = !!payload.isPlus;
-        _plusCache[payload.userId] = isPlus;
-        if (_editingUserId === payload.userId) {
-            _editorIsPlus = isPlus;
-            _vpeUpdateLock();
-        }
-        if (wasPlus === undefined || wasPlus !== isPlus) _maybeReRenderProfile(payload.userId);
-    };
-
     window.vrcnPlusSaveResult = function (payload) {
         if (!payload) return;
         if (payload.ok) {
@@ -199,20 +160,15 @@
 
         _editingUserId = currentVrcUser.id;
         window._vpeDirty = false;
-        _editorIsPlus = false;
 
         const cached = _themeCache[_editingUserId];
         _editorColors = cached ? { ..._seedColors(), ...cached } : _seedColors();
 
         _vpeRenderRows();
-        _vpeUpdateLock();
         host.style.display = 'flex';
         _applyEditorToOwnProfile();
 
-        if (typeof sendToCS === 'function') {
-            sendToCS({ action: 'vrcnPlusCheckEntitlement', userId: _editingUserId });
-            vrcnPlusRequestTheme(_editingUserId);
-        }
+        if (typeof sendToCS === 'function') vrcnPlusRequestTheme(_editingUserId);
         _vpePickerInit();
     }
     window.openVrcnPlusEditor = openVrcnPlusEditor;
@@ -233,19 +189,6 @@
     function _applyEditorToOwnProfile() {
         const box = document.querySelector('#modalMyProfile .modal-box');
         if (box) vrcnPlusApplyThemeToElement(box, _editorColors);
-    }
-
-    function _vpeUpdateLock() {
-        const host = document.getElementById('vrcnPlusEditor');
-        const ups  = document.getElementById('vpeUpsell');
-        if (!host) return;
-        if (_editorIsPlus) {
-            host.classList.remove('vpe-locked');
-            if (ups) ups.style.display = 'none';
-        } else {
-            host.classList.add('vpe-locked');
-            if (ups) ups.style.display = '';
-        }
     }
 
     function _rowValue(row) {
@@ -313,11 +256,6 @@
 
     function vrcnPlusSaveFromEditor() {
         if (!_editingUserId) return;
-        if (!_editorIsPlus) {
-            if (typeof showToast === 'function')
-                showToast(false, _t('vrcnplus.editor.locked', 'VRCN+ subscription required.'));
-            return;
-        }
         if (typeof sendToCS !== 'function') return;
         sendToCS({
             action: 'vrcnPlusSaveTheme',

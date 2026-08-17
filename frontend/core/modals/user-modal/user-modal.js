@@ -725,6 +725,7 @@ function renderFriendDetail(d) {
            </div>` : '';
 
     let badgesHtml = '<div class="fd-badges-row">';
+    if (typeof getCvrcOwnerBadgeHtml === 'function') badgesHtml += getCvrcOwnerBadgeHtml(d.id);
     const platBadge = getPlatformBadgeHtml(d.platform || d.lastPlatform || '');
     if (platBadge) badgesHtml += platBadge;
     if (d.isFriend) badgesHtml += `<span class="vrcn-badge bdg-friend"><span class="msi" style="font-size:11px;">check_circle</span>${t('profiles.badges.friend', 'Friend')}</span>`;
@@ -763,12 +764,9 @@ function renderFriendDetail(d) {
     }
 
     const vrcBadges = d.badges || [];
-    const _isVrcnPlusFd = (typeof vrcnPlusIsKnownPlus === 'function') && vrcnPlusIsKnownPlus(d.id);
     let vrcBadgesRowHtml = '';
-    if (vrcBadges.length > 0 || _isVrcnPlusFd) {
-        const vrcnPlusBadgeHtml = _isVrcnPlusFd && typeof window.vrcnPlusBadgeHtml === 'function'
-            ? window.vrcnPlusBadgeHtml() : '';
-        vrcBadgesRowHtml = `<div class="fd-vrc-badges-row">${vrcnPlusBadgeHtml}${vrcBadges.map(b =>
+    if (vrcBadges.length > 0) {
+        vrcBadgesRowHtml = `<div class="fd-vrc-badges-row">${vrcBadges.map(b =>
             `<div class="fd-vrc-badge-wrap"` +
                 ` data-badge-img="${esc(b.imageUrl)}"` +
                 ` data-badge-name="${encodeURIComponent(b.name)}"` +

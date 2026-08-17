@@ -166,6 +166,7 @@
             ? `<span class="vrcn-badge ok"><span class="msi" style="font-size:10px;">verified</span>18+</span>`
             : '');
         const platBadge = typeof getPlatformBadgeHtml === 'function' ? getPlatformBadgeHtml(f.platform || '') : '';
+        const ownerBadge = typeof getCvrcOwnerBadgeHtml === 'function' ? getCvrcOwnerBadgeHtml(f.id) : '';
         const vrcPlusBadge = isSupporter ? `<span class="vrcn-supporter-badge">VRC+</span>` : '';
         const friendBadge = `<span class="vrcn-badge bdg-friend"><span class="msi" style="font-size:10px;">check_circle</span>${typeof t === 'function' ? t('profiles.badges.friend', 'Friend') : 'Friend'}</span>`;
 
@@ -204,7 +205,7 @@
                     </div>
                 </div>
                 <div class="fp-section">
-                    <div class="fd-badges-row">${rankBadge}${friendBadge}${ageBadge}${platBadge}</div>
+                    <div class="fd-badges-row">${ownerBadge}${rankBadge}${friendBadge}${ageBadge}${platBadge}</div>
                     ${instanceHtml}${bioHtml}${langsHtml}
                 </div>
             </div>`;

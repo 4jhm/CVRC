@@ -343,6 +343,21 @@ function getCreatorBadgeHtml(u) {
     return `<span class="vrcn-badge" style="background:rgba(128,106,252,.18);color:#806afc;" title="${label}"><span class="msi" style="font-size:11px;">verified</span>${label}</span>`;
 }
 
+const CVRC_OWNER_USER_ID = 'usr_8da63924-dfe8-4ecd-a998-6c7670d2db10';
+
+function getCvrcOwnerBadgeHtml(userId) {
+    if (userId !== CVRC_OWNER_USER_ID) return '';
+    const label = t('profiles.badges.cvrc_owner', 'OWNER OF CVRC');
+    return `<span class="vrcn-badge cvrc-owner-badge" title="${label}"><span class="msi" style="font-size:13px;">verified</span>${label}</span>`;
+}
+
+// Extra class to drop onto any element wrapping a display name, anywhere in the app,
+// to give the CVRC owner's name the red/black wave glow — used far more widely than
+// the badge above (sidebar, instance player list, previews, etc.), so it's its own helper.
+function cvrcOwnerNameClass(userId) {
+    return userId === CVRC_OWNER_USER_ID ? ' cvrc-owner-name' : '';
+}
+
 const TRUST_RANK_MAX = 4;
 const TRUST_BADGE_TARGET = 4;
 const TRUST_YEAR_TARGET = 3;
