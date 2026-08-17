@@ -1,3 +1,5 @@
+# Custom VrChat Companion - CVRC
+
 **2026.42.1**
 * HOTFIX - Pin system shows only world id instead of world name.
 * HOTFIX - Pin system shows username weirdly.
