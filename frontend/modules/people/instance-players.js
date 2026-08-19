@@ -136,7 +136,7 @@ function buildInstancePlayersHtml(users, iStart, iTotal, now) {
             profile:  `<td class="pl-profile">${av}</td>`,
             timer:    `<td class="pl-date">${u.joinedAt ? esc(formatInstanceTimer(u.joinedAt, now)) : ''}</td>`,
             joined:   `<td class="pl-date">${u.joinedAt ? esc(fmtTime(new Date(u.joinedAt))) : ''}</td>`,
-            name:     `<td class="pl-name">${esc(displayName)}</td>`,
+            name:     `<td class="pl-name"><span class="${(typeof cvrcOwnerNameClass === 'function' ? cvrcOwnerNameClass(u.id) : '').trim()}">${esc(displayName)}</span></td>`,
             avatar:   `<td class="pl-avatar-cell">${_plAvatarInfoCell(u._avatar, isSelf)}</td>`,
             rank:     `<td>${rank ? `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>` : ''}</td>`,
             status:   `<td class="pl-status">${status ? `<span class="vrc-status-dot ${statusDotClass(status)}"></span><span class="pl-status-txt">${esc(statusDesc || statusLabel(status))}</span>` : ''}</td>`,

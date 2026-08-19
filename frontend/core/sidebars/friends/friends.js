@@ -29,7 +29,8 @@ function buildFriendCardHtml(f, presenceType) {
     const locationText = getFriendLocationLabel(presenceType, f.location);
     const badgeDotCls = presenceType === 'web' ? 'vrc-status-ring' : 'vrc-status-dot';
     const avatarWrap = `<div class="vrc-friend-avatar-wrap">${imgTag}${(typeof iconFrameHtml === 'function') ? iconFrameHtml(f.iconFrameUrl) : ''}<span class="vrc-friend-status-badge ${badgeDotCls} ${statusCls}"></span></div>`;
-    return `<div class="vrc-friend-card" data-uid="${fid}" data-status="${statusCls}" onclick="openFriendDetail('${fid}')">${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(f.nameplateUrl) : ''}${avatarWrap}<div class="vrc-friend-info"><div class="vrc-friend-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${nameColorStyle}">${esc(f.displayName)}</span>${rankBadge}</div><div class="vrc-friend-loc">${_friendLocLineInner(f, presenceType, statusText, locationText)}</div></div></div>`;
+    const ownerCls = (typeof cvrcOwnerNameClass === 'function') ? cvrcOwnerNameClass(f.id) : '';
+    return `<div class="vrc-friend-card" data-uid="${fid}" data-status="${statusCls}" onclick="openFriendDetail('${fid}')">${(typeof nameplateDecoHtml === 'function') ? nameplateDecoHtml(f.nameplateUrl) : ''}${avatarWrap}<div class="vrc-friend-info"><div class="vrc-friend-name"><span class="${ownerCls.trim()}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${nameColorStyle}">${esc(f.displayName)}</span>${rankBadge}</div><div class="vrc-friend-loc">${_friendLocLineInner(f, presenceType, statusText, locationText)}</div></div></div>`;
 }
 
 function tryPatchVrcFriendCard(prev, f) {

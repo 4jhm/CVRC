@@ -625,7 +625,7 @@ function buildPeopleListHtml(friends) {
 
         rows += tlTableRow('friendsList', ` onclick="openFriendDetail('${uid}')"`, {
             profile:   `<td class="pl-profile">${av}</td>`,
-            name:      `<td class="pl-name">${esc(f.displayName || '')}</td>`,
+            name:      `<td class="pl-name"><span class="${(typeof cvrcOwnerNameClass === 'function' ? cvrcOwnerNameClass(f.id) : '').trim()}">${esc(f.displayName || '')}</span></td>`,
             rank:      `<td>${rank ? `<span class="vrcn-badge ${rank.cls}">${esc(rank.label)}</span>` : ''}</td>`,
             status:    `<td class="pl-status">${statusCell}</td>`,
             language:  `<td class="pl-langs">${_plLangCell(f)}</td>`,

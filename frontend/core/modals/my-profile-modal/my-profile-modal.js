@@ -445,7 +445,7 @@ function renderMyProfileContent() {
                     <div class="fd-left-id">
                         <div class="fd-left-avatar-wrap">${imgTag}${_dotHtml}</div>
                         <div class="fd-left-name-wrap">
-                            <div class="fd-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${esc(u.displayName)}${vrcPlusBadge}</div>
+                            <div class="fd-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span class="${(typeof cvrcOwnerNameClass === 'function' ? cvrcOwnerNameClass(u.id) : '').trim()}">${esc(u.displayName)}</span>${vrcPlusBadge}</div>
                             ${pronounsHtml}
                             ${statusRowHtml}
                         </div>

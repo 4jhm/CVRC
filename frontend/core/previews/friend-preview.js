@@ -198,7 +198,7 @@
                     </div>
                     <div class="fp-header-info">
                         <div class="fp-name-row">
-                            <span class="fd-name">${esc(f.displayName)}</span>${vrcPlusBadge}
+                            <span class="fd-name${typeof cvrcOwnerNameClass === 'function' ? cvrcOwnerNameClass(f.id) : ''}">${esc(f.displayName)}</span>${vrcPlusBadge}
                         </div>
                         <div class="fp-status-row"><span>${esc(statusTxt)}</span></div>
                         ${statsHtml}

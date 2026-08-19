@@ -1,3 +1,4 @@
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using VRCNext.Services;
 
@@ -9,10 +10,18 @@ public class AvatarDatabaseController
     // https://gofile.io/d/dLV8UU
     private const string ContentId = "dLV8UU";
 
+    // Every install's guest Gofile account hits this same shared folder, so treating a
+    // network fetch as optional once we already have a decent on-disk cache cuts a lot of
+    // avoidable traffic — and stops "Could not load" from showing on every single launch
+    // just because Gofile rate-limited a listing call that minute.
+    private static readonly string CachePath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCNext", "Caches", "avatardb_cache.json");
+    private static readonly TimeSpan BackgroundRefreshAge = TimeSpan.FromHours(6);
+
     private readonly CoreLibrary _core;
     private GofileService? _gofile;
-    private List<GofileEntry>? _cachedEntries;
-    private DateTime _cachedAt = DateTime.MinValue;
+    private List<GofileEntry>? _memEntries;
+    private DateTime _memCachedAt = DateTime.MinValue;
 
     public AvatarDatabaseController(CoreLibrary core)
     {
@@ -42,28 +51,65 @@ public class AvatarDatabaseController
 
     private async Task LoadAsync(bool force)
     {
+        if (!force && _memEntries != null && (DateTime.UtcNow - _memCachedAt).TotalMinutes < 10)
+        {
+            SendEntries(_memEntries);
+            return;
+        }
+
+        // Cache-first: show whatever's on disk immediately (instant, no network wait, can't
+        // fail), then decide whether a network refresh is actually warranted this time.
+        if (_memEntries == null && !force)
+        {
+            var disk = LoadDiskCache();
+            if (disk != null)
+            {
+                _memEntries = disk.Value.entries;
+                _memCachedAt = disk.Value.at;
+                SendEntries(_memEntries);
+
+                if ((DateTime.UtcNow - disk.Value.at) < BackgroundRefreshAge)
+                    return; // fresh enough — skip the network entirely this load
+            }
+        }
+
+        await RefreshFromNetworkAsync();
+    }
+
+    private async Task RefreshFromNetworkAsync()
+    {
+        // _memEntries reflects anything already shown this session (disk cache or an earlier
+        // successful fetch) — a refresh failing is only fatal if there's truly nothing to fall
+        // back on; otherwise leave the current list alone and just log the miss.
+        var hadFallback = _memEntries != null;
+
         try
         {
-            if (!force && _cachedEntries != null && (DateTime.UtcNow - _cachedAt).TotalMinutes < 10)
-            {
-                SendEntries(_cachedEntries);
-                return;
-            }
-
             _gofile ??= new GofileService(s => _core.SendToJS("log", new { msg = s, color = "sec" }));
             var entries = await _gofile.ListFolderAsync(ContentId);
             if (entries == null)
             {
+                if (hadFallback)
+                {
+                    _core.SendToJS("log", new { msg = "[AvatarDb] Refresh failed, keeping cached list.", color = "warn" });
+                    return;
+                }
                 _core.SendToJS("avatarDbResult", new { ok = false, message = "Could not load the avatar database. Check the Activity Log for details." });
                 return;
             }
 
-            _cachedEntries = entries;
-            _cachedAt = DateTime.UtcNow;
+            _memEntries = entries;
+            _memCachedAt = DateTime.UtcNow;
+            SaveDiskCache(entries, _memCachedAt);
             SendEntries(entries);
         }
         catch (Exception ex)
         {
+            if (hadFallback)
+            {
+                _core.SendToJS("log", new { msg = $"[AvatarDb] Refresh error: {ex.Message}", color = "warn" });
+                return;
+            }
             _core.SendToJS("avatarDbResult", new { ok = false, message = $"Error: {ex.Message}" });
         }
     }
@@ -81,5 +127,29 @@ public class AvatarDatabaseController
             })
             .ToList();
         _core.SendToJS("avatarDbResult", new { ok = true, files });
+    }
+
+    private static (List<GofileEntry> entries, DateTime at)? LoadDiskCache()
+    {
+        try
+        {
+            if (!File.Exists(CachePath)) return null;
+            var obj = JObject.Parse(File.ReadAllText(CachePath));
+            var at = obj["at"]?.Value<DateTime?>();
+            var entries = obj["entries"]?.ToObject<List<GofileEntry>>();
+            if (at == null || entries == null) return null;
+            return (entries, DateTime.SpecifyKind(at.Value, DateTimeKind.Utc));
+        }
+        catch { return null; }
+    }
+
+    private static void SaveDiskCache(List<GofileEntry> entries, DateTime at)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(CachePath)!);
+            File.WriteAllText(CachePath, JObject.FromObject(new { entries, at }).ToString(Formatting.None));
+        }
+        catch { /* best-effort — a failed write just means next launch refetches */ }
     }
 }

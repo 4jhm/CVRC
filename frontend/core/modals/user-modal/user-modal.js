@@ -1051,7 +1051,7 @@ function renderFriendDetail(d) {
         const _fdLeftHtml = `<div class="fd-left">
             ${bannerSlotHtml}
             <div class="fd-left-body">
-                <div class="fd-left-id"><div class="fd-left-avatar-wrap">${imgTag}${_fdDotHtml}</div><div class="fd-left-name-wrap"><div class="fd-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">${esc(d.displayName)}${vrcPlusBadge}</div>${pronounsHtml}${_fdStatusRowCompact}</div></div>
+                <div class="fd-left-id"><div class="fd-left-avatar-wrap">${imgTag}${_fdDotHtml}</div><div class="fd-left-name-wrap"><div class="fd-name" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span class="${(typeof cvrcOwnerNameClass === 'function' ? cvrcOwnerNameClass(d.id) : '').trim()}">${esc(d.displayName)}</span>${vrcPlusBadge}</div>${pronounsHtml}${_fdStatusRowCompact}</div></div>
                 ${actionsHtml}${favPickerHtml}
                 ${_memoCard}
                 ${_fdBadgesCard}
