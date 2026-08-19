@@ -1330,3 +1330,43 @@ function onProfileThemeDeleted(data) {
     }
     renderProfileDecoPicker(false);
 }
+
+function _mypWmState(s) {
+    if (s === undefined) return {
+        rawJson:          _mypRawJson,
+        allWorlds:        _mypAllWorlds,
+        allAvatars:       _mypAllAvatars,
+        worldsPage:       _mypWorldsPage,
+        avatarsPage:      _mypAvatarsPage,
+        worldsRequested:  _mypWorldsRequested,
+        avatarsRequested: _mypAvatarsRequested,
+        avatarsLoaded:    _mypAvatarsLoaded,
+        favsRequested:    _mypFavsRequested,
+        heatmapDays:      _mypHeatmapDays,
+        heatmapView:      _mypHeatmapView,
+        statusData:       _mypStatusData,
+        groupsSort:       _mypGroupsSortMode,
+        groupsPage:       _mypGroupsPage,
+        ownGroupsPage:    _mypOwnGroupsPage,
+        groups:           window._mypGroups,
+        ownGroups:        window._mypOwnGroups,
+    };
+    s = s || {};
+    _mypRawJson          = s.rawJson          ?? null;
+    _mypAllWorlds        = s.allWorlds        ?? [];
+    _mypAllAvatars       = s.allAvatars       ?? [];
+    _mypWorldsPage       = s.worldsPage       ?? 0;
+    _mypAvatarsPage      = s.avatarsPage      ?? 0;
+    _mypWorldsRequested  = s.worldsRequested  ?? false;
+    _mypAvatarsRequested = s.avatarsRequested ?? false;
+    _mypAvatarsLoaded    = s.avatarsLoaded    ?? false;
+    _mypFavsRequested    = s.favsRequested    ?? false;
+    _mypHeatmapDays      = s.heatmapDays      ?? 30;
+    _mypHeatmapView      = s.heatmapView      ?? 'online';
+    _mypStatusData       = s.statusData       ?? null;
+    _mypGroupsSortMode   = s.groupsSort       ?? 'alpha';
+    _mypGroupsPage       = s.groupsPage       ?? 0;
+    _mypOwnGroupsPage    = s.ownGroupsPage    ?? 0;
+    window._mypGroups    = s.groups           ?? null;
+    window._mypOwnGroups = s.ownGroups        ?? null;
+}

@@ -230,6 +230,7 @@ function saveSettings() {
             vroControlRadius:  parseInt(document.getElementById('vroControlRadius')?.value) || 28,
             vroDynVis:         !!document.getElementById('vroDynVis')?.checked,
             vroFocusRadius:    parseInt(document.getElementById('vroFocusRadius')?.value) || 35,
+            vroSeamless:       !!document.getElementById('vroSeamless')?.checked,
             vroToastEnabled:    !!document.getElementById('vroToastEnabled')?.checked,
             vroToastFavOnly:    !!document.getElementById('vroToastFavOnly')?.checked,
             vroToastSize:       parseInt(document.getElementById('vroToastSize')?.value) || 50,
@@ -290,6 +291,8 @@ function saveSettings() {
             ffcEnabled: document.getElementById('setFfcEnabled').checked,
             memoryTrimEnabled: document.getElementById('setMemoryTrimEnabled').checked,
             mediaFixEnabled: document.getElementById('setMediaFixEnabled')?.checked ?? true,
+            multiTaskMode: document.getElementById('setMultiTaskMode')?.checked ?? false,
+            tilingManager: document.getElementById('setTilingManager')?.checked ?? true,
             dbOptimize: document.getElementById('setDbOptimize').checked,
             dbOptimizeMaxEntries: Math.max(500, Math.min(250000, parseInt(document.getElementById('setDbOptimizeMaxEntries').value) || 500)),
             autoUpdate: document.getElementById('setAutoUpdate').checked,
@@ -810,6 +813,7 @@ function loadSettingsToUI(s) {
         vroControlRadius:  s.VroControlRadius ?? s.vroControlRadius ?? 16,
         vroDynVis:         s.VroDynVis       ?? s.vroDynVis       ?? false,
         vroFocusRadius:    s.VroFocusRadius  ?? s.vroFocusRadius  ?? 35,
+        vroSeamless:       s.VroSeamless     ?? s.vroSeamless     ?? false,
         vroToastEnabled:    s.VroToastEnabled    ?? s.vroToastEnabled    ?? true,
         vroToastFavOnly:    s.VroToastFavOnly    ?? s.vroToastFavOnly    ?? false,
         vroToastSize:       s.VroToastSize       ?? s.vroToastSize       ?? 50,
@@ -897,6 +901,15 @@ function loadSettingsToUI(s) {
     // Memory Trim
     document.getElementById('setMemoryTrimEnabled').checked = s.MemoryTrimEnabled ?? s.memoryTrimEnabled ?? true;
     { const _mfEl = document.getElementById('setMediaFixEnabled'); if (_mfEl) _mfEl.checked = s.MediaFixEnabled ?? s.mediaFixEnabled ?? true; }
+
+    const multiTaskMode = s.MultiTaskMode ?? s.multiTaskMode ?? false;
+    { const _mtEl = document.getElementById('setMultiTaskMode'); if (_mtEl) _mtEl.checked = multiTaskMode; }
+    if (typeof wmSetEnabled === 'function') wmSetEnabled(multiTaskMode);
+
+    const tilingManager = s.TilingManager ?? s.tilingManager ?? true;
+    { const _tmEl = document.getElementById('setTilingManager'); if (_tmEl) _tmEl.checked = tilingManager; }
+    if (typeof wmSetTiling === 'function') wmSetTiling(tilingManager);
+    updateTilingManagerToggle();
 
     // Database optimization
     const dbOptimize           = s.DbOptimize ?? s.dbOptimize ?? true;
@@ -1049,6 +1062,25 @@ function onPerfSettingChange() {
     if (hint) hint.style.display = '';
     const linuxHint = document.getElementById('linuxPerfRestartHint');
     if (linuxHint) linuxHint.style.display = '';
+}
+
+function onMultiTaskModeChange(el) {
+    if (typeof wmSetEnabled === 'function') wmSetEnabled(!!el.checked);
+    autoSave();
+    updateTilingManagerToggle();
+}
+
+function onTilingManagerChange(el) {
+    if (typeof wmSetTiling === 'function') wmSetTiling(!!el.checked);
+    autoSave();
+}
+
+function updateTilingManagerToggle() {
+    const enabled = document.getElementById('setMultiTaskMode')?.checked ?? false;
+    const row  = document.getElementById('tilingManagerRow');
+    const desc = document.getElementById('tilingManagerDesc');
+    if (row)  row.classList.toggle('disabled', !enabled);
+    if (desc) desc.classList.toggle('disabled', !enabled);
 }
 
 function onSearchDebounceMsChange() {

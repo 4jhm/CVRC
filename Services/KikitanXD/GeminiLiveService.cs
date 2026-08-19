@@ -92,6 +92,8 @@ public sealed class GeminiLiveService : IKikitanSpeechService
         _silenceThreshold = Math.Clamp(s.NoiseGatePercent / 100f / 6f, 0.001f, 0.5f);
         _blockedWords = NormalizeList(s.BlockedWords);
         _blockedSentences = NormalizeList(s.BlockedSentences);
+        _disableNonSpeech = s.DisableNonSpeech;
+        _chatboxNotify = s.ChatboxNotify;
 
         if (string.IsNullOrWhiteSpace(_apiKey))
             throw new InvalidOperationException("Google API key is missing.");
@@ -172,6 +174,8 @@ public sealed class GeminiLiveService : IKikitanSpeechService
         _silenceThreshold = Math.Clamp(s.NoiseGatePercent / 100f / 6f, 0.001f, 0.5f);
         _blockedWords = NormalizeList(s.BlockedWords);
         _blockedSentences = NormalizeList(s.BlockedSentences);
+        _disableNonSpeech = s.DisableNonSpeech;
+        _chatboxNotify = s.ChatboxNotify;
 
         if (!_running) return;
         if (MapTargetLang(s.TargetLang) == _targetLang && (s.GoogleApiKey ?? "") == _apiKey) return;
@@ -424,7 +428,7 @@ public sealed class GeminiLiveService : IKikitanSpeechService
                 if (partial.Length > 0 && (DateTime.UtcNow - _lastPartialSend).TotalMilliseconds >= PartialMinIntervalMs)
                 {
                     _lastPartialSend = DateTime.UtcNow;
-                    SendChatbox(partial.Length > 140 ? partial.Substring(partial.Length - 140) + "..." : partial + "...");
+                    SendChatbox(partial.Length > 140 ? partial.Substring(partial.Length - 140) + "..." : partial + "...", false);
                 }
             }
         }
@@ -473,7 +477,7 @@ public sealed class GeminiLiveService : IKikitanSpeechService
         if (string.IsNullOrWhiteSpace(send)) return;
 
         OnTranslated?.Invoke(send);
-        if (_oscEnabled) { SendChatbox(send); OnChatboxSent?.Invoke(); }
+        if (_oscEnabled) { SendChatbox(send, _chatboxNotify); OnChatboxSent?.Invoke(); }
         OnOutput?.Invoke(send);
     }
 
@@ -503,9 +507,30 @@ public sealed class GeminiLiveService : IKikitanSpeechService
         return s.Trim().Trim(' ', '.', ',', '!', '?', ';', ':', '"', '\'', '。', '！', '？', '、', '…').Trim();
     }
 
+
+    private volatile bool _disableNonSpeech = true;
+    private volatile bool _chatboxNotify = true;
+
+    private static readonly System.Text.RegularExpressions.Regex NonSpeechRx =
+        new(@"\([^)]*\)|\[[^\]]*\]", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private string StripNonSpeech(string text)
+    {
+        if (!_disableNonSpeech || string.IsNullOrWhiteSpace(text)) return text;
+        var cleaned = NonSpeechRx.Replace(text, " ");
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\s{2,}", " ").Trim();
+
+        foreach (var c in cleaned)
+            if (char.IsLetterOrDigit(c)) return cleaned;
+        return "";
+    }
+
     private string ApplyBlockFilters(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return text;
+
+        text = StripNonSpeech(text);
+        if (string.IsNullOrWhiteSpace(text)) return "";
 
         var sentences = _blockedSentences;
         if (sentences.Length > 0)
@@ -534,7 +559,7 @@ public sealed class GeminiLiveService : IKikitanSpeechService
         return text;
     }
 
-    private static void SendChatbox(string text)
+    private static void SendChatbox(string text, bool notify)
     {
         try
         {
@@ -543,7 +568,7 @@ public sealed class GeminiLiveService : IKikitanSpeechService
             udp.Connect("127.0.0.1", 9000);
             var buf = new List<byte>();
             OscString(buf, "/chatbox/input");
-            OscString(buf, ",sTF");
+            OscString(buf, notify ? ",sTT" : ",sTF");
             OscString(buf, text);
             var pkt = buf.ToArray();
             udp.Send(pkt, pkt.Length);

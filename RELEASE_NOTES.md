@@ -1,5 +1,116 @@
 # Custom VrChat Companion - CVRC
 
+**2026.43.2**
+
+**Multi-Task Mode**
+
+* Added a **Tiling Manager** that lets you arrange Multi-Task windows using keybinds.
+* See **Settings > Advanced** and **Taskbar > Help > Keybinds** for available controls.
+
+**2026.43.1**
+
+**Avatar Lookups**
+* **Avatar Lookups** in the Timeline and **Check for Avatar** have been greatly improved.
+* If **AvtrDB** cannot find an avatar, VRCNext now automatically falls back to **Cute Avatar Search**, followed by **VRCNDb**.
+* A single lookup can now search up to **3 databases**, greatly improving the chance of identifying a user's avatar.
+
+**Multi-Task Mode** (Experimental)
+* Added **Multi-Task Mode**, allowing up to **12 profiles, groups, worlds, avatars, events, or instances** to stay open at the same time.
+* Enable it in **Settings > Advanced > Experimental Features**.
+* Hold **SHIFT + Left Click** to open something in its own movable and resizable window. Normal clicks still work as before.
+* Each window has its own navigation history and can be minimized into a dock at the bottom.
+* Duplicate windows are prevented. Opening the same item again brings the existing window to the front.
+* Windows automatically stay inside the VRCNext window when resizing the app.
+* Best used with VRCNext maximized.
+* This feature is experimental, so bugs may still occur.
+
+**Minor Changes**
+* Removed the divider below the **Time Spent** and **Meets** row in profile previews.
+
+**Fixes**
+* Fixed the **Friends Activity** hero widget not updating automatically. It now follows live friend updates like the sidebar.
+
+**Debugging**
+* Added more debugging help commands for avatar lookups. For devs only.
+
+**2026.43.0**
+
+**Multi-Task Mode** (Experimental)
+* Until now you could only really look at one profile, group, world, avatar or event at a time. Opening a new one replaced whatever you were looking at. Multi-Task Mode lets you keep up to 12 of them open side by side, as little windows you can move around.
+* Turn it on in **Settings > Advanced > Experimental Features**. It is off by default.
+* Once it is on, hold **SHIFT** and left click anything that would normally open a modal. Instead of taking over the screen, it opens as its own window.
+* Plain left click still works exactly like before, with the usual breadcrumb navigation. Nothing changes unless you hold SHIFT.
+* You can mix and match freely, for example 3 profiles, 2 worlds and a group all open at once, so comparing people or places is finally a thing you can just do.
+* Drag a window around by its title bar, resize it from any edge or corner, and click one to bring it to the front.
+* Minimize a window and it drops into a small dock at the bottom of the screen. It keeps everything it had loaded, so clicking it in the dock brings it right back where you left off.
+* Inside a window, clicking a link (like a user's group) navigates in that same window and builds up its own little breadcrumb trail, so each window keeps its own history.
+* Windows can never end up off screen. If you shrink the app, they get pulled back into view and shrink along with it.
+* Best used with VRCNext maximized. It still works in a small window, it just gets cramped fast.
+* This one is experimental, so expect the odd bug. Let us know what breaks.
+
+**Minor Changes**
+* Removed the divider line under the time spent and meets row in the profile preview.
+
+**2026.42.6**
+
+**Avatar And World Imports**
+* Imports now accept **JSON** and **TXT** files next to CSV.
+* Avatar and world IDs are detected anywhere in the file, including inside links, so exports from other tools usually work as they are.
+* Group names are picked up automatically where possible: headings in a text file, object keys or name fields in a JSON. Everything else lands in one untitled group.
+* You still assign every group to one of your favorite groups yourself before importing, and anything left on Skip is ignored.
+* Deleted and private avatars and worlds are now checked before importing and skipped, so your favorites no longer fill up with unusable "Unnamed / Private" entries. Your own private uploads are still imported.
+* The result message now tells you how many entries were skipped.
+
+**Kikitan XD 2.0**
+* Added **Local Models**. Kikitan can now run fully on your PC without an API key or rate limits.
+* Added a model manager for downloading and removing **Whisper** speech models and **Qwen2.5** translation models.
+* Local models use **Vulkan** and support NVIDIA, AMD, and Intel GPUs without requiring CUDA.
+* Local models are fully unloaded from RAM and VRAM when Kikitan stops.
+* Model and source language changes now apply instantly while Kikitan is running.
+* **Live Typing** now works with local models when translation is disabled.
+* Added **Disable Non-Speech Elements** to hide Whisper outputs such as "(laughs)" or "(coughing)". Enabled by default.
+* Updated the Groq translation model to **qwen/qwen3.6-27b**.
+* Redesigned the Kikitan layout and moved **Personality** into the new **Settings** section.
+* Added chatbox notifications on finals so other players know that you said something.
+
+**Interface**
+* Replaced the remaining browser popups with proper VRCN modals. Removing an account, deleting the VRChat asset cache, and creating, renaming or deleting Action Flows and conditions now use the same in-app dialogs as the rest of VRCNext.
+
+**Fixed Bugs**
+* Fixed Kikitan XD not working anymore with old groq models.
+* Fixed an bug where some uninstall/Deletion modals are missing.
+
+**2026.42.5**
+
+**Kikitan XD 2.0**
+* Added **Local Models**. Kikitan can now run fully on your PC without an API key or rate limits.
+* Added a model manager for downloading and removing **Whisper** speech models and **Qwen2.5** translation models.
+* Local models use **Vulkan** and support NVIDIA, AMD, and Intel GPUs without requiring CUDA.
+* Local models are fully unloaded from RAM and VRAM when Kikitan stops.
+* Model and source language changes now apply instantly while Kikitan is running.
+* **Live Typing** now works with local models when translation is disabled.
+* Added **Disable Non-Speech Elements** to hide Whisper outputs such as "(laughs)" or "(coughing)". Enabled by default.
+* Updated the Groq translation model to **qwen/qwen3.6-27b**.
+* Redesigned the Kikitan layout and moved **Personality** into the new **Settings** section.
+* Added chatbox notifications on finals so other players know that you said something.
+
+**Interface**
+* Replaced the remaining browser popups with proper VRCN modals. Removing an account, deleting the VRChat asset cache, and creating, renaming or deleting Action Flows and conditions now use the same in-app dialogs as the rest of VRCNext.
+
+**Fixed Bugs**
+* Fixed Kikitan XD not working anymore with old groq models.
+* Fixed an bug where some uninstall/Deletion modals are missing.
+
+**2026.42.3**
+* Temporarily disabled the **"VRCN has crashed"** modal.
+* The current watchdog is too aggressive and can count a simple **taskkill** as a crash, so the crash handler has been disabled for now.
+* Crash logs are still generated when an actual crash occurs.
+
+**2026.42.2**
+* Added an option to use the SteamVR Overlay without movement blocking.
+* HOTFIX - Fixed Voice Fight having no entries.
+* HOTFIX - Fixed being unable to add new sound files to Voice Fight.
+
 **2026.42.1**
 * HOTFIX - Pin system shows only world id instead of world name.
 * HOTFIX - Pin system shows username weirdly.
@@ -270,3 +381,4 @@ This includes searches and avatar lookups.
 * Fixed **Avatar Database** showing "Could not load" on nearly every launch. It now caches the file list to disk after a successful load and shows that instantly on future opens instead of hitting the server every time; a background refresh only kicks in once the cache is 6+ hours old, and a failed refresh silently keeps the last good list instead of blanking the screen with an error
 * Avatar Database's error message (and Avatar Logger's GoFile upload path) now show the actual reason a GoFile request failed directly on screen, instead of a generic message that required digging through the Activity Log
 * Avatar Logger: added a **Local-Only Above** size setting — past that size, it skips the Discord/GoFile upload attempt entirely and saves straight to your Local Archive Folder, since huge files are the ones most likely to fail or stall on upload anyway
+* The VR wrist overlay's new **Seamless Controls** pointer (Settings for the overlay attachment) works with CVRC's own OSC Expressions radial menu the same way the old SteamVR pointer did — dragging a wedge to send a value behaves identically in both pointer modes

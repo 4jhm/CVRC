@@ -81,6 +81,8 @@ public sealed class KikitanXDService : IKikitanSpeechService
         _silenceThreshold = Math.Clamp(s.NoiseGatePercent / 100f / 6f, 0.001f, 0.5f);
         _blockedWords = NormalizeList(s.BlockedWords);
         _blockedSentences = NormalizeList(s.BlockedSentences);
+        _disableNonSpeech = s.DisableNonSpeech;
+        _chatboxNotify = s.ChatboxNotify;
     }
 
     private static string[] NormalizeList(IEnumerable<string>? items)
@@ -97,9 +99,30 @@ public sealed class KikitanXDService : IKikitanSpeechService
         return s.Trim().Trim(' ', '.', ',', '!', '?', ';', ':', '"', '\'', '。', '！', '？', '、', '…').Trim();
     }
 
+
+    private volatile bool _disableNonSpeech = true;
+    private volatile bool _chatboxNotify = true;
+
+    private static readonly System.Text.RegularExpressions.Regex NonSpeechRx =
+        new(@"\([^)]*\)|\[[^\]]*\]", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private string StripNonSpeech(string text)
+    {
+        if (!_disableNonSpeech || string.IsNullOrWhiteSpace(text)) return text;
+        var cleaned = NonSpeechRx.Replace(text, " ");
+        cleaned = System.Text.RegularExpressions.Regex.Replace(cleaned, @"\s{2,}", " ").Trim();
+
+        foreach (var c in cleaned)
+            if (char.IsLetterOrDigit(c)) return cleaned;
+        return "";
+    }
+
     private string ApplyBlockFilters(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return text;
+
+        text = StripNonSpeech(text);
+        if (string.IsNullOrWhiteSpace(text)) return "";
 
         var sentences = _blockedSentences;
         if (sentences.Length > 0)
@@ -166,6 +189,8 @@ public sealed class KikitanXDService : IKikitanSpeechService
         _silenceThreshold = Math.Clamp(s.NoiseGatePercent / 100f / 6f, 0.001f, 0.5f);
         _blockedWords = NormalizeList(s.BlockedWords);
         _blockedSentences = NormalizeList(s.BlockedSentences);
+        _disableNonSpeech = s.DisableNonSpeech;
+        _chatboxNotify = s.ChatboxNotify;
 
         _waveIn = new WaveIn
         {
@@ -327,7 +352,7 @@ public sealed class KikitanXDService : IKikitanSpeechService
                     string withKaomoji = AppendKaomojiAsync(srcText).GetAwaiter().GetResult();
                     if (!string.IsNullOrWhiteSpace(withKaomoji)) outText = withKaomoji;
                 }
-                if (_oscEnabled) { SendChatbox(outText); OnChatboxSent?.Invoke(); }
+                if (_oscEnabled) { SendChatbox(outText, _chatboxNotify); OnChatboxSent?.Invoke(); }
                 OnOutput?.Invoke(outText);
                 return;
             }
@@ -336,7 +361,7 @@ public sealed class KikitanXDService : IKikitanSpeechService
             if (!string.IsNullOrWhiteSpace(translated))
             {
                 OnTranslated?.Invoke(translated);
-                if (_oscEnabled) { SendChatbox(translated); OnChatboxSent?.Invoke(); }
+                if (_oscEnabled) { SendChatbox(translated, _chatboxNotify); OnChatboxSent?.Invoke(); }
                 OnOutput?.Invoke(translated);
             }
         }
@@ -398,7 +423,9 @@ public sealed class KikitanXDService : IKikitanSpeechService
 
         var body = new JObject
         {
-            ["model"] = "llama-3.3-70b-versatile",
+            ["model"] = "qwen/qwen3.6-27b",
+            ["reasoning_effort"] = "none",
+            ["reasoning_format"] = "hidden",
             ["temperature"] = 0.2,
             ["max_completion_tokens"] = 1024,
             ["messages"] = new JArray
@@ -436,7 +463,9 @@ public sealed class KikitanXDService : IKikitanSpeechService
     {
         var body = new JObject
         {
-            ["model"] = "llama-3.3-70b-versatile",
+            ["model"] = "qwen/qwen3.6-27b",
+            ["reasoning_effort"] = "none",
+            ["reasoning_format"] = "hidden",
             ["temperature"] = 0.5,
             ["max_completion_tokens"] = 256,
             ["messages"] = new JArray
@@ -465,7 +494,9 @@ public sealed class KikitanXDService : IKikitanSpeechService
     {
         var body = new JObject
         {
-            ["model"] = "llama-3.3-70b-versatile",
+            ["model"] = "qwen/qwen3.6-27b",
+            ["reasoning_effort"] = "none",
+            ["reasoning_format"] = "hidden",
             ["temperature"] = 1,
             ["max_completion_tokens"] = 512,
             ["messages"] = new JArray
@@ -490,7 +521,7 @@ public sealed class KikitanXDService : IKikitanSpeechService
         return json["choices"]?[0]?["message"]?["content"]?.ToString()?.Trim() ?? "";
     }
 
-    private static void SendChatbox(string text)
+    private static void SendChatbox(string text, bool notify)
     {
         try
         {
@@ -499,7 +530,7 @@ public sealed class KikitanXDService : IKikitanSpeechService
             udp.Connect("127.0.0.1", 9000);
             var buf = new List<byte>();
             OscString(buf, "/chatbox/input");
-            OscString(buf, ",sTF");
+            OscString(buf, notify ? ",sTT" : ",sTF");
             OscString(buf, text);
             var pkt = buf.ToArray();
             udp.Send(pkt, pkt.Length);

@@ -816,6 +816,7 @@ public class UnifiedTimeEngine : IDisposable
         bool hasIos = false, string iosPerf = "")
     {
         if (string.IsNullOrEmpty(avatarId)) return;
+        if (avatarId == "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11") return;
         var now = DateTime.UtcNow.ToString("o");
         lock (_lock)
         {
@@ -1241,10 +1242,11 @@ public class UnifiedTimeEngine : IDisposable
         }
     }
 
-    public void SetAvatarInfoCache(string userId, string fileId, string avatarId, string name, string authorName)
+    public void SetAvatarInfoCache(string userId, string fileId, string avatarId, string name, string authorName, string imageUrl = "")
     {
         if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(avatarId)) return;
-        var json = JsonConvert.SerializeObject(new { fileId, avatarId, name, authorName });
+        if (avatarId == "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11") return;
+        var json = JsonConvert.SerializeObject(new { fileId, avatarId, name, authorName, imageUrl });
         lock (_lock)
         {
             try

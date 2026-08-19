@@ -171,10 +171,12 @@ function closeFriendDetail(fromNav = false) {
 
 
 
+const ROBOT_AVATAR_ID = 'avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11';
 function _applyAvatarSection(payload) {
     const section = document.getElementById('fdAvatarSection');
     if (!section || !payload?.avatarId) return;
-    const avImg = currentFriendDetail?.currentAvatarImageUrl || '';
+    if (payload.avatarId === ROBOT_AVATAR_ID) { section.style.display = 'none'; return; }
+    const avImg = payload.avatarImage || currentFriendDetail?.currentAvatarImageUrl || '';
     const avIcon = avImg
         ? `<img class="fd-group-icon" src="${esc(imgThumb(avImg, 96))}" onerror="this.style.display='none'">`
         : `<div class="fd-group-icon fd-group-icon-empty"><span class="msi" style="font-size:18px;">checkroom</span></div>`;
@@ -1090,7 +1092,7 @@ function renderFriendDetail(d) {
     const _avatarKey = avatarFileId || avatarId;
     const ca = d.cachedAvatar;
     if (ca?.avatarId && ca.fileId === avatarFileId) {
-        _fdLastAvatarPayload = { avatarId: ca.avatarId, avatarName: ca.name, avatarAuthor: ca.authorName };
+        _fdLastAvatarPayload = { avatarId: ca.avatarId, avatarName: ca.name, avatarAuthor: ca.authorName, avatarImage: ca.imageUrl || '' };
         _applyAvatarSection(_fdLastAvatarPayload);
         _fdLoadedAvatarKey = _avatarKey;
     } else if (_fdLastAvatarPayload) {
@@ -2051,3 +2053,55 @@ function handleUserBasic(payload) {
         if (tip) tip.style.opacity = '0';
     });
 }());
+
+function _fdWmState(s) {
+    if (s === undefined) return {
+        detail:            currentFriendDetail,
+        loadedAvatarKey:   _fdLoadedAvatarKey,
+        lastAvatarPayload: _fdLastAvatarPayload,
+        groupsSort:        _fdGroupsSortMode,
+        mutualsSort:       _fdMutualsSortMode,
+        mutualsGroupsSort: _fdMutualsGroupsSortMode,
+        heatmapDays:       _fdHeatmapDays,
+        heatmapView:       _fdHeatmapView,
+        statusData:        _fdStatusData,
+        allGroups:         window._fdAllGroups,
+        allGroupsAll:      window._fdAllGroupsAll,
+        allOwnGroups:      window._fdAllOwnGroups,
+        allMutualGroups:   window._fdAllMutualGroups,
+        allMutuals:        window._fdAllMutuals,
+        allWorlds:         window._fdAllWorlds,
+        allAvatars:        window._fdAllAvatars,
+        repGroup:          window._fdRepGroup,
+        groupsPage:        window._fdGroupsPage,
+        ownGroupsPage:     window._fdOwnGroupsPage,
+        mutualsPage:       window._fdMutualsPage,
+        mutualsGroupsPage: window._fdMutualsGroupsPage,
+        worldsPage:        window._fdWorldsPage,
+        avatarsPage:       window._fdAvatarsPage,
+    };
+    s = s || {};
+    currentFriendDetail        = s.detail            ?? null;
+    _fdLoadedAvatarKey         = s.loadedAvatarKey   ?? '';
+    _fdLastAvatarPayload       = s.lastAvatarPayload ?? null;
+    _fdGroupsSortMode          = s.groupsSort        ?? 'alpha';
+    _fdMutualsSortMode         = s.mutualsSort       ?? 'alpha';
+    _fdMutualsGroupsSortMode   = s.mutualsGroupsSort ?? 'alpha';
+    _fdHeatmapDays             = s.heatmapDays       ?? 30;
+    _fdHeatmapView             = s.heatmapView       ?? 'online';
+    _fdStatusData              = s.statusData        ?? null;
+    window._fdAllGroups        = s.allGroups         ?? null;
+    window._fdAllGroupsAll     = s.allGroupsAll      ?? null;
+    window._fdAllOwnGroups     = s.allOwnGroups      ?? null;
+    window._fdAllMutualGroups  = s.allMutualGroups   ?? null;
+    window._fdAllMutuals       = s.allMutuals        ?? null;
+    window._fdAllWorlds        = s.allWorlds         ?? null;
+    window._fdAllAvatars       = s.allAvatars        ?? [];
+    window._fdRepGroup         = s.repGroup          ?? null;
+    window._fdGroupsPage       = s.groupsPage        ?? 0;
+    window._fdOwnGroupsPage    = s.ownGroupsPage     ?? 0;
+    window._fdMutualsPage      = s.mutualsPage       ?? 0;
+    window._fdMutualsGroupsPage= s.mutualsGroupsPage ?? 0;
+    window._fdWorldsPage       = s.worldsPage        ?? 0;
+    window._fdAvatarsPage      = s.avatarsPage       ?? 0;
+}

@@ -2039,7 +2039,7 @@ public partial class AppShell
                 {
                     var imType = msg["type"]?.ToString() ?? "";
                     if (imType != "worlds" && imType != "avatars") break;
-                    var ro = Dialog.FileOpen("csv");
+                    var ro = Dialog.FileOpen("csv,json,txt");
                     if (!ro.IsOk) break;
                     string imText;
                     try { imText = System.IO.File.ReadAllText(ro.Path); }
@@ -2104,7 +2104,8 @@ public partial class AppShell
                     _ = Task.Run(async () =>
                     {
                         var impKind = impType == "avatars" ? "avatar" : "world";
-                        int total = impEntries.Count, done = 0, added = 0, failed = 0;
+                        var impSelfId = _vrcApi.CurrentUserId ?? "";
+                        int total = impEntries.Count, done = 0, added = 0, failed = 0, skipped = 0;
                         foreach (var entry in impEntries.OfType<JObject>())
                         {
                             var entId   = entry["id"]?.ToString() ?? "";
@@ -2113,16 +2114,46 @@ public partial class AppShell
                             done++;
                             if (entId.Length == 0 || entGrp.Length == 0) { failed++; continue; }
 
+                            // Deleted or private entries would otherwise be favorited as
+                            // unusable "Unnamed / Private" placeholders.
+                            JObject? entSnap = null;
+                            try
+                            {
+                                entSnap = impKind == "avatar"
+                                    ? await _core.Avatars.GetAvatarAsync(entId)
+                                    : await _core.World.GetWorldAsync(entId);
+                            }
+                            catch (Exception ex)
+                            {
+                                Invoke(() => SendToJS("log", new { msg = $"Import [{entId}] lookup failed: {ex.Message}", color = "err" }));
+                            }
+
+                            string entRelease = entSnap?["releaseStatus"]?.ToString() ?? "";
+                            string entAuthor  = entSnap?["authorId"]?.ToString() ?? "";
+                            bool entMine      = entAuthor.Length > 0 && entAuthor == impSelfId;
+                            bool entUnusable  = entSnap == null
+                                || (entRelease.Length > 0
+                                    && !entRelease.Equals("public", StringComparison.OrdinalIgnoreCase)
+                                    && !entMine);
+
+                            if (entUnusable)
+                            {
+                                skipped++;
+                                var why = entSnap == null ? "not found (deleted or private)" : $"not public ({entRelease})";
+                                Invoke(() => SendToJS("log", new { msg = $"Import [{entId}] skipped: {why}", color = "sec" }));
+                                int sDone = done, sOk = added, sFailed = failed, sSkip = skipped;
+                                Invoke(() => SendToJS("importProgress", new { type = impType, done = sDone, total, ok = sOk, failed = sFailed, skipped = sSkip }));
+                                await Task.Delay(500);
+                                continue;
+                            }
+
                             bool entLocal = entType.StartsWith("local") || _core.LocalFavorites.IsLocalGroup(entGrp);
                             bool entOk = false;
                             try
                             {
                                 if (entLocal)
                                 {
-                                    var snap = impKind == "avatar"
-                                        ? await _core.Avatars.GetAvatarAsync(entId) ?? new JObject()
-                                        : await _core.World.GetWorldAsync(entId)   ?? new JObject();
-                                    var (lok, lerr, _) = _core.LocalFavorites.AddItem(entGrp, impKind, entId, snap);
+                                    var (lok, lerr, _) = _core.LocalFavorites.AddItem(entGrp, impKind, entId, entSnap ?? new JObject());
                                     entOk = lok;
                                     if (!lok) Invoke(() => SendToJS("log", new { msg = $"Import [{entId}]: {lerr}", color = "err" }));
                                 }
@@ -2145,8 +2176,8 @@ public partial class AppShell
                             }
 
                             if (entOk) added++; else failed++;
-                            int pDone = done, pOk = added, pFailed = failed;
-                            Invoke(() => SendToJS("importProgress", new { type = impType, done = pDone, total, ok = pOk, failed = pFailed }));
+                            int pDone = done, pOk = added, pFailed = failed, pSkip = skipped;
+                            Invoke(() => SendToJS("importProgress", new { type = impType, done = pDone, total, ok = pOk, failed = pFailed, skipped = pSkip }));
                             await Task.Delay(500);
                         }
                         try
@@ -2158,7 +2189,7 @@ public partial class AppShell
                         {
                             Invoke(() => SendToJS("log", new { msg = $"Import refresh failed: {ex.Message}", color = "err" }));
                         }
-                        Invoke(() => SendToJS("importDone", new { type = impType, total, ok = added, failed }));
+                        Invoke(() => SendToJS("importDone", new { type = impType, total, ok = added, failed, skipped }));
                     });
                     break;
                 }
@@ -2540,6 +2571,11 @@ public partial class AppShell
                 case "kxdGetDevices":
                 case "kxdSaveSettings":
                 case "kxdTranslateProfileText":
+                case "kxdLocalGetState":
+                case "kxdLocalDownload":
+                case "kxdLocalCancel":
+                case "kxdLocalUninstall":
+                case "kxdLocalSaveSelection":
                     _kxdCtrl.HandleMessage(action, msg);
                     break;
 

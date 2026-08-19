@@ -1,0 +1,185 @@
+#wmLayer {
+    position: fixed;
+    top: var(--tb-h);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9000;
+    pointer-events: none;
+}
+
+.wm-window {
+    position: absolute;
+    pointer-events: auto;
+    max-width: none;
+}
+
+.wm-window.wm-minimized { display: none; }
+
+.wm-window.wm-tiling:not(.wm-dragging):not(.wm-resizing) {
+    transition: left .22s cubic-bezier(.2, 0, 0, 1),
+                top .22s cubic-bezier(.2, 0, 0, 1),
+                width .22s cubic-bezier(.2, 0, 0, 1),
+                height .22s cubic-bezier(.2, 0, 0, 1);
+    will-change: left, top, width, height;
+}
+@media (prefers-reduced-motion: reduce) {
+    .wm-window.wm-tiling { transition: none !important; }
+}
+
+.wm-window.wm-dragging,
+.wm-window.wm-dragging * { cursor: grabbing !important; user-select: none; }
+
+.wm-window.wm-resizing,
+.wm-window.wm-resizing * { user-select: none; }
+
+.wm-window > .modal-overlay {
+    position: static !important;
+    inset: auto !important;
+    background: none !important;
+    backdrop-filter: none !important;
+    z-index: auto !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    animation: none;
+    will-change: auto;
+}
+
+.wm-window > .modal-overlay > .modal-box {
+    max-width: none;
+    max-height: calc(100vh - var(--tb-h) - 72px);
+    box-shadow: 0 24px 70px rgba(0,0,0,.6);
+    animation: none;
+}
+
+.wm-window .fd-modal-bar { cursor: grab; }
+.wm-window .fd-modal-bar button,
+.wm-window .fd-modal-bar input,
+.wm-window .fd-modal-bar .tb-crumb { cursor: pointer; }
+
+.wm-window.wm-sized > .modal-overlay {
+    display: block !important;
+    height: 100% !important;
+}
+
+.wm-window.wm-sized > .modal-overlay > .modal-box {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow-y: auto;
+}
+
+.wm-window.wm-sized > .modal-overlay.fd-style-compact .modal-box-body,
+.wm-window.wm-sized > .modal-overlay.wd-style-compact .modal-box-body,
+.wm-window.wm-sized > .modal-overlay.gd-style-compact .modal-box-body,
+.wm-window.wm-sized > .modal-overlay.av-style-compact .modal-box-body,
+.wm-window.wm-sized > .modal-overlay.tl-style-compact .modal-box-body {
+    height: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.wm-window.wm-narrow .fd-info-cols,
+.wm-window.wm-narrow .fd-info-top-row {
+    grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.wm-window.wm-sized > .modal-overlay > .modal-box > #myInstanceContent {
+    height: 100% !important;
+}
+
+.wm-window.wm-sized .mi-layout {
+    height: 100% !important;
+    max-height: none !important;
+}
+
+.wm-resize {
+    position: absolute;
+    z-index: 20;
+}
+.wm-resize-n  { top: -4px;    left: 10px;  right: 10px; height: 8px;  cursor: n-resize; }
+.wm-resize-s  { bottom: -4px; left: 10px;  right: 10px; height: 8px;  cursor: s-resize; }
+.wm-resize-w  { left: -4px;   top: 10px;   bottom: 10px; width: 8px;  cursor: w-resize; }
+.wm-resize-e  { right: -4px;  top: 10px;   bottom: 10px; width: 8px;  cursor: e-resize; }
+.wm-resize-nw { top: -4px;    left: -4px;  width: 16px; height: 16px; cursor: nw-resize; }
+.wm-resize-ne { top: -4px;    right: -4px; width: 16px; height: 16px; cursor: ne-resize; }
+.wm-resize-sw { bottom: -4px; left: -4px;  width: 16px; height: 16px; cursor: sw-resize; }
+.wm-resize-se { bottom: -4px; right: -4px; width: 16px; height: 16px; cursor: se-resize; }
+
+.wm-resize-se::after {
+    content: '';
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    width: 7px;
+    height: 7px;
+    border-right: 2px solid var(--tx3);
+    border-bottom: 2px solid var(--tx3);
+    border-bottom-right-radius: 3px;
+    opacity: .5;
+}
+.wm-window:hover .wm-resize-se::after { opacity: .9; }
+
+#wmDock {
+    position: fixed;
+    left: 50%;
+    bottom: 14px;
+    transform: translateX(-50%);
+    z-index: 9500;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    max-width: 80vw;
+    overflow-x: auto;
+    padding: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--brd);
+    border-radius: 12px;
+    box-shadow: 0 12px 34px rgba(0,0,0,.5);
+    scrollbar-width: none;
+}
+#wmDock::-webkit-scrollbar { display: none; }
+#wmDock.wm-dock-shown { display: flex; }
+
+.wm-dock-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    height: 30px;
+    max-width: 190px;
+    padding: 0 8px 0 10px;
+    background: var(--bg-input);
+    border: 1px solid var(--brd);
+    border-radius: 8px;
+    color: var(--tx1);
+    font-family: inherit;
+    font-size: calc(12px + var(--fs-off, 0px));
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background .12s, color .12s, border-color .12s;
+}
+.wm-dock-item:hover { background: var(--bg-hover); color: var(--tx0); border-color: var(--accent); }
+.wm-dock-item > .msi { font-size: 16px; color: var(--tx2); flex-shrink: 0; }
+.wm-dock-item:hover > .msi { color: var(--accent-lt); }
+.wm-dock-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+.wm-dock-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border: none;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--tx3);
+    flex-shrink: 0;
+}
+.wm-dock-close:hover { background: var(--err); color: #fff; }
+.wm-dock-close .msi { font-size: 13px; color: inherit; }

@@ -32,25 +32,122 @@ function _importLogicalLines(text) {
     return out;
 }
 
-function _importParse(text, idPrefix) {
+function _importIdRegex(idPrefix, anchored) {
+    const body = idPrefix + '[A-Za-z0-9][A-Za-z0-9_-]{7,}';
+    return new RegExp(anchored ? '^' + body + '$' : body, anchored ? '' : 'g');
+}
+
+function _importUnquote(s) {
+    let v = String(s || '').trim();
+    if (v.length > 1 && v.startsWith('"') && v.endsWith('"')) v = v.slice(1, -1).replace(/""/g, '"');
+    return v.trim();
+}
+
+// CSV ("id,name") and plain text lists share one parser: any line holding an ID is
+// an entry, any other non-empty line becomes the heading for the lines below it.
+function _importParseLines(text, idPrefix) {
+    const idRx = _importIdRegex(idPrefix, false);
     const sets = [];
     let cur = null;
+
     for (const raw of _importLogicalLines(text)) {
         const line = raw.trim();
         if (!line) { cur = null; continue; }
-        const m = line.match(/^([A-Za-z0-9_-]+)\s*,\s*([\s\S]*)$/);
-        if (m && m[1].indexOf(idPrefix) === 0) {
+
+        idRx.lastIndex = 0;
+        const ids = line.match(idRx);
+
+        if (ids && ids.length) {
             if (!cur) { cur = { title: '', items: [] }; sets.push(cur); }
-            let name = m[2].trim();
-            if (name.length > 1 && name.startsWith('"') && name.endsWith('"'))
-                name = name.slice(1, -1).replace(/""/g, '"');
-            if (!cur.items.some(it => it.id === m[1])) cur.items.push({ id: m[1], name });
+            let name = '';
+            if (ids.length === 1) {
+                const tail = line.slice(line.indexOf(ids[0]) + ids[0].length);
+                name = _importUnquote(tail.replace(/^[\s,;|\t-]+/, ''));
+            }
+            ids.forEach(id => {
+                if (!cur.items.some(it => it.id === id)) cur.items.push({ id, name });
+            });
         } else {
-            cur = { title: line, items: [] };
+            cur = { title: _importUnquote(line.replace(/^[#>\-*\s]+/, '')), items: [] };
             sets.push(cur);
         }
     }
     return sets.filter(s => s.items.length > 0);
+}
+
+const _IMP_NAME_KEYS = ['name', 'displayName', 'title', 'label', 'groupName', 'folder', 'category'];
+const _IMP_GENERIC_KEYS = new Set([
+    'id', 'ids', 'items', 'entries', 'list', 'lists', 'data', 'value', 'values',
+    'children', 'favorites', 'favourites', 'avatars', 'worlds', 'content', 'results',
+]);
+
+// Walks any JSON shape and collects IDs, using the nearest meaningful object key or
+// name field as the group heading.
+function _importParseJson(text, idPrefix) {
+    let data;
+    try { data = JSON.parse(text); } catch { return null; }
+
+    const idAny = _importIdRegex(idPrefix, false);
+    const idExact = _importIdRegex(idPrefix, true);
+    const groups = new Map();
+
+    const add = (label, id, name) => {
+        const key = String(label || '');
+        if (!groups.has(key)) groups.set(key, new Map());
+        const items = groups.get(key);
+        if (!items.has(id) || (!items.get(id) && name)) items.set(id, name || '');
+    };
+
+    const findId = str => {
+        idAny.lastIndex = 0;
+        const hit = String(str).match(idAny);
+        return hit ? hit[0] : null;
+    };
+
+    const walk = (node, label, depth) => {
+        if (node == null || depth > 12) return;
+
+        if (typeof node === 'string') {
+            const id = findId(node);
+            if (id) add(label, id, '');
+            return;
+        }
+        if (Array.isArray(node)) { node.forEach(v => walk(v, label, depth + 1)); return; }
+        if (typeof node !== 'object') return;
+
+        const selfName = _IMP_NAME_KEYS
+            .map(k => node[k])
+            .find(v => typeof v === 'string' && v.trim() && !idExact.test(v.trim()));
+
+        const ownId = Object.values(node).find(v => typeof v === 'string' && idExact.test(v.trim()));
+        if (ownId) {
+            add(label, ownId.trim(), selfName || '');
+            return;
+        }
+
+        for (const [k, v] of Object.entries(node)) {
+            const generic = _IMP_GENERIC_KEYS.has(k.toLowerCase()) || /^\d+$/.test(k);
+            walk(v, generic ? (selfName || label) : k, depth + 1);
+        }
+    };
+
+    walk(data, '', 0);
+
+    const sets = [];
+    groups.forEach((items, title) => {
+        if (!items.size) return;
+        sets.push({ title, items: [...items].map(([id, name]) => ({ id, name })) });
+    });
+    return sets;
+}
+
+function _importParse(text, idPrefix) {
+    const trimmed = String(text || '').trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+        const json = _importParseJson(trimmed, idPrefix);
+        if (json && json.length) return json;
+    }
+    return _importParseLines(text, idPrefix);
 }
 
 function _importDefaultTarget(title) {
@@ -174,8 +271,10 @@ function onImportDone(payload) {
     _importRunning = false;
     const btn = document.getElementById('importStartBtn');
     if (btn) btn.disabled = false;
-    const msg = tf('import.done', { ok: payload.ok, total: payload.total, failed: payload.failed },
+    const skipped = payload.skipped || 0;
+    let msg = tf('import.done', { ok: payload.ok, total: payload.total, failed: payload.failed },
         'Imported {ok} of {total}, failed: {failed}');
+    if (skipped) msg += ' ' + tf('import.skipped', { count: skipped }, 'Skipped {count} deleted or private entries.');
     const statEl = document.getElementById('importStatus');
     if (statEl) statEl.textContent = msg;
     if (typeof showToast === 'function') showToast(!payload.failed, msg);

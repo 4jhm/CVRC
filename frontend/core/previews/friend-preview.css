@@ -116,7 +116,6 @@
 .fp-stats-dot { color: var(--tx3); margin: 0 1px; }
 
 .fp-section {
-    border-top: 1px solid var(--brd);
     padding-top: 6px;
     display: flex;
     flex-direction: column;

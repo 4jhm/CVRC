@@ -32,6 +32,12 @@ public class KikitanXDSettings
     public string TtsVoice { get; set; } = "";
     public string TtsEngine { get; set; } = "sapi";
     public int TtsRate { get; set; } = 0;
+    public string LocalSttModel { get; set; } = "stt-small";
+    public string LocalLlmModel { get; set; } = "llm-qwen25-3b";
+    public bool LocalVadEnabled { get; set; } = true;
+    public bool DisableNonSpeech { get; set; } = true;
+    public bool ChatboxNotify { get; set; } = true;
+    public bool LocalUseGpu { get; set; } = true;
 
     public static KikitanXDSettings Load()
     {

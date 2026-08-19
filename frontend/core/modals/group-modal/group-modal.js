@@ -2115,3 +2115,29 @@ function handleGroupInviteProgress(payload) {
         }, 1500);
     }
 }
+
+function _gdWmState(s) {
+    if (s === undefined) return {
+        detail:         window._currentGroupDetail,
+        detailFull:     window._currentGroupDetailFull,
+        membersGroupId: window._gdMembersGroupId,
+        membersOffset:  window._gdMembersOffset,
+        membersSearch:  window._gdMembersSearchActive,
+        memberRoleIds:  window._gdMemberRoleIds,
+        bannedLoaded:   window._gdBannedLoaded,
+        logsLoaded:     window._gdLogsLoaded,
+        logsOffset:     window._gdLogsOffset,
+        logRows:        window._gdLogRows,
+    };
+    s = s || {};
+    window._currentGroupDetail     = s.detail         ?? null;
+    window._currentGroupDetailFull = s.detailFull     ?? null;
+    window._gdMembersGroupId       = s.membersGroupId ?? null;
+    window._gdMembersOffset        = s.membersOffset  ?? 0;
+    window._gdMembersSearchActive  = s.membersSearch  ?? false;
+    window._gdMemberRoleIds        = s.memberRoleIds  ?? null;
+    window._gdBannedLoaded         = s.bannedLoaded   ?? false;
+    window._gdLogsLoaded           = s.logsLoaded     ?? false;
+    window._gdLogsOffset           = s.logsOffset     ?? 0;
+    window._gdLogRows              = s.logRows        ?? null;
+}

@@ -1,14 +1,13 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace VRCNext.Services;
 
-public sealed class AvtrdbResolver
+public sealed class VrcndbResolver
 {
-    public const int MaxBatch = 80;
+    public const int MaxBatch = 100;
 
-    private const string Endpoint     = "https://api.avtrdb.com/v3/avatar/resolve";
-    private const string RobotAvatar  = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
+    private const string Endpoint      = "https://db.vrcnext.com/api/query";
     private const int    MinIntervalMs = 1000;
     private const int    CoalesceMs    = 250;
     private const int    CacheLimit    = 4000;
@@ -24,8 +23,9 @@ public sealed class AvtrdbResolver
     private Task? _worker;
     private static readonly HttpMethod QueryMethod = new("QUERY");
     private DateTime _lastRequestUtc = DateTime.MinValue;
+    private int _lastBatchSize;
 
-    public AvtrdbResolver(Action<string>? log = null) => _log = log;
+    public VrcndbResolver(Action<string>? log = null) => _log = log;
 
     public Task<JObject?> ResolveAsync(string fileId)
     {
@@ -43,6 +43,13 @@ public sealed class AvtrdbResolver
             if (_worker == null || _worker.IsCompleted) _worker = Task.Run(DrainAsync);
         }
         return tcs.Task;
+    }
+
+    public async Task<JObject?> ResolveDirectAsync(string fileId)
+    {
+        if (string.IsNullOrWhiteSpace(fileId)) return null;
+        try { var m = await PostBatchAsync(new List<string> { fileId }); return m.TryGetValue(fileId, out var d) ? d : null; }
+        catch (Exception ex) { _log?.Invoke($"vrcndb resolve direct failed: {ex.Message}"); return null; }
     }
 
     public async Task<Dictionary<string, JObject?>> ResolveManyAsync(IEnumerable<string> fileIds)
@@ -77,7 +84,7 @@ public sealed class AvtrdbResolver
             try { result = await PostBatchAsync(batch); }
             catch (Exception ex)
             {
-                _log?.Invoke($"avtrdb resolve failed: {ex.Message}");
+                _log?.Invoke($"vrcndb resolve failed: {ex.Message}");
                 result = new Dictionary<string, JObject?>();
             }
 
@@ -103,16 +110,12 @@ public sealed class AvtrdbResolver
             _cache.Remove(old);
     }
 
-    private int _lastBatchSize;
-
     private async Task<Dictionary<string, JObject?>> PostBatchAsync(List<string> fileIds)
     {
         _lastBatchSize = fileIds.Count;
         var payload = JsonConvert.SerializeObject(new { file_ids = fileIds });
 
         using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(25) };
-        client.DefaultRequestVersion = System.Net.HttpVersion.Version20;
-        client.DefaultVersionPolicy  = System.Net.Http.HttpVersionPolicy.RequestVersionExact;
         client.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", AppInfo.UserAgent);
         client.DefaultRequestHeaders.TryAddWithoutValidation("Referer", $"https://{AppInfo.Website}");
         client.DefaultRequestHeaders.Accept.ParseAdd("application/json");
@@ -123,10 +126,7 @@ public sealed class AvtrdbResolver
         var map = new Dictionary<string, JObject?>();
         if (JToken.Parse(body) is not JObject root) return map;
         foreach (var prop in root.Properties())
-        {
-            if (prop.Value is not JObject o) { map[prop.Name] = null; continue; }
-            map[prop.Name] = o["vrc_id"]?.ToString() == RobotAvatar ? null : o;
-        }
+            map[prop.Name] = prop.Value as JObject;
         return map;
     }
 
@@ -134,18 +134,15 @@ public sealed class AvtrdbResolver
     {
         using var req = new HttpRequestMessage(QueryMethod, Endpoint)
         {
-            Version = System.Net.HttpVersion.Version20,
-            VersionPolicy = System.Net.Http.HttpVersionPolicy.RequestVersionExact,
             Content = new StringContent(payload, System.Text.Encoding.UTF8, "application/json")
         };
-        Log?.Invoke($"[AVTRDB] QRY resolve x{_lastBatchSize}");
-        VRCNext.Services.Helpers.AvtrdbSpamGuard.RecordQuery();
+        Log?.Invoke($"[VRCNDB] QRY resolve x{_lastBatchSize}");
         var resp = await client.SendAsync(req);
         var text = await resp.Content.ReadAsStringAsync();
 
         if (!resp.IsSuccessStatusCode)
         {
-            _log?.Invoke($"avtrdb resolve [{(int)resp.StatusCode}]: {text[..Math.Min(160, text.Length)]}");
+            _log?.Invoke($"vrcndb resolve [{(int)resp.StatusCode}]: {text[..Math.Min(160, text.Length)]}");
             return "";
         }
         return text.TrimStart().StartsWith("<") ? "" : text;

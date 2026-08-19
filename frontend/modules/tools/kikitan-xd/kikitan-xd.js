@@ -110,21 +110,23 @@ function kxdConnect() {
     const translateEnabled = document.getElementById('kxdTranslateToggle')?.checked ?? !!_kxdDevicesPayload.translateEnabled;
     const oscEnabled = document.getElementById('kxdOscToggle')?.checked ?? !!_kxdDevicesPayload.oscEnabled;
     const partialOsc = document.getElementById('kxdPartialToggle')?.checked ?? !!_kxdDevicesPayload.partialOsc;
+    const disableNonSpeech = document.getElementById('kxdNonSpeechToggle')?.checked ?? (_kxdDevicesPayload.disableNonSpeech !== false);
+    const chatboxNotify = document.getElementById('kxdNotifyToggle')?.checked ?? (_kxdDevicesPayload.chatboxNotify !== false);
     const model = document.getElementById('kxdModel')?.value || _kxdDevicesPayload.model || 'groq';
     const googleApiKey = (document.getElementById('kxdGoogleApiKey')?.value || _kxdDevicesPayload.googleApiKey || '').trim();
 
     if (model === 'google') {
         if (!googleApiKey) {
-            alert('Please enter your Google API key.');
+            showToast(false, t('kikitan.google_api_key.missing', 'Please enter your Google API key.'));
             return;
         }
-    } else if (!apiKey) {
-        alert('Please enter your Groq API key.');
+    } else if (model !== 'local' && !apiKey) {
+        showToast(false, t('kikitan.api_key.missing', 'Please enter your Groq API key.'));
         return;
     }
 
     const personality = document.getElementById('kxdPersonality')?.value || _kxdDevicesPayload.personality || 'raw';
-    const startMsg = { action: 'kxdStart', apiKey, googleApiKey, model, sourceLang, targetLang, translateEnabled, oscEnabled, partialOsc, noiseGatePct: kxdNoiseGatePct, personality, blockWords: _kxdBlockWords, blockSentences: _kxdBlockSentences };
+    const startMsg = { action: 'kxdStart', apiKey, googleApiKey, model, sourceLang, targetLang, translateEnabled, oscEnabled, partialOsc, disableNonSpeech, chatboxNotify, noiseGatePct: kxdNoiseGatePct, personality, blockWords: _kxdBlockWords, blockSentences: _kxdBlockSentences };
     if (dev) { startMsg.deviceId = dev.id; startMsg.deviceName = dev.name; }
     sendToCS(startMsg);
 }
@@ -292,6 +294,8 @@ function populateKxdDevices(p) {
         modelSel.value = p.model || 'groq';
         if (modelSel._vnRefresh) modelSel._vnRefresh();
     }
+    kxdApplyModelVisibility();
+    if (_kxdLocalState) kxdRenderLocalState(_kxdLocalState);
 
     const srcSel = document.getElementById('kxdSourceLang');
     if (srcSel) {
@@ -351,6 +355,12 @@ function populateKxdDevices(p) {
     if (oscToggle && p.oscEnabled != null) oscToggle.checked = !!p.oscEnabled;
     const partialToggle = document.getElementById('kxdPartialToggle');
     if (partialToggle && p.partialOsc != null) partialToggle.checked = !!p.partialOsc;
+
+    const nonSpeechToggle = document.getElementById('kxdNonSpeechToggle');
+    if (nonSpeechToggle) nonSpeechToggle.checked = p.disableNonSpeech !== false;
+
+    const notifyToggle = document.getElementById('kxdNotifyToggle');
+    if (notifyToggle) notifyToggle.checked = p.chatboxNotify !== false;
 
     if (p.noiseGatePct != null) {
         kxdNoiseGatePct = p.noiseGatePct;
@@ -414,6 +424,8 @@ function kxdSaveSettings() {
     const translateEnabled = !!(document.getElementById('kxdTranslateToggle')?.checked);
     const oscEnabled = !!(document.getElementById('kxdOscToggle')?.checked);
     const partialOsc = !!(document.getElementById('kxdPartialToggle')?.checked);
+    const disableNonSpeech = !!(document.getElementById('kxdNonSpeechToggle')?.checked);
+    const chatboxNotify = !!(document.getElementById('kxdNotifyToggle')?.checked);
     const profileTransToggle = document.getElementById('kxdProfileTransToggle');
     const profileTargetSel = document.getElementById('kxdProfileTargetLang');
     const profileTranslationEnabled = profileTransToggle ? !!profileTransToggle.checked : (window._kxdProfileTranslationEnabled !== false);
@@ -426,12 +438,152 @@ function kxdSaveSettings() {
     const ttsVoice = document.getElementById('kxdTtsVoice')?.value || '';
     const ttsEngine = document.getElementById('kxdTtsEngine')?.value || 'sapi';
     const ttsRate = parseInt(document.getElementById('kxdTtsRate')?.value ?? '0', 10);
-    const payload = { action: 'kxdSaveSettings', apiKey, googleApiKey, model, sourceLang, targetLang, translateEnabled, oscEnabled, partialOsc, noiseGatePct: kxdNoiseGatePct, profileTranslationEnabled, profileTargetLang, personality, blockWords: _kxdBlockWords, blockSentences: _kxdBlockSentences, ttsEnabled, ttsVoice, ttsEngine, ttsRate: isNaN(ttsRate) ? 0 : ttsRate };
+    const payload = { action: 'kxdSaveSettings', apiKey, googleApiKey, model, sourceLang, targetLang, translateEnabled, oscEnabled, partialOsc, disableNonSpeech, chatboxNotify, noiseGatePct: kxdNoiseGatePct, profileTranslationEnabled, profileTargetLang, personality, blockWords: _kxdBlockWords, blockSentences: _kxdBlockSentences, ttsEnabled, ttsVoice, ttsEngine, ttsRate: isNaN(ttsRate) ? 0 : ttsRate };
     const dev = audioDeviceValue('kxdDeviceSelect');
     if (dev) { payload.deviceId = dev.id; payload.deviceName = dev.name; }
     const ttsDev = audioDeviceValue('kxdTtsDevice');
     if (ttsDev) { payload.ttsDeviceId = ttsDev.id; payload.ttsDeviceName = ttsDev.name; }
     sendToCS(payload);
+}
+
+
+let _kxdLocalState = null;
+
+function kxdApplyModelVisibility() {
+    const isLocal = (document.getElementById('kxdModel')?.value || 'groq') === 'local';
+    const sec = document.getElementById('kxdLocalSection');
+    if (sec) sec.style.display = isLocal ? '' : 'none';
+    if (isLocal && !_kxdLocalState) sendToCS({ action: 'kxdLocalGetState' });
+}
+
+function kxdFmtBytes(n) {
+    if (!n || n < 0) return '';
+    if (n < 1024 * 1024) return (n / 1024).toFixed(0) + ' KB';
+    if (n < 1024 * 1024 * 1024) return (n / (1024 * 1024)).toFixed(0) + ' MB';
+    return (n / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+}
+
+function kxdLocalRow(item, selectable, selectedId, group) {
+    const active = selectable && item.installed && item.id === selectedId;
+    const clickable = selectable && item.installed && !item.busy;
+
+    const btn = item.busy
+        ? `<button class="vrcn-button" onclick="event.stopPropagation();kxdLocalCancel('${esc(item.id)}')" style="border-color:var(--warn);padding:2px 8px;font-size:calc(11px + var(--fs-off, 0px));"><span class="msi" style="font-size:13px;">close</span></button>`
+        : item.installed
+            ? `<button class="vrcn-button" onclick="event.stopPropagation();kxdLocalUninstall('${esc(item.id)}')" style="border-color:var(--err);padding:2px 8px;font-size:calc(11px + var(--fs-off, 0px));"><span class="msi" style="font-size:13px;">delete</span></button>`
+            : `<button class="vrcn-button" onclick="event.stopPropagation();kxdLocalDownload('${esc(item.id)}')" style="padding:2px 8px;font-size:calc(11px + var(--fs-off, 0px));"><span class="msi" style="font-size:13px;">download</span></button>`;
+
+    const size = item.installed ? kxdFmtBytes(item.sizeOnDisk) : kxdFmtBytes(item.approxBytes);
+
+    let warn = '';
+    if ((item.id === 'rt-whisper-vulkan' || item.id === 'rt-llama-vulkan')
+        && _kxdLocalState && _kxdLocalState.vulkanAvailable === false) {
+        warn = `<span style="color:var(--warn);">${esc(t('kikitan.local.vulkan_missing', 'No Vulkan driver found'))}</span>`;
+    }
+
+    const border = active ? 'var(--accent)' : 'var(--brd)';
+    const nameColor = active ? 'var(--accent)' : 'var(--tx1)';
+
+    return `
+    <div class="kxd-local-row" ${clickable ? `onclick="kxdPickModel('${esc(group)}','${esc(item.id)}')"` : ''}
+         style="display:flex;align-items:center;gap:8px;padding:5px 9px;margin-bottom:4px;border:1px solid ${border};border-radius:7px;${clickable ? 'cursor:pointer;' : ''}${item.installed ? '' : 'opacity:.72;'}">
+        <div style="flex:1;min-width:0;">
+            <div style="font-size:calc(12px + var(--fs-off, 0px));color:${nameColor};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                ${esc(item.name)} <span style="color:var(--tx3);">${esc(size)}</span>
+            </div>
+            <div style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(item.detail)}">${warn || esc(item.detail)}</div>
+        </div>
+        ${btn}
+        <div class="inv-progress-wrap" id="kxdProgWrap-${esc(item.id)}" style="display:${item.busy ? '' : 'none'};padding:0;width:78px;flex-shrink:0;">
+            <div class="inv-progress-track"><div class="inv-progress-bar" id="kxdProgBar-${esc(item.id)}"></div></div>
+            <div class="inv-progress-text" id="kxdProgText-${esc(item.id)}" style="margin-top:2px;font-size:calc(9px + var(--fs-off, 0px));"></div>
+        </div>
+    </div>`;
+}
+
+function kxdPickModel(group, id) {
+    if (!_kxdDevicesPayload) _kxdDevicesPayload = {};
+    if (group === 'stt') _kxdDevicesPayload.localSttModel = id;
+    if (group === 'llm') _kxdDevicesPayload.localLlmModel = id;
+    if (_kxdLocalState) kxdRenderLocalState(_kxdLocalState);
+    kxdSaveLocalSelection();
+}
+
+function kxdRenderLocalState(state) {
+    if (!state) return;
+    _kxdLocalState = state;
+
+    const p = _kxdDevicesPayload || {};
+    const sttSel = p.localSttModel || 'stt-small';
+    const llmSel = p.localLlmModel || 'llm-qwen25-3b';
+
+    const by = k => (state.items || []).filter(i => i.kind === k);
+
+    const sttEl = document.getElementById('kxdLocalStt');
+    if (sttEl) sttEl.innerHTML = by('stt').map(i => kxdLocalRow(i, true, sttSel, 'stt')).join('');
+
+    const vadEl = document.getElementById('kxdLocalVad');
+    if (vadEl) vadEl.innerHTML = by('vad').map(i => kxdLocalRow(i, false, '', '')).join('');
+
+    const llmEl = document.getElementById('kxdLocalLlm');
+    if (llmEl) llmEl.innerHTML = by('llm').map(i => kxdLocalRow(i, true, llmSel, 'llm')).join('');
+
+    const rtEl = document.getElementById('kxdLocalRuntime');
+    if (rtEl) rtEl.innerHTML = by('runtime').map(i => kxdLocalRow(i, false, '', '')).join('');
+
+    const rootEl = document.getElementById('kxdLocalRoot');
+    if (rootEl) rootEl.textContent = state.root || '';
+
+    const gpuEl = document.getElementById('kxdLocalGpu');
+    if (gpuEl && p.localUseGpu !== undefined) gpuEl.checked = !!p.localUseGpu;
+
+    if (typeof applyTranslations === 'function') applyTranslations(document);
+}
+
+function kxdOnLocalProgress(p) {
+    if (!p || !p.id) return;
+    const wrap = document.getElementById('kxdProgWrap-' + p.id);
+    const bar = document.getElementById('kxdProgBar-' + p.id);
+    const txt = document.getElementById('kxdProgText-' + p.id);
+    if (wrap) wrap.style.display = '';
+    if (bar) bar.style.width = (p.pct || 0) + '%';
+    if (txt) txt.textContent = `${p.pct || 0}%`;
+}
+
+function kxdOnLocalFinished(p) {
+    if (!p || !p.id) return;
+    const wrap = document.getElementById('kxdProgWrap-' + p.id);
+    if (wrap) wrap.style.display = 'none';
+    if (!p.ok && p.error && p.error !== 'cancelled') {
+        if (typeof showToast === 'function') showToast(false, p.error);
+    }
+}
+
+function kxdLocalDownload(id) { sendToCS({ action: 'kxdLocalDownload', id }); }
+function kxdLocalCancel(id)   { sendToCS({ action: 'kxdLocalCancel', id }); }
+
+function kxdLocalUninstall(id) {
+    const item = (_kxdLocalState?.items || []).find(i => i.id === id);
+    const name = item ? item.name : id;
+    vnConfirmModal({
+        title: t('kikitan.local.uninstall_title', 'Remove Model'),
+        icon: 'delete',
+        message: tf('kikitan.local.uninstall_confirm', { name: esc(name) }, 'Remove {name} from your disk?'),
+        confirmLabel: t('kikitan.local.uninstall', 'Uninstall'),
+        onConfirm: () => sendToCS({ action: 'kxdLocalUninstall', id }),
+    });
+}
+
+function kxdSaveLocalSelection() {
+    const p = _kxdDevicesPayload || (_kxdDevicesPayload = {});
+    const useGpu = !!document.getElementById('kxdLocalGpu')?.checked;
+    p.localUseGpu = useGpu;
+    sendToCS({
+        action: 'kxdLocalSaveSelection',
+        sttModel: p.localSttModel,
+        llmModel: p.localLlmModel,
+        useGpu,
+    });
 }
 
 function kxdRenderBlockChips(kind) {

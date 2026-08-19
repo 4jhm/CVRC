@@ -527,3 +527,64 @@ function jsonHighlight(obj) {
     result += json.slice(last).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     return result;
 }
+
+function vnConfirmModal(opts) {
+    opts = opts || {};
+    const id = 'vnConfirmModal';
+    document.getElementById(id)?.remove();
+
+    const danger = opts.danger !== false;
+    const o = document.createElement('div');
+    o.className = 'modal-overlay';
+    o.style.display = 'flex';
+    o.id = id;
+    o.style.zIndex = '10003';
+    o.onclick = e => { if (e.target === o) o.remove(); };
+    o.innerHTML = `<div class="modal-box">
+        ${renderModalBar(opts.title || '', [modalCloseAction(`document.getElementById('${id}').remove()`)])}
+        <div class="modal-icon${danger ? ' danger' : ''}" style="margin-top:20px;"><span class="msi" style="font-size:22px;">${esc(opts.icon || 'delete')}</span></div>
+        <div class="modal-msg">${opts.message || ''}</div>
+        <div class="modal-btns">
+            <button class="vrcn-button-round${danger ? ' vrcn-btn-danger' : ''}" id="${id}Ok">${esc(opts.confirmLabel || t('common.remove', 'Remove'))}</button>
+        </div></div>`;
+    document.body.appendChild(o);
+
+    document.getElementById(id + 'Ok').onclick = () => {
+        o.remove();
+        if (typeof opts.onConfirm === 'function') opts.onConfirm();
+    };
+}
+
+function vnPromptModal(opts) {
+    opts = opts || {};
+    const id = 'vnPromptModal';
+    document.getElementById(id)?.remove();
+
+    const o = document.createElement('div');
+    o.className = 'modal-overlay';
+    o.style.display = 'flex';
+    o.id = id;
+    o.style.zIndex = '10003';
+    o.onclick = e => { if (e.target === o) o.remove(); };
+    o.innerHTML = `<div class="modal-box">
+        ${renderModalBar(opts.title || '', [modalCloseAction(`document.getElementById('${id}').remove()`)])}
+        <div class="modal-msg" style="margin:20px 0 8px;word-break:normal;">${opts.message || ''}</div>
+        <input id="${id}Input" class="vrcn-edit-field" style="width:100%;box-sizing:border-box;margin-bottom:20px;"
+               maxlength="${parseInt(opts.maxLength, 10) || 128}"
+               placeholder="${esc(opts.placeholder || '')}" value="${esc(opts.value || '')}">
+        <div class="modal-btns">
+            <button class="vrcn-button-round" id="${id}Ok">${esc(opts.confirmLabel || t('common.save', 'Save'))}</button>
+        </div></div>`;
+    document.body.appendChild(o);
+
+    const input = document.getElementById(id + 'Input');
+    const submit = () => {
+        const v = (input.value || '').trim();
+        if (!v) return;
+        o.remove();
+        if (typeof opts.onConfirm === 'function') opts.onConfirm(v);
+    };
+    document.getElementById(id + 'Ok').onclick = submit;
+    input.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } };
+    setTimeout(() => { input.focus(); input.select(); }, 50);
+}

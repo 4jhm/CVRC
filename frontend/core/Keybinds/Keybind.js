@@ -115,6 +115,7 @@ const VrcnKeybinds = (() => {
             e.preventDefault();
             e.stopPropagation();
             document.getElementById('modalKeybinds')?.style && (document.getElementById('modalKeybinds').style.display = 'flex');
+            if (typeof wmSyncKeybindHelp === 'function') wmSyncKeybindHelp();
         } else if (_isCtrlChord(e, 't')) {
             e.preventDefault();
             e.stopPropagation();

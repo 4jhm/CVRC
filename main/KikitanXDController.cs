@@ -10,6 +10,7 @@ public class KikitanXDController : IDisposable
     private readonly CoreLibrary _core;
     private IKikitanSpeechService? _service;
     private KikitanXDSettings _settings;
+    private readonly LocalAiManager _localAi = new();
 
     public bool IsRunning => _service?.IsRunning ?? false;
     public float MeterLevel => _service?.MeterLevel ?? 0f;
@@ -19,6 +20,17 @@ public class KikitanXDController : IDisposable
         _core = core;
         _settings = KikitanXDSettings.Load();
         MigrateDeviceSelections();
+
+        _localAi.OnProgress += (id, pct, done, total) =>
+            Invoke(() => _core.SendToJS("kxdLocalProgress", new { id, pct, done, total }));
+        _localAi.OnFinished += (id, ok, error) =>
+            Invoke(() =>
+            {
+                _core.SendToJS("kxdLocalFinished", new { id, ok, error });
+                _core.SendToJS("kxdLocalState", _localAi.GetState());
+            });
+        _localAi.OnLog += s =>
+            Invoke(() => _core.SendToJS("log", new { msg = s, color = "sec" }));
     }
 
     private AudioSelection InputSelection => AudioSelection.From(_settings.InputDeviceId, _settings.InputDeviceName);
@@ -69,6 +81,8 @@ public class KikitanXDController : IDisposable
                     oscEnabled = _settings.OscEnabled,
                     partialOsc = _settings.PartialOsc,
                     noiseGatePct = _settings.NoiseGatePercent,
+                    disableNonSpeech = _settings.DisableNonSpeech,
+                    chatboxNotify = _settings.ChatboxNotify,
                     profileTranslationEnabled = OperatingSystem.IsWindows() && _settings.ProfileTranslationEnabled,
                     profileTargetLang = _settings.ProfileTargetLang,
                     personality = _settings.Personality,
@@ -76,6 +90,10 @@ public class KikitanXDController : IDisposable
                     blockSentences = _settings.BlockedSentences,
                     model = _settings.Model,
                     googleApiKey = _settings.GoogleApiKey,
+                    localSttModel = _settings.LocalSttModel,
+                    localLlmModel = _settings.LocalLlmModel,
+                    localVadEnabled = _settings.LocalVadEnabled,
+                    localUseGpu = _settings.LocalUseGpu,
                     ttsEnabled = _settings.TtsEnabled,
                     tts = new { mode = ttsSel.ModeString, id = ttsSel.EndpointId, name = ttsSel.DisplayName, available = AudioDeviceManager.IsAvailable(false, ttsSel) },
                     ttsVoice = _settings.TtsVoice,
@@ -98,6 +116,8 @@ public class KikitanXDController : IDisposable
                 if (msg["oscEnabled"] is JToken oe0) _settings.OscEnabled = oe0.Value<bool>();
                 if (msg["partialOsc"] is JToken po0) _settings.PartialOsc = po0.Value<bool>();
                 if (msg["noiseGatePct"]?.Value<int?>() is int ng0) _settings.NoiseGatePercent = ng0;
+                if (msg["disableNonSpeech"] is JToken dns0) _settings.DisableNonSpeech = dns0.Value<bool>();
+                if (msg["chatboxNotify"] is JToken cn0) _settings.ChatboxNotify = cn0.Value<bool>();
                 if (msg["personality"] is JToken pe0) _settings.Personality = pe0.ToString();
                 if (msg["model"] is JToken md0) _settings.Model = md0.ToString();
                 if (msg["blockWords"] is JToken bw0) _settings.BlockedWords = bw0.ToObject<List<string>>() ?? new();
@@ -127,6 +147,9 @@ public class KikitanXDController : IDisposable
 
             case "kxdSaveSettings":
             {
+                var prevModel  = _settings.Model;
+                var prevDevice = _settings.InputDeviceId + "|" + _settings.InputDeviceName;
+
                 ApplyDeviceSelection(msg, "deviceId", "deviceName", true, (id, name) => { _settings.InputDeviceId = id; _settings.InputDeviceName = name; }, _settings.InputDeviceName);
                 if (msg["apiKey"] is JToken ak) _settings.ApiKey = ak.ToString();
                 if (msg["googleApiKey"] is JToken gk) _settings.GoogleApiKey = gk.ToString();
@@ -137,6 +160,8 @@ public class KikitanXDController : IDisposable
                 if (msg["oscEnabled"] is JToken oe) _settings.OscEnabled = oe.Value<bool>();
                 if (msg["partialOsc"] is JToken po) _settings.PartialOsc = po.Value<bool>();
                 if (msg["noiseGatePct"]?.Value<int?>() is int ng) _settings.NoiseGatePercent = ng;
+                if (msg["disableNonSpeech"] is JToken dns) _settings.DisableNonSpeech = dns.Value<bool>();
+                if (msg["chatboxNotify"] is JToken cn) _settings.ChatboxNotify = cn.Value<bool>();
                 if (msg["profileTranslationEnabled"] is JToken pte) _settings.ProfileTranslationEnabled = pte.Value<bool>();
                 if (msg["profileTargetLang"] is JToken ptl) _settings.ProfileTargetLang = ptl.ToString();
                 if (msg["personality"] is JToken pers) _settings.Personality = pers.ToString();
@@ -149,6 +174,51 @@ public class KikitanXDController : IDisposable
                 if (msg["ttsRate"]?.Value<int?>() is int ttr) _settings.TtsRate = Math.Clamp(ttr, -10, 10);
                 _settings.Save();
                 _core.SendToJS("toast", new { ok = true, msg = "Saved" });
+
+                bool backendChanged = !string.Equals(prevModel, _settings.Model, StringComparison.OrdinalIgnoreCase);
+                bool deviceChanged  = prevDevice != _settings.InputDeviceId + "|" + _settings.InputDeviceName;
+
+                if (IsRunning && (backendChanged || deviceChanged))
+                    RestartService(backendChanged ? "model" : "input device");
+                else
+                    _service?.UpdateSettings(_settings);
+                break;
+            }
+
+            case "kxdLocalGetState":
+                _localAi.CleanObsolete();
+                _core.SendToJS("kxdLocalState", _localAi.GetState());
+                break;
+
+            case "kxdLocalDownload":
+            {
+                var id = msg["id"]?.ToString() ?? "";
+                if (id.Length == 0 || _localAi.IsBusy(id)) break;
+                _ = Task.Run(() => _localAi.DownloadAsync(id));
+                _core.SendToJS("kxdLocalState", _localAi.GetState());
+                break;
+            }
+
+            case "kxdLocalCancel":
+                _localAi.Cancel(msg["id"]?.ToString() ?? "");
+                break;
+
+            case "kxdLocalUninstall":
+            {
+                var id = msg["id"]?.ToString() ?? "";
+                var ok = _localAi.Uninstall(id);
+                _core.SendToJS("kxdLocalState", _localAi.GetState());
+                if (!ok) _core.SendToJS("toast", new { ok = false, msg = "Could not remove, is it in use?" });
+                break;
+            }
+
+            case "kxdLocalSaveSelection":
+            {
+                if (msg["sttModel"] is JToken sm) _settings.LocalSttModel = sm.ToString();
+                if (msg["llmModel"] is JToken lm) _settings.LocalLlmModel = lm.ToString();
+                if (msg["vadEnabled"] is JToken ve) _settings.LocalVadEnabled = ve.Value<bool>();
+                if (msg["useGpu"] is JToken ug) _settings.LocalUseGpu = ug.Value<bool>();
+                _settings.Save();
                 _service?.UpdateSettings(_settings);
                 break;
             }
@@ -202,12 +272,33 @@ public class KikitanXDController : IDisposable
         }
     }
 
+    private void RestartService(string reason)
+    {
+        try
+        {
+            StartServiceFromSettings();
+            _core.SendToJS("log", new { msg = $"Kikitan XD: restarted to apply the new {reason}", color = "sec" });
+        }
+        catch (Exception ex)
+        {
+            _service?.Dispose();
+            _service = null;
+            _core.SendToJS("kxdState", new { running = false });
+            _core.SendToJS("kxdMeter", new { level = 0f });
+            _core.SendToJS("toast", new { ok = false, msg = ex.Message });
+            _core.SendToJS("log", new { msg = $"Kikitan XD: {ex.Message}", color = "err" });
+        }
+    }
+
     private void StartServiceFromSettings()
     {
         _service?.Dispose();
-        _service = string.Equals(_settings.Model, "google", StringComparison.OrdinalIgnoreCase)
-            ? new GeminiLiveService()
-            : new KikitanXDService();
+        _service = _settings.Model?.ToLowerInvariant() switch
+        {
+            "google" => new GeminiLiveService(),
+            "local"  => new LocalKikitanService(),
+            _        => new KikitanXDService(),
+        };
         _service.OnLog += s => Invoke(() => _core.SendToJS("log", new { msg = s, color = "sec" }));
         _service.OnRecognized += (text, isPartial) =>
         {

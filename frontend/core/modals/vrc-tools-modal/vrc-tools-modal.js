@@ -128,9 +128,16 @@ function vrcCfgRefreshCache() {
 }
 
 function vrcCfgDeleteCache() {
-    if (!confirm(t('vrc_config.confirm_delete', 'Delete the entire VRChat asset cache?'))) return;
-    document.getElementById('vrcCfgCacheSize').textContent = '...';
-    sendToCS({ action: 'vrcCacheDeleteAll' });
+    vnConfirmModal({
+        title: t('vrc_config.confirm_delete_title', 'Delete Asset Cache'),
+        icon: 'delete_sweep',
+        message: esc(t('vrc_config.confirm_delete', 'Delete the entire VRChat asset cache?')),
+        confirmLabel: t('common.delete', 'Delete'),
+        onConfirm: () => {
+            document.getElementById('vrcCfgCacheSize').textContent = '...';
+            sendToCS({ action: 'vrcCacheDeleteAll' });
+        },
+    });
 }
 
 function vrcCfgSweepCache() {

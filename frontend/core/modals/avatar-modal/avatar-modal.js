@@ -481,3 +481,21 @@ function avRenderTagChips() {
         ).join('')
         : `<div class="myp-empty">${t('avatars.detail.empty_tags', 'No tags')}</div>`;
 }
+
+function _avWmState(s) {
+    if (s === undefined) return {
+        detail:        _avDetailData,
+        editTags:      _avEditTags,
+        galleryLoaded: _avGalleryLoaded,
+        galleryImages: _avGalleryImages,
+        savingField:   _avSavingField,
+        visState:      _avVisState,
+    };
+    s = s || {};
+    _avDetailData    = s.detail        ?? null;
+    _avEditTags      = s.editTags      ?? [];
+    _avGalleryLoaded = s.galleryLoaded ?? false;
+    _avGalleryImages = s.galleryImages ?? [];
+    _avSavingField   = s.savingField   ?? '';
+    _avVisState      = s.visState      ?? 'public';
+}

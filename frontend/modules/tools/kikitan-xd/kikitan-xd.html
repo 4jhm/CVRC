@@ -6,8 +6,24 @@
                             <button class="vrcn-button" id="kxdConnBtn" onclick="kxdConnect()"><span class="msi" style="font-size:16px;">play_arrow</span> <span data-i18n="common.start">Start</span></button>
                         </div>
                     </div>
-                    <!-- API Key -->
-                    <div class="vrcn-panel-card" id="kxdGroqKeyCard">
+                    <!-- Live output -->
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                        <div class="vrcn-panel-card" style="flex:1;min-width:260px;margin:0;">
+                            <div class="vrcn-panel-card-header"><span class="msi">hearing</span> <span data-i18n="kikitan.recognized.title">Recognized Speech</span></div>
+                            <div class="vf-recognized-wrap" style="min-height:54px;">
+                                <span id="kxdSourceText" style="color:var(--tx1);font-size:calc(13px + var(--fs-off, 0px));white-space:pre-wrap;word-break:break-word;">-</span>
+                            </div>
+                        </div>
+                        <div class="vrcn-panel-card" id="kxdOutputCard" style="flex:1;min-width:260px;margin:0;">
+                            <div class="vrcn-panel-card-header"><span class="msi">translate</span> <span data-i18n="kikitan.translation.title">Translation</span></div>
+                            <div class="vf-recognized-wrap" style="min-height:54px;">
+                                <span id="kxdOutputText" style="color:var(--accent);font-size:calc(13px + var(--fs-off, 0px));white-space:pre-wrap;word-break:break-word;">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- API Keys -->
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                    <div class="vrcn-panel-card" id="kxdGroqKeyCard" style="flex:1;min-width:280px;margin:0;">
                         <div class="vrcn-panel-card-header"><span class="msi">key</span> <span data-i18n="kikitan.api_key">Groq API Key</span></div>
                         <input id="kxdApiKey" type="password" class="vrcn-edit-field" style="width:100%;box-sizing:border-box;" placeholder="gsk_..." onblur="kxdSaveSettings()">
                         <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:8px;line-height:1.5;" data-i18n="kikitan.api_key.hint">Kikitan XD requires a free Groq API key for Speech-To-Text and live translation. Sign up with Google, GitHub, SSO or email at console.groq.com/keys, create a new API key, and paste it above.</div>
@@ -15,14 +31,16 @@
                         <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:10px;padding-top:10px;border-top:1px solid var(--bg-line, rgba(255,255,255,.06));line-height:1.5;">Kikitan XD is based on <a onclick="sendToCS({action:'openUrl',url:'https://github.com/YusufOzmen01/kikitan-translator'})" style="color:var(--accent);cursor:pointer;">Kikitan by YusufOzmen01</a> (MIT License) <a onclick="sendToCS({action:'openUrl',url:'https://github.com/YusufOzmen01/kikitan-translator'})" style="color:var(--accent);cursor:pointer;">github.com/YusufOzmen01/kikitan-translator</a></div>
                     </div>
                     <!-- Google API Key -->
-                    <div class="vrcn-panel-card" id="kxdGoogleKeyCard">
+                    <div class="vrcn-panel-card" id="kxdGoogleKeyCard" style="flex:1;min-width:280px;margin:0;">
                         <div class="vrcn-panel-card-header"><span class="msi">key</span> <span data-i18n="kikitan.google_api_key">Google API Key</span></div>
                         <input id="kxdGoogleApiKey" type="password" class="vrcn-edit-field" style="width:100%;box-sizing:border-box;" placeholder="AIza..." onblur="kxdSaveSettings()">
                         <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:8px;line-height:1.5;" data-i18n="kikitan.google_api_key.hint">The Google Gemini Live model needs a free Google AI Studio API key for live speech translation. Sign in with your Google account at aistudio.google.com/apikey, create an API key, and paste it above. The free tier is enough for personal use.</div>
                         <a onclick="sendToCS({action:'openUrl',url:'https://aistudio.google.com/apikey'})" style="display:inline-flex;align-items:center;gap:4px;font-size:calc(11px + var(--fs-off, 0px));color:var(--accent);cursor:pointer;margin-top:6px;text-decoration:none;" data-i18n="kikitan.google_api_key.open_dashboard">Open Google AI Studio Keys</a>
                     </div>
-                    <!-- Mic + Volume -->
-                    <div class="vrcn-panel-card">
+                    </div>
+                    <!-- Mic + Settings -->
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:stretch;">
+                    <div class="vrcn-panel-card" style="flex:1;min-width:280px;margin:0;">
                         <div class="vrcn-panel-card-header"><span class="msi">mic</span> <span data-i18n="kikitan.input_device">Input Device</span></div>
                         <select id="kxdDeviceSelect" class="lib-filter-select" style="width:100%;margin-bottom:12px;" onchange="kxdSaveSettings()"><option data-i18n="common.loading">Loading...</option></select>
                         <div class="vrcn-panel-card-header" style="margin-top:4px;"><span class="msi">graphic_eq</span> <span data-i18n="kikitan.mic_level">Mic Level</span></div>
@@ -35,15 +53,81 @@
                             <input type="range" class="vf-vol-slider" min="0" max="50" value="10" id="kxdGateSlider" oninput="kxdSetNoiseGate(this.value)">
                             <span id="kxdGateVal" style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);min-width:32px;text-align:right;">10%</span>
                         </div>
+                        <div class="sf-toggle-row" style="margin-top:12px;">
+                            <span><span class="msi" style="font-size:16px;vertical-align:middle;">visibility_off</span> <span data-i18n="kikitan.non_speech">Disable Non-Speech Elements</span></span>
+                            <label class="toggle"><input type="checkbox" id="kxdNonSpeechToggle" checked onchange="kxdSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" data-i18n="kikitan.non_speech_desc">When enabled then things like "(laughs)" "(coughing)" will not be shown in your textbox.</div>
+                        <div class="sf-toggle-row" style="margin-top:8px;">
+                            <span><span class="msi" style="font-size:16px;vertical-align:middle;">notifications_active</span> <span data-i18n="kikitan.chatbox_notify">Send Notification to others</span></span>
+                            <label class="toggle"><input type="checkbox" id="kxdNotifyToggle" checked onchange="kxdSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" data-i18n="kikitan.chatbox_notify_desc">When enabled the chatbox will make a blop sound after the final message has been sent.</div>
+                    </div>
+                    <div class="vrcn-panel-card" style="flex:1;min-width:280px;margin:0;">
+                        <div class="vrcn-panel-card-header"><span class="msi">tune</span> <span data-i18n="kikitan.settings.title">Settings</span></div>
+                        <div class="sf-toggle-row">
+                            <span><span class="msi" style="font-size:16px;vertical-align:middle;">translate</span> <span data-i18n="kikitan.translate_enabled">Enable Translation</span></span>
+                            <label class="toggle"><input type="checkbox" id="kxdTranslateToggle" checked onchange="kxdUpdateTranslateVisibility();kxdSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="sf-toggle-row" style="margin-top:8px;">
+                            <span><span class="msi" style="font-size:16px;vertical-align:middle;">send</span> <span data-i18n="kikitan.osc_enabled">Send via OSC Chatbox</span></span>
+                            <label class="toggle"><input type="checkbox" id="kxdOscToggle" checked onchange="kxdSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="sf-toggle-row" style="margin-top:8px;">
+                            <span><span class="msi" style="font-size:16px;vertical-align:middle;">more_horiz</span> <span data-i18n="kikitan.partial_osc">Live typing (Gemini Live, Local LLM only)</span></span>
+                            <label class="toggle"><input type="checkbox" id="kxdPartialToggle" onchange="kxdSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
+                        </div>
+                        <div class="set-desc" data-i18n="kikitan.partial_osc_desc">Shows the sentence building up in the chatbox while you speak, instead of only the finished result. Only active when translation is off, because sending partial text would use up the chatbox rate limit the finished translation needs.</div>
+                        <div class="vrcn-panel-card-header" style="margin:14px 0 6px;"><span class="msi">mood</span> <span data-i18n="kikitan.personality.title">Personality</span></div>
+                        <select id="kxdPersonality" class="lib-filter-select" style="width:100%;" onchange="kxdSaveSettings()">
+                            <option value="raw" data-i18n="kikitan.personality.raw">Raw (Default)</option>
+                            <option value="kawai" data-i18n="kikitan.personality.kawai">Kawai</option>
+                        </select>
+                        <div class="set-desc" style="margin-top:8px;" data-i18n="kikitan.personality.hint">Kawai appends one mood-matching kaomoji at the end of every translated sentence. Affects only speech translation — not profile, world or group description translations.</div>
+                    </div>
                     </div>
                     <!-- Language selectors -->
                     <div class="vrcn-panel-card">
                         <div class="vrcn-panel-card-header" style="margin-bottom:6px;"><span class="msi">smart_toy</span> <span data-i18n="kikitan.model.title">Model</span></div>
-                        <select id="kxdModel" class="lib-filter-select" style="width:100%;margin-bottom:6px;" onchange="kxdSaveSettings()">
+                        <select id="kxdModel" class="lib-filter-select" style="width:100%;margin-bottom:6px;" onchange="kxdSaveSettings();kxdApplyModelVisibility()">
                             <option value="groq" data-i18n="kikitan.model.groq">Groq Whisper v3</option>
                             <option value="google" data-i18n="kikitan.model.google">Google Gemini Live Translate</option>
+                            <option value="local" data-i18n="kikitan.model.local">Local Models</option>
                         </select>
                         <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin:0 0 12px;line-height:1.5;" data-i18n="kikitan.model.hint">Groq uses Whisper for transcription plus a separate translation step. Google Gemini Live translates speech directly in one streaming model and auto-detects the source language.</div>
+
+                        <!-- Local models -->
+                        <div id="kxdLocalSection" style="display:none;margin:0 0 14px;">
+                            <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin:0 0 12px;line-height:1.5;" data-i18n="kikitan.local.hint">Everything runs on your own machine, no API key and no rate limits. Download a recognition model and a translation model below, plus the matching runtime. Large models need a lot of VRAM, which VRChat also uses in VR.</div>
+
+                            <div class="sf-toggle-row"><span data-i18n="kikitan.local.use_gpu">Use GPU</span><label class="toggle"><input type="checkbox" id="kxdLocalGpu" checked onchange="kxdSaveLocalSelection()"><div class="toggle-track"><div class="toggle-knob"></div></div></label></div>
+                            <div class="set-desc" style="margin-bottom:12px;" data-i18n="kikitan.local.use_gpu_desc">Runs both models on the graphics card via Vulkan, which works with your normal display driver. Requires the two GPU runtimes below. Turn this off to use the processor instead, which is far slower.</div>
+
+                            <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
+                                <div style="flex:1;min-width:250px;">
+                                    <div class="vrcn-panel-card-header" style="margin:0 0 6px;"><span class="msi">record_voice_over</span> <span data-i18n="kikitan.local.rec_models">Recognition Models</span></div>
+                                    <div id="kxdLocalStt"></div>
+                                </div>
+                                <div style="flex:1;min-width:250px;">
+                                    <div class="vrcn-panel-card-header" style="margin:0 0 6px;"><span class="msi">graphic_eq</span> <span data-i18n="kikitan.local.vad">Voice Activity Detection</span></div>
+                                    <div id="kxdLocalVad"></div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;margin-top:14px;">
+                                <div style="flex:1;min-width:250px;">
+                                    <div class="vrcn-panel-card-header" style="margin:0 0 6px;"><span class="msi">translate</span> <span data-i18n="kikitan.local.trans_models">Translation Engine</span></div>
+                                    <div id="kxdLocalLlm"></div>
+                                </div>
+                                <div style="flex:1;min-width:250px;">
+                                    <div class="vrcn-panel-card-header" style="margin:0 0 6px;"><span class="msi">memory</span> <span data-i18n="kikitan.local.runtimes">Runtimes</span></div>
+                                    <div id="kxdLocalRuntime"></div>
+                                </div>
+                            </div>
+
+                            <div id="kxdLocalRoot" style="font-size:calc(10px + var(--fs-off, 0px));color:var(--tx3);margin-top:10px;word-break:break-all;"></div>
+                        </div>
                         <div style="display:flex;gap:12px;">
                             <div style="flex:1;">
                                 <div class="vrcn-panel-card-header" style="margin-bottom:6px;"><span class="msi">record_voice_over</span> <span data-i18n="kikitan.source_lang">Source Language</span></div>
@@ -54,15 +138,6 @@
                                 <select id="kxdTargetLang" class="lib-filter-select" style="width:100%;" onchange="kxdSaveSettings()"></select>
                             </div>
                         </div>
-                    </div>
-                    <!-- Personality -->
-                    <div class="vrcn-panel-card">
-                        <div class="vrcn-panel-card-header"><span class="msi">mood</span> <span data-i18n="kikitan.personality.title">Personality</span></div>
-                        <select id="kxdPersonality" class="lib-filter-select" style="width:100%;" onchange="kxdSaveSettings()">
-                            <option value="raw" data-i18n="kikitan.personality.raw">Raw (Default)</option>
-                            <option value="kawai" data-i18n="kikitan.personality.kawai">Kawai</option>
-                        </select>
-                        <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:8px;line-height:1.5;" data-i18n="kikitan.personality.hint">Kawai appends one mood-matching kaomoji at the end of every translated sentence. Affects only speech translation — not profile, world or group description translations.</div>
                     </div>
                     <!-- Blocked Words and Sentences -->
                     <div class="vrcn-panel-card">
@@ -84,29 +159,6 @@
                         <div style="font-size:calc(11px + var(--fs-off, 0px));color:var(--tx3);margin-top:8px;line-height:1.5;" data-i18n="kikitan.profile_translation.hint">When Profile Translation is enabled you will see a "Translate" icon in the Biography section. Clicking this will translate it to your target language.</div>
                         <div class="vrcn-panel-card-header" style="margin-top:12px;margin-bottom:6px;"><span class="msi">translate</span> <span data-i18n="kikitan.profile_translation.target_lang">Target Language</span></div>
                         <select id="kxdProfileTargetLang" class="lib-filter-select" style="width:100%;" onchange="kxdSaveSettings()"></select>
-                    </div>
-                    <!-- Options -->
-                    <div class="vrcn-panel-card">
-                        <div class="sf-toggle-row">
-                            <span><span class="msi" style="font-size:16px;vertical-align:middle;">translate</span> <span data-i18n="kikitan.translate_enabled">Enable Translation</span></span>
-                            <label class="toggle"><input type="checkbox" id="kxdTranslateToggle" checked onchange="kxdUpdateTranslateVisibility();kxdSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-                        </div>
-                        <div class="sf-toggle-row" style="margin-top:8px;">
-                            <span><span class="msi" style="font-size:16px;vertical-align:middle;">send</span> <span data-i18n="kikitan.osc_enabled">Send via OSC Chatbox</span></span>
-                            <label class="toggle"><input type="checkbox" id="kxdOscToggle" checked onchange="kxdSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-                        </div>
-                        <div class="sf-toggle-row" style="margin-top:8px;">
-                            <span><span class="msi" style="font-size:16px;vertical-align:middle;">more_horiz</span> <span data-i18n="kikitan.partial_osc">Live typing (Gemini only)</span></span>
-                            <label class="toggle"><input type="checkbox" id="kxdPartialToggle" onchange="kxdSaveSettings()"><div class="toggle-track"><div class="toggle-knob"></div></div></label>
-                        </div>
-                        <div class="set-desc" data-i18n="kikitan.partial_osc_desc">Shows the sentence building up in the chatbox while you speak, instead of only the finished result. Works with the Google Gemini model.</div>
-                    </div>
-                    <!-- Recognition (source) -->
-                    <div class="vrcn-panel-card">
-                        <div class="vrcn-panel-card-header"><span class="msi">hearing</span> <span data-i18n="kikitan.recognized.title">Recognized Speech</span></div>
-                        <div class="vf-recognized-wrap" style="min-height:54px;">
-                            <span id="kxdSourceText" style="color:var(--tx1);font-size:calc(13px + var(--fs-off, 0px));white-space:pre-wrap;word-break:break-word;">-</span>
-                        </div>
                     </div>
                     <!-- Speech Text (TTS) -->
                     <div class="vrcn-panel-card" id="kxdTtsCard">
@@ -149,14 +201,6 @@
                         </div>
                         <div style="margin-top:12px;">
                             <button class="vrcn-button" onclick="kxdTtsTest()"><span class="msi" style="font-size:16px;">volume_up</span> <span data-i18n="kikitan.tts.test">Test Voice</span></button>
-                        </div>
-                    </div>
-
-                    <!-- Translation output -->
-                    <div class="vrcn-panel-card" id="kxdOutputCard">
-                        <div class="vrcn-panel-card-header"><span class="msi">translate</span> <span data-i18n="kikitan.translation.title">Translation</span></div>
-                        <div class="vf-recognized-wrap" style="min-height:54px;">
-                            <span id="kxdOutputText" style="color:var(--accent);font-size:calc(13px + var(--fs-off, 0px));white-space:pre-wrap;word-break:break-word;">-</span>
                         </div>
                     </div>
                 </div>

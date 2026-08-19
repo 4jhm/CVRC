@@ -433,3 +433,8 @@ function setOwnInstanceModal(inst) {
     if (thumb) { const s = c.querySelector('#mi-banner-slot'); const bi = _getMiBannerImg(worldId, thumb); if (s && bi) s.insertBefore(bi, s.firstChild); }
     m.style.display = 'flex';
 }
+
+function _miWmState(s) {
+    if (s === undefined) return { worldId: _miModalWorldId };
+    _miModalWorldId = (s || {}).worldId ?? null;
+}

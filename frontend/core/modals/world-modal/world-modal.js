@@ -1400,3 +1400,41 @@ function rerenderWorldInsightsTranslations() {
 }
 
 document.documentElement.addEventListener('languagechange', rerenderWorldInsightsTranslations);
+
+function _wdWmState(s) {
+    if (s === undefined) return {
+        currentId:       _wdCurrentId,
+        currentWorldId:  _wdCurrentWorldId,
+        currentTab:      _wdCurrentTab,
+        refreshing:      _wdRefreshing,
+        instanceHistory: _wdInstanceHistory,
+        photosPage:      _wdPhotosPage,
+        photosItems:     _wdPhotosItems,
+        preloadedThumbs: _wdPreloadedThumbs,
+        wiWorldId:       _wiWorldId,
+        wiMode:          _wiMode,
+        wiAnchor:        _wiAnchor,
+        wiData:          _wiData,
+        wiLoading:       _wiLoading,
+        wiInitialized:   _wiInitialized,
+        wiDpYear:        _wiDpYear,
+        wiDpMonth:       _wiDpMonth,
+    };
+    s = s || {};
+    _wdCurrentId       = s.currentId       ?? '';
+    _wdCurrentWorldId  = s.currentWorldId  ?? '';
+    _wdCurrentTab      = s.currentTab      ?? 'info';
+    _wdRefreshing      = s.refreshing      ?? false;
+    _wdInstanceHistory = s.instanceHistory ?? [];
+    _wdPhotosPage      = s.photosPage      ?? 0;
+    _wdPhotosItems     = s.photosItems     ?? [];
+    _wdPreloadedThumbs = s.preloadedThumbs ?? [];
+    _wiWorldId         = s.wiWorldId       ?? '';
+    _wiMode            = s.wiMode          ?? 'week';
+    _wiAnchor          = s.wiAnchor        ?? null;
+    _wiData            = s.wiData          ?? [];
+    _wiLoading         = s.wiLoading       ?? false;
+    _wiInitialized     = s.wiInitialized   ?? false;
+    _wiDpYear          = s.wiDpYear        ?? 0;
+    _wiDpMonth         = s.wiDpMonth       ?? 0;
+}

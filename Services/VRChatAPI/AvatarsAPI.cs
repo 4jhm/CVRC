@@ -328,12 +328,41 @@ public class AvatarsAPI(VRChatApiService ctx)
     }
 
     private static readonly AvtrdbResolver _avtrdbResolver = new();
+    private static readonly IcuResolver    _icuResolver    = new();
+    private static readonly VrcndbResolver _vrcndbResolver = new();
+
+    private const string RobotAvatarId = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
+
+    private static (string? id, JObject? data) MapResolvedIcu(JObject? o)
+    {
+        if (o == null) return (null, null);
+        var id = o["id"]?.ToString();
+        if (string.IsNullOrEmpty(id) || id == RobotAvatarId) return (null, null);
+
+        var mapped = new JObject
+        {
+            ["id"]            = id,
+            ["name"]          = o["name"],
+            ["description"]   = o["description"],
+            ["imageUrl"]      = o["imageUrl"],
+            ["authorName"]    = o["authorName"],
+            ["authorId"]      = o["authorId"],
+            ["created_at"]    = o["created_at"],
+            ["updated_at"]    = o["updated_at"],
+            ["compatibility"] = o["platforms"],
+            ["performance"]   = o["performanceRating"],
+            ["tags"]          = o["tags"],
+            ["styles"]        = o["styles"],
+            ["explicit"]      = o["explicit"],
+        };
+        return (id, mapped);
+    }
 
     private static (string? id, JObject? data) MapResolved(JObject? o)
     {
         if (o == null) return (null, null);
         var id = o["vrc_id"]?.ToString();
-        if (string.IsNullOrEmpty(id)) return (null, null);
+        if (string.IsNullOrEmpty(id) || id == RobotAvatarId) return (null, null);
 
         var mapped = new JObject
         {
@@ -356,11 +385,43 @@ public class AvatarsAPI(VRChatApiService ctx)
 
     public async Task<(string? id, JObject? data)> GetAvatarIdByFileIdAsync(string fileId)
     {
+        if (fileId == AvtrdbResolver.HiddenAvatarFileId) return (null, null);
         try
         {
-            return MapResolved(await _avtrdbResolver.ResolveAsync(fileId));
+            var res = MapResolved(await _avtrdbResolver.ResolveAsync(fileId));
+            if (res.id != null) return res;
+
+            var icu = MapResolvedIcu(await _icuResolver.ResolveAsync(fileId));
+            if (icu.id != null)
+            {
+                ctx.Log($"icu fallback resolved {fileId} -> {icu.id}");
+                return icu;
+            }
+
+            var fb = MapResolved(await _vrcndbResolver.ResolveAsync(fileId));
+            if (fb.id != null)
+            {
+                ctx.Log($"vrcndb fallback resolved {fileId} -> {fb.id}");
+                return fb;
+            }
         }
         catch (Exception ex) { ctx.Log($"GetAvatarIdByFileId exception: {ex.Message}"); }
+        return (null, null);
+    }
+
+    public async Task<(string? id, JObject? data)> ResolveByFileIdSourceAsync(string source, string fileId)
+    {
+        try
+        {
+            return source switch
+            {
+                "avtrdb" => MapResolved(await _avtrdbResolver.ResolveDirectAsync(fileId)),
+                "icu"    => MapResolvedIcu(await _icuResolver.ResolveDirectAsync(fileId)),
+                "vrcndb" => MapResolved(await _vrcndbResolver.ResolveDirectAsync(fileId)),
+                _        => await GetAvatarIdByFileIdAsync(fileId),
+            };
+        }
+        catch (Exception ex) { ctx.Log($"ResolveByFileIdSource({source}) exception: {ex.Message}"); }
         return (null, null);
     }
 
@@ -371,6 +432,32 @@ public class AvatarsAPI(VRChatApiService ctx)
         {
             var raw = await _avtrdbResolver.ResolveManyAsync(fileIds);
             foreach (var kv in raw) result[kv.Key] = MapResolved(kv.Value);
+
+            var missing = result.Where(kv => kv.Value.id == null).Select(kv => kv.Key).ToList();
+            if (missing.Count > 0)
+            {
+                var icu = await _icuResolver.ResolveManyAsync(missing);
+                foreach (var kv in icu)
+                {
+                    var mapped = MapResolvedIcu(kv.Value);
+                    if (mapped.id == null) continue;
+                    result[kv.Key] = mapped;
+                    ctx.Log($"icu fallback resolved {kv.Key} -> {mapped.id}");
+                }
+            }
+
+            missing = result.Where(kv => kv.Value.id == null).Select(kv => kv.Key).ToList();
+            if (missing.Count > 0)
+            {
+                var fb = await _vrcndbResolver.ResolveManyAsync(missing);
+                foreach (var kv in fb)
+                {
+                    var mapped = MapResolved(kv.Value);
+                    if (mapped.id == null) continue;
+                    result[kv.Key] = mapped;
+                    ctx.Log($"vrcndb fallback resolved {kv.Key} -> {mapped.id}");
+                }
+            }
         }
         catch (Exception ex) { ctx.Log($"GetAvatarIdsByFileIds exception: {ex.Message}"); }
         return result;

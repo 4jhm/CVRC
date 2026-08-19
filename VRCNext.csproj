@@ -39,6 +39,8 @@
     <PackageReference Include="Vortice.Direct3D11" Version="3.8.2" Condition="'$(_LinuxBuild)'!='true'" />
     <PackageReference Include="Velopack" Version="0.0.915" />
     <PackageReference Include="Vosk" Version="0.3.38" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="Whisper.net" Version="1.9.1" Condition="'$(_LinuxBuild)'!='true'" />
+    <PackageReference Include="LLamaSharp" Version="0.27.0" Condition="'$(_LinuxBuild)'!='true'" />
     <PackageReference Include="NAudio" Version="3.0.0" Condition="'$(_LinuxBuild)'!='true'" />
     <PackageReference Include="System.Speech" Version="9.0.0" Condition="'$(_LinuxBuild)'!='true'" />
     <PackageReference Include="NAudio.Vorbis" Version="1.5.0" Condition="'$(_LinuxBuild)'!='true'" />

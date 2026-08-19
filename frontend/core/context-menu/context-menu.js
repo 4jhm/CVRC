@@ -214,6 +214,32 @@
         submenu.innerHTML = '';
     }
 
+    /* Avatar lookup debug submenu (toggled via /debug avatar-lookup true) */
+    function showAvatarLookupSubmenu(userId, fileId, plainAction, parentBtn) {
+        const run = src => fileId
+            ? sendToCS({ action: 'vrcLookupAvatarByFileId', fileId, userId, openModal: true, source: src })
+            : sendToCS({ action: 'vrcGetInstanceAvatars', userIds: [userId], source: src });
+        const opts = [
+            { icon: 'checkroom', label: cm('check_for_avatar', 'Check for Avatar'), fn: plainAction },
+            { icon: 'travel_explore', label: 'Check with Avtrdb', src: 'avtrdb' },
+            { icon: 'travel_explore', label: 'Check with Icu', src: 'icu' },
+            { icon: 'travel_explore', label: 'Check with VRCNdb', src: 'vrcndb' },
+        ];
+        submenu.innerHTML = opts.map((o, i) =>
+            `<button class="vn-ctx-item" data-ali="${i}"><span class="msi" style="font-size:14px;">${o.icon}</span><span class="vn-ctx-label">${esc(o.label)}</span></button>`
+        ).join('');
+        submenu.querySelectorAll('[data-ali]').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                const o = opts[+btn.dataset.ali];
+                if (o.fn) o.fn();
+                else run(o.src);
+                hideMenu();
+            });
+        });
+        positionSubmenu(parentBtn);
+    }
+
     /* Favorites submenu */
     function showFavGroupSubmenu(worldId, parentBtn) {
         const groups = (typeof favWorldGroups !== 'undefined') ? favWorldGroups : [];
@@ -736,8 +762,11 @@
                 const checkAction = fileId
                     ? () => sendToCS({ action: 'vrcLookupAvatarByFileId', fileId, userId: id, openModal: true })
                     : () => ctxCheckAvatar(id);
+                const checkItem = { icon: 'checkroom', label: cm('check_for_avatar', 'Check for Avatar') };
+                if (window.avatarLookupDebug) checkItem.submenuFn = btn => showAvatarLookupSubmenu(id, fileId, checkAction, btn);
+                else checkItem.action = checkAction;
                 items.unshift('sep');
-                items.unshift({ icon: 'checkroom', label: cm('check_for_avatar', 'Check for Avatar'), action: checkAction });
+                items.unshift(checkItem);
                 return items;
             }
         }
@@ -1096,9 +1125,15 @@
         let items;
         if (modItems.length > 0) items = [...modItems, 'sep', ...friendItems];
         else items = friendItems;
-        if (fileId) {
+        if (fileId || window.avatarLookupDebug) {
             items.unshift('sep');
-            items.unshift({ icon: 'checkroom', label: cm('check_for_avatar', 'Check for Avatar'), action: () => sendToCS({ action: 'vrcLookupAvatarByFileId', fileId, userId, openModal: true }) });
+            const plain = fileId
+                ? () => sendToCS({ action: 'vrcLookupAvatarByFileId', fileId, userId, openModal: true })
+                : () => sendToCS({ action: 'vrcGetInstanceAvatars', userIds: [userId] });
+            const checkItem = { icon: 'checkroom', label: cm('check_for_avatar', 'Check for Avatar') };
+            if (window.avatarLookupDebug) checkItem.submenuFn = btn => showAvatarLookupSubmenu(userId, fileId, plain, btn);
+            else checkItem.action = plain;
+            items.unshift(checkItem);
         }
         return items;
     }

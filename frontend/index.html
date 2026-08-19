@@ -62,6 +62,7 @@
     <link rel="stylesheet" href="core/modals/my-instance-modal/my-instance-modal.css">
     <link rel="stylesheet" href="core/modals/timeline-modal/timeline-modal.css">
     <link rel="stylesheet" href="core/modals/import-modal/import-modal.css">
+    <link rel="stylesheet" href="core/modals/window-manager/window-manager.css">
     <link rel="stylesheet" href="core/context-menu/context-menu.css">
     <link rel="stylesheet" href="core/messenger/messenger.css">
     <link rel="stylesheet" href="core/items/items.css">
@@ -133,7 +134,7 @@
     <div class="sidebar" id="sidebarEl">
         <div class="sidebar-resizer" id="sidebarResizer" data-side="left"></div>
         <div class="sidebar-sep"></div>
-        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.23</div></div></div>
+        <div class="logo"><div class="logo-icon" id="logoIcon">C</div><div class="logo-txt"><div class="logo-text-row"><div class="logo-text">CVRC</div></div><div class="logo-sub">v2026.41.24</div></div></div>
         <div class="nav vrcn-scrollbar" id="navEl"></div>
         <div class="play-area"><button class="btn-play" onclick="playVRChat()" data-i18n-title="sidebar.play_vrchat" title="Play VRChat"><span class="play-icon-wrap"><span class="msi play-icon">play_arrow</span></span><span class="play-copy pl"><strong class="play-title" data-i18n="sidebar.play_vrchat">Play VRChat</strong><span class="play-sub" id="playSubText"></span></span><span class="msi play-arrow pl">chevron_right</span></button></div>
     </div>
@@ -260,7 +261,7 @@
                         <div class="tb-dropdown">
                             <div class="tb-dd-item" onclick="sendToCS({action:'openUrl',url:'https://wiki.vrcnext.com'})"><span class="msi">article</span><span data-i18n="tb.help.wiki">Wiki</span></div>
                             <div class="tb-dd-sep"></div>
-                            <div class="tb-dd-item" data-keep-modal onclick="document.getElementById('modalKeybinds').style.display='flex'"><span class="msi">keyboard</span><span data-i18n="tb.help.show_keybinds">Show Keybinds</span></div>
+                            <div class="tb-dd-item" data-keep-modal onclick="document.getElementById('modalKeybinds').style.display='flex'; if (typeof wmSyncKeybindHelp === 'function') wmSyncKeybindHelp();"><span class="msi">keyboard</span><span data-i18n="tb.help.show_keybinds">Show Keybinds</span></div>
                             <div class="tb-dd-item" onclick="toggleHelpPanel()"><span class="msi">info</span><span data-i18n="tb.help.explain_tab">Explain this Tab</span></div>
                             <div class="tb-dd-sep"></div>
                             <div class="tb-dd-item" onclick="sendToCS({action:'openUrl',url:'https://discord.gg/dHsrWJzNS9'})"><span class="msi">forum</span><span data-i18n="tb.help.join_discord">Join Discord</span></div>
@@ -724,6 +725,9 @@
         </div>
     </div>
 
+    <div id="wmLayer"></div>
+    <div id="wmDock"></div>
+
     <script>
     (async function () {
         function showFatalError(msg, detail) {
@@ -885,6 +889,7 @@
             'modules/tools/avatar-scaling/avatar-scaling.js',
             'modules/tools/action-flow/action-flow.js',
             'modules/tools/status-schedule/status-schedule.js',
+            'core/modals/window-manager/window-manager.js',
             'modules/tools/vrc-accounts/vrc-accounts.js',
             'modules/tools/avatar-database/avatar-database.js',
             'modules/tools/direct-access/direct-access.js',

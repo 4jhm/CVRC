@@ -197,6 +197,14 @@ function showReconnectModal(username) {
 
 function confirmRemoveAccount(accountId) {
     if (!accountId) return;
-    if (!confirm(t('settings.accounts.remove_confirm', 'Remove this account from the list? Its database file stays on disk and can be re-linked by adding the same account again.'))) return;
-    sendToCS({ action: 'removeAccount', accountId });
+    const acc  = (_accountsState.accounts || []).find(a => a.accountId === accountId);
+    const name = acc ? (acc.displayName || acc.username || '(unnamed)') : accountId;
+    vnConfirmModal({
+        title: t('settings.accounts.remove_title', 'Remove Account'),
+        icon: 'delete',
+        message: tf('settings.accounts.remove_confirm', { name: esc(name) },
+                    'Remove {name} from the list? Its database file stays on disk and can be re-linked by adding the same account again.'),
+        confirmLabel: t('settings.accounts.btn.remove', 'Remove'),
+        onConfirm: () => sendToCS({ action: 'removeAccount', accountId }),
+    });
 }

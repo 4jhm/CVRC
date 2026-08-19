@@ -53,7 +53,18 @@ public static class ConsoleHelper
                         new { enabled = val }
                     );
                 }
-                return new("Usage: /debug img cache <true/false>", "err");
+                if (parts.Length >= 3
+                    && parts[1].Equals("avatar-lookup", StringComparison.OrdinalIgnoreCase)
+                    && bool.TryParse(parts[2], out var alv))
+                {
+                    return new(
+                        $"Avatar lookup debug: {(alv ? "ON" : "OFF")} — right-click a user to test avtrdb / ICU / VRCNDb individually.",
+                        alv ? "ok" : "warn",
+                        "debugAvatarLookupState",
+                        new { enabled = alv }
+                    );
+                }
+                return new("Usage: /debug img cache <true/false>  |  /debug avatar-lookup <true/false>", "err");
 
             default:
                 return new($"Unknown command: '{parts[0]}'. Type /help for available commands.", "err");
@@ -88,5 +99,9 @@ public static class ConsoleHelper
         "Debugging:\n" +
         "  /debug img cache <true/false>\n" +
         "  Shows an overlay on all images.\n" +
-        "  Green = cached (disk). Red = not cached (CDN/API). Orange = WebView cache.";
+        "  Green = cached (disk). Red = not cached (CDN/API). Orange = WebView cache.\n" +
+        "\n" +
+        "  /debug avatar-lookup <true/false>\n" +
+        "  Adds a submenu to the right-click 'Check for Avatar' so you can resolve a\n" +
+        "  file id against avtrdb, ICU or VRCNDb individually (results in the Activity Log).";
 }

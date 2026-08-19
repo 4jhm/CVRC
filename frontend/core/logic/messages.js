@@ -136,6 +136,9 @@ window.external.receiveMessage(rawMsg => {
             case 'debugImgCacheState':
                 if (typeof setImgCacheDebug === 'function') setImgCacheDebug(payload.enabled);
                 break;
+            case 'debugAvatarLookupState':
+                window.avatarLookupDebug = !!payload.enabled;
+                break;
             case 'toast': showToast(payload.ok, payload.msg); break;
             case 'vrcConfigData':
                 if (typeof _vrcCfgApplyData === 'function') _vrcCfgApplyData(payload || {});
@@ -304,6 +307,7 @@ window.external.receiveMessage(rawMsg => {
                 if (typeof filterAllFriendsIfLive === 'function') filterAllFriendsIfLive();
                 if (typeof updateUserItemWorld === 'function') updateUserItemWorld(payload);
                 if (typeof patchFriendDetailLive === 'function') patchFriendDetailLive(payload);
+                if (typeof scheduleRenderDashboardFriendSections === 'function') scheduleRenderDashboardFriendSections();
                 break;
             }
             case 'vrcFriends':
@@ -1102,6 +1106,9 @@ case 'vrcNews':
             case 'kxdRecognized': handleKxdRecognized(payload); break;
             case 'kxdTranslated': handleKxdTranslated(payload); break;
             case 'kxdProfileTranslated': handleKxdProfileTranslated(payload); break;
+            case 'kxdLocalState': kxdRenderLocalState(payload); break;
+            case 'kxdLocalProgress': kxdOnLocalProgress(payload); break;
+            case 'kxdLocalFinished': kxdOnLocalFinished(payload); break;
             case 'snipeStatus': handleSnipeStatus(payload); break;
             case 'snipeFound': handleSnipeFound(payload); break;
             case 'snipeJoinResult': handleSnipeJoinResult(payload); break;
@@ -1298,6 +1305,8 @@ case 'vrcNews':
 // Crash Report Modal
 
 function showCrashModal(payload) {
+    const CRASH_MODAL_ENABLED = false;
+    if (!CRASH_MODAL_ENABLED) return;
     const preview = document.getElementById('crashLogPreview');
     if (preview) {
         preview.innerHTML = '';

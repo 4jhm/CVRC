@@ -1088,24 +1088,35 @@ function afRenderConditionsPanel() {
 }
 
 function afAddConditionPrompt() {
-    const raw = prompt(aft('condition.prompt.name', 'Condition name:'));
-    if (!raw) return;
-    const name = String(raw).trim();
-    if (!name) return;
-    if (Object.prototype.hasOwnProperty.call(afConditions, name)) {
-        if (typeof showToast === 'function') showToast(false, aftf('condition.toast.already_exists', { name }, 'Condition "' + name + '" already exists'));
-        return;
-    }
-    afConditions[name] = false;
-    afScheduleConditionsSave();
-    afRenderConditionsPanel();
+    vnPromptModal({
+        title: aft('condition.prompt.title', 'New Condition'),
+        message: esc(aft('condition.prompt.name', 'Condition name:')),
+        confirmLabel: t('common.create', 'Create'),
+        maxLength: 64,
+        onConfirm: name => {
+            if (Object.prototype.hasOwnProperty.call(afConditions, name)) {
+                if (typeof showToast === 'function') showToast(false, aftf('condition.toast.already_exists', { name }, 'Condition "' + name + '" already exists'));
+                return;
+            }
+            afConditions[name] = false;
+            afScheduleConditionsSave();
+            afRenderConditionsPanel();
+        },
+    });
 }
 
 function afRemoveCondition(name) {
-    if (!confirm(aftf('condition.confirm.remove', { name }, 'Remove condition "' + name + '"?'))) return;
-    delete afConditions[name];
-    afScheduleConditionsSave();
-    afRenderConditionsPanel();
+    vnConfirmModal({
+        title: aft('condition.confirm.title', 'Remove Condition'),
+        icon: 'delete',
+        message: aftf('condition.confirm.remove', { name: esc(name) }, 'Remove condition "' + esc(name) + '"?'),
+        confirmLabel: t('common.remove', 'Remove'),
+        onConfirm: () => {
+            delete afConditions[name];
+            afScheduleConditionsSave();
+            afRenderConditionsPanel();
+        },
+    });
 }
 
 function afToggleConditionValue(name, value) {
@@ -1400,37 +1411,56 @@ function afScheduleAutoSave() {
 function afNewId() { return 'flow_' + Math.random().toString(36).slice(2, 10); }
 
 function afNewFlow() {
-    const name = prompt(aft('prompt.flow_name', 'Flow name:'), aft('prompt.flow_name_default', 'New Flow'));
-    if (!name) return;
-    const id = afNewId();
-    const now = Date.now();
-    afFlows.push({ id, name, enabled: false, workspace: null, createdAt: now, updatedAt: now });
-    afRenderFlowSelect();
-    afSelectFlow(id);
-    afPersistFlows();
+    vnPromptModal({
+        title: aft('prompt.flow_name_title', 'New Flow'),
+        message: esc(aft('prompt.flow_name', 'Flow name:')),
+        value: aft('prompt.flow_name_default', 'New Flow'),
+        confirmLabel: t('common.create', 'Create'),
+        onConfirm: name => {
+            const id = afNewId();
+            const now = Date.now();
+            afFlows.push({ id, name, enabled: false, workspace: null, createdAt: now, updatedAt: now });
+            afRenderFlowSelect();
+            afSelectFlow(id);
+            afPersistFlows();
+        },
+    });
 }
 
 function afRenameFlow() {
     const flow = afFlows.find(f => f.id === afCurrentFlowId);
     if (!flow) return;
-    const name = prompt(aft('prompt.rename', 'Rename flow:'), flow.name);
-    if (!name) return;
-    flow.name = name;
-    flow.updatedAt = Date.now();
-    afRenderFlowSelect();
-    afPersistFlows();
+    vnPromptModal({
+        title: aft('prompt.rename_title', 'Rename Flow'),
+        message: esc(aft('prompt.rename', 'Rename flow:')),
+        value: flow.name,
+        confirmLabel: t('common.save', 'Save'),
+        onConfirm: name => {
+            flow.name = name;
+            flow.updatedAt = Date.now();
+            afRenderFlowSelect();
+            afPersistFlows();
+        },
+    });
 }
 
 function afDeleteFlow() {
     const flow = afFlows.find(f => f.id === afCurrentFlowId);
     if (!flow) return;
-    if (!confirm(aftf('prompt.delete_confirm', { name: flow.name }, 'Delete flow "' + flow.name + '"?'))) return;
-    afFlows = afFlows.filter(f => f.id !== flow.id);
-    delete afTriggerState[flow.id];
-    afCurrentFlowId = afFlows[0]?.id || null;
-    afRenderFlowSelect();
-    afLoadFlowIntoWorkspace(afCurrentFlowId);
-    afPersistFlows();
+    vnConfirmModal({
+        title: aft('prompt.delete_title', 'Delete Flow'),
+        icon: 'delete',
+        message: aftf('prompt.delete_confirm', { name: esc(flow.name) }, 'Delete flow "' + esc(flow.name) + '"?'),
+        confirmLabel: t('common.delete', 'Delete'),
+        onConfirm: () => {
+            afFlows = afFlows.filter(f => f.id !== flow.id);
+            delete afTriggerState[flow.id];
+            afCurrentFlowId = afFlows[0]?.id || null;
+            afRenderFlowSelect();
+            afLoadFlowIntoWorkspace(afCurrentFlowId);
+            afPersistFlows();
+        },
+    });
 }
 
 function afSelectFlow(id) {

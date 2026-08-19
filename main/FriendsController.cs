@@ -482,9 +482,35 @@ public class FriendsController
                 var fileId = msg["fileId"]?.ToString() ?? "";
                 var openModal = msg["openModal"]?.Value<bool>() ?? false;
                 var forUserId = msg["userId"]?.ToString() ?? "";
+                var source = msg["source"]?.ToString() ?? "";
                 if (!string.IsNullOrEmpty(fileId))
                 {
-                    var (avtrId, avtrData) = await _core.Avatars.GetAvatarIdByFileIdAsync(fileId);
+                    var (avtrId, avtrData) = string.IsNullOrEmpty(source)
+                        ? await _core.Avatars.GetAvatarIdByFileIdAsync(fileId)
+                        : await _core.Avatars.ResolveByFileIdSourceAsync(source, fileId);
+                    if (!string.IsNullOrEmpty(source))
+                    {
+                        var label = source switch { "avtrdb" => "Avtrdb", "icu" => "ICU", "vrcndb" => "VRCNDb", _ => source };
+                        _core.SendToJS("log", string.IsNullOrEmpty(avtrId)
+                            ? new { msg = $"[{label}] no match for {fileId}", color = "warn" }
+                            : new { msg = $"[{label}] {fileId} -> {avtrId}", color = "ok" });
+                    }
+
+                    if (string.IsNullOrEmpty(avtrId) && string.IsNullOrEmpty(source) && !string.IsNullOrEmpty(forUserId))
+                    {
+                        var grpKey = "avtrgroup:" + forUserId;
+                        if (!ModalCacheHelper.IsCached(grpKey))
+                        {
+                            ModalCacheHelper.Mark(grpKey);
+                            var groupFileId = await TryGetAvatarFileIdViaGroupAsync(forUserId);
+                            if (!string.IsNullOrEmpty(groupFileId) && groupFileId != fileId)
+                            {
+                                var g = await _core.Avatars.GetAvatarIdByFileIdAsync(groupFileId);
+                                if (!string.IsNullOrEmpty(g.id)) { avtrId = g.id; avtrData = g.data; }
+                            }
+                        }
+                    }
+
                     string avatarName = "", avatarImage = "", avatarAuthor = "";
                     if (!string.IsNullOrEmpty(avtrId))
                     {
@@ -492,7 +518,7 @@ public class FriendsController
                         avatarImage = ImageCacheHelper.GetAvatarUrl(avtrId, avtrData?["imageUrl"]?.ToString());
                         avatarAuthor = avtrData?["authorName"]?.ToString() ?? "";
                         if (!string.IsNullOrEmpty(forUserId))
-                            _core.TimeEngine.SetAvatarInfoCache(forUserId, fileId, avtrId, avatarName, avatarAuthor);
+                            _core.TimeEngine.SetAvatarInfoCache(forUserId, fileId, avtrId, avatarName, avatarAuthor, avatarImage);
                     }
                     _core.SendToJS("vrcAvatarByFileId", new { fileId, avatarId = avtrId ?? "", avatarName, avatarImage, avatarAuthor, openModal });
                 }
@@ -521,6 +547,7 @@ public class FriendsController
                 if (idsToken is JArray idsArr && idsArr.Count > 0)
                 {
                     var ids = idsArr.Select(t => t.ToString()).Where(s => !string.IsNullOrEmpty(s)).ToList();
+                    var source = msg["source"]?.ToString() ?? "";
                     _ = Task.Run(async () =>
                     {
                         foreach (var uid in ids)
@@ -559,7 +586,17 @@ public class FriendsController
 
                                 string avtrId = "";
                                 if (!string.IsNullOrEmpty(fileId))
-                                    avtrId = (await _core.Avatars.GetAvatarIdByFileIdAsync(fileId)).id ?? "";
+                                    avtrId = (string.IsNullOrEmpty(source)
+                                        ? await _core.Avatars.GetAvatarIdByFileIdAsync(fileId)
+                                        : await _core.Avatars.ResolveByFileIdSourceAsync(source, fileId)).id ?? "";
+                                if (!string.IsNullOrEmpty(source))
+                                {
+                                    var label = source switch { "avtrdb" => "Avtrdb", "icu" => "ICU", "vrcndb" => "VRCNDb", _ => source };
+                                    var what = string.IsNullOrEmpty(fileId) ? uid : fileId;
+                                    _core.SendToJS("log", string.IsNullOrEmpty(avtrId)
+                                        ? new { msg = $"[{label}] no match for {what}", color = "warn" }
+                                        : new { msg = $"[{label}] {what} -> {avtrId}", color = "ok" });
+                                }
                                 _core.SendToJS("vrcInstanceAvatarFound", new { userId = uid, avatarId = avtrId });
                             }
                             catch
@@ -1923,6 +1960,7 @@ public class FriendsController
             bool liveIsInWorld = !string.IsNullOrEmpty(liveLoc) && liveLoc != "offline" && liveLoc != "private" && liveLoc != "traveling";
             bool liveInGame    = !string.IsNullOrEmpty(liveLoc) && liveLoc != "offline";
             var liveAvatarId   = live?["currentAvatar"]?.ToString() ?? cachedEntry.ProfileCurrentAvatarId;
+            if (liveAvatarId == RobotAvatarId) liveAvatarId = "";
             var liveFileId     = live != null ? ExtractAvatarFileId(live) : "";
             if (string.IsNullOrEmpty(liveFileId)) liveFileId = cachedEntry.ProfileAvatarFileId;
             var isCoPresent    = (_core.IsVrcRunning?.Invoke() ?? false) && _core.LogWatcher.GetCurrentPlayers().Any(p => p.UserId == userId);
@@ -1989,7 +2027,7 @@ public class FriendsController
                 ["isFavorited"]           = _favoriteFriends.ContainsKey(userId),
                 ["favFriendId"]           = GetFavoriteFriendId(userId),
                 ["badges"]                = liveBadges ?? TryParseJArray(cachedEntry.ProfileBadges) ?? new JArray(),
-                ["cachedAvatar"]          = (JToken?)TryParseJObject(cachedEntry.ProfileCurrentAvatar) ?? JValue.CreateNull(),
+                ["cachedAvatar"]          = CachedAvatarToken(cachedEntry.ProfileCurrentAvatar),
                 ["iconFrame"]             = live?["iconFrame"]?.ToString() ?? cachedEntry.ProfileIconFrame,
                 ["iconFrameUrl"]          = IconFrameHelper.UrlFor(live?["iconFrame"]?.ToString() ?? cachedEntry.ProfileIconFrame, _core.Inventory),
                 ["nameplateEffect"]       = live?["nameplateEffect"]?.ToString() ?? cachedEntry.ProfileNameplate,
@@ -2136,6 +2174,39 @@ public class FriendsController
             if (m.Success) return m.Groups[1].Value;
         }
         return "";
+    }
+
+    private async Task<string> TryGetAvatarFileIdViaGroupAsync(string userId)
+    {
+        try
+        {
+            const string RobotFileId = "file_0e8c4e32-7444-44ea-ade4-313c010d4bae";
+            var displayName = GetStoreValue(userId)?["displayName"]?.ToString() ?? "";
+            if (string.IsNullOrEmpty(displayName))
+                displayName = (await _core.Users.GetUserAsync(userId))?["displayName"]?.ToString() ?? "";
+            if (string.IsNullOrEmpty(displayName)) return "";
+
+            var repGroup = await _core.Users.GetUserRepresentedGroupAsync(userId);
+            var groupId = repGroup?["groupId"]?.ToString() ?? repGroup?["id"]?.ToString() ?? "";
+            if (string.IsNullOrEmpty(groupId)) return "";
+
+            var member = await _core.Groups.FindGroupMemberByDisplayNameAsync(groupId, displayName, userId);
+            if (member == null) return "";
+
+            var fid = ExtractAvatarFileId(member["user"] as JObject ?? member);
+            return fid == RobotFileId ? "" : fid;
+        }
+        catch { return ""; }
+    }
+
+    private const string RobotAvatarId = "avtr_c38a1615-5bf5-42b4-84eb-a8b6c37cbd11";
+
+    private JToken CachedAvatarToken(string? json)
+    {
+        var o = TryParseJObject(json ?? "");
+        if (o == null) return JValue.CreateNull();
+        var id = o["avatarId"]?.ToString() ?? o["id"]?.ToString() ?? "";
+        return id == RobotAvatarId ? JValue.CreateNull() : o;
     }
 
     private (List<object> userGroups, object? representedGroup) BuildGroupsDisplay(JArray raw, string? overrideRepId = null)
@@ -2465,7 +2536,7 @@ public class FriendsController
             favFriendId = GetFavoriteFriendId(userId),
             memo = _core.Timeline?.GetUserMemo(userId) ?? "",
             badges,
-            cachedAvatar = TryParseJObject(dbCache?.ProfileCurrentAvatar ?? "") ?? (object?)null,
+            cachedAvatar = CachedAvatarToken(dbCache?.ProfileCurrentAvatar),
             rawJson = user,
         };
     }

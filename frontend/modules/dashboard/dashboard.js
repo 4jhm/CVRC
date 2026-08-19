@@ -154,9 +154,21 @@ function renderDashboard() {
     }
 }
 
+const DASH_FRIEND_SECTIONS_THROTTLE_MS = 300;
+let _dashFriendSectionsTimer = null;
+
+function scheduleRenderDashboardFriendSections() {
+    if (_dashFriendSectionsTimer) return;
+    _dashFriendSectionsTimer = setTimeout(() => {
+        _dashFriendSectionsTimer = null;
+        renderDashboardFriendSections();
+    }, DASH_FRIEND_SECTIONS_THROTTLE_MS);
+}
+
 function renderDashboardFriendSections() {
     const _tab0 = document.getElementById('tab0');
     if (_tab0 && !_tab0.classList.contains('active')) return;
+    renderDashHeroWidgets();
     renderDashFriendsLocationSmall();
     renderDashGroupActivityInstancesSmall();
 }
@@ -1400,9 +1412,9 @@ function renderDashHeroWidgets() {
         else if (id === 'vrchat_news') body = _dashHeroNewsHtml();
         else if (id === 'pins') body = _dashHeroPinsHtml();
         if (!id) {
-            slot.innerHTML = _dashEditMode
+            setHtmlIfChanged(slot, _dashEditMode
                 ? `<button class="dash-slot-add" onclick="dashHeroPick(event, '${side}')"><span class="msi">add</span><span>${esc(t('dashboard.edit.add_widget', 'Add Widget'))}</span></button>`
-                : '';
+                : '');
             return;
         }
         const editBtn = _dashEditMode
@@ -1413,7 +1425,7 @@ function renderDashHeroWidgets() {
             seeAll = `<button class="dash-hw-seeall" onclick="showTab(3);setTimeout(()=>{if(typeof setPeopleFilter==='function')setPeopleFilter('all');if(typeof setAllFriendsStatusFilter==='function')setAllFriendsStatusFilter('ingame');},80)">${esc(t('dashboard.section.see_all', 'SEE ALL →'))}</button>`;
         else if (!_dashEditMode && id === 'group_activity')
             seeAll = `<button class="dash-hw-seeall" onclick="showTab(2);setTimeout(()=>{if(typeof setGroupFilter==='function')setGroupFilter('instances');},80)">${esc(t('dashboard.section.see_all', 'SEE ALL →'))}</button>`;
-        slot.innerHTML = `<div class="dash-hw-label">${esc(_dashHeroLabel(side, id))}${editBtn}${seeAll}</div>${body}`;
+        setHtmlIfChanged(slot, `<div class="dash-hw-label">${esc(_dashHeroLabel(side, id))}${editBtn}${seeAll}</div>${body}`);
     });
 }
 
