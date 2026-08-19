@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NativeFileDialogSharp;
 using VRCNext.Services;
 using VRCNext.Services.Helpers;
 
@@ -939,6 +940,82 @@ public class FriendsController
                         if (ok) _core.SendToJS("vrcUnfriendDone", new { userId = uid });
                     });
                 }
+                break;
+            }
+
+            case "vrcExportFriendsList":
+            {
+                var snap = GetStoreSnapshot();
+                var r = Dialog.FileSave("txt", "CVRC-friends.txt");
+                if (r.IsOk)
+                {
+                    try
+                    {
+                        var lines = snap
+                            .Select(f => (id: f["id"]?.ToString() ?? "", name: f["displayName"]?.ToString() ?? ""))
+                            .Where(f => f.id.Length > 0)
+                            .OrderBy(f => f.name, StringComparer.OrdinalIgnoreCase)
+                            .Select(f => $"{f.id}  # {f.name}");
+                        var header = $"# CVRC friend list export — {snap.Count} friends — {DateTime.Now:yyyy-MM-dd HH:mm}\n" +
+                                     "# One VRChat user ID per line. Import this file from another account to send friend requests to everyone in it.\n\n";
+                        System.IO.File.WriteAllText(r.Path, header + string.Join("\n", lines) + "\n");
+                        _core.SendToJS("toast", new { ok = true, msg = $"Exported {snap.Count} friends to {r.Path}" });
+                    }
+                    catch (Exception ex)
+                    {
+                        _core.SendToJS("toast", new { ok = false, msg = $"Export failed: {ex.Message}" });
+                    }
+                }
+                break;
+            }
+
+            case "vrcImportFriendsPickFile":
+            {
+                var r = Dialog.FileOpen("txt,csv,json");
+                if (!r.IsOk) break;
+                string text;
+                try { text = System.IO.File.ReadAllText(r.Path); }
+                catch (Exception ex)
+                {
+                    _core.SendToJS("toast", new { ok = false, msg = $"Read failed: {ex.Message}" });
+                    break;
+                }
+                var selfId = _core.VrcApi.CurrentUserId ?? "";
+                var ids = System.Text.RegularExpressions.Regex.Matches(text,
+                        @"usr_[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+                    .Select(m => m.Value)
+                    .Distinct()
+                    .Where(id => id != selfId)
+                    .ToList();
+                var already = ids.Count(IsInStore);
+                var toImport = ids.Where(id => !IsInStore(id)).ToList();
+                _core.SendToJS("importFriendsFile", new { total = ids.Count, alreadyFriends = already, toImport });
+                break;
+            }
+
+            case "vrcImportFriendsList":
+            {
+                var ids = (msg["userIds"] as JArray)?
+                    .Select(x => x.ToString())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .Distinct()
+                    .ToList() ?? new List<string>();
+                _ = Task.Run(async () =>
+                {
+                    int total = ids.Count, done = 0, ok = 0, failed = 0;
+                    foreach (var uid in ids)
+                    {
+                        done++;
+                        bool sent;
+                        try { sent = await _core.Friends.SendFriendRequestAsync(uid); }
+                        catch { sent = false; }
+                        if (sent) ok++; else failed++;
+                        int pDone = done, pOk = ok, pFailed = failed;
+                        _core.SendToJS("importFriendsProgress", new { done = pDone, total, ok = pOk, failed = pFailed });
+                        if (done < total) await Task.Delay(1500);
+                    }
+                    _core.SendToJS("importFriendsDone", new { total, ok, failed });
+                });
                 break;
             }
 

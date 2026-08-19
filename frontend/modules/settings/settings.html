@@ -593,6 +593,17 @@
                         </div>
                     </div>
 
+                    <!-- FRIENDS LIST EXPORT/IMPORT -->
+                    <div class="vrcn-panel-card" data-section="data" style="display:none;">
+                        <div class="vrcn-panel-card-header"><span class="msi">group</span> <span data-i18n="settings.friendsio.title">Export / Import Friends List</span></div>
+                        <div class="set-desc" style="margin-bottom:10px;" data-i18n="settings.friendsio.desc">Save your friends' user IDs to a text file. On another account, import that file to send everyone in it a friend request — handy for moving your friends over to a new account.</div>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                            <button class="vrcn-button" onclick="exportFriendsList()"><span class="msi" style="font-size:16px;">upload_file</span> <span data-i18n="settings.friendsio.export">Export Friends List...</span></button>
+                            <button class="vrcn-button" onclick="importFriendsList()"><span class="msi" style="font-size:16px;">download</span> <span data-i18n="settings.friendsio.import">Import Friends List...</span></button>
+                        </div>
+                        <div id="friendsImportResult" style="display:none;margin-top:10px;"></div>
+                    </div>
+
                     <!-- WATCH FOLDERS -->
                     <div class="vrcn-panel-card" data-section="vrchat" style="display:none;">
                         <div class="vrcn-panel-card-header"><span class="msi">folder_open</span> <span data-i18n="settings.watch_folders.title">Watch Folders</span></div>

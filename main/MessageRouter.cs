@@ -2657,6 +2657,9 @@ public partial class AppShell
                 case "vrcGetChatHistory":
                 case "vrcSetFriendAlert":
                 case "vrcGetFriendAlert":
+                case "vrcExportFriendsList":
+                case "vrcImportFriendsPickFile":
+                case "vrcImportFriendsList":
                     await _friends.HandleMessage(action, msg);
                     break;
 

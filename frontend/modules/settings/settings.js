@@ -1744,6 +1744,68 @@ function handleConfigImported() {
     }
 }
 
+function exportFriendsList() {
+    sendToCS({ action: 'vrcExportFriendsList' });
+}
+
+function importFriendsList() {
+    sendToCS({ action: 'vrcImportFriendsPickFile' });
+}
+
+function handleImportFriendsFile(payload) {
+    const total   = payload?.total || 0;
+    const already = payload?.alreadyFriends || 0;
+    const toImport = Array.isArray(payload?.toImport) ? payload.toImport : [];
+
+    if (total === 0) {
+        if (typeof showToast === 'function') showToast(false, t('settings.friendsio.none_found', 'No VRChat user IDs found in that file.'));
+        return;
+    }
+    if (toImport.length === 0) {
+        if (typeof showToast === 'function') showToast(true, tf('settings.friendsio.all_already', { count: already }, `All ${already} people in that file are already your friends.`));
+        return;
+    }
+
+    vnConfirmModal({
+        title: t('settings.friendsio.import_title', 'Import Friends List'),
+        icon: 'group_add',
+        danger: false,
+        message: tf('settings.friendsio.import_confirm',
+            { total, already, count: toImport.length },
+            `Found ${total} user ID(s) in that file${already > 0 ? `, ${already} already your friend(s)` : ''}. Send friend requests to the remaining ${toImport.length}?`),
+        confirmLabel: t('settings.friendsio.import_confirm_btn', 'Send Requests'),
+        onConfirm: () => {
+            const res = document.getElementById('friendsImportResult');
+            if (res) {
+                res.style.display = '';
+                res.innerHTML = `<div style="color:var(--tx3);font-size:calc(12px + var(--fs-off, 0px));">${esc(tf('settings.friendsio.progress', { done: 0, total: toImport.length }, `Sending requests... 0/${toImport.length}`))}</div>`;
+            }
+            sendToCS({ action: 'vrcImportFriendsList', userIds: toImport });
+        },
+    });
+}
+
+function handleImportFriendsProgress(payload) {
+    const res = document.getElementById('friendsImportResult');
+    if (!res) return;
+    const done = payload?.done || 0, total = payload?.total || 0, failed = payload?.failed || 0;
+    res.style.display = '';
+    res.innerHTML = `<div style="color:var(--tx3);font-size:calc(12px + var(--fs-off, 0px));">${esc(tf('settings.friendsio.progress_detail',
+        { done, total, failed }, `Sending requests... ${done}/${total}${failed > 0 ? ` (${failed} failed)` : ''}`))}</div>`;
+}
+
+function handleImportFriendsDone(payload) {
+    const res = document.getElementById('friendsImportResult');
+    if (!res) return;
+    const total = payload?.total || 0, ok = payload?.ok || 0, failed = payload?.failed || 0;
+    const label = tf('settings.friendsio.done', { ok, total, failed }, `Sent ${ok}/${total} friend requests${failed > 0 ? ` (${failed} failed)` : ''}`);
+    res.style.display = '';
+    res.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(var(--ok-rgb,80,200,120),.12);border:1px solid rgba(var(--ok-rgb,80,200,120),.30);border-radius:8px;">
+        <span class="msi" style="font-size:20px;color:var(--ok);">check_circle</span>
+        <div style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);">${esc(label)}</div>
+    </div>`;
+}
+
 function manualDbBackup() {
     const btn = document.getElementById('btnManualDbBackup');
     if (btn) btn.disabled = true;

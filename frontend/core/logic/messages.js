@@ -1066,6 +1066,15 @@ case 'vrcNews':
             case 'configImported':
                 if (typeof handleConfigImported === 'function') handleConfigImported();
                 break;
+            case 'importFriendsFile':
+                if (typeof handleImportFriendsFile === 'function') handleImportFriendsFile(payload);
+                break;
+            case 'importFriendsProgress':
+                if (typeof handleImportFriendsProgress === 'function') handleImportFriendsProgress(payload);
+                break;
+            case 'importFriendsDone':
+                if (typeof handleImportFriendsDone === 'function') handleImportFriendsDone(payload);
+                break;
             case 'emojiSheetSaved':
                 if (typeof onEmojiSheetSaved === 'function') onEmojiSheetSaved(payload);
                 break;
