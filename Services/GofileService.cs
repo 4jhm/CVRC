@@ -95,14 +95,20 @@ public class GofileService
             var body = await resp.Content.ReadAsStringAsync();
             if (!resp.IsSuccessStatusCode)
             {
-                _log($"[Gofile] Account creation failed: {(int)resp.StatusCode}");
+                LastError = $"account creation failed: HTTP {(int)resp.StatusCode} — {body[..Math.Min(200, body.Length)]}";
+                _log($"[Gofile] {LastError}");
                 // A rate-limited/failed fresh account creation is still better served by a stale
                 // cached token (if we have one) than by giving up outright.
                 return cached?.token;
             }
 
             var token = JObject.Parse(body)["data"]?["token"]?.ToString();
-            if (string.IsNullOrEmpty(token)) { _log("[Gofile] Account creation returned no token."); return cached?.token; }
+            if (string.IsNullOrEmpty(token))
+            {
+                LastError = $"account creation returned no token: {body[..Math.Min(200, body.Length)]}";
+                _log($"[Gofile] {LastError}");
+                return cached?.token;
+            }
 
             _accountToken = token;
             _accountTokenAt = DateTime.UtcNow;
@@ -111,13 +117,18 @@ public class GofileService
         }
         catch (Exception ex)
         {
-            _log($"[Gofile] Account creation error: {ex.Message}");
+            LastError = $"account creation error: {ex.GetType().Name}: {ex.Message}";
+            _log($"[Gofile] {LastError}");
             return null;
         }
     }
 
     // Reason the most recent upload failed, for surfacing in the UI.
     public string LastUploadError { get; private set; } = "";
+    // Reason the most recent account/listing call failed — set alongside LastUploadError but
+    // covers GetAccountTokenAsync/ListFolderAsync too, so a broken guest-account or folder
+    // listing (as opposed to an upload) can also be surfaced directly instead of only logged.
+    public string LastError { get; private set; } = "";
 
     private async Task<string?> GetUploadServerAsync()
     {
@@ -208,7 +219,11 @@ public class GofileService
     private async Task<List<GofileEntry>?> ListFolderAsync(string contentId, bool allowRetry)
     {
         var accountToken = await GetAccountTokenAsync();
-        if (accountToken == null) return null;
+        if (accountToken == null)
+        {
+            if (string.IsNullOrEmpty(LastError)) LastError = "could not obtain a guest account token";
+            return null;
+        }
 
         try
         {
@@ -229,7 +244,8 @@ public class GofileService
             var status = root?["status"]?.ToString() ?? "";
             if (!resp.IsSuccessStatusCode || status != "ok")
             {
-                _log($"[Gofile] Folder listing failed (HTTP {(int)resp.StatusCode}, status='{status}'): {body[..Math.Min(200, body.Length)]}");
+                LastError = $"folder listing failed: HTTP {(int)resp.StatusCode}, status='{status}' — {body[..Math.Min(200, body.Length)]}";
+                _log($"[Gofile] {LastError}");
                 if (allowRetry)
                 {
                     _log("[Gofile] Retrying once with a fresh guest account token...");
@@ -243,7 +259,8 @@ public class GofileService
             var children = root!["data"]?["children"] as JObject;
             if (children == null)
             {
-                _log($"[Gofile] Folder listing had no 'children' object despite status=ok: {body[..Math.Min(200, body.Length)]}");
+                LastError = $"folder listing had no 'children' object despite status=ok: {body[..Math.Min(200, body.Length)]}";
+                _log($"[Gofile] {LastError}");
                 return null;
             }
 
@@ -264,7 +281,8 @@ public class GofileService
         }
         catch (Exception ex)
         {
-            _log($"[Gofile] Folder listing error: {ex.Message}");
+            LastError = $"folder listing error: {ex.GetType().Name}: {ex.Message}";
+            _log($"[Gofile] {LastError}");
             return null;
         }
     }

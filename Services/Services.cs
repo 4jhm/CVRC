@@ -453,6 +453,11 @@ public class AppSettings
     // When set, every avatar that passes the size check gets copied here (as "<Name> - <Author>.vrca")
     // alongside whatever gets uploaded to Discord/GoFile — a local backup, independent of delivery.
     public string AvlogLocalArchivePath { get; set; } = "";
+    // 0 = disabled. Above this size, skip the Discord/GoFile upload attempt entirely and just
+    // rely on the local archive copy — large files are the ones most likely to hit GoFile's
+    // practical limits or take forever, so there's little point even trying. Requires
+    // AvlogLocalArchivePath to be set; otherwise there'd be nowhere for the file to go.
+    public double AvlogLocalOnlyAboveMb { get; set; } = 0;
     // Optional override for VRChat's disk cache folder (the one containing "__data" bundles) —
     // auto-detected by default (LocalLow\VRChat\VRChat\Cache-WindowsPlayer), but useful if
     // VRChat or its cache was moved to a non-standard drive/location.

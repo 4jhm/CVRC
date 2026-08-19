@@ -89,12 +89,13 @@ public class AvatarDatabaseController
             var entries = await _gofile.ListFolderAsync(ContentId);
             if (entries == null)
             {
+                var reason = string.IsNullOrEmpty(_gofile.LastError) ? "unknown error" : _gofile.LastError;
                 if (hadFallback)
                 {
-                    _core.SendToJS("log", new { msg = "[AvatarDb] Refresh failed, keeping cached list.", color = "warn" });
+                    _core.SendToJS("log", new { msg = $"[AvatarDb] Refresh failed, keeping cached list: {reason}", color = "warn" });
                     return;
                 }
-                _core.SendToJS("avatarDbResult", new { ok = false, message = "Could not load the avatar database. Check the Activity Log for details." });
+                _core.SendToJS("avatarDbResult", new { ok = false, message = $"Could not load the avatar database: {reason}" });
                 return;
             }
 

@@ -23,6 +23,7 @@ function avlogSaveConfig() {
         gofileToken: document.getElementById('avlogGofileToken').value.trim(),
         gofileFolder: document.getElementById('avlogGofileFolder').value.trim(),
         localArchivePath: document.getElementById('avlogLocalArchivePath').value.trim(),
+        localOnlyAboveMb: parseFloat(document.getElementById('avlogLocalOnlyAboveMb').value) || 0,
         cachePathOverride: document.getElementById('avlogCachePathOverride').value.trim(),
         cacheFileName: document.getElementById('avlogCacheFileName').value.trim(),
         logMySwitches: document.getElementById('avlogLogMySwitches').checked,
@@ -101,6 +102,7 @@ function handleAvatarLoggerStatus(data) {
     document.getElementById('avlogGofileToken').value = data.gofileToken || '';
     document.getElementById('avlogGofileFolder').value = data.gofileFolder || '';
     document.getElementById('avlogLocalArchivePath').value = data.localArchivePath || '';
+    document.getElementById('avlogLocalOnlyAboveMb').value = data.localOnlyAboveMb ?? 0;
     document.getElementById('avlogCachePathOverride').value = data.cachePathOverride || '';
     document.getElementById('avlogCacheFileName').value = data.cacheFileName || '';
     document.getElementById('avlogLogMySwitches').checked = data.logMySwitches !== false;
@@ -121,6 +123,7 @@ function handleAvatarLoggerStatus(data) {
 function _avlogStatusLabel(status) {
     return {
         posted: t('avlog.row.status.posted', 'Posted'),
+        local: t('avlog.row.status.local', 'Local only'),
         listed: t('avlog.row.status.listed', 'Listed'),
         error: t('avlog.row.status.error', 'Error'),
         skipped_small: t('avlog.row.status.skipped_small', 'Too small'),
@@ -342,6 +345,7 @@ function rerenderAvatarLoggerTranslations() {
         gofileToken: document.getElementById('avlogGofileToken')?.value,
         gofileFolder: document.getElementById('avlogGofileFolder')?.value,
         localArchivePath: document.getElementById('avlogLocalArchivePath')?.value,
+        localOnlyAboveMb: document.getElementById('avlogLocalOnlyAboveMb')?.value,
         cachePathOverride: document.getElementById('avlogCachePathOverride')?.value,
         cacheFileName: document.getElementById('avlogCacheFileName')?.value,
         logMySwitches: document.getElementById('avlogLogMySwitches')?.checked,

@@ -382,6 +382,18 @@ public class AvatarLoggerService : IDisposable
 
         TryArchiveLocalCopy(entry.CachePath, fileName);
 
+        // Large files are the ones most likely to hit GoFile's practical limits or just take
+        // forever to upload — past the configured size, skip the network attempt entirely and
+        // call it delivered once the local copy is down.
+        var localOnlyAbove = _core.Settings.AvlogLocalOnlyAboveMb;
+        if (localOnlyAbove > 0 && fileMb >= localOnlyAbove && !string.IsNullOrWhiteSpace(_core.Settings.AvlogLocalArchivePath))
+        {
+            entry.Status = "local";
+            entry.Note = $"saved locally only ({fileMb:0.#} MB is over the {localOnlyAbove:g} MB auto-local limit)";
+            AddToHistory(entry);
+            return;
+        }
+
         string? downloadLink = null;
         bool discordHasFile = mode != "gofile" && fileMb <= _core.Settings.AvlogMaxAttachmentMb;
 
@@ -699,7 +711,7 @@ public class AvatarLoggerService : IDisposable
 
     private void AddToHistory(AvatarLogEntry entry)
     {
-        if (entry.Status != "posted") return;
+        if (entry.Status != "posted" && entry.Status != "local") return;
         _history.RemoveAll(e => e.Key == entry.Key);
         _history.Add(entry);
         if (_history.Count > HistoryCap) _history.RemoveRange(0, _history.Count - HistoryCap);

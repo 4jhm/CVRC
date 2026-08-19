@@ -43,6 +43,7 @@ public class AvatarLoggerController
                 _core.Settings.AvlogLogMySwitches     = msg["logMySwitches"]?.Value<bool>() ?? true;
                 _core.Settings.AvlogIgnorePeople      = msg["ignorePeople"]?.ToObject<List<string>>() ?? new();
                 _core.Settings.AvlogLocalArchivePath  = msg["localArchivePath"]?.ToString() ?? "";
+                _core.Settings.AvlogLocalOnlyAboveMb  = msg["localOnlyAboveMb"]?.Value<double>() ?? 0;
                 _core.Settings.AvlogCachePathOverride = msg["cachePathOverride"]?.ToString() ?? "";
                 _core.Settings.AvlogCacheFileName     = msg["cacheFileName"]?.ToString()?.Trim() ?? "";
                 _core.Settings.Save();
@@ -144,6 +145,7 @@ public class AvatarLoggerController
             logMySwitches = _core.Settings.AvlogLogMySwitches,
             ignorePeople = _core.Settings.AvlogIgnorePeople,
             localArchivePath = _core.Settings.AvlogLocalArchivePath,
+            localOnlyAboveMb = _core.Settings.AvlogLocalOnlyAboveMb,
             cachePathOverride = _core.Settings.AvlogCachePathOverride,
             cacheFileName = _core.Settings.AvlogCacheFileName,
         });

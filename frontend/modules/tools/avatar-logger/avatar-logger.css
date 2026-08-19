@@ -115,6 +115,7 @@
     flex-shrink: 0;
 }
 .avlog-row-status.posted        { background: rgba(46,204,113,.15); color: #2ecc71; }
+.avlog-row-status.local         { background: rgba(56,132,255,.15); color: var(--accent); }
 .avlog-row-status.listed        { background: rgba(255,255,255,.08); color: var(--tx2); }
 .avlog-row-status.error         { background: rgba(224,108,117,.15); color: var(--err); }
 .avlog-row-status.skipped_small { background: rgba(255,255,255,.06); color: var(--tx3); }
