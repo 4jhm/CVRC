@@ -1,0 +1,40 @@
+name: Refresh Avatar Database
+
+# Regenerates data/avatar_database.json from the shared Gofile folder that backs the
+# in-app Avatar Database tool. GOFILE_PREMIUM_TOKEN is a Premium account token, kept only
+# as an encrypted repo secret — it is read here, server-side, and never appears in the
+# shipped app. See main/AvatarDatabaseController.cs and scripts/refresh-avatar-db.sh for
+# why: Gofile's folder-listing API is Premium-only, and a client-embedded token would be
+# extractable by anyone running the app.
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily at 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch current folder listing from Gofile
+        env:
+          GOFILE_PREMIUM_TOKEN: ${{ secrets.GOFILE_PREMIUM_TOKEN }}
+        run: |
+          chmod +x scripts/refresh-avatar-db.sh
+          ./scripts/refresh-avatar-db.sh
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/avatar_database.json
+          if git diff --cached --quiet; then
+            echo "No changes to the avatar database manifest."
+          else
+            git commit -m "Refresh avatar database manifest"
+            git push
+          fi
