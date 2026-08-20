@@ -343,19 +343,36 @@ function getCreatorBadgeHtml(u) {
     return `<span class="vrcn-badge" style="background:rgba(128,106,252,.18);color:#806afc;" title="${label}"><span class="msi" style="font-size:11px;">verified</span>${label}</span>`;
 }
 
-const CVRC_OWNER_USER_ID = 'usr_8da63924-dfe8-4ecd-a998-6c7670d2db10';
+// Registry of CVRC-recognized badge holders: a special glowing badge plus an animated name
+// glow, shown anywhere their name appears (sidebar, instance player list, previews, profile
+// modals). Fetched from a small public JSON file (see CvrcBadgesController.cs) rather than
+// hardcoded here, so adding someone doesn't require a new app release — just an edit + push
+// to data/cvrc_badges.json. Empty until that fetch resolves; `label` is optional per entry,
+// falling back to the theme's default badge text.
+let CVRC_BADGES = {};
+sendToCS({ action: 'getCvrcBadges' });
+
+function _cvrcBadgeClass(theme) { return theme === 'owner' ? 'cvrc-owner-badge' : `cvrc-badge-${theme}`; }
+function _cvrcNameClass(theme)  { return theme === 'owner' ? 'cvrc-owner-name'  : `cvrc-name-${theme}`; }
+function _cvrcDefaultLabel(theme) {
+    return theme === 'owner'
+        ? t('profiles.badges.cvrc_owner', 'OWNER OF CVRC')
+        : t('profiles.badges.cvrc_supporter', 'CVRC SUPPORTER');
+}
 
 function getCvrcOwnerBadgeHtml(userId) {
-    if (userId !== CVRC_OWNER_USER_ID) return '';
-    const label = t('profiles.badges.cvrc_owner', 'OWNER OF CVRC');
-    return `<span class="vrcn-badge cvrc-owner-badge" title="${label}"><span class="msi" style="font-size:13px;">verified</span>${label}</span>`;
+    const b = CVRC_BADGES[userId];
+    if (!b) return '';
+    const label = b.label || _cvrcDefaultLabel(b.theme);
+    return `<span class="vrcn-badge ${_cvrcBadgeClass(b.theme)}" title="${esc(label)}"><span class="msi" style="font-size:13px;">verified</span>${esc(label)}</span>`;
 }
 
 // Extra class to drop onto any element wrapping a display name, anywhere in the app,
-// to give the CVRC owner's name the red/black wave glow — used far more widely than
-// the badge above (sidebar, instance player list, previews, etc.), so it's its own helper.
+// to give a badge holder's name its themed wave glow — used far more widely than the
+// badge above (sidebar, instance player list, previews, etc.), so it's its own helper.
 function cvrcOwnerNameClass(userId) {
-    return userId === CVRC_OWNER_USER_ID ? ' cvrc-owner-name' : '';
+    const b = CVRC_BADGES[userId];
+    return b ? ` ${_cvrcNameClass(b.theme)}` : '';
 }
 
 const TRUST_RANK_MAX = 4;

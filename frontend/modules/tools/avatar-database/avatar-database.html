@@ -9,6 +9,15 @@
                         <div class="avdb-lock-error" id="avdbLockError" style="display:none;" data-i18n="avdb.locked.wrong">Incorrect password.</div>
                     </div>
                     <div class="avdb-unlocked-content" id="avdbUnlockedContent" style="display:none;">
+                        <div class="vrcn-panel-card" id="avdbMyFolderCard">
+                            <div class="vrcn-panel-card-header"><span class="msi">folder_special</span> <span data-i18n="avdb.myfolder.title">My Gofile Folder</span></div>
+                            <div class="set-desc" style="margin:12px 0 14px;" data-i18n="avdb.myfolder.desc">Save a link to your own Gofile folder here for quick access — it just opens in your browser, the same as the community database's "Open in Gofile" button.</div>
+                            <div class="avdb-lock-row">
+                                <input type="text" id="avdbMyFolderInput" class="vrcn-edit-field" placeholder="https://gofile.io/d/xxxxxxxx" style="flex:1;">
+                                <button class="vrcn-button" onclick="avdbSaveMyFolder()"><span class="msi" style="font-size:16px;">save</span> <span data-i18n="common.save">Save</span></button>
+                                <button class="vrcn-button" id="avdbMyFolderOpenBtn" onclick="avdbOpenMyFolder()" disabled><span class="msi" style="font-size:16px;">open_in_new</span> <span data-i18n="avdb.myfolder.open">Open</span></button>
+                            </div>
+                        </div>
                         <div class="vrcn-panel-card">
                             <div class="vrcn-panel-card-header"><span class="msi">view_in_ar</span> <span data-i18n="avdb.title">Avatar Database</span></div>
                             <div class="set-desc" style="margin:12px 0 14px;" data-i18n="avdb.desc">Downloadable avatars, browsable and sortable right here.</div>

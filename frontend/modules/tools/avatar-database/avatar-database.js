@@ -28,6 +28,29 @@ function avdbUnlock() {
     if (lockCard) lockCard.style.display = 'none';
     if (content) content.style.display = '';
     avdbLoad(false);
+    sendToCS({ action: 'avatarDbGetMyFolder' });
+}
+
+function handleAvatarDbMyFolder(data) {
+    const link = data?.link || '';
+    const input = document.getElementById('avdbMyFolderInput');
+    const openBtn = document.getElementById('avdbMyFolderOpenBtn');
+    if (input && document.activeElement !== input) input.value = link;
+    if (openBtn) openBtn.disabled = !link;
+}
+
+function avdbSaveMyFolder() {
+    const input = document.getElementById('avdbMyFolderInput');
+    const link = input ? input.value.trim() : '';
+    sendToCS({ action: 'avatarDbSaveMyFolder', link });
+    if (typeof showToast === 'function') showToast(true, t('avdb.myfolder.saved', 'Folder link saved.'));
+}
+
+function avdbOpenMyFolder() {
+    const input = document.getElementById('avdbMyFolderInput');
+    const link = input ? input.value.trim() : '';
+    if (!link) return;
+    sendToCS({ action: 'avatarDbOpenLink', url: link });
 }
 
 function avdbCheckUnlockState() {

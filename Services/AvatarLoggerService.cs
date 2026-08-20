@@ -12,6 +12,9 @@ public class AvatarLogEntry
     public string Name { get; set; } = "";
     public string Author { get; set; } = "";
     public string? Wearer { get; set; }
+    // Display name of the VRChat account that was logged in when this entry was recorded —
+    // lets a multi-account setup tell which account actually encountered a given avatar.
+    public string? Account { get; set; }
     public double? SizeMb { get; set; }
     public string? ThumbUrl { get; set; }
     public string? AvatarId { get; set; }
@@ -280,6 +283,8 @@ public class AvatarLoggerService : IDisposable
     {
         try
         {
+            var account = _core.VrcApi.IsLoggedIn ? _core.VrcApi.CurrentUserRaw?["displayName"]?.ToString() : null;
+
             var ignore = _core.Settings.AvlogIgnorePeople
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .Select(p => p.Trim().ToLowerInvariant())
@@ -297,7 +302,7 @@ public class AvatarLoggerService : IDisposable
                 // be force-uploaded via the row's Upload button if wanted.
                 Emit(new AvatarLogEntry
                 {
-                    Key = key, When = when, Name = name, Author = author, Wearer = wearer,
+                    Key = key, When = when, Name = name, Author = author, Wearer = wearer, Account = account,
                     SizeMb = sizeMb, CachePath = FindCacheFile(when), Status = "repeat",
                     Note = "already logged before (use \"Forget Logged Avatars\" to reset, or Upload to force it again)",
                 });
@@ -315,7 +320,7 @@ public class AvatarLoggerService : IDisposable
                 RecordSeen(key, when);
                 Emit(new AvatarLogEntry
                 {
-                    Key = key, When = when, Name = name, Author = author, Wearer = wearer,
+                    Key = key, When = when, Name = name, Author = author, Wearer = wearer, Account = account,
                     SizeMb = sizeMb, ThumbUrl = thumb, AvatarId = avatarId, Visibility = visibility,
                     CachePath = FindCacheFile(when), Status = "skipped_small",
                     Note = $"under {_core.Settings.AvlogMinSizeMb:g} MB — click Upload to send it anyway",
@@ -328,7 +333,7 @@ public class AvatarLoggerService : IDisposable
 
             var entry = new AvatarLogEntry
             {
-                Key = key, When = when, Name = name, Author = author, Wearer = wearer,
+                Key = key, When = when, Name = name, Author = author, Wearer = wearer, Account = account,
                 SizeMb = sizeMb, ThumbUrl = thumb, AvatarId = avatarId, Visibility = visibility,
                 CachePath = cachePath, Status = "listed",
             };

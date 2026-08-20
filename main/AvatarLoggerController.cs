@@ -158,6 +158,7 @@ public class AvatarLoggerController
         name = e.Name,
         author = e.Author,
         wearer = e.Wearer,
+        account = e.Account,
         sizeMb = e.SizeMb,
         thumbUrl = e.ThumbUrl,
         avatarId = e.AvatarId,

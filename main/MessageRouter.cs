@@ -2772,7 +2772,13 @@ public partial class AppShell
 
                 case "avatarDbLoad":
                 case "avatarDbOpenLink":
+                case "avatarDbGetMyFolder":
+                case "avatarDbSaveMyFolder":
                     _avatarDbCtrl.HandleMessage(action, msg);
+                    break;
+
+                case "getCvrcBadges":
+                    _cvrcBadgesCtrl.HandleMessage(action, msg);
                     break;
 
                 case "avlogConfig":

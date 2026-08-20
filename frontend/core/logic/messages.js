@@ -1051,6 +1051,12 @@ case 'vrcNews':
             case 'avatarDbResult':
                 if (typeof handleAvatarDbResult === 'function') handleAvatarDbResult(payload);
                 break;
+            case 'avatarDbMyFolder':
+                if (typeof handleAvatarDbMyFolder === 'function') handleAvatarDbMyFolder(payload);
+                break;
+            case 'cvrcBadges':
+                CVRC_BADGES = payload?.badges || {};
+                break;
             case 'avatarLoggerStatus':
                 if (typeof handleAvatarLoggerStatus === 'function') handleAvatarLoggerStatus(payload);
                 break;

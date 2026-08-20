@@ -301,7 +301,8 @@ function _avlogRenderHistory() {
     const entries = q
         ? _avlogHistoryEntries.filter(e =>
             (e.name || '').toLowerCase().includes(q) ||
-            (e.wearer || '').toLowerCase().includes(q))
+            (e.wearer || '').toLowerCase().includes(q) ||
+            (e.account || '').toLowerCase().includes(q))
         : _avlogHistoryEntries;
 
     if (entries.length === 0) {
@@ -322,6 +323,7 @@ function _avlogRenderHistory() {
             <div class="avlog-history-name" title="${esc(e.name)}">${esc(e.name || '(unnamed avatar)')}</div>
             <div class="avlog-history-meta">${esc(e.author || '')}</div>
             ${e.wearer ? `<div class="avlog-history-meta">${esc(t('avlog.row.worn_by', 'worn by'))} ${esc(e.wearer)}</div>` : ''}
+            ${e.account ? `<div class="avlog-history-meta">${esc(t('avlog.row.logged_on', 'logged on'))} ${esc(e.account)}</div>` : ''}
             ${whenText ? `<div class="avlog-history-when" title="${esc(whenText)}"><span class="msi" style="font-size:11px;">schedule</span> ${esc(whenText)}</div>` : ''}
             ${e.downloadLink ? `<a class="vrcn-button" href="#" onclick="sendToCS({action:'avatarDbOpenLink', url:'${jsq(e.downloadLink)}'});return false;"><span class="msi" style="font-size:14px;">download</span> ${t('avdb.download', 'Download')}</a>` : ''}
         </div>

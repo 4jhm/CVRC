@@ -62,6 +62,7 @@ public partial class AppShell
     private AvatarScalingController _asCtrl = null!;
     private RelayController _relayCtrl = null!;
     private AvatarDatabaseController _avatarDbCtrl = null!;
+    private CvrcBadgesController _cvrcBadgesCtrl = null!;
     private AvatarLoggerController _avatarLoggerCtrl = null!;
     private EmojiMakerController _emojiMakerCtrl = null!;
     private SnipeController _snipeCtrl = null!;
@@ -267,6 +268,7 @@ public partial class AppShell
 #endif
         _relayCtrl = new RelayController(_core, _friends, _instance, _notifications, _vroCtrl);
         _avatarDbCtrl = new AvatarDatabaseController(_core);
+        _cvrcBadgesCtrl = new CvrcBadgesController(_core);
         _avatarLoggerCtrl = new AvatarLoggerController(_core, Invoke);
         _emojiMakerCtrl = new EmojiMakerController(_core);
         _ssCtrl.Start();

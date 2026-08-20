@@ -51,11 +51,55 @@ public class AvatarDatabaseController
             case "avatarDbOpenLink":
                 {
                     var url = msg["url"]?.ToString() ?? "https://gofile.io/d/dLV8UU";
+                    // "My Folder" links are free-text user input rather than one of our own
+                    // hardcoded URLs — restrict to http(s) so a stray paste can't ShellExecute
+                    // a local file or something else unexpected.
+                    if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
+                        !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _core.SendToJS("log", new { msg = $"[AvatarDb] Refused to open non-http(s) link: {url}", color = "err" });
+                        break;
+                    }
                     try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo { FileName = url, UseShellExecute = true }); }
                     catch (Exception ex) { _core.SendToJS("log", new { msg = $"[AvatarDb] Could not open link: {ex.Message}", color = "err" }); }
                 }
                 break;
+
+            case "avatarDbGetMyFolder":
+                _core.SendToJS("avatarDbMyFolder", new { link = LoadMyFolderLink() });
+                break;
+
+            case "avatarDbSaveMyFolder":
+                {
+                    var link = msg["link"]?.ToString()?.Trim() ?? "";
+                    SaveMyFolderLink(link);
+                    _core.SendToJS("avatarDbMyFolder", new { link });
+                }
+                break;
         }
+    }
+
+    private static readonly string MyFolderLinkPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VRCNext", "Caches", "avatardb_myfolder.json");
+
+    private static string LoadMyFolderLink()
+    {
+        try
+        {
+            if (!File.Exists(MyFolderLinkPath)) return "";
+            return JObject.Parse(File.ReadAllText(MyFolderLinkPath))["link"]?.ToString() ?? "";
+        }
+        catch { return ""; }
+    }
+
+    private static void SaveMyFolderLink(string link)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(MyFolderLinkPath)!);
+            File.WriteAllText(MyFolderLinkPath, JObject.FromObject(new { link }).ToString(Formatting.None));
+        }
+        catch { /* best-effort — worst case the field is just empty again next launch */ }
     }
 
     private async Task LoadAsync(bool force)
