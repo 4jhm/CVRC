@@ -37,7 +37,10 @@ while :; do
     exit 1
   fi
 
-  page_files=$(echo "$resp" | jq '[.data.children[]? | select(.type == "file") | {name: .name, sizeBytes: .size, createTime: .createTime, link: .link}]')
+  # Deliberately no download link here: the manifest is a public, permanently-versioned
+  # GitHub file, and the shared folder is public anyway — the app opens the folder page for
+  # downloads instead of shipping a ready-made bulk link-dump of every file in it.
+  page_files=$(echo "$resp" | jq '[.data.children[]? | select(.type == "file") | {name: .name, sizeBytes: .size, createTime: .createTime}]')
   all_files=$(jq -c -n --argjson a "$all_files" --argjson b "$page_files" '$a + $b')
 
   has_next=$(echo "$resp" | jq -r '.metadata.hasNextPage // false')

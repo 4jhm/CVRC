@@ -92,7 +92,7 @@
   "avdb.empty": "No files found.",
   "avdb.error": "Could not load the avatar database.",
   "avdb.unknown_date": "Unknown date",
-  "avdb.download": "Download",
+  "avdb.download": "Open in Gofile",
   "avdb.locked.desc": "This section is password-protected. Enter the password to browse.",
   "avdb.locked.placeholder": "Password",
   "avdb.locked.unlock": "Unlock",

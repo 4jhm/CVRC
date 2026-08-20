@@ -3,7 +3,8 @@ using Newtonsoft.Json.Linq;
 
 namespace VRCNext;
 
-public record AvatarDbEntry(string Name, long SizeBytes, long CreateTimeUnix, string DownloadLink);
+// No download link on purpose — see the workflow that generates the manifest for why.
+public record AvatarDbEntry(string Name, long SizeBytes, long CreateTimeUnix);
 
 // "Avatar Database" tool — browses a shared Gofile folder of downloadable avatar files.
 //
@@ -131,8 +132,7 @@ public class AvatarDatabaseController
                 .Select(f => new AvatarDbEntry(
                     Name: f["name"]?.ToString() ?? "unknown",
                     SizeBytes: f["sizeBytes"]?.Value<long>() ?? 0,
-                    CreateTimeUnix: f["createTime"]?.Value<long>() ?? 0,
-                    DownloadLink: f["link"]?.ToString() ?? ""))
+                    CreateTimeUnix: f["createTime"]?.Value<long>() ?? 0))
                 .ToList();
 
             _memEntries = entries;
@@ -159,7 +159,6 @@ public class AvatarDatabaseController
                 name = e.Name,
                 sizeBytes = e.SizeBytes,
                 createTime = e.CreateTimeUnix,
-                link = e.DownloadLink,
             })
             .ToList();
         _core.SendToJS("avatarDbResult", new { ok = true, files });

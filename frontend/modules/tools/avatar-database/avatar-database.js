@@ -112,13 +112,13 @@ function avdbRender() {
             <span class="msi avdb-card-icon">${_avdbExtIcon(f.name)}</span>
             <div class="avdb-card-name" title="${esc(f.name)}">${esc(f.name)}</div>
             <div class="avdb-card-meta">${esc(_avdbFormatSize(f.sizeBytes))} · ${esc(_avdbFormatDate(f.createTime))}</div>
-            <button class="vrcn-button avdb-card-download" onclick="avdbDownload('${jsq(f.link)}')"><span class="msi" style="font-size:15px;">download</span> <span data-i18n="avdb.download">Download</span></button>
+            <button class="vrcn-button avdb-card-download" onclick="avdbDownload()"><span class="msi" style="font-size:15px;">open_in_new</span> <span data-i18n="avdb.download">Open in Gofile</span></button>
         </div>
     `).join('');
 }
 
-function avdbDownload(link) {
-    sendToCS({ action: 'avatarDbOpenLink', url: link });
+function avdbDownload() {
+    sendToCS({ action: 'avatarDbOpenLink' });
 }
 
 function rerenderAvatarDbTranslations() {
