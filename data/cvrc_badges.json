@@ -2,5 +2,7 @@
   "usr_8da63924-dfe8-4ecd-a998-6c7670d2db10": { "theme": "owner" },
   "usr_348cc727-8559-4ed8-99e1-80705b1f25a7": { "theme": "owner" },
   "usr_42030fae-042f-4458-8ce9-4152b21197ef": { "theme": "mono", "label": "Tester Upxxet" },
-  "usr_45d9d4c4-586d-4069-a397-d3e0b4f6d818": { "theme": "silly", "label": "Silly" }
+  "usr_45d9d4c4-586d-4069-a397-d3e0b4f6d818": { "theme": "silly", "label": "Silly" },
+  "usr_8835bab5-167c-4f2f-b020-ec3b7ee1341a": { "theme": "fault", "label": "Fault" },
+  "usr_216d0390-d41a-4efe-9f40-fdec71431f74": { "theme": "femboi", "label": "Femboi" }
 }
