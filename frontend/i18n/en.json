@@ -47,6 +47,8 @@
   "avlog.settings.ignore_people": "Ignore List",
   "avlog.settings.test_webhook": "Test Webhook",
   "avlog.settings.clear_seen": "Forget Logged Avatars",
+  "avlog.settings.browse_cache": "Browse My Cache",
+  "avlog.settings.browse_cache_desc": "Not detecting anything? This lists every cache file directly into the feed below (unnamed — check size/date), no log parsing required.",
   "avlog.feed.title": "Live Feed",
   "avlog.feed.empty": "No avatars detected yet this session.",
   "avlog.feed.sort.time": "Time",

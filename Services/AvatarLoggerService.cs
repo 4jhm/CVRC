@@ -755,6 +755,50 @@ public class AvatarLoggerService : IDisposable
         return results.OrderBy(r => r.Diff).Take(max).Select(r => r.Candidate).ToList();
     }
 
+    // Manual escape hatch for setups where the automatic log-based pipeline finds nothing at all
+    // (non-standard VRChat install, a log line format the parser doesn't recognize, etc.) — lists
+    // every valid bundle in the configured cache directly, with no dependency on the log watcher
+    // having detected anything first. Each one is emitted into the live feed unnamed (there's no
+    // download-log line to read a name from), so the user can recognize theirs by size/date and
+    // use the existing Upload / Upload to Files / Reveal buttons on it like any detected entry.
+    public int BrowseCache()
+    {
+        var overridePath = _core.Settings.AvlogCachePathOverride;
+        var cache = !string.IsNullOrWhiteSpace(overridePath)
+            ? overridePath
+            : AutoCacheDir(VrcPathsHelper.AppDataDir());
+        if (!Directory.Exists(cache)) return 0;
+
+        var targetFileName = _core.Settings.AvlogCacheFileName;
+        var found = new List<(string Path, double SizeMb, DateTime Modified)>();
+        foreach (var data in IterDataFiles(cache, targetFileName))
+        {
+            var key = "browse:" + data;
+            if (_claimedFiles.Contains(data) || _liveEntries.ContainsKey(key)) continue;
+            if (!LooksLikeAssetBundle(data)) continue;
+            DateTime touch;
+            long len;
+            try
+            {
+                touch = File.GetLastWriteTime(data);
+                len = new FileInfo(data).Length;
+            }
+            catch { continue; }
+            found.Add((data, len / (1024.0 * 1024.0), touch));
+        }
+
+        foreach (var (path, sizeMb, modified) in found.OrderByDescending(f => f.Modified).Take(60))
+        {
+            Emit(new AvatarLogEntry
+            {
+                Key = "browse:" + path, When = modified, Name = "", Author = "",
+                SizeMb = sizeMb, CachePath = path, Status = "listed",
+                Note = "Picked from your cache folder, not detected from the log — check the size/date to confirm this is yours before uploading.",
+            });
+        }
+        return found.Count;
+    }
+
     // ---- persistence ----
 
     private void LoadSeen()

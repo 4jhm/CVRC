@@ -134,6 +134,25 @@ public class AvatarLoggerController
                 break;
             }
 
+            // Manual "browse my cache" — for setups where the log-based pipeline finds nothing
+            // (see AvatarLoggerService.BrowseCache). Independent of whether the log watcher is
+            // even running correctly.
+            case "avlogBrowseCache":
+            {
+                _ = Task.Run(() =>
+                {
+                    var count = Service.BrowseCache();
+                    _invoke(() => _core.SendToJS("toast", new
+                    {
+                        ok = count > 0,
+                        msg = count > 0
+                            ? $"Found {count} cache file(s) — check the Live Feed below."
+                            : "No cache files found. Check your VRChat Cache Folder setting.",
+                    }));
+                });
+                break;
+            }
+
             case "avlogBrowseCachePath":
             {
                 var defaultDir = _core.Settings.AvlogCachePathOverride;

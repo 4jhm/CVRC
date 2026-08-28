@@ -51,6 +51,13 @@ function avlogClearSeen() {
     sendToCS({ action: 'avlogClearSeen' });
 }
 
+// Manual escape hatch for setups where auto-detection isn't finding anything — lists every cache
+// file directly into the Live Feed below (unnamed, since there's no log line to read a name
+// from), independent of whether the log watcher itself is working.
+function avlogBrowseCache() {
+    sendToCS({ action: 'avlogBrowseCache' });
+}
+
 function avlogManualUpload(key) {
     sendToCS({ action: 'avlogManualUpload', key });
 }
