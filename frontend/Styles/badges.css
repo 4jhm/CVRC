@@ -57,7 +57,8 @@
 .cvrc-badge-mono,
 .cvrc-badge-silly,
 .cvrc-badge-fault,
-.cvrc-badge-femboi {
+.cvrc-badge-femboi,
+.cvrc-badge-feet {
     font-size: calc(13px + var(--fs-off, 0px)) !important;
     font-weight: 800 !important;
     padding: 5px 12px !important;
@@ -111,6 +112,11 @@
     border: 1px solid #ff6ec7;
     box-shadow: 0 0 12px rgba(255,110,199,.55);
 }
+.cvrc-badge-feet {
+    background: #5a5a5a !important;
+    border: 1px solid #ffffff;
+    box-shadow: 0 0 12px rgba(255,255,255,.5);
+}
 .vrcn-local-badge { display: inline-flex; align-items: center; gap: 2px; font-size: calc(7px + var(--fs-off, 0px)); font-weight: 600; padding: 2px 5px; border-radius: 4px; background: #2a0a1f; color: #ff5fbf; border: 1px solid #ff5fbf; box-shadow: 0 0 7px #ff5fbf88; text-shadow: 0 0 5px #ff5fbf99; letter-spacing: .4px; }
 .cvrc-owner-name,
 .cvrc-name-gold,
@@ -120,7 +126,8 @@
 .cvrc-name-mono,
 .cvrc-name-silly,
 .cvrc-name-fault,
-.cvrc-name-femboi {
+.cvrc-name-femboi,
+.cvrc-name-feet {
     -webkit-text-fill-color: transparent !important;
     color: transparent !important;
     font-weight: 800 !important;
@@ -188,6 +195,13 @@
     -webkit-background-clip: text;
     background-clip: text;
     filter: drop-shadow(0 0 4px rgba(255,110,199,.55));
+}
+.cvrc-name-feet {
+    background: linear-gradient(90deg, #ffffff 0%, #9a9a9a 20%, #ffffff 40%, #9a9a9a 60%, #ffffff 80%, #9a9a9a 100%);
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    filter: drop-shadow(0 0 4px rgba(255,255,255,.55));
 }
 @keyframes cvrc-name-wave {
     0%   { background-position: 0% 50%; }

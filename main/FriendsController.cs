@@ -927,6 +927,36 @@ public class FriendsController
                 break;
             }
 
+            // Bulk-send from the Adder tool (select people out of the current instance, then add
+            // some/all of them at once) — same rate-limited loop as vrcImportFriendsList, just
+            // reported under its own event names so it can't cross-talk with that tool's own
+            // progress UI if both happened to be on screen.
+            case "adderSendRequests":
+            {
+                var ids = (msg["userIds"] as JArray)?
+                    .Select(x => x.ToString())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .Distinct()
+                    .ToList() ?? new List<string>();
+                _ = Task.Run(async () =>
+                {
+                    int total = ids.Count, done = 0, ok = 0, failed = 0;
+                    foreach (var uid in ids)
+                    {
+                        done++;
+                        bool sent;
+                        try { sent = await _core.Friends.SendFriendRequestAsync(uid); }
+                        catch { sent = false; }
+                        if (sent) ok++; else failed++;
+                        int pDone = done, pOk = ok, pFailed = failed;
+                        _core.SendToJS("adderProgress", new { done = pDone, total, ok = pOk, failed = pFailed });
+                        if (done < total) await Task.Delay(1500);
+                    }
+                    _core.SendToJS("adderDone", new { total, ok, failed });
+                });
+                break;
+            }
+
             case "vrcUnfriend":
             {
                 var uid = msg["userId"]?.ToString();
@@ -1093,6 +1123,43 @@ public class FriendsController
                         if (ok) { _core.SendToJS("vrcModDone", new { userId = uid, type = "mute", active = true }); await LogModerationEventAsync(uid,"mute", true); }
                     });
                 }
+                break;
+            }
+
+            // Bulk block from the Blocker tool (filter the current instance by trust rank, select
+            // some/all, block at once). Mirrors adderSendRequests' rate-limited loop, but drives
+            // the existing single-block plumbing (ModerateUserAsync + vrcModDone + activity log)
+            // per user, so blockedData/People > Blocked/profile modals all stay in sync exactly
+            // as if each block had been done one at a time from the UI.
+            case "blockerSendBlocks":
+            {
+                var ids = (msg["userIds"] as JArray)?
+                    .Select(x => x.ToString())
+                    .Where(s => !string.IsNullOrEmpty(s))
+                    .Distinct()
+                    .ToList() ?? new List<string>();
+                _ = Task.Run(async () =>
+                {
+                    int total = ids.Count, done = 0, ok = 0, failed = 0;
+                    foreach (var uid in ids)
+                    {
+                        done++;
+                        bool success;
+                        try { success = await _core.PlayerModeration.ModerateUserAsync(uid, "block"); }
+                        catch { success = false; }
+                        if (success)
+                        {
+                            ok++;
+                            _core.SendToJS("vrcModDone", new { userId = uid, type = "block", active = true });
+                            await LogModerationEventAsync(uid, "block", true);
+                        }
+                        else failed++;
+                        int pDone = done, pOk = ok, pFailed = failed;
+                        _core.SendToJS("blockerProgress", new { done = pDone, total, ok = pOk, failed = pFailed });
+                        if (done < total) await Task.Delay(1500);
+                    }
+                    _core.SendToJS("blockerDone", new { total, ok, failed });
+                });
                 break;
             }
 

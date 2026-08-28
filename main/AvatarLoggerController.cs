@@ -94,6 +94,25 @@ public class AvatarLoggerController
                 break;
             }
 
+            // User picked the correct file out of the candidate list (own-avatar switches list
+            // every cache file found, since there's no reliable automatic match — see
+            // AvatarLoggerService.FindCacheCandidates). Swap it in as the entry's source file and
+            // run it through the normal delivery pipeline exactly like the Upload button does.
+            case "avlogUseCandidate":
+            {
+                var key = msg["key"]?.ToString() ?? "";
+                var path = msg["path"]?.ToString() ?? "";
+                var entry = Service.FindEntry(key);
+                if (entry == null || string.IsNullOrEmpty(path) || !File.Exists(path)) break;
+                entry.CachePath = path;
+                _ = Task.Run(async () =>
+                {
+                    await Service.DeliverAsync(entry);
+                    _invoke(() => _core.SendToJS("avatarLoggerEvent", ToJs(entry)));
+                });
+                break;
+            }
+
             case "avlogTestWebhook":
             {
                 var url = msg["webhookUrl"]?.ToString() ?? _core.Settings.AvlogWebhookUrl;
@@ -168,6 +187,7 @@ public class AvatarLoggerController
         status = e.Status,
         note = e.Note,
         uploadProgress = e.UploadProgress,
+        cacheCandidates = e.CacheCandidates?.Select(c => new { path = c.Path, sizeMb = c.SizeMb, modifiedIso = c.Modified.ToString("o") }),
     };
 
     // Called on app shutdown so the background tail loop stops cleanly.

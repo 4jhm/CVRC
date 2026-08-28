@@ -1,0 +1,62 @@
+/* === Adder Tool === */
+
+/* A plain vertical list rather than .search-grid's fixed 240px card columns — each row needs
+   room for a rank-free trailing group (Add button + checkbox), which a narrow card can't fit. */
+.adder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.adder-list .vrcn-user-item { flex-wrap: wrap; }
+
+.adder-select-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.adder-selected-count {
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx2);
+    white-space: nowrap;
+    margin-right: 4px;
+}
+
+.adder-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.adder-row-add-btn {
+    flex-shrink: 0;
+    padding: 5px 10px;
+}
+
+.adder-row-check {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.adder-progress-text {
+    color: var(--tx3);
+    font-size: calc(12px + var(--fs-off, 0px));
+}
+
+.adder-progress-done {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(var(--ok-rgb, 80, 200, 120), .12);
+    border: 1px solid rgba(var(--ok-rgb, 80, 200, 120), .30);
+    border-radius: 8px;
+    font-size: calc(13px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx1);
+}

@@ -592,6 +592,7 @@ window.external.receiveMessage(rawMsg => {
                         blockedData = (blockedData || []).filter(e => e.targetUserId !== modUid);
                     }
                     renderModList('blockedList', blockedData, 'block');
+                    if (typeof onBlockerInstanceLive === 'function') onBlockerInstanceLive();
                 } else if (modType === 'mute') {
                     if (modActive) {
                         if (!Array.isArray(mutedData)) mutedData = [];
@@ -1080,6 +1081,18 @@ case 'vrcNews':
                 break;
             case 'importFriendsDone':
                 if (typeof handleImportFriendsDone === 'function') handleImportFriendsDone(payload);
+                break;
+            case 'adderProgress':
+                if (typeof handleAdderProgress === 'function') handleAdderProgress(payload);
+                break;
+            case 'adderDone':
+                if (typeof handleAdderDone === 'function') handleAdderDone(payload);
+                break;
+            case 'blockerProgress':
+                if (typeof handleBlockerProgress === 'function') handleBlockerProgress(payload);
+                break;
+            case 'blockerDone':
+                if (typeof handleBlockerDone === 'function') handleBlockerDone(payload);
                 break;
             case 'emojiSheetSaved':
                 if (typeof onEmojiSheetSaved === 'function') onEmojiSheetSaved(payload);

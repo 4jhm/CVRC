@@ -33,6 +33,8 @@ const NAV_ITEMS_DEF = {
     'avatar-logger':    { icon: 'terminal',         tab: 31, i18n: 'nav.avatar_logger',      label: 'Avatar Logger',    defaultFolder: 'folder-tools' },
     'emoji-maker':      { icon: 'emoji_emotions',   tab: 32, i18n: 'nav.emoji_maker',        label: 'Emoji Maker',      defaultFolder: 'folder-tools' },
     'osc-radial':       { icon: 'target',           tab: 33, i18n: 'nav.osc_radial',         label: 'OSC Radial Menu',  defaultFolder: 'folder-tools', locked: true },
+    'adder':            { icon: 'group_add',         tab: 34, i18n: 'nav.adder',              label: 'Adder',            defaultFolder: 'folder-tools' },
+    'blocker':          { icon: 'block',             tab: 35, i18n: 'nav.blocker',             label: 'Blocker',          defaultFolder: 'folder-tools' },
 };
 
 const NAV_ICON_OPTIONS = [
@@ -59,7 +61,7 @@ const NAV_ICON_OPTIONS = [
     'mark_chat_unread','question_answer','sms',
     // Status / Badges
     'flag','label','new_releases','workspace_premium','military_tech',
-    'verified','shield','key','vpn_key','security','privacy_tip','info','warning',
+    'verified','shield','key','vpn_key','security','privacy_tip','info','warning','block',
     // Navigation / Location
     'location_on','place','directions','navigation','pin_drop','my_location','public','language',
     // Time
@@ -92,7 +94,7 @@ const NAV_DEFAULT_LAYOUT = [
             'chatbox','media-relay','space-flight','frame-shot','osc-tool','youtube-fix',
             'activity-log','mutual-network','time-spent','voice-fight',
             'discord-presence','vr-overlay','permini','kikitan-xd','event-snipe','avatar-scaling','action-flow',
-            'status-schedule','vrc-accounts','avatar-database','direct-access','avatar-logger','emoji-maker','osc-radial',
+            'status-schedule','vrc-accounts','avatar-database','direct-access','avatar-logger','emoji-maker','osc-radial','adder','blocker',
         ],
     },
     { type: 'item', key: 'settings' },

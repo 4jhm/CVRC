@@ -1,0 +1,62 @@
+/* === Blocker Tool === */
+
+/* A plain vertical list rather than .search-grid's fixed 240px card columns — each row needs
+   room for a rank badge + Block button + checkbox, which a narrow card can't fit. */
+.blocker-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.blocker-list .vrcn-user-item { flex-wrap: wrap; }
+
+.blocker-select-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.blocker-selected-count {
+    font-size: calc(12px + var(--fs-off, 0px));
+    color: var(--tx2);
+    white-space: nowrap;
+    margin-right: 4px;
+}
+
+.blocker-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.blocker-row-block-btn {
+    flex-shrink: 0;
+    padding: 5px 10px;
+}
+
+.blocker-row-check {
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.blocker-progress-text {
+    color: var(--tx3);
+    font-size: calc(12px + var(--fs-off, 0px));
+}
+
+.blocker-progress-done {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(var(--ok-rgb, 80, 200, 120), .12);
+    border: 1px solid rgba(var(--ok-rgb, 80, 200, 120), .30);
+    border-radius: 8px;
+    font-size: calc(13px + var(--fs-off, 0px));
+    font-weight: 600;
+    color: var(--tx1);
+}

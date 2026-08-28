@@ -27,6 +27,17 @@ public class AvatarLogEntry
     public string? Note { get; set; }
     // 0-100 while Status == "uploading"; meaningless otherwise.
     public int UploadProgress { get; set; }
+    // Populated only for own-avatar switches (no download event to reliably correlate against a
+    // cache write — see FindCacheCandidates). Every valid bundle found in the cache, so the UI can
+    // list them by size/recency and let the user pick theirs manually.
+    public List<CacheCandidate>? CacheCandidates { get; set; }
+}
+
+public class CacheCandidate
+{
+    public string Path { get; set; } = "";
+    public double SizeMb { get; set; }
+    public DateTime Modified { get; set; }
 }
 
 // Watches VRChat's log for freshly-downloaded avatars and posts them to Discord/GoFile.
@@ -227,7 +238,7 @@ public class AvatarLoggerService : IDisposable
         var w = ParseTs(m.Groups[1].Value);
         var (name, author) = SplitNameAuthor(m.Groups[2].Value);
         if (string.IsNullOrEmpty(name)) return;
-        _ = ProcessAvatarAsync(name, author, w, TakeDownloadSize(w), FindWearer(name, w));
+        _ = ProcessAvatarAsync(name, author, w, TakeDownloadSize(w), FindWearer(name, w), fromSwitch: false);
     }
 
     private void FlushPendingMySwitches(DateTime now)
@@ -239,7 +250,7 @@ public class AvatarLoggerService : IDisposable
             if (now - when < SwitchSettle) { still.Add((when, name, wearer)); continue; }
             if (_postedNames.TryGetValue(name, out var last) && (when - last).Duration() < TimeSpan.FromMinutes(5))
                 continue; // the download path already handled this avatar
-            _ = ProcessAvatarAsync(name, "", when, null, wearer);
+            _ = ProcessAvatarAsync(name, "", when, null, wearer, fromSwitch: true);
         }
         _pendingMy.Clear();
         _pendingMy.AddRange(still);
@@ -279,7 +290,7 @@ public class AvatarLoggerService : IDisposable
 
     // ---- per-avatar pipeline ----
 
-    private async Task ProcessAvatarAsync(string name, string author, DateTime when, double? sizeMb, string? wearer)
+    private async Task ProcessAvatarAsync(string name, string author, DateTime when, double? sizeMb, string? wearer, bool fromSwitch)
     {
         try
         {
@@ -336,6 +347,10 @@ public class AvatarLoggerService : IDisposable
                 Key = key, When = when, Name = name, Author = author, Wearer = wearer, Account = account,
                 SizeMb = sizeMb, ThumbUrl = thumb, AvatarId = avatarId, Visibility = visibility,
                 CachePath = cachePath, Status = "listed",
+                // Own-avatar switches have no download event to correlate a single cache file
+                // against, so a lone "best guess" can't be trusted — hand the user every valid
+                // bundle in the cache instead, so they can recognize theirs by size/recency.
+                CacheCandidates = fromSwitch ? FindCacheCandidates(when) : null,
             };
 
             if (!auto || cachePath == null)
@@ -642,6 +657,34 @@ public class AvatarLoggerService : IDisposable
         }
     }
 
+    // VRChat's asset bundles (the "__data" cache files, once unpacked) are Unity "UnityFS"
+    // bundles regardless of nesting depth. Timestamp proximity alone isn't enough to trust a
+    // match: for an avatar that's already fully cached (typically your own — VRChat doesn't
+    // re-download/re-touch it just because you switched to it), nothing in the cache tree was
+    // genuinely written at switch time, so the "closest by timestamp" candidate can be some
+    // unrelated file that happened to be touched around then. Checking the header rejects those
+    // false matches instead of silently archiving/uploading garbage.
+    private static bool LooksLikeAssetBundle(string path)
+    {
+        try
+        {
+            using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+            if (fs.Length < 7) return false;
+            var header = new byte[7];
+            int read = 0;
+            while (read < 7)
+            {
+                int n = fs.Read(header, read, 7 - read);
+                if (n <= 0) break;
+                read += n;
+            }
+            if (read < 7) return false;
+            var sig = System.Text.Encoding.ASCII.GetString(header);
+            return sig is "UnityFS" or "UnityWe" or "UnityRa"; // FS / Web / Raw bundle formats
+        }
+        catch { return false; }
+    }
+
     private string? FindCacheFile(DateTime when)
     {
         var overridePath = _core.Settings.AvlogCachePathOverride;
@@ -675,9 +718,41 @@ public class AvatarLoggerService : IDisposable
             }
             var diff = Math.Abs((touch - whenTicks).TotalSeconds);
             if (diff > 300) continue;
+            if (!LooksLikeAssetBundle(data)) continue;
             if (best == null || diff < best.Value.Score) best = (diff, data);
         }
         return best?.Path;
+    }
+
+    // Every valid bundle in the cache tree, sorted by closeness to `when` (nearest first) so the
+    // most likely match still shows up first — but unlike FindCacheFile this doesn't collapse to
+    // one guess or apply a time cutoff, since for an own avatar there may be no genuinely-fresh
+    // write to find at all. Capped so a huge cache doesn't flood the UI with candidates.
+    private List<CacheCandidate> FindCacheCandidates(DateTime when, int max = 40)
+    {
+        var overridePath = _core.Settings.AvlogCachePathOverride;
+        var cache = !string.IsNullOrWhiteSpace(overridePath)
+            ? overridePath
+            : AutoCacheDir(VrcPathsHelper.AppDataDir());
+        if (!Directory.Exists(cache)) return new();
+
+        var targetFileName = _core.Settings.AvlogCacheFileName;
+        var results = new List<(double Diff, CacheCandidate Candidate)>();
+        foreach (var data in IterDataFiles(cache, targetFileName))
+        {
+            if (!LooksLikeAssetBundle(data)) continue;
+            DateTime touch;
+            long len;
+            try
+            {
+                touch = File.GetLastWriteTime(data);
+                len = new FileInfo(data).Length;
+            }
+            catch { continue; }
+            var diff = Math.Abs((touch - when).TotalSeconds);
+            results.Add((diff, new CacheCandidate { Path = data, SizeMb = len / (1024.0 * 1024.0), Modified = touch }));
+        }
+        return results.OrderBy(r => r.Diff).Take(max).Select(r => r.Candidate).ToList();
     }
 
     // ---- persistence ----

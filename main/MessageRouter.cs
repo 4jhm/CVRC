@@ -2660,6 +2660,8 @@ public partial class AppShell
                 case "vrcExportFriendsList":
                 case "vrcImportFriendsPickFile":
                 case "vrcImportFriendsList":
+                case "adderSendRequests":
+                case "blockerSendBlocks":
                     await _friends.HandleMessage(action, msg);
                     break;
 

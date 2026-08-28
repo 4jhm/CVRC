@@ -1,6 +1,7 @@
                 <div class="tab-toolbar tt-split" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                     <div id="peopleFilterBtns" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                         <button class="vrcn-button sub-tab-btn active" id="peopleFilterFav" onclick="setPeopleFilter('favorites')"><span class="msi" style="font-size:16px;">favorite</span> <span data-i18n="profiles.people.filters.favorites">Favorites</span></button>
+                        <button class="vrcn-button sub-tab-btn" id="peopleFilterPinned" onclick="setPeopleFilter('pinned')"><span class="msi" style="font-size:16px;">push_pin</span> <span data-i18n="profiles.people.filters.pinned">Pinned</span></button>
                         <button class="vrcn-button sub-tab-btn" id="peopleFilterAll" onclick="setPeopleFilter('all')"><span class="msi" style="font-size:16px;">group</span> <span data-i18n="profiles.people.filters.all">All Friends</span></button>
                         <button class="vrcn-button sub-tab-btn" id="peopleFilterInstance" onclick="setPeopleFilter('instance')"><span class="msi" style="font-size:16px;">sensors</span> <span data-i18n="profiles.people.filters.instance">Instance</span></button>
                         <button class="vrcn-button sub-tab-btn" id="peopleFilterRecent" onclick="setPeopleFilter('recentseen')"><span class="msi" style="font-size:16px;">history</span> <span data-i18n="profiles.people.filters.recent_seen">Recently Seen</span></button>
@@ -67,6 +68,12 @@
                     </div>
                     </div>
                     <div id="favFriendsGrid" class="search-grid"><div class="empty-msg" data-i18n="friends.favorites.loading">Loading favorite friends...</div></div>
+                </div>
+                <div id="peoplePinnedArea" style="display:none;">
+                    <div class="tab-toolbar-body">
+                        <div class="set-desc" style="margin-bottom:12px;" data-i18n="profiles.people.pinned.desc">Profiles you've pinned from their context menu (up to 10).</div>
+                    </div>
+                    <div id="pinnedPeopleGrid" class="search-grid"><div class="empty-msg" data-i18n="profiles.people.pinned.empty">No pinned profiles yet.</div></div>
                 </div>
                 <div id="peopleAllArea" style="display:none;">
                     <div class="tab-toolbar-body">

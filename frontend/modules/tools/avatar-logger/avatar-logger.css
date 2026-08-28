@@ -128,6 +128,21 @@
     padding: 5px 10px;
 }
 
+/* Below this width the row (thumb + name/meta + status pill + 3 buttons) doesn't have room for
+   full text labels without wrapping awkwardly — collapse the buttons down to icon-only (with a
+   title tooltip picking up the label) so they stay on one line and stop crowding each other. */
+@media (max-width: 1300px) {
+    .avlog-row-btn-label { display: none; }
+    .avlog-row-upload-btn,
+    .avlog-row-files-btn,
+    .avlog-row-reveal-btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        justify-content: center;
+    }
+}
+
 .avlog-row-progress {
     position: relative;
     flex-shrink: 0;
@@ -156,6 +171,57 @@
     font-size: calc(10px + var(--fs-off, 0px));
     color: var(--tx1);
     font-variant-numeric: tabular-nums;
+}
+
+.avlog-row-candidates {
+    flex-basis: 100%;
+    font-size: calc(11px + var(--fs-off, 0px));
+    color: var(--tx3);
+}
+
+.avlog-row-candidates summary {
+    cursor: pointer;
+    color: var(--accent);
+    padding: 2px 0;
+}
+
+.avlog-row-candidates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.avlog-candidate {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-hover);
+    border-radius: 8px;
+    padding: 6px 8px;
+}
+
+.avlog-candidate-size {
+    font-weight: 600;
+    color: var(--tx1);
+    flex-shrink: 0;
+    min-width: 60px;
+}
+
+.avlog-candidate-when {
+    color: var(--tx3);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.avlog-candidate-use-btn,
+.avlog-candidate-reveal-btn {
+    flex-shrink: 0;
+    padding: 4px 8px;
 }
 
 .avlog-history-search-wrap {

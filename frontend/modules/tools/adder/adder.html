@@ -1,0 +1,21 @@
+                <div class="vrcn-panel-card">
+                    <div class="vrcn-panel-card-header"><span class="msi">group_add</span> <span data-i18n="adder.title">Adder</span></div>
+                    <div class="set-desc" style="margin:12px 0 14px;" data-i18n="adder.desc">Select people from your current VRChat instance and send them friend requests — one at a time, or several at once.</div>
+
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+                        <span id="adderInstanceTitle" style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);"></span>
+                        <span style="flex:1;"></span>
+                        <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:140px;max-width:280px;"><span class="msi search-ico">search</span><input type="text" id="adderSearch" class="vrcn-input" placeholder="Filter players..." data-i18n-placeholder="adder.filter_placeholder" oninput="renderAdderList()"></div>
+                    </div>
+
+                    <div class="adder-select-bar" id="adderSelectBar">
+                        <span id="adderSelectedCount" class="adder-selected-count">0 selected</span>
+                        <button class="vrcn-button" onclick="adderSelectAll()"><span class="msi" style="font-size:14px;">select_all</span> <span data-i18n="adder.select_all">Select All</span></button>
+                        <button class="vrcn-button" onclick="adderSelectNone()"><span class="msi" style="font-size:14px;">deselect</span> <span data-i18n="adder.select_none">Select None</span></button>
+                        <button class="vrcn-button vrcn-btn-primary" id="adderAddSelectedBtn" disabled onclick="adderAddSelected()"><span class="msi" style="font-size:14px;">person_add</span> <span data-i18n="adder.add_selected">Add Selected</span></button>
+                    </div>
+
+                    <div id="adderProgressResult" style="display:none;margin-bottom:10px;"></div>
+
+                    <div id="adderGrid" class="adder-list"><div class="empty-msg" data-i18n="adder.empty_no_instance">You are not in an instance.</div></div>
+                </div>

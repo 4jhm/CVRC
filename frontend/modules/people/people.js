@@ -173,7 +173,7 @@ let _peopleStatsMap = {};
 let _peopleStatsMax = 1;
 let _peopleStatsLoaded = false;
 
-const PEOPLE_STATS_AREAS = ['peopleFavArea', 'peopleAllArea', 'peopleRecentArea', 'peopleSearchArea', 'peopleBlockedArea', 'peopleMutedArea'];
+const PEOPLE_STATS_AREAS = ['peopleFavArea', 'peoplePinnedArea', 'peopleAllArea', 'peopleRecentArea', 'peopleSearchArea', 'peopleBlockedArea', 'peopleMutedArea'];
 
 function _peopleStatsFmtTime(seconds) {
     const d = Math.floor(seconds / 86400);
@@ -263,7 +263,7 @@ function _plGridId() {
     return {
         favorites: 'favFriendsGrid', all: 'allFriendsGrid', recentseen: 'recentSeenGrid',
         search: 'searchPeopleResults', blocked: 'blockedList', muted: 'mutedList',
-        instance: 'instancePlayersGrid',
+        instance: 'instancePlayersGrid', pinned: 'pinnedPeopleGrid',
     }[peopleFilter] || '';
 }
 
@@ -293,10 +293,11 @@ function setPeopleFilter(filter) {
     peopleFilter = filter;
     _peopleRecentPage = 0;
     const viewBtns = document.getElementById('peopleViewBtns');
-    if (viewBtns) viewBtns.style.display = filter === 'instance' ? 'none' : 'flex';
+    if (viewBtns) viewBtns.style.display = (filter === 'instance' || filter === 'pinned') ? 'none' : 'flex';
     ['peopleFavPaginatorBar', 'peopleAllPaginatorBar', 'peopleRecentPaginatorBar', 'peopleBlockedPaginatorBar', 'peopleMutedPaginatorBar']
         .forEach(id => setPaginator(id, ''));
     document.getElementById('peopleFilterFav').classList.toggle('active', filter === 'favorites');
+    document.getElementById('peopleFilterPinned')?.classList.toggle('active', filter === 'pinned');
     document.getElementById('peopleFilterAll').classList.toggle('active', filter === 'all');
     document.getElementById('peopleFilterInstance')?.classList.toggle('active', filter === 'instance');
     document.getElementById('peopleFilterRecent').classList.toggle('active', filter === 'recentseen');
@@ -304,6 +305,7 @@ function setPeopleFilter(filter) {
     document.getElementById('peopleFilterBlocked').classList.toggle('active', filter === 'blocked');
     document.getElementById('peopleFilterMuted').classList.toggle('active', filter === 'muted');
     document.getElementById('peopleFavArea').style.display     = filter === 'favorites'  ? '' : 'none';
+    document.getElementById('peoplePinnedArea').style.display  = filter === 'pinned'     ? '' : 'none';
     document.getElementById('peopleAllArea').style.display     = filter === 'all'        ? '' : 'none';
     const instArea = document.getElementById('peopleInstanceArea');
     if (instArea) instArea.style.display = filter === 'instance' ? '' : 'none';
@@ -374,6 +376,7 @@ function refreshPeopleTab(force) {
         filterFavFriends();
         sendToCS({ action: 'vrcGetFavoriteFriends' });
     }
+    if (peopleFilter === 'pinned') renderPinnedPeople();
     if (peopleFilter === 'all') {
         if (force) sendToCS({ action: 'vrcRefreshFriends' });
         else filterAllFriends();
@@ -392,6 +395,24 @@ function refreshPeopleTab(force) {
         sendToCS({ action: 'vrcGetMuted' });
     }
     if (peopleFilter === 'search') renderPeopleListView();
+}
+
+// === Pinned Profiles (People tab) ===
+// Capped at PINS_MAX (10) by pins.js, so this stays a plain grid — no search/pagination needed.
+function renderPinnedPeople() {
+    const el = document.getElementById('pinnedPeopleGrid');
+    if (!el) return;
+    const pins = (typeof pinsList === 'function' ? pinsList() : []).filter(p => p.type === 'user');
+    el.classList.add('search-grid');
+    if (!pins.length) {
+        el.innerHTML = `<div class="empty-msg">${esc(t('profiles.people.pinned.empty', 'No pinned profiles yet.'))}</div>`;
+        return;
+    }
+    el.innerHTML = pins.map(p => {
+        const user = { id: p.id, displayName: p.name || p.id, image: p.image };
+        const trailing = `<button class="vrcn-icon-button" title="${esc(t('pins.remove', 'Remove pin'))}" onclick="event.stopPropagation();pinsRemove('user','${jsq(p.id)}')"><span class="msi" style="font-size:18px;">push_pin</span></button>`;
+        return renderUserItem(user, `openFriendDetail('${jsq(p.id)}')`, { trailing });
+    }).join('');
 }
 
 let _recentSeenData = [];
@@ -657,6 +678,7 @@ function plSetPaginator(id, html) {
 
 function renderPeopleListView() {
     if (peopleFilter === 'instance')        renderInstancePlayers();
+    else if (peopleFilter === 'pinned')     renderPinnedPeople();
     else if (peopleFilter === 'favorites')  filterFavFriends();
     else if (peopleFilter === 'recentseen') filterRecentSeen();
     else if (peopleFilter === 'blocked')    filterModList('block');

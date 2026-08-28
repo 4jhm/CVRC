@@ -55,6 +55,17 @@ function avlogManualUpload(key) {
     sendToCS({ action: 'avlogManualUpload', key });
 }
 
+// Picks one candidate cache file (out of the full list shown for own-avatar switches, since
+// there's no reliable automatic match for those) and runs it through the normal delivery
+// pipeline in its place.
+function avlogUseCandidate(key, path) {
+    sendToCS({ action: 'avlogUseCandidate', key, path });
+}
+
+function avlogRevealCandidate(path) {
+    sendToCS({ action: 'revealInExplorer', path });
+}
+
 // Saves straight to the configured Local Archive Folder, no GoFile/Discord involved.
 function avlogUploadToFiles(key) {
     sendToCS({ action: 'avlogUploadToFiles', key });
@@ -191,6 +202,28 @@ function _avlogBuildRow(entry) {
     return row;
 }
 
+// Own-avatar switches come with no reliable automatic cache match, so the backend instead sends
+// every valid bundle it found in the cache (size + modified time) for the user to eyeball and
+// pick the right one from — see AvatarLoggerService.FindCacheCandidates.
+function _avlogCandidatesHtml(entry) {
+    const list = entry.cacheCandidates || [];
+    if (!list.length) return '';
+    const rows = list.map(c => {
+        const sizeText = c.sizeMb != null ? c.sizeMb.toFixed(1) + ' MB' : '';
+        const whenText = avlogFormatWhen(c.modifiedIso);
+        return `<div class="avlog-candidate">
+            <span class="avlog-candidate-size">${esc(sizeText)}</span>
+            <span class="avlog-candidate-when">${esc(whenText)}</span>
+            <button class="vrcn-button avlog-candidate-use-btn" data-path="${esc(c.path)}"><span class="msi" style="font-size:13px;">check</span> ${esc(t('avlog.row.candidate_use', 'Use this'))}</button>
+            <button class="vrcn-button avlog-candidate-reveal-btn" data-path="${esc(c.path)}"><span class="msi" style="font-size:13px;">folder_open</span> ${esc(t('avlog.row.reveal_file', 'File'))}</button>
+        </div>`;
+    }).join('');
+    return `<details class="avlog-row-candidates">
+        <summary>${esc(t('avlog.row.candidates_title', 'Not sure which is yours? Pick from every cache file'))} (${list.length})</summary>
+        <div class="avlog-row-candidates-list">${rows}</div>
+    </details>`;
+}
+
 function _avlogFillRow(row, entry) {
     const thumbHtml = entry.thumbUrl
         ? `<img class="avlog-row-thumb" alt="">`
@@ -201,14 +234,17 @@ function _avlogFillRow(row, entry) {
     if (entry.sizeMb != null) metaParts.push(entry.sizeMb.toFixed(1) + ' MB');
     if (entry.downloadLink) metaParts.push(t('avlog.row.has_link', 'link ready'));
     const whenText = avlogFormatWhen(entry.whenIso);
+    // The label is wrapped in its own span (rather than plain text) so a narrow panel can hide
+    // just the text via CSS and collapse the button down to its icon — the title attribute picks
+    // up the tooltip at that point so the action stays identifiable.
     const uploadBtnHtml = AVLOG_UPLOADABLE_STATUSES.includes(entry.status)
-        ? `<button class="vrcn-button avlog-row-upload-btn"><span class="msi" style="font-size:14px;">upload</span> ${esc(t('avlog.row.upload', 'Upload'))}</button>`
+        ? `<button class="vrcn-button avlog-row-upload-btn" title="${esc(t('avlog.row.upload', 'Upload'))}"><span class="msi" style="font-size:14px;">upload</span><span class="avlog-row-btn-label">${esc(t('avlog.row.upload', 'Upload'))}</span></button>`
         : '';
     const filesBtnHtml = entry.cachePath
-        ? `<button class="vrcn-button avlog-row-files-btn"><span class="msi" style="font-size:14px;">drive_file_move</span> ${esc(t('avlog.row.upload_to_files', 'Upload to Files'))}</button>`
+        ? `<button class="vrcn-button avlog-row-files-btn" title="${esc(t('avlog.row.upload_to_files', 'Upload to Files'))}"><span class="msi" style="font-size:14px;">drive_file_move</span><span class="avlog-row-btn-label">${esc(t('avlog.row.upload_to_files', 'Upload to Files'))}</span></button>`
         : '';
     const revealBtnHtml = entry.cachePath
-        ? `<button class="vrcn-button avlog-row-reveal-btn"><span class="msi" style="font-size:14px;">folder_open</span> ${esc(t('avlog.row.reveal_file', 'File'))}</button>`
+        ? `<button class="vrcn-button avlog-row-reveal-btn" title="${esc(t('avlog.row.reveal_file', 'File'))}"><span class="msi" style="font-size:14px;">folder_open</span><span class="avlog-row-btn-label">${esc(t('avlog.row.reveal_file', 'File'))}</span></button>`
         : '';
 
     row.innerHTML = `
@@ -222,6 +258,7 @@ function _avlogFillRow(row, entry) {
         ${uploadBtnHtml}
         ${filesBtnHtml}
         ${revealBtnHtml}
+        ${_avlogCandidatesHtml(entry)}
     `;
 
     // Bound here instead of inline onclick="..." strings — a name/link containing a double
@@ -259,6 +296,18 @@ function _avlogFillRow(row, entry) {
             avlogRevealFile(entry.key);
         };
     }
+    row.querySelectorAll('.avlog-candidate-use-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            avlogUseCandidate(entry.key, btn.dataset.path);
+        };
+    });
+    row.querySelectorAll('.avlog-candidate-reveal-btn').forEach(btn => {
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            avlogRevealCandidate(btn.dataset.path);
+        };
+    });
 }
 
 function handleAvatarLoggerEvent(entry) {

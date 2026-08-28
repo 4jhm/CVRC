@@ -1,0 +1,30 @@
+                <div class="vrcn-panel-card">
+                    <div class="vrcn-panel-card-header"><span class="msi">block</span> <span data-i18n="blocker.title">Blocker</span></div>
+                    <div class="set-desc" style="margin:12px 0 14px;" data-i18n="blocker.desc">Filter people in your current VRChat instance by trust rank, then block some or all of them at once.</div>
+
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+                        <span id="blockerInstanceTitle" style="font-size:calc(13px + var(--fs-off, 0px));font-weight:600;color:var(--tx1);"></span>
+                        <span style="flex:1;"></span>
+                        <div class="search-bar-row" style="margin-bottom:0;flex:1;min-width:140px;max-width:280px;"><span class="msi search-ico">search</span><input type="text" id="blockerSearch" class="vrcn-input" placeholder="Filter players..." data-i18n-placeholder="blocker.filter_placeholder" oninput="renderBlockerList()"></div>
+                    </div>
+
+                    <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;">
+                        <button class="vrcn-button sub-tab-btn active" id="blockerRankAll" onclick="blockerSetRankFilter('all')" data-i18n="blocker.rank.all">All Ranks</button>
+                        <button class="vrcn-button sub-tab-btn" id="blockerRankVisitor" onclick="blockerSetRankFilter('rank-visitor')" data-i18n="profiles.trust.visitor">Visitor</button>
+                        <button class="vrcn-button sub-tab-btn" id="blockerRankNew" onclick="blockerSetRankFilter('rank-new')" data-i18n="profiles.trust.new">New User</button>
+                        <button class="vrcn-button sub-tab-btn" id="blockerRankUser" onclick="blockerSetRankFilter('rank-user')" data-i18n="profiles.trust.user">User</button>
+                        <button class="vrcn-button sub-tab-btn" id="blockerRankKnown" onclick="blockerSetRankFilter('rank-known')" data-i18n="profiles.trust.known">Known User</button>
+                        <button class="vrcn-button sub-tab-btn" id="blockerRankTrusted" onclick="blockerSetRankFilter('rank-trusted')" data-i18n="profiles.trust.trusted">Trusted User</button>
+                    </div>
+
+                    <div class="blocker-select-bar" id="blockerSelectBar">
+                        <span id="blockerSelectedCount" class="blocker-selected-count">0 selected</span>
+                        <button class="vrcn-button" onclick="blockerSelectAll()"><span class="msi" style="font-size:14px;">select_all</span> <span data-i18n="blocker.select_all">Select All</span></button>
+                        <button class="vrcn-button" onclick="blockerSelectNone()"><span class="msi" style="font-size:14px;">deselect</span> <span data-i18n="blocker.select_none">Select None</span></button>
+                        <button class="vrcn-button vrcn-btn-danger" id="blockerBlockSelectedBtn" disabled onclick="blockerBlockSelected()"><span class="msi" style="font-size:14px;">block</span> <span data-i18n="blocker.block_selected">Block Selected</span></button>
+                    </div>
+
+                    <div id="blockerProgressResult" style="display:none;margin-bottom:10px;"></div>
+
+                    <div id="blockerGrid" class="blocker-list"><div class="empty-msg" data-i18n="blocker.empty_no_instance">You are not in an instance.</div></div>
+                </div>

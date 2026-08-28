@@ -260,6 +260,7 @@ function _pinsCloseMenu() {
 function _pinsRenderMenu() {
     _pinsRefresh();
     if (typeof dashHeroRefreshPins === 'function') dashHeroRefreshPins();
+    if (typeof renderPinnedPeople === 'function') renderPinnedPeople();
     const drop = document.getElementById('pinsDropdown');
     if (!drop) return;
     drop.innerHTML = '';
